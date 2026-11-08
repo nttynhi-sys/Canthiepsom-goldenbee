@@ -25,6 +25,7 @@ function makeServer(users){
    if(gt==='refresh_token'){const old=String(b.refresh_token).slice(1),e=S.tokens[old];if(!e)return json(400,{error:'invalid_grant'});const u=S.users[e];const tok='t'+Math.random().toString(36).slice(2);S.tokens[tok]=e;return json(200,{access_token:tok,refresh_token:'r'+tok,expires_in:3600,user:{id:u.uid,email:u.email}})}}
   if(p==='/auth/v1/logout')return json(204,{});
   const u=who(req);
+  if(p==='/auth/v1/user'&&m==='PUT'){if(!u)return json(401,{msg:'jwt'});const b=JSON.parse(req.postData()||'{}');if(b.password&&b.password===u.pw)return json(422,{msg:'New password should be different from the old password.'});if(b.password)u.pw=b.password;return json(200,{id:u.uid})}
   if(p==='/rest/v1/profiles'){if(!u)return json(401,{message:'JWT'});const uid=url.searchParams.get('user_id').replace('eq.','');const pr=S.profiles[uid];return json(200,pr&&uid===u.uid?[pr]:[])}
   const tn=p.replace('/rest/v1/','');const tab=tabOf(tn);
   if(!tab)return json(404,{message:'no table'});

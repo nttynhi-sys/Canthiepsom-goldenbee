@@ -107,7 +107,7 @@ function cloudEnter(){
  const a=findAccount(CLD.ss.email);
  if(!a){cMsg('Email '+CLD.ss.email+' chưa có trong danh sách nhân sự đang làm việc. Trưởng Trung tâm cần thêm hồ sơ nhân sự với đúng email này.');return}
  if(a.role!==CLD.role){cMsg('Vai trò của tài khoản ('+ROLE[CLD.role]+') không khớp với hồ sơ nhân sự ('+ROLE[a.role]+'). Hãy nhờ Trưởng Trung tâm kiểm tra.');return}
- U=a;CLD.stage='app';S.v=ACCESS[a.role][0];S.modal=null;S.menu=false;S.top=1;setSt('ok');render();cloudTimers()}
+ U=a;CLD.stage='app';S.v=ACCESS[a.role][0];S.modal=null;S.menu=false;S.top=1;setSt('ok');render();cloudTimers();accLoad()}
 function cloudDrop(msg){CLD.ss=null;sbStore(null);U=null;DB=null;CLD.stage='login';CLD.err=msg||'';CLD.snap=new Map();render()}
 async function cloudLogout(){
  try{await cloudFlush()}catch(e){}
@@ -179,6 +179,58 @@ async function cloudPull(){
 function cloudTimers(){if(CLD.tmr)return;
  CLD.tmr=setInterval(()=>{if(document.visibilityState==='visible')cloudPull()},45000);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')cloudPull();else cloudFlush()})}
+
+/* ---- cấp tài khoản đăng nhập (qua /api/accounts; khóa secret nằm ở máy chủ, không ở trình duyệt) ---- */
+async function cloudApi(body,again){
+ const r=await fetch((typeof window.GB_API==='string'?window.GB_API:'')+'/api/accounts',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+CLD.ss.at},body:JSON.stringify(body)});
+ if(r.status===401&&!again&&await sbRefresh())return cloudApi(body,true);
+ if(r.status===404)throw new Error('Máy chủ chưa có chức năng cấp tài khoản.');
+ const j=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(j.error||('Lỗi '+r.status));
+ return j}
+async function accLoad(){if(!CLOUDMODE||CLD.role!=='tt')return;
+ try{CLD.acc=(await cloudApi({action:'list'})).accounts;CLD.accErr=''}catch(e){CLD.acc=null;CLD.accErr=e.message}
+ if(CLD.stage==='app')softRender()}
+const accOf=em=>(CLD.acc||[]).find(a=>a.email===String(em||'').trim().toLowerCase());
+const accCol=()=>CLOUDMODE&&canCfg();
+const accTag=s=>{if(s.role==='hc')return'<span class="mu">–</span>';if(CLD.acc===null)return'<span class="mu">?</span>';return accOf(s.em)?tg('Đã cấp','ok'):tg('Chưa cấp','wa')};
+const genPw=()=>{const c='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789',a=new Uint32Array(10);crypto.getRandomValues(a);return Array.from(a,x=>c[x%c.length]).join('')};
+function accSection(s){
+ if(!CLOUDMODE||!canCfg())return'';
+ const h='<h3 style="margin-top:18px">Tài khoản đăng nhập</h3>';
+ if(s.role==='hc')return'';
+ if(s.role==='tt')return h+'<p class="note sm">Tài khoản Trưởng Trung tâm được tạo trực tiếp trong Supabase (Authentication).</p>';
+ if(!s.em)return h+'<p class="note sm">Nhập email đăng nhập và bấm Lưu hồ sơ trước, rồi mở lại hồ sơ này để cấp tài khoản.</p>';
+ if(CLD.acc===null)return h+`<p class="note sm">Chưa dùng được chức năng cấp tài khoản: ${esc(CLD.accErr||'đang kiểm tra...')}</p>`;
+ const a=accOf(s.em),busy=S.accBusy?'disabled':'',done=S.accDone&&S.accDone.id===s.id?`<div class="note sm" role="status">${esc(S.accDone.msg)}${S.accDone.pw?` Mật khẩu vừa đặt: <b style="user-select:all">${esc(S.accDone.pw)}</b>. Mật khẩu này chỉ hiện ở đây một lần; hãy gửi cho nhân viên và nhắc đổi mật khẩu sau khi đăng nhập.`:''}</div>`:'';
+ if(a)return h+done+`<p class="sm">Đã có tài khoản <b>${esc(a.email)}</b> · vai trò ${esc(ROLE[a.role]||a.role)}.${a.role!==s.role?' <span style="color:var(--er)">Vai trò hệ thống đã đổi. Hãy thu hồi rồi cấp lại để khớp.</span>':''}</p>
+  <form id="accpw" class="f"><div class="f2"><div><label for="acc-pw">Mật khẩu mới (ít nhất 8 ký tự)</label><input id="acc-pw" name="pw" type="password" minlength="8" maxlength="72" autocomplete="new-password" required></div></div>
+  <div class="acts"><button class="btn p" type="submit" ${busy}>Đặt lại mật khẩu</button><button class="btn" type="button" data-a="accgen">Tạo mật khẩu ngẫu nhiên</button><button class="btn no" type="button" data-a="accdel" ${busy}>Thu hồi quyền đăng nhập</button></div></form>`;
+ return h+done+`<p class="sm mu">Chưa có tài khoản cho <b>${esc(s.em)}</b> (${esc(ROLE[s.role])}). Cấp tài khoản theo thông tin đã lưu của hồ sơ.</p>
+  <form id="accnew" class="f"><div class="f2"><div><label for="acc-pw">Mật khẩu ban đầu (ít nhất 8 ký tự)</label><input id="acc-pw" name="pw" type="password" minlength="8" maxlength="72" autocomplete="new-password" required></div></div>
+  <div class="acts"><button class="btn p" type="submit" ${busy}>Cấp tài khoản</button><button class="btn" type="button" data-a="accgen">Tạo mật khẩu ngẫu nhiên</button></div></form>`}
+ACT.accgen=()=>{const el=$q('#acc-pw');if(el){el.type='text';el.value=genPw()}return false};
+async function accRun(action,body,msg,showPw){
+ const id=S.modal&&S.modal.id;S.accBusy=true;S.accDone=null;render();
+ try{await cloudFlush();await cloudApi(Object.assign({action},body));
+  await accLoad();S.accDone={id,msg,pw:showPw||''};toast(msg)}
+ catch(e){toast(e.message)}
+ S.accBusy=false;render()}
+FORM.accnew=f=>{const s=stBy(S.modal.id),pw=f.elements.pw.value;if(!s||!canCfg())return false;
+ accRun('create',{staff_id:s.id,email:s.em,role:s.role,password:pw},'Đã cấp tài khoản cho '+s.em+'.',pw);return false};
+FORM.accpw=f=>{const s=stBy(S.modal.id),pw=f.elements.pw.value;if(!s||!canCfg())return false;
+ accRun('setpw',{email:s.em,password:pw},'Đã đặt lại mật khẩu.',pw);return false};
+ACT.accdel=()=>{const s=stBy(S.modal.id);if(!s||!canCfg())return false;
+ ask('Thu hồi quyền đăng nhập của '+s.n+'? Người này sẽ không vào được hệ thống nữa. Hồ sơ nhân sự và dữ liệu cũ vẫn giữ nguyên.',()=>accRun('remove',{email:s.em},'Đã thu hồi quyền đăng nhập.'),'Thu hồi')};
+
+/* ---- đổi mật khẩu của chính mình ---- */
+ACT.pwopen=()=>{S.modal={t:'pw'}};
+MODALS.pw=()=>mdl('Đổi mật khẩu',`<form id="pwf" class="f"><div><label for="pw-1">Mật khẩu mới (ít nhất 8 ký tự)</label><input id="pw-1" name="a" type="password" minlength="8" maxlength="72" autocomplete="new-password" required></div><div><label for="pw-2">Nhập lại mật khẩu mới</label><input id="pw-2" name="b" type="password" minlength="8" maxlength="72" autocomplete="new-password" required></div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Đổi mật khẩu</button></div></form>`);
+FORM.pwf=f=>{const a=f.elements.a.value,b=f.elements.b.value;
+ if(a.length<8){toast('Mật khẩu cần ít nhất 8 ký tự');return false}
+ if(a!==b){toast('Hai lần nhập mật khẩu chưa giống nhau');return false}
+ sbReq('/auth/v1/user',{method:'PUT',body:{password:a}}).then(async r=>{if(r.ok){S.modal=null;toast('Đã đổi mật khẩu')}else{let m='';try{m=(await r.json()).msg||''}catch(e){}toast(/different from the old/i.test(m)?'Mật khẩu mới phải khác mật khẩu cũ':'Chưa đổi được mật khẩu. Hãy đăng xuất, đăng nhập lại rồi thử lại.')}render()});
+ return false};
 
 /* ---- màn hình trước khi vào ứng dụng ---- */
 const CL_NAME='TRUNG TÂM CAN THIỆP SỚM GOLDEN BEE';

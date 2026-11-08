@@ -5,7 +5,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const srv=makeServer({'tt@gb.vn':{pw:'pw1',uid:'u-tt',role:'tt',name:'Trưởng TT',email:'tt@gb.vn'}});
  const ctx=await b.newContext({viewport:{width:1366,height:900},acceptDownloads:true}),page=await ctx.newPage();
  page.on('pageerror',e=>errs.push('PAGEERROR '+e.message));page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|ERR_|net::/.test(m.text()))errs.push('CONSOLE '+m.text())});
- await page.route(/fonts\.(googleapis|gstatic)\.com|cdnjs\.cloudflare\.com/,r=>r.abort());await srv.attach(page);await page.goto(URL);
+ await page.route(/fonts\.(googleapis|gstatic)\.com|cdnjs\.cloudflare\.com/,r=>r.abort());await ctx.addInitScript(()=>{window.GB_API='https://gb.test'});await page.route('https://gb.test/api/accounts',r=>r.fulfill({status:200,contentType:'application/json',body:JSON.stringify({accounts:[]})}));await srv.attach(page);await page.goto(URL);
  await page.waitForSelector('#login');await page.fill('#lg-e','tt@gb.vn');await page.fill('#lg-p','pw1');await page.click('#login button[type=submit]');
  await page.waitForSelector('[data-a="csetup"]');await page.click('[data-v="empty"]');await page.waitForSelector('.nav');
  const views=await page.evaluate(()=>ACCESS[U.role]);const bad=[];
