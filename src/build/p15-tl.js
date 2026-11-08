@@ -1,0 +1,30 @@
+/* ===== 10. Tiền lương ===== */
+const PMODE={thang:'Lương tháng',buoi:'Theo buổi',kethop:'Cơ bản và theo buổi'};
+const tlMonths=()=>[sm(CM,-2),sm(CM,-1),CM].map(x=>[x,mLabel(x)]);
+/* Trưởng Trung tâm và Văn phòng xem và tính lương mọi nhân sự; giáo viên chỉ xem phiếu của mình */
+const slipOK=id=>canMoney()||(isGV()&&!!U&&id===U.id);
+VIEWS.tl=()=>canMoney()?tlAll():isGV()?tlMine():head('Tiền lương','')+'<div class="card"><p class="empty">Mục này không dành cho vai trò của bạn.</p></div>';
+CHG.tlm=v=>{S.tl.m=v};
+function slipLines(s,m){const p=payroll(s,m),f=s.pay,L=[];
+ if(f.mode!=='buoi')L.push(['Lương theo ngày công ('+p.cong+'/'+DB.cfg.cc+' công)',p.byDay]);
+ if(f.mode!=='thang')L.push(['Dạy 1-1: '+p.teach+' buổi × '+fnum(f.rate)+' ₫',p.bySess]);
+ if(f.rateBt)L.push(['Bán trú: '+p.btd+' ngày × '+fnum(f.rateBt)+' ₫',p.byBt]);
+ L.push(['Phụ cấp',p.allow],['Thưởng',p.bonus]);if(p.pen)L.push(['Trừ đi muộn ('+p.late+' lần)',-p.pen]);
+ return{p,L}}
+function slipH(s,m){const {p,L}=slipLines(s,m),r=(a,b,c)=>`<tr class="${c||''}"><td>${a}</td><td class="r nw">${fnum(b)} ₫</td></tr>`;
+ return`<div class="tw"><table style="min-width:0"><tbody>${L.map(x=>r(x[0],x[1])).join('')}${r('Tổng thu nhập',p.gross,'tot')}${r('Bảo hiểm ('+(s.pay.bh||0)+'% lương cơ bản)',-p.bh)}${r('Giảm trừ gia cảnh (không tính thuế)',DB.cfg.giamTru)}${r('Thuế TNCN tạm tính ('+DB.cfg.thue+'% phần vượt giảm trừ)',-p.tax)}${r('Thực nhận',p.net,'tot')}</tbody></table></div><p class="sm mu" style="margin-top:8px">Số liệu tạm tính theo chấm công (${p.cong} công, ${p.leave} ngày nghỉ phép được tính công), lịch dạy và bán trú trong ${mLabel(m)}${m===CM?', tính đến ngày '+vdm(addD(WD,-1)):''}. Thuế là mức ước tính cố định, kế toán cần đối chiếu trước khi chi.</p>`}
+function tlAll(){const t=S.tl=Object.assign({m:sm(CM,-1)},S.tl),m=t.m,st=DB.staff.filter(s=>s.st==='dang'),rows=st.map(s=>({s,p:payroll(s,m)})),T=rows.reduce((a,x)=>({g:a.g+x.p.gross,bh:a.bh+x.p.bh,tx:a.tx+x.p.tax,n:a.n+x.p.net}),{g:0,bh:0,tx:0,n:0});
+ return head('Tiền lương','Bảng lương tạm tính từ chấm công, lịch dạy và bán trú','<button class="btn s" data-a="tlxl">Xuất Excel</button>')
+ +`<div class="grid">${kpi('Tổng thực nhận',fmt(T.n),st.length+' nhân sự')}${kpi('Tổng thu nhập',fmt(T.g),'trước bảo hiểm và thuế')}${kpi('Bảo hiểm khấu trừ',fmt(T.bh),'')}${kpi('Thuế tạm tính',fmt(T.tx),'ước tính')}</div>`
+ +`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="tlm">Tháng</label><select id="tlm" data-c="tlm">${opts(tlMonths(),m)}</select></div></div>`
+ +tbl(['Nhân viên','Hình thức','>Công','>Buổi 1-1','>Ngày BT','>Tổng thu nhập','>Bảo hiểm','>Thuế','>Thực nhận'],rows.map(({s,p})=>`<tr class="k" data-a="slipopen" data-v="${s.id}|${m}"><td><b>${esc(s.n)}</b><br><span class="sm mu">${esc(s.pos)}</span></td><td>${PMODE[s.pay.mode]}</td><td class="r">${p.cong}</td><td class="r">${p.teach}</td><td class="r">${p.btd}</td><td class="r nw">${fnum(p.gross)}</td><td class="r nw">${fnum(p.bh)}</td><td class="r nw">${fnum(p.tax)}</td><td class="r nw"><b>${fnum(p.net)}</b></td></tr>`).join(''))+`<p class="sm mu" style="margin-top:8px">Bấm vào một dòng để xem phiếu lương, thêm thưởng hoặc xuất PDF.</p></div>`}
+function tlMine(){const t=S.tl=Object.assign({m:sm(CM,-1)},S.tl),s=stBy(U.id);
+ return head('Phiếu lương của tôi',esc(s.pos))+`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="tlm">Tháng</label><select id="tlm" data-c="tlm">${opts(tlMonths(),t.m)}</select></div></div>${slipH(s,t.m)}<div class="acts" style="margin-top:12px"><button class="btn s" data-a="slippdf" data-v="${s.id}|${t.m}">Tải phiếu PDF</button></div></div>`}
+ACT.slipopen=v=>{const [id,m]=v.split('|');S.modal={t:'slip',id,m}};
+MODALS.slip=()=>{const {id,m}=S.modal,s=stBy(id);if(!s||!slipOK(id)){S.modal=null;return''}
+ return mdl('Phiếu lương · '+s.n,`<p class="mu sm" style="margin-bottom:10px">${esc(s.pos)} · ${mLabel(m)} · ${PMODE[s.pay.mode]}</p>${slipH(s,m)}${canMoney()?`<form id="bonf" class="acts" style="margin-top:12px;align-items:flex-end"><div style="flex:1;min-width:180px"><label for="bo-a">Thưởng tháng này (₫)</label><input id="bo-a" name="a" type="number" min="0" step="any" value="${DB.bon[id+'|'+m]||0}"></div><button class="btn p" type="submit">Lưu thưởng</button><button class="btn" type="button" data-a="slippdf" data-v="${id}|${m}">Tải phiếu PDF</button></form>`:''}`)};
+FORM.bonf=f=>{if(!canMoney())return false;const a=Math.max(0,+f.elements.a.value||0),k=S.modal.id+'|'+S.modal.m;if(a)DB.bon[k]=a;else delete DB.bon[k];toast('Đã lưu thưởng')};
+ACT.slippdf=v=>{const [id,m]=v.split('|'),s=stBy(id);if(!s||!slipOK(id))return false;
+ const {p,L}=slipLines(s,m),r=(a,b,bold)=>`<tr><td ${bold?'style="font-weight:700"':''}>${a}</td><td align="right" ${bold?'style="font-weight:700"':''}>${fnum(b)} ₫</td></tr>`;
+ exportPDF('phieu-luong-'+ascii(s.n)+'-'+m+'.pdf',`<h2 style="margin:0 0 4px;font:700 17px 'Baloo 2','Be Vietnam Pro',sans-serif">PHIẾU LƯƠNG ${mLabel(m).toUpperCase()}</h2><p style="margin-bottom:10px"><b>${esc(s.n)}</b> · ${esc(s.pos)} · Mã ${s.id}</p><table><tbody>${L.map(x=>r(x[0],x[1])).join('')}${r('Tổng thu nhập',p.gross,1)}${r('Bảo hiểm',-p.bh)}${r('Thuế TNCN tạm tính',-p.tax)}${r('Thực nhận',p.net,1)}</tbody></table><p style="margin-top:10px;font-size:11px;color:#6b5f50">Phiếu lương tạm tính từ chấm công và lịch dạy; thuế là mức ước tính.</p>`)};
+ACT.tlxl=()=>{if(!canMoney())return false;const m=S.tl.m;exportXLSX('bang-luong-'+m+'.xlsx',[{n:'Bảng lương',rows:[['Mã','Nhân viên','Chức vụ','Hình thức','Công','Buổi 1-1','Ngày bán trú','Đi muộn','Lương ngày công','Lương theo buổi','Bán trú','Phụ cấp','Thưởng','Trừ đi muộn','Tổng thu nhập','Bảo hiểm','Thuế','Thực nhận']].concat(DB.staff.filter(s=>s.st==='dang').map(s=>{const p=payroll(s,m);return[s.id,s.n,s.pos,PMODE[s.pay.mode],p.cong,p.teach,p.btd,p.late,Math.round(p.byDay),Math.round(p.bySess),Math.round(p.byBt),p.allow,p.bonus,p.pen,Math.round(p.gross),Math.round(p.bh),Math.round(p.tax),Math.round(p.net)]}))}])};

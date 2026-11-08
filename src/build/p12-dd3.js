@@ -1,0 +1,40 @@
+/* ===== Chi tiết từng bé, xuất tệp, quy định ===== */
+ACT.sdopen=v=>{const [id,m]=v.split('|');S.modal={t:'sd',id,m}};
+ACT.sdpost=()=>{if(!canMoney())return false;const k=kidBy(S.modal.id);postSettle(k,S.modal.m);toast('Đã ghi khoản hoàn của '+k.n+' vào công nợ')};
+ACT.nsgo=()=>{go('ns',{ns:Object.assign(S.ns||{},{tab:'cd'})})};
+MODALS.sd=()=>{const {id,m}=S.modal,k=kidBy(id);if(!k||!canKid(id)){S.modal=null;return''}
+ const r=settle(k,m),L=canMoney(),inv=L?billed(id,m):0,nm=sm(m,1),next=L?invoice(k,nm):0,ps=postState(k,r,m);
+ const mini=(l,v,c)=>`<div class="card kpi mini"><div class="mu sm">${l}</div><div class="big ${c||''}">${v}</div></div>`;
+ const pend=Object.keys(r.cells).filter(d=>r.cells[d].includes('?')).sort().map(vdm);
+ const money=L?`<div class="grid">${mini('Học phí '+mLow(m),fmt(inv))}${mini('Phí mất do nghỉ',fmt(r.lost))}${mini('Hoàn trừ tháng sau',fmt(r.refund),'ok')}${mini('Học phí '+mLow(nm)+' dự kiến',fmt(Math.max(0,next-r.refund)))}</div><p class="sm mu" style="margin:-4px 0 12px">Học phí ${mLabel(nm)} dự kiến = ${fmt(next)} theo lịch trừ ${fmt(r.refund)} khoản hoàn.${r.stop?' Bé đã ngưng can thiệp nên không hoàn khoản nào.':''}</p>`:'';
+ const rows=r.rows.sort((a,b)=>a.d<b.d?-1:1).map(x=>`<tr><td class="nw">${DAYS[dow(x.d)]} ${vdm(x.d)}</td><td>${x.kind==='11'?'1-1':'Bán trú'}</td><td class="nw">${x.kind==='11'?slotLb(x.slot):'Cả ngày'}</td><td>${tg(AC[x.code],x.code==='kp'?'er':x.code==='p'?'wa':x.code==='bv'?'in':'gy')}</td>${L?`<td>${esc(x.note)}</td><td class="r nw">${fnum(x.ls)}</td><td class="r nw">${fnum(x.rf)}</td>`:''}</tr>`).join('');
+ return mdl('Chi tiết chấm công · '+k.n,`<p class="mu sm" style="margin-bottom:10px">${mLabel(m)} · ${esc(progShort(k))} · ${esc(mainGV(k))}</p>
+ <div class="grid g3">${mini('Kế hoạch',r.plan+' 1-1, '+r.planBt+' ngày BT')}${mini('Có mặt',r.cm,'ok')}${mini('Nghỉ P / KP',r.p+' / '+r.kp)}${mini('TT/GV nghỉ',r.tt)}${mini('Nhập viện',r.bv)}${mini('Học bù có mặt',r.bu)}</div>${money}
+ ${pend.length?`<p class="note sm" style="margin-bottom:12px"><b>Chưa điểm danh:</b> ${pend.join(', ')}. Hoàn thành điểm danh${L?' để khoản hoàn được tính đủ':' để số ngày học được tính đủ'}.</p>`:''}
+ <h2>${L?'Các buổi nghỉ và cách tính':'Các buổi nghỉ'}</h2>`+tbl(['Ngày','Loại','Ca','Trạng thái'].concat(L?['Cách tính','>Mất (₫)','>Hoàn (₫)']:[]),rows,'Bé không có buổi nghỉ nào trong tháng.')
+ +(L?`<div class="acts" style="margin-top:12px;justify-content:space-between"><span class="sm">Ghi nhận công nợ: ${ps[1]?tg(ps[0],ps[1]):ps[0]}</span><button class="btn y" data-a="sdpost" ${r.refund||DB.set[id+'|'+m]?'':'disabled'}>Ghi khoản hoàn của bé này</button></div>`:'')
+ +(L?`<details style="margin-top:14px"><summary style="cursor:pointer" class="sm"><b>Quy định đang áp dụng</b></summary>${r.plan?policyH('m11'):''}${r.planBt?policyH('bt'):''}</details>`:''),1)};
+/* --- xuất Excel và PDF --- */
+ACT.ddxl=()=>{const m=S.dd.m,rows=sheetRows(),L=canMoney(),ds=mDates(m);
+ const s1=[['Mã','Họ tên','Chương trình','Kế hoạch 1-1','Kế hoạch bán trú','Có mặt','Nghỉ P','Nghỉ KP','TT/GV nghỉ','Nhập viện','Học bù','Chưa ghi'].concat(L?['Học phí tháng','Phí mất do nghỉ','Hoàn trừ tháng sau']:[])].concat(rows.map(({k,r,inv})=>[k.id,k.n,progShort(k),r.plan,r.planBt,r.cm,r.p,r.kp,r.tt,r.bv,r.bu,r.none].concat(L?[inv,r.lost,r.refund]:[])));
+ const s2=[['Mã','Họ tên','Ngày','Loại','Ca','Trạng thái'].concat(L?['Cách tính','Mất','Hoàn']:[])];
+ rows.forEach(({k,r})=>r.rows.forEach(x=>s2.push([k.id,k.n,vd(x.d),x.kind==='11'?'1-1':'Bán trú',x.kind==='11'?slotLb(x.slot):'Cả ngày',AC[x.code]].concat(L?[x.note,x.ls,x.rf]:[]))));
+ const s3=[['Mã','Họ tên'].concat(ds.map(d=>pd(d).getDate()+'/'+(+m.slice(5,7))))].concat(rows.map(({k,r})=>[k.id,k.n].concat(ds.map(d=>(r.cells[d]||[]).join('+')))));
+ exportXLSX('bang-cham-cong-hoc-sinh-'+m+'.xlsx',[{n:'Tổng hợp',rows:s1},{n:'Chi tiết nghỉ',rows:s2},{n:'Ma trận ngày',rows:s3}])};
+ACT.ddpdf=()=>{const m=S.dd.m,rows=sheetRows(),L=canMoney();let T=[0,0,0];
+ const tr=rows.map(({k,r,inv})=>{T[0]+=inv;T[1]+=r.lost;T[2]+=r.refund;return`<tr><td>${k.id}</td><td>${esc(k.n)}</td><td>${progShort(k)}</td><td>${r.plan}/${r.planBt}</td><td>${r.cm}</td><td>${r.p}</td><td>${r.kp}</td><td>${r.tt}</td><td>${r.bv}</td><td>${r.bu}</td><td>${r.none}</td>${L?`<td align="right">${fnum(inv)}</td><td align="right">${fnum(r.lost)}</td><td align="right">${fnum(r.refund)}</td>`:''}</tr>`}).join('');
+ const html=`<h2 style="margin:0 0 4px;font:700 17px 'Baloo 2','Be Vietnam Pro',sans-serif">BẢNG CHẤM CÔNG HỌC SINH ${mLabel(m).toUpperCase()}</h2><p style="font-size:11px;margin-bottom:8px;color:#6b5f50">KH: số buổi 1-1 / số ngày bán trú theo lịch. P: nghỉ có phép · KP: nghỉ không phép · TT: Trung tâm hoặc giáo viên nghỉ · Viện: nhập viện · Bù: học bù có mặt.${L?' Khoản hoàn trừ vào học phí tháng sau.':''}</p>
+ <table><thead><tr><th>Mã</th><th>Họ tên</th><th>Chương trình</th><th>KH</th><th>Có mặt</th><th>P</th><th>KP</th><th>TT</th><th>Viện</th><th>Bù</th><th>Chưa ghi</th>${L?'<th>Học phí</th><th>Phí mất</th><th>Hoàn</th>':''}</tr></thead><tbody>${tr}${L?`<tr><td colspan="11" align="right"><b>Tổng cộng</b></td><td align="right"><b>${fnum(T[0])}</b></td><td align="right"><b>${fnum(T[1])}</b></td><td align="right"><b>${fnum(T[2])}</b></td></tr>`:''}</tbody></table>`;
+ exportPDF('bang-cham-cong-hoc-sinh-'+m+'.pdf',html)};
+/* --- tab quy định --- */
+function ddRule(){if(!canMoney())return'';const c=DB.cfg,R=c.rule,bd=btDays(S.dd.m)||1,dCN=c.pbtCN/bd,dAll=(c.pbtCN+c.pbtKhac)/bd;
+ const rows=[['Nghỉ có phép (P)','Mất '+R.pLoss+'% phí buổi ('+fmt(c.p11*R.pLoss/100)+'), hoàn '+(100-R.pLoss)+'% ('+fmt(c.p11*(100-R.pLoss)/100)+') trừ vào học phí tháng sau','Hoàn phí can thiệp cá nhân của ngày ('+fmt(dCN)+'), không hoàn chi phí khác'],
+  ['Nghỉ không phép (KP)','Mất 100% phí buổi ('+fmt(c.p11)+')','Không hoàn ('+fmt(dAll)+' mỗi ngày)'],
+  ['Trung tâm hoặc giáo viên nghỉ (TT/GV)','Học bù nếu hai bên thỏa thuận; gia đình không nhận học bù thì hoàn '+R.ttRefund+'% phí buổi','Trung tâm xếp học bù, không tính phí nghỉ'],
+  ['Nhập viện có giấy (bán trú)','Không áp dụng','Hoàn '+R.bvRefund+'% phí của ngày nhập viện ('+fmt(dAll*R.bvRefund/100)+' mỗi ngày)'],
+  ['Học bù có hai bên đồng ý','Không tính phí nghỉ cho buổi được bù','Theo lịch Trung tâm điều chỉnh'],
+  ['Bé ngưng can thiệp','Không hoàn khoản nào','Không hoàn khoản nào']];
+ return`<div class="card"><h2>Cách hệ thống tính từ bảng chấm công</h2>`+tbl(['Tình huống','Can thiệp 1-1','Bán trú'],rows.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join(''))
+ +`<p class="sm mu" style="margin-top:10px">Đơn giá đang áp dụng: 1-1 ${fmt(c.p11)}/buổi; bán trú ${fmt(c.pbtCN)} phí can thiệp cá nhân và ${fmt(c.pbtKhac)} chi phí khác mỗi tháng, chia cho ${bd} ngày học (thứ Hai đến thứ Sáu) của ${mLabel(S.dd.m)}. ${canCfg()?'<button class="btn s" data-a="nsgo">Đổi thông số</button>':'Trưởng Trung tâm có thể đổi thông số trong mục Nhân sự.'}</p></div>`
+ +`<div class="card"><h2>Hệ thống đang giả định những điểm sau</h2><ol style="margin:0;padding-left:20px"><li>Học phí 1-1 của tháng bằng số buổi trong lịch cố định của tháng nhân với đơn giá buổi; bán trú tính nguyên tháng.</li><li>Quy định ghi “hoàn 50% phí trong tổng số ngày nhập viện”: hệ thống lấy 50% trên tổng phí bán trú của ngày đó (phí can thiệp cá nhân cộng chi phí khác). Nếu Trung tâm chỉ hoàn trên phí can thiệp cá nhân, đổi lại ở thông số hoặc báo để chỉnh công thức.</li><li>Phí bán trú mỗi ngày bằng phí tháng chia số ngày thứ Hai đến thứ Sáu trong tháng.</li><li>Nghỉ P hay KP do giáo viên ghi dựa vào thời điểm phụ huynh báo; hệ thống không tự biết giờ báo.</li><li>Mọi khoản hoàn được trừ vào học phí tháng sau và ghi vào công nợ ngày đầu tháng đó.</li></ol></div>`
+ +`<div class="two"><div class="card">${policyH('m11')}</div><div class="card">${policyH('bt')}</div></div>`}

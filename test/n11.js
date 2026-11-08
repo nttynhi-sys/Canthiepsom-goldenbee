@@ -1,0 +1,24 @@
+const {open,login}=require('./h.js');
+(async()=>{
+ const {b,page,errs}=await open({w:390,h:844,dpr:2});
+ const log=(...a)=>console.log(...a);
+ const ovf=async(tag)=>{const o=await page.evaluate(()=>{const bad=[];document.querySelectorAll('#app *, .mdl *').forEach(e=>{const r=e.getBoundingClientRect();if(r.width>0&&r.right>innerWidth+1&&!e.closest('.tw,.side,.tabs,.sheet')&&getComputedStyle(e).position!=='fixed')bad.push(e.tagName+'.'+(e.className||'')+' r='+Math.round(r.right))});const m=document.querySelector('.mdl');return{sw:document.documentElement.scrollWidth,iw:innerWidth,msw:m?m.scrollWidth:0,mcw:m?m.clientWidth:0,bad:bad.slice(0,6)}});log(tag,JSON.stringify(o))};
+ await login(page,'gv');
+ await page.click('.hamb');await page.click('.nav button[data-v="hs"]');await page.waitForTimeout(80);
+ await page.click('.tab:has-text("Ngân hàng mục tiêu")');await page.waitForTimeout(60);await ovf('lib');
+ await page.screenshot({path:'s1-lib.png'});
+ await page.click('.tab:has-text("Buổi can thiệp")');await page.waitForTimeout(60);await ovf('hub');
+ await page.screenshot({path:'s2-hub.png',fullPage:true});
+ await page.click('.tab:has-text("Học sinh của tôi")');await page.click('tr.k >> nth=0');await page.waitForSelector('.mdc');
+ await page.click('.mdc .tab:has-text("Kế hoạch mục tiêu")');await page.waitForTimeout(60);await ovf('plan');
+ await page.screenshot({path:'s3-plan.png'});
+ await page.click('.mdc [data-a="senew"]');await page.waitForSelector('.si');await page.waitForTimeout(60);await ovf('form');
+ await page.screenshot({path:'s4-form.png'});
+ const it0=page.locator('.si').nth(0);for(let i=0;i<6;i++)await it0.locator('.tb').nth(i).click();
+ await page.$eval('.mdl',e=>{e.scrollTop=300});await page.waitForTimeout(50);await page.screenshot({path:'s5-form2.png'});
+ await page.click('[data-a="sepick"]');await page.waitForSelector('.gp-f');await page.waitForTimeout(60);await ovf('picker');
+ await page.screenshot({path:'s6-picker.png'});
+ await page.$eval('.mdl',e=>{e.scrollTop=400});await page.waitForTimeout(50);await page.screenshot({path:'s7-picker2.png'});
+ log('ERRS',errs.length);errs.slice(0,8).forEach(e=>console.log(e));
+ await b.close();
+})();

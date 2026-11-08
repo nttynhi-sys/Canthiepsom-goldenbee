@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sổ can thiệp – Trung tâm ngôn ngữ trị liệu</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#f6f5fb;--card:#fff;--tx:#1f2140;--mu:#6b6f8d;--bd:#e4e3f0;--side:#2b2d6e;--ac:#4b5bd6;--acs:#e8eafc;--sun:#f2a33a;--sus:#fff0d9;--ok:#18865a;--er:#c23a47;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#12132a;--card:#1b1d3a;--tx:#e8e9f7;--mu:#9a9dc0;--bd:#2c2f55;--side:#0d0e22;--ac:#8c9bff;--acs:#262a5c;--sun:#f5b95c;--sus:#3a2c12;--ok:#4cc28d;--er:#ee7480}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#12132a;--card:#1b1d3a;--tx:#e8e9f7;--mu:#9a9dc0;--bd:#2c2f55;--side:#0d0e22;--ac:#8c9bff;--acs:#262a5c;--sun:#f5b95c;--sus:#3a2c12;--ok:#4cc28d;--er:#ee7480}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 "Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:16px;margin:0 0 12px}
+.mu{color:var(--mu)}.sm{font-size:13px}
+.shell{display:grid;grid-template-columns:230px 1fr}
+.side{background:var(--side);color:#e8e9f7;padding:20px 12px;position:sticky;top:0;align-self:start;height:100vh}
+.brand{font-weight:700;font-size:17px;padding:4px 12px 20px;line-height:1.3}.brand i{font-style:normal;color:var(--sun)}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav button{all:unset;cursor:pointer;padding:10px 12px;border-radius:10px;color:#b9bce0;display:flex;gap:10px;align-items:center}
+.nav button:hover{background:rgba(255,255,255,.08)}.nav button.on{background:var(--sun);color:#2b2108;font-weight:600}
+.nav button:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+main{padding:24px 28px 40px;min-width:0}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:18px;margin-bottom:16px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.btn{border:1px solid var(--bd);background:var(--card);padding:8px 14px;border-radius:9px;cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--ac)}.btn.p{background:var(--ac);border-color:var(--ac);color:#fff}.btn.s{padding:4px 10px;font-size:13px}.btn.no{color:var(--er)}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:520px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--bd);vertical-align:top}th{font-weight:600;color:var(--mu);font-size:13px;white-space:nowrap}
+tr.k{cursor:pointer}tr.k:hover td{background:var(--acs)}
+label{display:block;font-size:13px;color:var(--mu);margin:0 0 4px}
+input,select,textarea{width:100%;padding:9px 11px;border:1px solid var(--bd);border-radius:9px;background:var(--bg)}
+.f{display:grid;gap:12px}.f2{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12.5px;font-weight:600;background:var(--acs);color:var(--ac)}
+.tag.d{background:var(--sus);color:var(--sun)}
+.err{color:var(--er);font-size:13px;min-height:18px}
+.bars{display:flex;align-items:flex-end;gap:4px;height:44px}.bars i{display:block;width:14px;border-radius:3px 3px 0 0;background:var(--ac)}
+.bars i.e{background:var(--bd)}
+.lv{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bd)}
+.empty{padding:16px 0;color:var(--mu)}
+@media (max-width:800px){
+.shell{grid-template-columns:1fr}
+.side{position:fixed;top:auto;left:0;right:0;bottom:0;height:auto;z-index:5;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+.brand{display:none}.nav{flex-direction:row}.nav button{flex:1;flex-direction:column;gap:0;font-size:11px;padding:6px 2px;text-align:center}
+main{padding:16px 14px 96px}.lv{grid-template-columns:1fr}}
+@media print{.side,.noprint{display:none}.shell{display:block}main{padding:0}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const now=new Date(),iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const TODAY=iso(now),ago=n=>iso(new Date(now.getFullYear(),now.getMonth(),now.getDate()-n));
+const DOM=['Tiền ngôn ngữ','Tiếp nhận ngôn ngữ','Diễn đạt','Giao tiếp xã hội','Phát âm'];
+const LV={1:'Cần hỗ trợ hoàn toàn',2:'Gợi ý bằng cử chỉ',3:'Gợi ý bằng lời',4:'Tự làm được'};
+const mo=dob=>{const d=new Date(dob+'T00:00:00');return (now.getFullYear()-d.getFullYear())*12+now.getMonth()-d.getMonth()-(now.getDate()<d.getDate()?1:0)};
+const age=dob=>{const m=mo(dob);return m>=12?Math.floor(m/12)+' tuổi'+(m%12?' '+m%12+' tháng':''):m+' tháng'};
+const vd=s=>s.split('-').reverse().join('/');
+// Dữ liệu mẫu do tôi tự soạn, hãy thay bằng thư viện mục tiêu riêng của trung tâm
+let K=[{id:1,n:'Nguyễn Gia An',dob:ago(1340)},{id:2,n:'Lê Minh Bình',dob:ago(1900)},{id:3,n:'Trần Bảo Chi',dob:ago(900)}];
+let G=[[1,'Đáp lại khi được gọi tên',1,9,24],[2,'Làm theo chỉ dẫn một bước',1,12,30],[3,'Chỉ vào tranh khi nghe tên đồ vật',1,18,36],[4,'Bắt chước âm thanh và cử chỉ',0,6,24],
+[5,'Dùng cử chỉ hoặc lời để yêu cầu',2,12,30],[6,'Gọi tên đồ vật quen thuộc',2,18,36],[7,'Ghép hai từ thành câu ngắn',2,24,42],[8,'Trả lời câu hỏi “cái gì?”',2,30,48],
+[9,'Luân phiên lượt trong trò chơi',3,18,42],[10,'Kể lại một sự việc đơn giản',2,42,72],[11,'Phát âm đúng âm đầu /b/, /m/',4,24,48],[12,'Duy trì chú ý khi chơi cùng người lớn',0,12,36]].map(a=>({id:a[0],t:a[1],d:a[2],a:a[3],b:a[4]}));
+let P=[{k:1,g:1,s:'dang'},{k:1,g:2,s:'dang'},{k:1,g:5,s:'dang'},{k:2,g:7,s:'dang'},{k:2,g:8,s:'dang'},{k:2,g:11,s:'dang'},{k:3,g:4,s:'dang'},{k:3,g:12,s:'dang'}];
+let SS=[];[[1,[1,2,5]],[2,[7,8,11]]].forEach(([k,gs])=>[12,9,6,3].forEach((d,i)=>SS.push({id:k*10+i,k,date:ago(d),note:i==3?'Bé hợp tác tốt, tăng thời gian chơi chung.':'',r:Object.fromEntries(gs.map((g,j)=>[g,Math.min(4,1+Math.floor((i+j)/2)+(j==0&&i>1?1:0))]))})));
+let TH=[{id:1,n:'Phạm Thu Trang',sp:'Ngôn ngữ trị liệu'},{id:2,n:'Đỗ Quang Huy',sp:'Giáo dục đặc biệt'},{id:3,n:'Vũ Lan Phương',sp:'Hoạt động trị liệu'}];
+let C=[{id:1,t:'cn',n:'Trị liệu 1-1 sáng thứ Hai',th:1,tm:'T2, T4 · 8:30',k:[1]},{id:2,t:'cn',n:'Trị liệu 1-1 sáng thứ Ba',th:1,tm:'T3, T5 · 9:00',k:[2]},{id:3,t:'nh',n:'Nhóm giao tiếp xã hội',th:2,tm:'T6 · 15:00',k:[1,2,3]},{id:4,t:'bt',n:'Bán trú buổi sáng',th:3,tm:'T2–T6 · 7:30–11:30',k:[2,3]}];
+let A={};
+let S={v:'kids',k:1,q:'',d:'',fl:'',ct:'cn',role:'tl',pk:1};
+try{const x=JSON.parse(localStorage.getItem('tt_data'));if(x&&x.K){K=x.K;G=x.G;P=x.P;SS=x.SS;if(x.C){TH=x.TH;C=x.C;A=x.A}}}catch(e){}
+const save=()=>{try{localStorage.setItem('tt_data',JSON.stringify({K,G,P,SS,TH,C,A}))}catch(e){}};
+const kid=id=>K.find(k=>k.id===id),goal=id=>G.find(g=>g.id===id);
+const ksel=()=>S.role==='pv'?'':`<div class="noprint" style="max-width:280px"><label>Trẻ</label><select data-sel="k">${K.map(k=>`<option value="${k.id}" ${k.id===S.k?'selected':''}>${esc(k.n)} (${age(k.dob)})</option>`).join('')}</select></div>`;
+const head=(t,s,extra)=>`<div class="top"><div><h1>${t}</h1><p class="mu" style="margin:0">${s}</p></div>${extra||''}</div>`;
+
+function vKids(){
+ const rows=K.map(k=>`<tr class="k" data-a="open" data-v="${k.id}"><td><b>${esc(k.n)}</b></td><td>${age(k.dob)}</td><td>${P.filter(p=>p.k===k.id&&p.s==='dang').length}</td><td>${SS.filter(s=>s.k===k.id).length}</td><td><button class="btn s no" data-a="delk" data-v="${k.id}">Xóa</button></td></tr>`).join('');
+ return head('Hồ sơ trẻ','Bấm vào một trẻ để mở kế hoạch can thiệp.')+`<div class="card"><div class="tw"><table><thead><tr><th>Họ tên</th><th>Tuổi</th><th>Mục tiêu đang làm</th><th>Số buổi</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="5" class="empty">Chưa có hồ sơ. Thêm trẻ đầu tiên ở bên dưới.</td></tr>'}</tbody></table></div></div>
+ <div class="card"><h2>Thêm trẻ</h2><form class="f" id="fk"><div class="f2"><div><label>Họ tên</label><input id="kn" required></div><div><label>Ngày sinh</label><input type="date" id="kd" required max="${TODAY}"></div></div><div><button class="btn p">Lưu hồ sơ</button></div></form></div>`}
+
+function vLib(){
+ const q=S.q.toLowerCase(),l=G.filter(g=>g.t.toLowerCase().includes(q)&&(S.d===''||g.d==S.d)&&(!S.fl||(mo(kid(S.k).dob)>=g.a&&mo(kid(S.k).dob)<=g.b)));
+ const rows=l.map(g=>`<tr><td>${esc(g.t)}</td><td><span class="tag">${DOM[g.d]}</span></td><td>${g.a} – ${g.b} tháng</td><td>${P.filter(p=>p.g===g.id).length} trẻ</td></tr>`).join('');
+ return head('Thư viện mục tiêu','Mục tiêu do trung tâm tự soạn, dùng chung cho mọi trẻ.')+`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label>Tìm theo tên mục tiêu</label><input data-q value="${esc(S.q)}" placeholder="Ví dụ: gọi tên"></div>
+ <div><label>Lĩnh vực</label><select data-sel="d"><option value="">Tất cả</option>${DOM.map((d,i)=>`<option value="${i}" ${S.d==i&&S.d!==''?'selected':''}>${d}</option>`).join('')}</select></div>
+ <div><label>Lọc theo tuổi</label><select data-sel="fl"><option value="">Mọi độ tuổi</option>${K.length?`<option value="1" ${S.fl?'selected':''}>Phù hợp tuổi của ${esc(kid(S.k).n)}</option>`:''}</select></div></div>
+ <div class="tw"><table><thead><tr><th>Mục tiêu</th><th>Lĩnh vực</th><th>Độ tuổi</th><th>Đang dùng</th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="empty">Không có mục tiêu khớp bộ lọc.</td></tr>'}</tbody></table></div></div>
+ <div class="card"><h2>Thêm mục tiêu mới</h2><form class="f" id="fg"><div><label>Tên mục tiêu</label><input id="gt" required></div><div class="f2"><div><label>Lĩnh vực</label><select id="gd">${DOM.map((d,i)=>`<option value="${i}">${d}</option>`).join('')}</select></div><div><label>Từ (tháng tuổi)</label><input type="number" id="ga" min="0" max="216" value="12" required></div><div><label>Đến (tháng tuổi)</label><input type="number" id="gb" min="0" max="216" value="36" required></div></div><div class="err" id="ge"></div><div><button class="btn p">Thêm vào thư viện</button></div></form></div>`}
+
+function vPlan(){
+ if(!K.length)return head('Kế hoạch can thiệp','')+'<div class="card empty">Hãy thêm hồ sơ trẻ trước.</div>';
+ const k=kid(S.k),mine=P.filter(p=>p.k===k.id),free=G.filter(g=>!mine.some(p=>p.g===g.id));
+ const rows=mine.map(p=>{const g=goal(p.g);return`<tr><td>${esc(g.t)}</td><td><span class="tag">${DOM[g.d]}</span></td><td><span class="tag ${p.s==='dat'?'d':''}">${p.s==='dat'?'Đã đạt':'Đang làm'}</span></td><td style="white-space:nowrap"><button class="btn s" data-a="tg" data-v="${p.g}">${p.s==='dat'?'Mở lại':'Đánh dấu đạt'}</button> <button class="btn s no" data-a="rm" data-v="${p.g}">Gỡ</button></td></tr>`}).join('');
+ return head('Kế hoạch can thiệp',esc(k.n)+' · '+age(k.dob),ksel())+`<div class="card"><div class="tw"><table><thead><tr><th>Mục tiêu</th><th>Lĩnh vực</th><th>Trạng thái</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="empty">Chưa gán mục tiêu nào. Chọn từ thư viện ở bên dưới.</td></tr>'}</tbody></table></div></div>
+ <div class="card"><h2>Gán mục tiêu từ thư viện</h2><form class="f2" id="fp" style="align-items:end"><div><label>Mục tiêu</label><select id="pg">${free.map(g=>`<option value="${g.id}">${esc(g.t)} (${g.a}–${g.b} tháng)</option>`).join('')}</select></div><div><button class="btn p" ${free.length?'':'disabled'}>Thêm vào kế hoạch</button></div></form></div>`}
+
+function vSes(){
+ if(!K.length)return head('Buổi trị liệu','')+'<div class="card empty">Hãy thêm hồ sơ trẻ trước.</div>';
+ const k=kid(S.k),act=P.filter(p=>p.k===k.id&&p.s==='dang'),hist=SS.filter(s=>s.k===k.id).sort((a,b)=>a.date<b.date?1:-1);
+ const form=act.length?`<form class="f" id="fs"><div style="max-width:200px"><label>Ngày</label><input type="date" id="sd" value="${TODAY}" required></div>
+ ${act.map(p=>`<div class="lv"><span>${esc(goal(p.g).t)}</span><select data-lv="${p.g}"><option value="">Không làm hôm nay</option>${Object.entries(LV).map(([n,t])=>`<option value="${n}">${n}. ${t}</option>`).join('')}</select></div>`).join('')}
+ <div><label>Ghi chú buổi trị liệu</label><textarea id="sn" rows="2"></textarea></div><div class="err" id="se"></div><div><button class="btn p">Lưu buổi trị liệu</button></div></form>`:'<div class="empty">Trẻ chưa có mục tiêu đang làm. Hãy gán mục tiêu ở trang Kế hoạch.</div>';
+ const hl=hist.slice(0,6).map(s=>`<div class="lv" style="grid-template-columns:110px 1fr"><b>${vd(s.date)}</b><span>${Object.entries(s.r).map(([g,l])=>esc(goal(+g)?.t||'')+': <b>'+l+'/4</b>').join(' · ')}${s.note?`<br><span class="mu sm">${esc(s.note)}</span>`:''}</span></div>`).join('')||'<div class="empty">Chưa có buổi nào.</div>';
+ return head('Buổi trị liệu',esc(k.n),ksel())+`<div class="card"><h2>Ghi nhận buổi mới</h2>${form}</div><div class="card"><h2>Các buổi gần đây</h2>${hl}</div>`+vVid(true)}
+
+function vProg(){
+ if(!K.length)return head('Tiến bộ','')+'<div class="card empty">Hãy thêm hồ sơ trẻ trước.</div>';
+ const k=kid(S.k),ss=SS.filter(s=>s.k===k.id).sort((a,b)=>a.date<b.date?-1:1);
+ const rows=P.filter(p=>p.k===k.id).map(p=>{const g=goal(p.g),vals=ss.filter(s=>s.r[p.g]).slice(-8).map(s=>s.r[p.g]),last=vals[vals.length-1];
+  return`<tr><td>${esc(g.t)}<br><span class="tag">${DOM[g.d]}</span></td><td><div class="bars">${vals.map(v=>`<i style="height:${v*25}%" title="${LV[v]}"></i>`).join('')||'<span class="mu sm">Chưa có số liệu</span>'}</div></td><td>${last?`<b>${last}/4</b><br><span class="mu sm">${LV[last]}</span>`:'–'}</td><td><span class="tag ${p.s==='dat'?'d':''}">${p.s==='dat'?'Đã đạt':'Đang làm'}</span></td></tr>`}).join('');
+ return head('Báo cáo tiến bộ',esc(k.n)+' · '+age(k.dob)+' · '+ss.length+' buổi · ngày '+vd(TODAY),ksel()+'<button class="btn p noprint" onclick="print()">In báo cáo cho phụ huynh</button>')+`<div class="card"><div class="tw"><table><thead><tr><th>Mục tiêu</th><th>Mức độc lập qua các buổi</th><th>Gần nhất</th><th>Trạng thái</th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="empty">Chưa có mục tiêu trong kế hoạch.</td></tr>'}</tbody></table></div></div>
+ <p class="sm mu">Mức độc lập: 1 là cần hỗ trợ hoàn toàn, 4 là trẻ tự làm được. Cột càng cao thì trẻ càng ít cần hỗ trợ.</p>`+vVid(false)}
+
+const CT={cn:'Lớp cá nhân',nh:'Lớp nhóm',bt:'Lớp bán trú'},MEAL=['Ăn hết','Ăn một nửa','Ăn ít'];
+const thn=id=>(TH.find(x=>x.id===id)||{n:'Chưa phân công'}).n;
+function vCls(){
+ const pv=S.role==='pv',t=S.ct,L=C.filter(c=>c.t===t&&(!pv||c.k.includes(S.k)));
+ const tabs=Object.entries(CT).map(([k,v])=>`<button class="btn s ${t===k?'p':''}" data-a="ct" data-v="${k}">${v}</button>`).join(' ');
+ const cards=L.map(c=>{const ks=c.k.filter(id=>kid(id)&&(!pv||id===S.k));
+  return`<div class="card"><div class="top" style="margin-bottom:6px"><div><h2 style="margin:0">${esc(c.n)}</h2><span class="mu sm">${esc(c.tm)} · ${esc(thn(c.th))}</span></div>${pv?'':`<button class="btn s no" data-a="delc" data-v="${c.id}">Xóa lớp</button>`}</div><div class="sm mu">Điểm danh hôm nay, ${vd(TODAY)}</div>${ks.map(id=>{const o=A[TODAY+'|'+c.id+'|'+id]||{},dis=pv?'disabled':'';
+   return`<div class="lv" style="grid-template-columns:1fr auto"><span>${esc(kid(id).n)}</span><span style="display:flex;gap:10px;align-items:center"><label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" style="width:auto" data-at="${c.id}:${id}" data-f="p" ${o.p?'checked':''} ${dis}>Có mặt</label>${t==='bt'?`<select data-at="${c.id}:${id}" data-f="m" style="width:auto" ${dis}><option value="">Bữa ăn</option>${MEAL.map(m=>`<option ${o.m===m?'selected':''}>${m}</option>`).join('')}</select>`:''}</span></div>`}).join('')||'<div class="empty">Chưa có trẻ trong lớp.</div>'}</div>`}).join('');
+ const form=pv?'':`<div class="card"><h2>Thêm ${CT[t].toLowerCase()}</h2><form class="f" id="fc"><div class="f2"><div><label>Tên lớp</label><input id="cn" required></div><div><label>Trị liệu viên</label><select id="cth">${TH.map(x=>`<option value="${x.id}">${esc(x.n)}</option>`).join('')}</select></div><div><label>Lịch học</label><input id="ctm" placeholder="T2, T4 · 8:30" required></div></div><div><label>Trẻ trong lớp</label><div style="display:flex;gap:14px;flex-wrap:wrap">${K.map(k=>`<label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--tx)"><input type="checkbox" style="width:auto" data-ck value="${k.id}">${esc(k.n)}</label>`).join('')}</div></div><div><button class="btn p">Tạo lớp</button></div></form></div>`;
+ return head('Lớp học',pv?'Lịch lớp của con bạn':'Điểm danh hằng ngày và quản lý lớp theo từng hình thức',`<div class="noprint">${tabs}</div>`)+(cards||`<div class="card empty">Chưa có ${CT[t].toLowerCase()} nào.</div>`)+form}
+function vTh(){
+ const rows=TH.map(x=>`<tr><td><b>${esc(x.n)}</b></td><td>${esc(x.sp)}</td><td>${C.filter(c=>c.th===x.id).length}</td><td><button class="btn s no" data-a="delth" data-v="${x.id}">Xóa</button></td></tr>`).join('');
+ return head('Nhân sự','Trị liệu viên của trung tâm.')+`<div class="card"><div class="tw"><table><thead><tr><th>Họ tên</th><th>Chuyên môn</th><th>Số lớp phụ trách</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="empty">Chưa có trị liệu viên.</td></tr>'}</tbody></table></div></div><div class="card"><h2>Thêm trị liệu viên</h2><form class="f" id="fth"><div class="f2"><div><label>Họ tên</label><input id="tn" required></div><div><label>Chuyên môn</label><input id="tsp" required></div></div><div><button class="btn p">Lưu</button></div></form></div>`}
+const roleBar=()=>`<div class="noprint card" style="padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="sm mu">Đang xem với vai trò</span><select data-sel="role" style="width:auto"><option value="tl" ${S.role==='tl'?'selected':''}>Trị liệu viên</option><option value="pv" ${S.role==='pv'?'selected':''}>Phụ huynh</option></select>${S.role==='pv'?`<select data-sel="pk" style="width:auto">${K.map(k=>`<option value="${k.id}" ${k.id===S.pk?'selected':''}>Phụ huynh của ${esc(k.n)}</option>`).join('')}</select>`:''}</div>`;
+const NAV=[['kids','👧','Hồ sơ trẻ'],['lib','📚','Mục tiêu'],['plan','🧩','Kế hoạch'],['ses','📝','Buổi học'],['cls','🏫','Lớp học'],['prog','📈','Tiến bộ'],['th','👩‍⚕️','Nhân sự']];
+const navs=()=>S.role==='pv'?NAV.filter(n=>['cls','prog'].includes(n[0])):NAV;
+function render(){
+ if(S.role==='pv'){S.k=S.pk||(K[0]&&K[0].id);if(!['prog','cls'].includes(S.v))S.v='prog'}
+ const v={kids:vKids,lib:vLib,plan:vPlan,ses:vSes,prog:vProg,cls:vCls,th:vTh}[S.v]();
+ const fo=document.activeElement&&document.activeElement.dataset.q!==undefined;
+ app.innerHTML=`<div class="shell"><aside class="side"><div class="brand">Sổ <i>can thiệp</i><br><span style="font-weight:400;font-size:13px;opacity:.7">Ngôn ngữ trị liệu</span></div><nav class="nav">${navs().map(n=>`<button class="${S.v===n[0]?'on':''}" data-a="nav" data-v="${n[0]}"><span>${n[1]}</span><span>${n[2]}</span></button>`).join('')}</nav></aside><main>${roleBar()}${v}</main></div>`;
+ if(fo){const i=$q('[data-q]');i.focus();i.setSelectionRange(i.value.length,i.value.length)}
+}
+const $q=s=>document.querySelector(s),app=$q('#app');
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=+b.dataset.v||b.dataset.v;
+ if(a==='nav')S.v=v;
+ else if(a==='open'){S.k=v;S.v='plan'}
+ else if(a==='delk'){e.stopPropagation();if(!confirm('Xóa hồ sơ này cùng toàn bộ kế hoạch và số liệu?'))return;K=K.filter(k=>k.id!==v);P=P.filter(p=>p.k!==v);SS=SS.filter(s=>s.k!==v);if(S.k===v&&K.length)S.k=K[0].id;save()}
+ else if(a==='tg'){const p=P.find(p=>p.k===S.k&&p.g===v);p.s=p.s==='dat'?'dang':'dat';save()}
+ else if(a==='rm'){P=P.filter(p=>!(p.k===S.k&&p.g===v));save()}
+ render()});
+document.addEventListener('change',e=>{const s=e.target.dataset.sel;if(s){S[s]=(s==='k'||s==='pk')?+e.target.value:e.target.value;render()}});
+document.addEventListener('input',e=>{if(e.target.dataset.q!==undefined){S.q=e.target.value;render()}});
+document.addEventListener('submit',e=>{e.preventDefault();const id=e.target.id;
+ if(id==='fk'){const k={id:Date.now(),n:$q('#kn').value.trim(),dob:$q('#kd').value};K.push(k);S.k=k.id;save()}
+ if(id==='fg'){const a=+$q('#ga').value,b=+$q('#gb').value;if(b<a)return $q('#ge').textContent='Tuổi kết thúc phải lớn hơn hoặc bằng tuổi bắt đầu.';G.push({id:Date.now(),t:$q('#gt').value.trim(),d:+$q('#gd').value,a,b});save()}
+ if(id==='fp'){const g=+$q('#pg').value;if(g){P.push({k:S.k,g,s:'dang'});save()}}
+ if(id==='fs'){const r={};document.querySelectorAll('[data-lv]').forEach(x=>{if(x.value)r[x.dataset.lv]=+x.value});
+  if(!Object.keys(r).length)return $q('#se').textContent='Hãy chọn mức độc lập cho ít nhất một mục tiêu.';
+  SS.push({id:Date.now(),k:S.k,date:$q('#sd').value,note:$q('#sn').value.trim(),r});save()}
+ render()});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=+b.dataset.v||b.dataset.v;
+ if(a==='ct')S.ct=v;else if(a==='delc'){C=C.filter(c=>c.id!==v);save()}else if(a==='delth'){if(!confirm('Xóa trị liệu viên này?'))return;TH=TH.filter(x=>x.id!==v);save()}else return;render()});
+document.addEventListener('change',e=>{const t=e.target,d=t.dataset;if(d.at){const[c,k]=d.at.split(':'),key=TODAY+'|'+c+'|'+k,o=A[key]||(A[key]={});if(d.f==='p')o.p=t.checked;else o.m=t.value;save()}});
+document.addEventListener('submit',e=>{const id=e.target.id;
+ if(id==='fc'){C.push({id:Date.now(),t:S.ct,n:$q('#cn').value.trim(),th:+$q('#cth').value,tm:$q('#ctm').value.trim(),k:[...document.querySelectorAll('[data-ck]:checked')].map(x=>+x.value)});save();render()}
+ if(id==='fth'){TH.push({id:Date.now(),n:$q('#tn').value.trim(),sp:$q('#tsp').value.trim()});save();render()}});
+// Video buổi can thiệp: tệp lưu bằng capability assets, thông tin lưu bằng db (dùng chung cho mọi người mở trang)
+let V=[],AS=null,DBX=null,UID=null,UPL=false;
+const CAP=20*1024*1024,okId=s=>/^[0-9a-f]{32}$/.test(s||'');
+const useCap=n=>window.claude&&claude.use?claude.use(n):Promise.resolve(null);
+function vVid(edit){
+ const k=kid(S.k);if(!k)return'';
+ const vs=V.filter(v=>v.kid===k.n),can=edit&&AS&&DBX;
+ const form=edit?(can?`<form class="f" id="fv" style="margin-bottom:14px"><div class="f2"><div><label>Ngày buổi can thiệp</label><input type="date" id="vd" value="${TODAY}" required></div><div><label>Tiêu đề</label><input id="vt" required placeholder="Ví dụ: Luyện gọi tên đồ vật"></div></div><div><label>Chọn video (MP4 hoặc WebM, tối đa 20 MB)</label><input type="file" id="vf" accept="video/mp4,video/webm" required></div><div><label>Ghi chú</label><input id="vn"></div><div class="err" id="vst"></div><div><button class="btn p">Tải video lên</button></div></form>`:'<div class="empty">Chưa thể tải video ở chế độ này. Hãy mở trang qua claude.ai bằng tài khoản được cấp quyền chỉnh sửa hoặc cộng tác.</div>'):'';
+ const list=vs.map(v=>`<div class="lv" style="grid-template-columns:1fr"><div><b>${esc(v.title||'')}</b> <span class="mu sm">${vd(v.date||TODAY)} · ${((+v.size||0)/1048576).toFixed(1)} MB</span>${v.note?`<div class="mu sm">${esc(v.note)}</div>`:''}</div>${okId(v.asset)?`<video controls preload="metadata" src="/_blob/${v.asset}" style="width:100%;max-width:420px;border-radius:10px;background:#000"></video>`:'<div class="mu sm">Không tìm thấy tệp video.</div>'}${can?`<div><button class="btn s no" data-a="delv" data-v="${esc(v.id)}">Xóa video</button></div>`:''}</div>`).join('')||'<div class="empty">Chưa có video nào cho trẻ này.</div>';
+ return`<div class="card noprint"><h2>Video lưu trữ buổi can thiệp</h2>${form}${list}</div>`}
+document.addEventListener('submit',async e=>{
+ if(e.target.id!=='fv')return;e.preventDefault();e.stopPropagation();
+ const f=$q('#vf').files[0],d=$q('#vd').value,t=$q('#vt').value.trim(),n=$q('#vn').value.trim(),st=$q('#vst'),k=kid(S.k);
+ if(!f||!k)return;
+ if(!/^video\/(mp4|webm)$/.test(f.type))return st.textContent='Chỉ nhận video MP4 hoặc WebM. Video quay bằng iPhone (.mov) cần chuyển sang MP4 trước.';
+ if(f.size>CAP)return st.textContent='Video lớn hơn 20 MB. Hãy cắt ngắn hoặc nén video rồi tải lại.';
+ st.style.color='var(--mu)';st.textContent='Đang tải lên, vui lòng giữ trang mở...';UPL=true;
+ try{const r=await AS.upload(f);await DBX.collection('videos').add({kid:k.n,date:d,title:t,note:n,asset:r.id,size:r.sizeBytes,by:UID,at:Date.now()});UPL=false;render()}
+ catch(er){UPL=false;st.style.color='var(--er)';st.textContent=er&&er.code==='too_large'?'Video vượt giới hạn 20 MB.':er&&er.code==='quota_or_state'?'Kho lưu trữ của trang đã đầy.':'Tải lên chưa thành công, hãy thử lại.'}
+},true);
+document.addEventListener('click',async e=>{
+ const b=e.target.closest('[data-a="delv"]');if(!b)return;
+ const v=V.find(x=>x.id===b.dataset.v);if(!v||!confirm('Xóa video này? Thao tác không thể hoàn tác.'))return;
+ try{if(okId(v.asset))await AS.delete(v.asset);await DBX.collection('videos').doc(v.id).delete()}
+ catch(er){alert(er&&er.code==='not_uploader'?'Chỉ người đã tải video lên hoặc người có quyền chỉnh sửa mới xóa được video này.':'Chưa xóa được video, hãy thử lại.')}
+});
+(async()=>{
+ try{AS=await useCap('assets')}catch(e){}
+ try{DBX=await useCap('db');const us=await useCap('user');UID=us&&us.id?await us.id():null}catch(e){}
+ if(DBX)DBX.collection('videos').orderBy('at','desc').limit(200).onSnapshot(s=>{V=s.docs.map(d=>Object.assign({id:d.id},d.data()));const a=document.activeElement;if(!UPL&&!(a&&a.closest&&a.closest('#fv')))render()},()=>{});
+ render()})();
+render();
+</script>
+</body>
+</html>
