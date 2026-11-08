@@ -39,6 +39,7 @@ function migrate4(d){
  d.v=4}
 const okDB=d=>d&&Array.isArray(d.staff)&&Array.isArray(d.kids)&&d.cfg&&d.cfg.rule&&d.set&&d.rd&&d.att&&Array.isArray(d.rp)&&Array.isArray(d.tpl);
 (function boot(){
+ if(CLOUDMODE){try{const th=localStorage.getItem('gb_th');if(th)document.documentElement.dataset.theme=th}catch(e){}cloudBoot();initCaps();return}
  let d=null;try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
  if(okDB(d)&&d.v===4&&Array.isArray(d.plans)&&Array.isArray(d.sess)&&Array.isArray(d.cg)&&d.menu&&Array.isArray(d.groups))DB=d;
  else if(okDB(d)&&(d.v===2||d.v===3)){try{if(d.v===2)migrate(d);migrate4(d);save()}catch(e){DB=null;seed();save()}}

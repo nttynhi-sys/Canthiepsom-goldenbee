@@ -3,7 +3,7 @@ const monOf=d=>{let x=d;while(dow(x)!==1)x=addD(x,-1);return x};
 const onLeave=(id,d)=>DB.lr.some(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t);
 VIEWS.lh=()=>isPH()?lhParent():lhStaff();
 const lhStaff=()=>{const h=S.lh=Object.assign({tab:'wk',mode:'gv',wk:monOf(WD),gv:'',room:ROOMS[0],kid:''},S.lh);
- if(isGV()){h.mode='gv';h.gv=U.id}else if(!h.gv)h.gv=pool11()[0].id;
+ if(isGV()){h.mode='gv';h.gv=U.id}else if(!h.gv)h.gv=(pool11()[0]||{}).id||'';
  if(!h.kid)h.kid=(myKids().find(k=>k.st==='dang'&&wk11(k.id))||{}).id||'';
  return head(isGV()?'Lịch dạy của tôi':'Lịch học','Lịch 1-1 cố định theo tuần ('+DAY_OPEN+'–'+DAY_CLOSE+', mỗi ca '+SLOT_MIN+' phút), lịch học bù và bán trú')+tabsH([['wk','Lịch 1-1 theo tuần'],['bt','Bán trú']],h.tab,'lhtab')+(h.tab==='wk'?lhWeek(h):lhBt())};
 ACT.lhtab=v=>{S.lh.tab=v};

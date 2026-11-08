@@ -1,5 +1,5 @@
 const {chromium}=require('playwright');
-const URL='file:///tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratchpad/build/page-test.html';
+const URL='file://'+require('path').resolve(__dirname,'../src/build/page-test.html');
 async function open(o){o=o||{};
  const b=await chromium.launch();
  const ctx=await b.newContext({viewport:{width:o.w||1366,height:o.h||900},deviceScaleFactor:o.dpr||1,colorScheme:o.dark?'dark':'light'});

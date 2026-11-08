@@ -26,7 +26,7 @@ MODALS.mkn=()=>{const m=S.modal,ks=myKids().filter(k=>k.st==='dang'&&wk11(k.id))
  <div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit" ${cs.length?'':'disabled'}>Gửi yêu cầu</button></div></form>`)};
 FORM.mknf=f=>{const v=f.elements.s.value;if(!v)return false;const [d,sid]=v.split('|');mkMake(S.modal.k,d,sid,f.elements.w.value.trim()||'Xin học bù');S.modal=null;toast('Đã gửi yêu cầu học bù')};
 ACT.mkopen=v=>{S.modal={t:'mkd',id:v}};
-function mkGV(r){const l=DB.lich.find(x=>x.id===r.from.sid);return(l&&l.gv)||(kidBy(r.hs)||{}).gv||pool11()[0].id}
+function mkGV(r){const l=DB.lich.find(x=>x.id===r.from.sid);return(l&&l.gv)||(kidBy(r.hs)||{}).gv||(pool11()[0]||{}).id||''}
 MODALS.mkd=()=>{const r=DB.mk.find(x=>x.id===S.modal.id);if(!r||!canKid(r.hs)){S.modal=null;return''}
  const open=r.s==='dk'||r.s==='tt',staff=!isPH();
  const props=r.props.map(p=>`<div class="rw"><span><b>${DAYN[dow(p.d)]} ${vd(p.d)}</b> · ${slotLb(p.slot)} · ${esc(p.room)} · ${esc(sn(p.gv))}</span>${r.s==='tt'&&(isPH()||isLead())?`<button class="btn s p" data-a="mkpick" data-v="${r.id}|${p.id}">${isPH()?'Chọn giờ này':'Xác nhận thay phụ huynh'}</button>`:r.pick===p.id?tg('Đã chọn','ok'):''}</div>`).join('');

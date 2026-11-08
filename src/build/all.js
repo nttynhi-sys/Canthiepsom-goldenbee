@@ -33,7 +33,9 @@ let DB=null,U=null;
 const S={v:'dash',menu:false,modal:null,pg:{}};
 const ACT={},FORM={},CHG={},INP={},VIEWS={},MODALS={};
 const KEY='gb_v2';
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}};
+/* Chế độ máy chủ (mặc định trên web). Thêm ?demo vào địa chỉ để xem bản trình diễn chạy trong trình duyệt, không lưu lên máy chủ. */
+const CLOUDMODE=!(/[?&]demo\b/.test(location.search)||(location.protocol==='file:'&&!/[?&]cloud\b/.test(location.search)));
+const save=()=>{if(CLOUDMODE){cloudSave();return}try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}};
 function go(v,p){S.v=v;S.modal=null;S.menu=false;S.top=1;if(p)Object.assign(S,p)}
 ACT.nav=v=>go(v);
 ACT.menu=()=>{S.menu=!S.menu};
@@ -75,7 +77,7 @@ async function initCaps(){
 const libs={};
 function loadLib(u){return libs[u]||(libs[u]=new Promise((ok,no)=>{const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=()=>{delete libs[u];no(new Error('lib'))};document.head.appendChild(s)}))}
 async function saveFile(name,data){
- if(!CAP.dl){toast('Chế độ xem này chưa cho phép tải tệp xuống');return false}
+ if(!CAP.dl){try{const bl=data instanceof Blob?data:new Blob([data]),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);toast('Đã tải '+name);return true}catch(e){toast('Chưa tải được tệp');return false}}
  try{await CAP.dl.save({filename:name,data});toast('Đã lưu '+name);return true}catch(e){toast('Chưa lưu được tệp');return false}}
 async function exportXLSX(name,sheets){
  toast('Đang tạo tệp Excel...');
@@ -109,6 +111,206 @@ document.addEventListener('change',e=>{const t=e.target,c=t.dataset&&t.dataset.c
 document.addEventListener('input',e=>{const t=e.target,i=t.dataset&&t.dataset.i;if(i&&INP[i]){INP[i](t.value,t);const id=t.id;render();const n=id&&$q('#'+id);if(n){n.focus();try{n.setSelectionRange(n.value.length,n.value.length)}catch(x){}}}});
 document.addEventListener('submit',e=>{e.preventDefault();const f=FORM[e.target.id];if(f&&f(e.target,e)!==false)render()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.modal){S.modal=null;render()}});
+/* ===== Kết nối Supabase: đăng nhập thật, lưu dữ liệu dùng chung, tách riêng dữ liệu tiền ===== */
+/* Khóa dưới đây là khóa "publishable", an toàn khi đặt trong trình duyệt. Quyền xem và sửa dữ liệu do máy chủ kiểm tra (RLS). */
+const SB={url:'https://bqvwibipmzyrkrwlfoqf.supabase.co',key:'sb_publishable_SHk0kLdrNieeOY9Ilfw27g_vHe7Jd8A'};
+const CLD={stage:'login',ss:null,role:null,pname:'',err:'',email:'',st:'ok',msg:'',snap:new Map(),ord:{},maxo:0,since:{records:'1970-01-01T00:00:00Z',money:'1970-01-01T00:00:00Z'},flushing:false,again:false,pulling:false,tm:0};
+const MONEY_ROLES=['tt','vp'],CLOUD_ROLES=['tt','vp','ql','gv'];
+/* Hình dạng từng nhóm dữ liệu: danh sách có mã (id hoặc k), bảng khóa, mục đơn */
+const CSH={arr:['staff','kids','cg','plans','sess','groups','lich','lr','mk','lg','rp','nt'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon'],one:['cfg']};
+/* Nhóm dữ liệu tiền: chỉ Trưởng Trung tâm và Văn phòng đọc và ghi được (giáo viên chỉ đọc lương của mình) */
+const MONEYC=['lg','set','bon'],CFG_MONEY=['p11','pbtCN','pbtKhac','giamTru','thue'];
+const PAY_STUB=()=>({mode:'thang',base:0,rate:0,rateBt:0,allow:0,bh:0,latePen:0});
+const canM=()=>MONEY_ROLES.includes(CLD.role);
+const KEYF=c=>CSH.arrk[c]||'id';
+const tblOf=(c)=>(MONEYC.includes(c)||c==='pay'||c==='cfgm')?'money':'records';
+const tblName=t=>t==='money'?'money_records':'records';
+
+/* ---- phiên đăng nhập ---- */
+function sbLoad(){try{return JSON.parse(localStorage.getItem('gb_sb')||'null')}catch(e){return null}}
+function sbStore(s){try{if(s)localStorage.setItem('gb_sb',JSON.stringify(s));else localStorage.removeItem('gb_sb')}catch(e){}}
+async function sbReq(path,o){o=o||{};
+ const go=()=>{const h=Object.assign({apikey:SB.key,'Content-Type':'application/json'},o.headers||{});
+  if(CLD.ss&&o.auth!==false)h.Authorization='Bearer '+CLD.ss.at;
+  return fetch(SB.url+path,{method:o.method||'GET',headers:h,body:o.body===undefined?undefined:JSON.stringify(o.body)})};
+ let r=await go();
+ if(r.status===401&&CLD.ss&&o.auth!==false&&await sbRefresh())r=await go();
+ return r}
+function sbSess(j){return{at:j.access_token,rt:j.refresh_token,uid:j.user.id,email:String(j.user.email||'').toLowerCase()}}
+async function sbRefresh(){if(!CLD.ss||!CLD.ss.rt)return false;
+ try{const r=await sbReq('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:CLD.ss.rt},auth:false});
+  if(!r.ok)return false;CLD.ss=sbSess(await r.json());sbStore(CLD.ss);return true}catch(e){return false}}
+async function errText(r){let t='';try{const j=await r.json();t=j.message||j.error_description||j.hint||''}catch(e){}return (r.status===401||r.status===403?'Không có quyền ghi dữ liệu. ':'')+(t||('Lỗi máy chủ '+r.status))}
+async function sbAll(table,extra){const out=[];
+ for(let off=0;;off+=1000){
+  const r=await sbReq('/rest/v1/'+table+'?select=collection,id,data,updated_at&order=collection,id&limit=1000&offset='+off+(extra||''));
+  if(!r.ok)throw new Error(await errText(r));
+  const a=await r.json();out.push(...a);if(a.length<1000)break}
+ return out}
+
+/* ---- chuyển DB trong bộ nhớ thành các dòng để lưu ---- */
+function ordOf(c,id){const k=c+'|'+id;if(CLD.ord[k]==null)CLD.ord[k]=++CLD.maxo;return CLD.ord[k]}
+function cflat(db,withMoney){const M=new Map();
+ const add=(t,c,id,v)=>M.set(t+'|'+c+'|'+id,{t,c,id,s:JSON.stringify(v)});
+ CSH.arr.concat(Object.keys(CSH.arrk)).forEach(c=>{
+  const money=MONEYC.includes(c);if(money&&!withMoney)return;
+  (db[c]||[]).forEach(x=>{const id=String(x[KEYF(c)]);let d=x;
+   if(c==='staff'){d=Object.assign({},x);const pay=d.pay;delete d.pay;if(withMoney&&pay)add('money','pay',id,pay)}
+   add(money?'money':'records',c,id,Object.assign({_o:ordOf(c,id)},d))})});
+ CSH.map.forEach(c=>{const money=MONEYC.includes(c);if(money&&!withMoney)return;const o=db[c]||{};Object.keys(o).forEach(k=>add(money?'money':'records',c,k,o[k]))});
+ const cfg=Object.assign({},db.cfg),cm={};CFG_MONEY.forEach(k=>{cm[k]=cfg[k];delete cfg[k]});
+ add('records','cfg','_',cfg);if(withMoney)add('money','cfgm','_',cm);
+ return M}
+
+/* ---- dựng DB từ các dòng đã tải ---- */
+function cEmpty(){return{v:4,cfg:{},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
+function cApply(D,t,r,pay,cfgm){const c=r.collection;
+ if(t==='money'&&c==='pay'){pay[r.id]=r.data;return}
+ if(t==='money'&&c==='cfgm'){Object.assign(cfgm,r.data);return}
+ if(c==='cfg'){Object.assign(D.cfg,r.data);return}
+ if(CSH.map.includes(c)){D[c][r.id]=r.data;return}
+ if(CSH.arr.includes(c)||CSH.arrk[c]){const x=Object.assign({},r.data);
+  if(x._o!=null){CLD.ord[c+'|'+r.id]=x._o;CLD.maxo=Math.max(CLD.maxo,x._o);delete x._o}
+  const kf=KEYF(c),i=D[c].findIndex(y=>String(y[kf])===String(r.id));if(i>=0)D[c][i]=x;else D[c].push(x)}}
+function cFinish(D,pay,cfgm){
+ CSH.arr.concat(Object.keys(CSH.arrk)).forEach(c=>{const kf=KEYF(c);D[c].sort((a,b)=>{const x=CLD.ord[c+'|'+a[kf]],y=CLD.ord[c+'|'+b[kf]];return (x==null?1e12:x)-(y==null?1e12:y)||(String(a[kf])<String(b[kf])?-1:1)})});
+ D.staff.forEach(s=>{s.pay=pay[s.id]||PAY_STUB()});
+ CFG_MONEY.forEach(k=>{D.cfg[k]=cfgm[k]!=null?cfgm[k]:0});
+ if(!D.tpl.length)D.tpl=TPL0.map(x=>({...x}));
+ return D}
+function cbuild(rr,mr){const D=cEmpty(),pay={},cfgm={};CLD.ord={};CLD.maxo=0;
+ rr.forEach(r=>cApply(D,'records',r,pay,cfgm));mr.forEach(r=>cApply(D,'money',r,pay,cfgm));
+ return cFinish(D,pay,cfgm)}
+const maxAt=(a,cur)=>a.reduce((m,r)=>r.updated_at&&r.updated_at>m?r.updated_at:m,cur);
+
+/* ---- trạng thái hiển thị ---- */
+function setSt(s,msg){CLD.st=s;CLD.msg=msg||'';const el=$q('#cl-st');if(el){el.textContent=stText();el.title=CLD.msg;el.className='sm '+(s==='err'?'er':'mu')}}
+const stText=()=>CLD.st==='saving'?'Đang lưu...':CLD.st==='err'?'Chưa lưu được':'Đã lưu';
+
+/* ---- đăng nhập và tải dữ liệu ---- */
+function viLoginErr(m){m=String(m||'');if(/invalid login|invalid_grant|credentials/i.test(m))return 'Email hoặc mật khẩu chưa đúng.';if(/email not confirmed/i.test(m))return 'Tài khoản chưa được xác nhận. Hãy nhờ Trưởng Trung tâm kiểm tra.';if(/failed to fetch|network/i.test(m))return 'Không kết nối được máy chủ. Hãy kiểm tra mạng.';return m||'Đăng nhập không thành công.'}
+async function cloudLogin(email,pw){
+ CLD.err='';CLD.email=email;CLD.stage='loading';render();
+ try{const r=await sbReq('/auth/v1/token?grant_type=password',{method:'POST',body:{email,password:pw},auth:false});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error_description||j.msg||j.message||('Lỗi '+r.status));
+  CLD.ss=sbSess(j);sbStore(CLD.ss)}
+ catch(e){CLD.stage='login';CLD.err=viLoginErr(e.message);render();return}
+ await cloudLoad()}
+function cMsg(m){CLD.stage='msg';CLD.msg=m;render()}
+async function cloudLoad(){
+ CLD.stage='loading';render();
+ try{
+  const pr=await sbReq('/rest/v1/profiles?select=role,full_name&user_id=eq.'+encodeURIComponent(CLD.ss.uid));
+  if(pr.status===401){cloudDrop('Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.');return}
+  if(!pr.ok)throw new Error(await errText(pr));
+  const p=(await pr.json())[0];
+  if(!p){cMsg('Tài khoản này chưa được cấp vai trò. Hãy nhờ Trưởng Trung tâm thêm vai trò cho email '+CLD.ss.email+'.');return}
+  CLD.role=p.role;CLD.pname=p.full_name||'';
+  if(!CLOUD_ROLES.includes(p.role)){cMsg('Cổng phụ huynh chưa mở ở giai đoạn này. Hiện chỉ nhân viên trung tâm đăng nhập được.');return}
+  const rr=await sbAll('records'),mr=p.role==='ql'?[]:await sbAll('money_records');
+  if(!rr.some(r=>r.collection==='cfg')){
+   if(p.role==='tt'){CLD.stage='setup';render();return}
+   cMsg('Trung tâm chưa có dữ liệu. Hãy nhờ Trưởng Trung tâm đăng nhập và khởi tạo trước.');return}
+  DB=cbuild(rr,mr);CLD.since={records:maxAt(rr,'1970-01-01T00:00:00Z'),money:maxAt(mr,'1970-01-01T00:00:00Z')};
+  CLD.snap=new Map();cflat(DB,canM()).forEach((v,k)=>CLD.snap.set(k,v.s));
+  cloudEnter()}
+ catch(e){CLD.stage='login';CLD.err=viLoginErr(e.message);render()}}
+function cloudEnter(){
+ const a=findAccount(CLD.ss.email);
+ if(!a){cMsg('Email '+CLD.ss.email+' chưa có trong danh sách nhân sự đang làm việc. Trưởng Trung tâm cần thêm hồ sơ nhân sự với đúng email này.');return}
+ if(a.role!==CLD.role){cMsg('Vai trò của tài khoản ('+ROLE[CLD.role]+') không khớp với hồ sơ nhân sự ('+ROLE[a.role]+'). Hãy nhờ Trưởng Trung tâm kiểm tra.');return}
+ U=a;CLD.stage='app';S.v=ACCESS[a.role][0];S.modal=null;S.menu=false;S.top=1;setSt('ok');render();cloudTimers()}
+function cloudDrop(msg){CLD.ss=null;sbStore(null);U=null;DB=null;CLD.stage='login';CLD.err=msg||'';CLD.snap=new Map();render()}
+async function cloudLogout(){
+ try{await cloudFlush()}catch(e){}
+ try{if(CLD.ss)sbReq('/auth/v1/logout',{method:'POST'})}catch(e){}
+ CLD.role=null;cloudDrop('')}
+
+/* ---- khởi tạo dữ liệu lần đầu (Trưởng Trung tâm) ---- */
+async function cloudSetup(kind){
+ CLD.stage='loading';render();
+ const email=CLD.ss.email,name=CLD.pname||email.split('@')[0];
+ seed();
+ if(kind==='demo'){const s=DB.staff.find(x=>x.role==='tt')||DB.staff[1];s.em=email;s.n=name}
+ else{
+  const me={id:'nv01',n:name,role:'tt',pos:'Trưởng Trung tâm',ph:'',em:email,st:'dang',sd:TODAY,sup:'',pay:PAY_STUB()};
+  DB.staff=[me];['kids','cg','plans','sess','lich','lr','mk','lg','rp','nt'].forEach(k=>{DB[k]=[]});['att','ts','set','rd','menu','bon'].forEach(k=>{DB[k]={}});
+  DB.groups=[{id:'G1',n:BTN[0],gv:'',tg:''},{id:'G2',n:BTN[1],gv:'',tg:''}]}
+ CLD.snap=new Map();CLD.ord={};CLD.maxo=0;
+ cloudEnter();if(CLD.stage==='app')cloudFlush()}
+ACT.csetup=v=>{cloudSetup(v);return false};
+
+/* ---- lưu: chỉ gửi các dòng đã thay đổi ---- */
+function cloudSave(){if(CLD.stage!=='app'||!DB)return;clearTimeout(CLD.tm);CLD.tm=setTimeout(cloudFlush,50)}
+async function cloudFlush(){
+ if(CLD.stage!=='app'||!DB)return;
+ if(CLD.flushing){CLD.again=true;return}
+ CLD.flushing=true;
+ try{do{CLD.again=false;
+  const withM=canM(),cur=cflat(DB,withM),up={records:[],money:[]},del=[],denied=[];
+  cur.forEach((v,k)=>{if(CLD.snap.get(k)!==v.s)up[v.t].push({k,s:v.s,row:{collection:v.c,id:v.id,data:JSON.parse(v.s)}})});
+  CLD.snap.forEach((s,k)=>{if(!cur.has(k)){const p=k.split('|');del.push({k,t:p[0],c:p[1],id:p.slice(2).join('|')})}});
+  if(!up.records.length&&!up.money.length&&!del.length)continue;
+  setSt('saving');
+  for(const t of ['records','money']){const rows=up[t];
+   for(let i=0;i<rows.length;i+=400){const part=rows.slice(i,i+400);
+    const send=rows=>sbReq('/rest/v1/'+tblName(t)+'?on_conflict=collection,id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:rows.map(x=>x.row)});
+    const r=await send(part);
+    if(r.ok){part.forEach(x=>CLD.snap.set(x.k,x.s));continue}
+    if(r.status!==403)throw new Error(await errText(r));
+    /* Một dòng bị từ chối quyền làm hỏng cả lô: thử từng dòng để các dòng hợp lệ vẫn được lưu */
+    for(const x of part){const r1=await send([x]);
+     if(r1.ok)CLD.snap.set(x.k,x.s);
+     else if(r1.status===403){CLD.snap.set(x.k,x.s);denied.push(x.row.collection+'/'+x.row.id)}
+     else throw new Error(await errText(r1))}}}
+  for(const d of del){
+   const r=await sbReq('/rest/v1/'+tblName(d.t)+'?collection=eq.'+encodeURIComponent(d.c)+'&id=eq.'+encodeURIComponent(d.id),{method:'DELETE'});
+   if(r.ok||r.status===403){if(!r.ok)denied.push(d.c+'/'+d.id);CLD.snap.delete(d.k)}else throw new Error(await errText(r))}
+  if(denied.length){setSt('err','Bạn không có quyền lưu: '+denied.slice(0,3).join(', '));toast('Một số thay đổi không được phép lưu và đã bị bỏ qua. Hãy tải lại trang để lấy dữ liệu đúng.');CLD.again=false;return}
+ }while(CLD.again);setSt('ok')}
+ catch(e){setSt('err',e.message);clearTimeout(CLD.rt);CLD.rt=setTimeout(cloudFlush,8000)}
+ finally{CLD.flushing=false}}
+
+/* ---- đồng bộ thay đổi của người khác (các dòng được thêm hoặc sửa) ---- */
+async function cloudPull(){
+ if(CLD.stage!=='app'||CLD.flushing||CLD.pulling)return;CLD.pulling=true;
+ try{const withM=canM(),cur=cflat(DB,withM),changed=new Set(),pay={},cfgm={};let any=false;
+  for(const t of (withM||CLD.role==='gv'?['records','money']:['records'])){
+   const r=await sbReq('/rest/v1/'+tblName(t)+'?select=collection,id,data,updated_at&order=updated_at&limit=1000&updated_at=gt.'+encodeURIComponent(CLD.since[t]));
+   if(!r.ok)continue;const rows=await r.json();if(!rows.length)continue;
+   CLD.since[t]=maxAt(rows,CLD.since[t]);
+   rows.forEach(x=>{const k=t+'|'+x.collection+'|'+x.id,mine=cur.get(k);
+    if(mine&&mine.s!==CLD.snap.get(k))return;      /* có thay đổi chưa gửi: giữ bản của mình */
+    if(t==='money'&&!withM&&x.collection!=='pay'&&x.collection!=='cfgm')return;
+    cApply(DB,t,x,pay,cfgm);changed.add(k);any=true});
+   Object.keys(pay).forEach(id=>{const s=DB.staff.find(y=>y.id===id);if(s)s.pay=pay[id]});
+   CFG_MONEY.forEach(k=>{if(cfgm[k]!=null)DB.cfg[k]=cfgm[k]})}
+  if(any){const nf=cflat(DB,withM);changed.forEach(k=>{if(nf.has(k))CLD.snap.set(k,nf.get(k).s)});softRender()}}
+ catch(e){}
+ finally{CLD.pulling=false}}
+function cloudTimers(){if(CLD.tmr)return;
+ CLD.tmr=setInterval(()=>{if(document.visibilityState==='visible')cloudPull()},45000);
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')cloudPull();else cloudFlush()})}
+
+/* ---- màn hình trước khi vào ứng dụng ---- */
+const CL_NAME='TRUNG TÂM CAN THIỆP SỚM GOLDEN BEE';
+function lgLeft(){return`<div class="lgl"><img src="${LOGO}" alt="Logo Trung tâm Can thiệp sớm Golden Bee"><h1>${CL_NAME}</h1><p style="max-width:34ch;color:var(--sidemu)">Hệ thống quản lý can thiệp sớm: hồ sơ trẻ, lịch học 1-1 và bán trú, điểm danh, học phí, báo cáo chuyên môn.</p></div>`}
+function cloudScreen(){const st=CLD.stage;
+ if(st==='loading')return`<div class="lg">${lgLeft()}<div class="lgr"><div class="lgc"><h2>Đang tải dữ liệu...</h2><p class="mu">Vui lòng chờ trong giây lát.</p></div></div></div>`;
+ if(st==='setup')return`<div class="lg">${lgLeft()}<div class="lgr"><div class="lgc"><h2>Khởi tạo dữ liệu trung tâm</h2><p class="mu">Máy chủ chưa có dữ liệu. Bạn là Trưởng Trung tâm đầu tiên, hãy chọn cách bắt đầu:</p>
+ <div class="roles"><button class="btn p" data-a="csetup" data-v="empty"><b>Bắt đầu với dữ liệu trống</b><span>Để nhập dữ liệu thật của trung tâm</span></button>
+ <button class="btn" data-a="csetup" data-v="demo"><b>Nạp dữ liệu mẫu để xem thử</b><span>Khoảng 100 trẻ giả lập. Dữ liệu mẫu sẽ nằm cùng dữ liệu thật nếu bạn nhập tiếp</span></button></div>
+ <p class="sm mu" style="margin-top:14px">Tài khoản đăng nhập: ${esc(CLD.ss?CLD.ss.email:'')}</p></div></div></div>`;
+ if(st==='msg')return`<div class="lg">${lgLeft()}<div class="lgr"><div class="lgc"><h2>Chưa vào được hệ thống</h2><p role="alert">${esc(CLD.msg)}</p><div class="acts" style="margin-top:14px"><button class="btn p" data-a="logout">Đăng xuất</button></div></div></div></div>`;
+ return`<div class="lg">${lgLeft()}<div class="lgr"><div class="lgc"><h2>Đăng nhập</h2>
+ <form id="login" class="f" autocomplete="on"><div><label for="lg-e">Email</label><input id="lg-e" name="e" type="email" required autocomplete="username" value="${esc(CLD.email||'')}" placeholder="ten@email.com"></div><div><label for="lg-p">Mật khẩu</label><input id="lg-p" name="p" type="password" required autocomplete="current-password"></div><div class="err" role="alert">${esc(CLD.err||'')}</div><button class="btn p" type="submit">Đăng nhập</button></form>
+ <p class="note sm" style="margin-top:16px">Tài khoản do Trưởng Trung tâm cấp. Nếu quên mật khẩu hoặc chưa có tài khoản, hãy liên hệ Trưởng Trung tâm.</p></div></div></div>`}
+
+/* ---- khởi động ở chế độ máy chủ ---- */
+async function cloudBoot(){
+ const s=sbLoad();
+ if(s&&s.at&&s.rt){CLD.ss=s;await cloudLoad()}else{CLD.stage='login';render()}}
 /* ===== Hằng số nghiệp vụ ===== */
 const ROLE={ql:'Quản lý',tt:'Trưởng Trung tâm',vp:'Văn phòng',gv:'Giáo viên',ph:'Phụ huynh',hc:'Hành chính'};
 /* Giờ học 1-1: từ 07:15 đến 20:00, mỗi ca 50 phút, xếp liên tiếp (15 ca/ngày, ca cuối 18:55–19:45).
@@ -557,12 +759,12 @@ function demoAcc(r){
  const pick={ql:'nv01',tt:'nv02',vp:'nv26',gv:'nv04'}[r];
  if(pick){let s=stBy(pick);if(!s||s.role!==r||s.st!=='dang')s=DB.staff.find(x=>x.role===r&&x.st==='dang');return s?findAccount(s.em):null}
  const k=DB.kids.find(x=>x.st==='dang'&&x.m11>0&&x.bt)||DB.kids[0];return findAccount(k.pe)}
-function setUser(u){U=u;S.modal=null;S.menu=false;S.top=1;
+function setUser(u){if(CLOUDMODE&&u&&(!CLD.ss||u.em!==CLD.ss.email))return;U=u;S.modal=null;S.menu=false;S.top=1;
  if(u){S.v=ACCESS[u.role][0];try{localStorage.setItem('gb_u',u.em)}catch(e){}}else{try{localStorage.removeItem('gb_u')}catch(e){}}}
 ACT.demo=r=>{setUser(demoAcc(r))};
-ACT.logout=()=>{setUser(null)};
+ACT.logout=()=>{if(CLOUDMODE){cloudLogout();return false}setUser(null)};
 CHG.role=r=>{setUser(demoAcc(r))};
-FORM.login=f=>{const a=findAccount(f.elements.e.value);
+FORM.login=f=>{if(CLOUDMODE){cloudLogin(f.elements.e.value.trim().toLowerCase(),f.elements.p.value);return false}const a=findAccount(f.elements.e.value);
  if(!a||f.elements.p.value!==PW){S.err='Email hoặc mật khẩu chưa đúng. Bản trình diễn dùng mật khẩu chung 123456.';return}
  S.err='';setUser(a)};
 ACT.theme=()=>{const h=document.documentElement,dark=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches,cur=h.dataset.theme||(dark?'dark':'light'),nx=cur==='dark'?'light':'dark';h.dataset.theme=nx;try{localStorage.setItem('gb_th',nx)}catch(e){}};
@@ -583,16 +785,18 @@ function vLogin(){
 function vTop(){
  const rn=ROLE[U.role],ini=given(U.name).split(' ').pop().charAt(0).toUpperCase();
  return`<div class="bar0"><div class="who"><button class="btn hamb" data-a="menu" aria-label="Mở menu">Menu</button><span class="av" aria-hidden="true">${esc(ini)}</span><div style="min-width:0"><b>${esc(U.name)}</b><div class="sm mu">${rn} · ${DAYN[dow(TODAY)]}, ${vd(TODAY)}</div></div></div>
- <div class="acts"><label class="sm mu" style="margin:0" for="demo-role">Xem thử vai trò</label><select id="demo-role" data-c="role" style="width:auto" aria-label="Chuyển vai trò xem thử">${opts([['ql','Quản lý'],['tt','Trưởng Trung tâm'],['vp','Văn phòng'],['gv','Giáo viên'],['ph','Phụ huynh']],U.role)}</select><button class="btn s" data-a="theme">Sáng/Tối</button><button class="btn s" data-a="logout">Đăng xuất</button></div></div>`}
+ <div class="acts">${CLOUDMODE?`<span id="cl-st" class="sm ${CLD.st==='err'?'er':'mu'}" role="status">${stText()}</span>`:`<label class="sm mu" style="margin:0" for="demo-role">Xem thử vai trò</label><select id="demo-role" data-c="role" style="width:auto" aria-label="Chuyển vai trò xem thử">${opts([['ql','Quản lý'],['tt','Trưởng Trung tâm'],['vp','Văn phòng'],['gv','Giáo viên'],['ph','Phụ huynh']],U.role)}</select>`}<button class="btn s" data-a="theme">Sáng/Tối</button><button class="btn s" data-a="logout">Đăng xuất</button></div></div>`}
 function vSide(){
  let h=`<aside class="side ${S.menu?'open':''}" aria-label="Menu chính"><div class="brand"><img src="${LOGO}" alt="Logo Golden Bee"><b>${esc(DB.cfg.name)}</b></div><nav class="nav">`;
  ACCESS[U.role].forEach(v=>{const[,l,g]=NAV.find(x=>x[0]===v),gl=(NAVG[U.role]||{})[v]||g;if(gl)h+=`<div class="ng">${gl}</div>`;const b=badge(v);
   h+=`<button data-a="nav" data-v="${v}" class="${S.v===v?'on':''}" ${S.v===v?'aria-current="page"':''}><span>${esc(vlab(v))}</span>${b?`<span class="bdg">${b}</span>`:''}</button>`});
- return h+`</nav><p class="sm" style="color:var(--sidemu);padding:18px 10px 0">Bản trình diễn · dữ liệu mẫu</p></aside>${S.menu?'<div class="scrim" data-a="menu"></div>':''}`}
+ return h+`</nav><p class="sm" style="color:var(--sidemu);padding:18px 10px 0">${CLOUDMODE?'Dữ liệu dùng chung trên máy chủ':'Bản trình diễn · dữ liệu mẫu'}</p></aside>${S.menu?'<div class="scrim" data-a="menu"></div>':''}`}
 
 let SVT=0;
 function render(){
- const app=$q('#app');if(!app||!DB)return;
+ const app=$q('#app');if(!app)return;
+ if(CLOUDMODE&&(CLD.stage!=='app'||!DB||!U)){app.innerHTML=cloudScreen();return}
+ if(!DB)return;
  const y=S.top?0:window.scrollY,sd0=$q('.side'),sy=sd0?sd0.scrollTop:0,md0=$q('.mdl'),my=md0?md0.scrollTop:0;S.top=0;
  if(!U){app.innerHTML=vLogin();window.scrollTo(0,y);return}
  if(!ACCESS[U.role].includes(S.v))S.v=ACCESS[U.role][0];
@@ -971,7 +1175,7 @@ const monOf=d=>{let x=d;while(dow(x)!==1)x=addD(x,-1);return x};
 const onLeave=(id,d)=>DB.lr.some(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t);
 VIEWS.lh=()=>isPH()?lhParent():lhStaff();
 const lhStaff=()=>{const h=S.lh=Object.assign({tab:'wk',mode:'gv',wk:monOf(WD),gv:'',room:ROOMS[0],kid:''},S.lh);
- if(isGV()){h.mode='gv';h.gv=U.id}else if(!h.gv)h.gv=pool11()[0].id;
+ if(isGV()){h.mode='gv';h.gv=U.id}else if(!h.gv)h.gv=(pool11()[0]||{}).id||'';
  if(!h.kid)h.kid=(myKids().find(k=>k.st==='dang'&&wk11(k.id))||{}).id||'';
  return head(isGV()?'Lịch dạy của tôi':'Lịch học','Lịch 1-1 cố định theo tuần ('+DAY_OPEN+'–'+DAY_CLOSE+', mỗi ca '+SLOT_MIN+' phút), lịch học bù và bán trú')+tabsH([['wk','Lịch 1-1 theo tuần'],['bt','Bán trú']],h.tab,'lhtab')+(h.tab==='wk'?lhWeek(h):lhBt())};
 ACT.lhtab=v=>{S.lh.tab=v};
@@ -1222,7 +1426,7 @@ MODALS.mkn=()=>{const m=S.modal,ks=myKids().filter(k=>k.st==='dang'&&wk11(k.id))
  <div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit" ${cs.length?'':'disabled'}>Gửi yêu cầu</button></div></form>`)};
 FORM.mknf=f=>{const v=f.elements.s.value;if(!v)return false;const [d,sid]=v.split('|');mkMake(S.modal.k,d,sid,f.elements.w.value.trim()||'Xin học bù');S.modal=null;toast('Đã gửi yêu cầu học bù')};
 ACT.mkopen=v=>{S.modal={t:'mkd',id:v}};
-function mkGV(r){const l=DB.lich.find(x=>x.id===r.from.sid);return(l&&l.gv)||(kidBy(r.hs)||{}).gv||pool11()[0].id}
+function mkGV(r){const l=DB.lich.find(x=>x.id===r.from.sid);return(l&&l.gv)||(kidBy(r.hs)||{}).gv||(pool11()[0]||{}).id||''}
 MODALS.mkd=()=>{const r=DB.mk.find(x=>x.id===S.modal.id);if(!r||!canKid(r.hs)){S.modal=null;return''}
  const open=r.s==='dk'||r.s==='tt',staff=!isPH();
  const props=r.props.map(p=>`<div class="rw"><span><b>${DAYN[dow(p.d)]} ${vd(p.d)}</b> · ${slotLb(p.slot)} · ${esc(p.room)} · ${esc(sn(p.gv))}</span>${r.s==='tt'&&(isPH()||isLead())?`<button class="btn s p" data-a="mkpick" data-v="${r.id}|${p.id}">${isPH()?'Chọn giờ này':'Xác nhận thay phụ huynh'}</button>`:r.pick===p.id?tg('Đã chọn','ok'):''}</div>`).join('');
@@ -1663,6 +1867,7 @@ function migrate4(d){
  d.v=4}
 const okDB=d=>d&&Array.isArray(d.staff)&&Array.isArray(d.kids)&&d.cfg&&d.cfg.rule&&d.set&&d.rd&&d.att&&Array.isArray(d.rp)&&Array.isArray(d.tpl);
 (function boot(){
+ if(CLOUDMODE){try{const th=localStorage.getItem('gb_th');if(th)document.documentElement.dataset.theme=th}catch(e){}cloudBoot();initCaps();return}
  let d=null;try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
  if(okDB(d)&&d.v===4&&Array.isArray(d.plans)&&Array.isArray(d.sess)&&Array.isArray(d.cg)&&d.menu&&Array.isArray(d.groups))DB=d;
  else if(okDB(d)&&(d.v===2||d.v===3)){try{if(d.v===2)migrate(d);migrate4(d);save()}catch(e){DB=null;seed();save()}}

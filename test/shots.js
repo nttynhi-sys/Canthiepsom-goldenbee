@@ -1,5 +1,5 @@
 const {chromium}=require('playwright');
-const URL='file:///tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratchpad/build/page.html';
+const URL='file://'+require('path').resolve(__dirname,'../src/build/page-test.html');
 (async()=>{
  const b=await chromium.launch();
  const ctx=await b.newContext({viewport:{width:1366,height:860}});

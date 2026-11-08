@@ -53,12 +53,12 @@ function demoAcc(r){
  const pick={ql:'nv01',tt:'nv02',vp:'nv26',gv:'nv04'}[r];
  if(pick){let s=stBy(pick);if(!s||s.role!==r||s.st!=='dang')s=DB.staff.find(x=>x.role===r&&x.st==='dang');return s?findAccount(s.em):null}
  const k=DB.kids.find(x=>x.st==='dang'&&x.m11>0&&x.bt)||DB.kids[0];return findAccount(k.pe)}
-function setUser(u){U=u;S.modal=null;S.menu=false;S.top=1;
+function setUser(u){if(CLOUDMODE&&u&&(!CLD.ss||u.em!==CLD.ss.email))return;U=u;S.modal=null;S.menu=false;S.top=1;
  if(u){S.v=ACCESS[u.role][0];try{localStorage.setItem('gb_u',u.em)}catch(e){}}else{try{localStorage.removeItem('gb_u')}catch(e){}}}
 ACT.demo=r=>{setUser(demoAcc(r))};
-ACT.logout=()=>{setUser(null)};
+ACT.logout=()=>{if(CLOUDMODE){cloudLogout();return false}setUser(null)};
 CHG.role=r=>{setUser(demoAcc(r))};
-FORM.login=f=>{const a=findAccount(f.elements.e.value);
+FORM.login=f=>{if(CLOUDMODE){cloudLogin(f.elements.e.value.trim().toLowerCase(),f.elements.p.value);return false}const a=findAccount(f.elements.e.value);
  if(!a||f.elements.p.value!==PW){S.err='Email hoặc mật khẩu chưa đúng. Bản trình diễn dùng mật khẩu chung 123456.';return}
  S.err='';setUser(a)};
 ACT.theme=()=>{const h=document.documentElement,dark=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches,cur=h.dataset.theme||(dark?'dark':'light'),nx=cur==='dark'?'light':'dark';h.dataset.theme=nx;try{localStorage.setItem('gb_th',nx)}catch(e){}};
@@ -79,16 +79,18 @@ function vLogin(){
 function vTop(){
  const rn=ROLE[U.role],ini=given(U.name).split(' ').pop().charAt(0).toUpperCase();
  return`<div class="bar0"><div class="who"><button class="btn hamb" data-a="menu" aria-label="Mở menu">Menu</button><span class="av" aria-hidden="true">${esc(ini)}</span><div style="min-width:0"><b>${esc(U.name)}</b><div class="sm mu">${rn} · ${DAYN[dow(TODAY)]}, ${vd(TODAY)}</div></div></div>
- <div class="acts"><label class="sm mu" style="margin:0" for="demo-role">Xem thử vai trò</label><select id="demo-role" data-c="role" style="width:auto" aria-label="Chuyển vai trò xem thử">${opts([['ql','Quản lý'],['tt','Trưởng Trung tâm'],['vp','Văn phòng'],['gv','Giáo viên'],['ph','Phụ huynh']],U.role)}</select><button class="btn s" data-a="theme">Sáng/Tối</button><button class="btn s" data-a="logout">Đăng xuất</button></div></div>`}
+ <div class="acts">${CLOUDMODE?`<span id="cl-st" class="sm ${CLD.st==='err'?'er':'mu'}" role="status">${stText()}</span>`:`<label class="sm mu" style="margin:0" for="demo-role">Xem thử vai trò</label><select id="demo-role" data-c="role" style="width:auto" aria-label="Chuyển vai trò xem thử">${opts([['ql','Quản lý'],['tt','Trưởng Trung tâm'],['vp','Văn phòng'],['gv','Giáo viên'],['ph','Phụ huynh']],U.role)}</select>`}<button class="btn s" data-a="theme">Sáng/Tối</button><button class="btn s" data-a="logout">Đăng xuất</button></div></div>`}
 function vSide(){
  let h=`<aside class="side ${S.menu?'open':''}" aria-label="Menu chính"><div class="brand"><img src="${LOGO}" alt="Logo Golden Bee"><b>${esc(DB.cfg.name)}</b></div><nav class="nav">`;
  ACCESS[U.role].forEach(v=>{const[,l,g]=NAV.find(x=>x[0]===v),gl=(NAVG[U.role]||{})[v]||g;if(gl)h+=`<div class="ng">${gl}</div>`;const b=badge(v);
   h+=`<button data-a="nav" data-v="${v}" class="${S.v===v?'on':''}" ${S.v===v?'aria-current="page"':''}><span>${esc(vlab(v))}</span>${b?`<span class="bdg">${b}</span>`:''}</button>`});
- return h+`</nav><p class="sm" style="color:var(--sidemu);padding:18px 10px 0">Bản trình diễn · dữ liệu mẫu</p></aside>${S.menu?'<div class="scrim" data-a="menu"></div>':''}`}
+ return h+`</nav><p class="sm" style="color:var(--sidemu);padding:18px 10px 0">${CLOUDMODE?'Dữ liệu dùng chung trên máy chủ':'Bản trình diễn · dữ liệu mẫu'}</p></aside>${S.menu?'<div class="scrim" data-a="menu"></div>':''}`}
 
 let SVT=0;
 function render(){
- const app=$q('#app');if(!app||!DB)return;
+ const app=$q('#app');if(!app)return;
+ if(CLOUDMODE&&(CLD.stage!=='app'||!DB||!U)){app.innerHTML=cloudScreen();return}
+ if(!DB)return;
  const y=S.top?0:window.scrollY,sd0=$q('.side'),sy=sd0?sd0.scrollTop:0,md0=$q('.mdl'),my=md0?md0.scrollTop:0;S.top=0;
  if(!U){app.innerHTML=vLogin();window.scrollTo(0,y);return}
  if(!ACCESS[U.role].includes(S.v))S.v=ACCESS[U.role][0];

@@ -32,7 +32,9 @@ let DB=null,U=null;
 const S={v:'dash',menu:false,modal:null,pg:{}};
 const ACT={},FORM={},CHG={},INP={},VIEWS={},MODALS={};
 const KEY='gb_v2';
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}};
+/* Chế độ máy chủ (mặc định trên web). Thêm ?demo vào địa chỉ để xem bản trình diễn chạy trong trình duyệt, không lưu lên máy chủ. */
+const CLOUDMODE=!(/[?&]demo\b/.test(location.search)||(location.protocol==='file:'&&!/[?&]cloud\b/.test(location.search)));
+const save=()=>{if(CLOUDMODE){cloudSave();return}try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}};
 function go(v,p){S.v=v;S.modal=null;S.menu=false;S.top=1;if(p)Object.assign(S,p)}
 ACT.nav=v=>go(v);
 ACT.menu=()=>{S.menu=!S.menu};
@@ -74,7 +76,7 @@ async function initCaps(){
 const libs={};
 function loadLib(u){return libs[u]||(libs[u]=new Promise((ok,no)=>{const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=()=>{delete libs[u];no(new Error('lib'))};document.head.appendChild(s)}))}
 async function saveFile(name,data){
- if(!CAP.dl){toast('Chế độ xem này chưa cho phép tải tệp xuống');return false}
+ if(!CAP.dl){try{const bl=data instanceof Blob?data:new Blob([data]),a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);toast('Đã tải '+name);return true}catch(e){toast('Chưa tải được tệp');return false}}
  try{await CAP.dl.save({filename:name,data});toast('Đã lưu '+name);return true}catch(e){toast('Chưa lưu được tệp');return false}}
 async function exportXLSX(name,sheets){
  toast('Đang tạo tệp Excel...');
