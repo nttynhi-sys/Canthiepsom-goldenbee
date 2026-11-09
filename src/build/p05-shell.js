@@ -54,7 +54,7 @@ function findAccount(em){em=(em||'').trim().toLowerCase();if(!em)return null;
 function demoAcc(r){
  const pick={ql:'nv01',tt:'nv02',vp:'nv26',gv:'nv04'}[r];
  if(pick){let s=stBy(pick);if(!s||s.role!==r||s.st!=='dang')s=DB.staff.find(x=>x.role===r&&x.st==='dang');return s?findAccount(s.em):null}
- const k=DB.kids.find(x=>x.st==='dang'&&x.m11>0&&x.bt)||DB.kids[0];return findAccount(pkeyOf(k))}
+ const ok=x=>x.st==='dang'&&x.m11>0&&x.bt,k=DB.kids.find(x=>ok(x)&&!phLockOf(pkeyOf(x)).locked)||DB.kids.find(ok)||DB.kids[0];return findAccount(pkeyOf(k))}
 function setUser(u){if(CLOUDMODE&&u&&(!CLD.ss||u.em!==CLD.ss.email))return;U=u;S.modal=null;S.menu=false;S.top=1;
  if(u){S.v=ACCESS[u.role][0];try{localStorage.setItem('gb_u',u.em)}catch(e){}}else{try{localStorage.removeItem('gb_u')}catch(e){}}}
 ACT.demo=r=>{setUser(demoAcc(r))};
@@ -96,6 +96,7 @@ function render(){
  if(!DB)return;
  const y=S.top?0:window.scrollY,sd0=$q('.side'),sy=sd0?sd0.scrollTop:0,md0=$q('.mdl'),my=md0?md0.scrollTop:0;S.top=0;
  if(!U){app.innerHTML=vLogin();window.scrollTo(0,y);return}
+ if(U.role==='ph'&&!CLOUDMODE){const lk=phLockOf(U.pkey);if(lk.locked){app.innerHTML=lockHtml(lk);window.scrollTo(0,0);return}}
  if(!ACCESS[U.role].includes(S.v))S.v=ACCESS[U.role][0];
  let body;try{body=VIEWS[S.v]()}catch(e){console.error(e);body=`<div class="card"><h2>Chưa hiển thị được trang này</h2><p class="mu">${esc(e.message)}</p></div>`}
  let mh='';if(S.modal&&MODALS[S.modal.t]){try{mh=MODALS[S.modal.t]()}catch(e){console.error(e);S.modal=null}}

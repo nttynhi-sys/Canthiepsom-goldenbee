@@ -64,7 +64,8 @@ function makeEmu() {
     return { uid, u, role: p ? p.role : null, sid: p ? p.staff_id : null };
   }
   const canRead = (a, t, r) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records') return ['tt', 'vp', 'ql', 'gv'].includes(a.role); if (['tt', 'vp'].includes(a.role)) return true; if (a.role === 'gv') return r.collection === 'cfgm' || (r.collection === 'pay' && r.id === a.sid) || (r.collection === 'bon' && r.id.split('|')[0] === a.sid); return false; };
-  const canWrite = (a, t, c) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records') return a.role === 'gv' ? !['staff', 'cfg'].includes(c) : ['tt', 'vp', 'ql'].includes(a.role); return ['tt', 'vp'].includes(a.role); };
+  const canWrite = (a, t, c) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records' && c === 'pul') return false;   /* chỉ khóa secret (máy chủ) ghi bản ghi mở khóa */
+    if (t === 'records') return a.role === 'gv' ? !['staff', 'cfg', 'hol'].includes(c) : ['tt', 'vp', 'ql'].includes(a.role); return ['tt', 'vp'].includes(a.role); };
 
   /* ---- lõi xử lý một yêu cầu ---- */
   function core(method, path, params, h, bodyText) {
@@ -169,7 +170,7 @@ function makeEmu() {
   });
   /* chuyển /api/* của trình duyệt sang các hàm xử lý thật */
   S.attachApi = async (page, base) => {
-    const H = { accounts: require('../api/accounts.js'), login: require('../api/login.js'), parent: require('../api/parent.js') };
+    const H = { accounts: require('../api/accounts.js'), login: require('../api/login.js'), parent: require('../api/parent.js'), plock: require('../api/plock.js') };
     await page.route(base + '/api/*', async route => {
       const req = route.request(), name = new URL(req.url()).pathname.replace('/api/', '');
       const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' };

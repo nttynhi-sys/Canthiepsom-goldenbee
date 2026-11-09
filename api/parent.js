@@ -1,7 +1,10 @@
 /* Cổng dữ liệu cho phụ huynh. Phụ huynh KHÔNG đọc hay ghi trực tiếp bảng dữ liệu: mọi thứ đi qua hàm này.
    Hàm xác nhận phụ huynh là ai, chỉ trả về dữ liệu của các bé gắn với tài khoản đó, và chỉ cho ghi vài loại dữ liệu hẹp
-   (yêu cầu học bù, lịch học bù của chính bé, đánh dấu đã đọc thông báo). Dùng khóa secret ở máy chủ. */
+   (yêu cầu học bù, lịch học bù của chính bé, đánh dấu đã đọc thông báo). Dùng khóa secret ở máy chủ.
+   Phụ huynh quá hạn học phí (sau ngày 10 hàng tháng) bị khóa: không nhận dữ liệu của bé và không ghi được, cho đến khi nhân viên
+   ghi nhận thu đủ hoặc mở khóa tạm (xem _lock.js, plock.js). */
 const L = require('./_lib');
+const K = require('./_lock');
 const { HttpError, clean, sbSecret, pkeyOf } = L;
 const U = encodeURIComponent;
 
@@ -39,8 +42,18 @@ async function myKids(key) {
 /* Nhân viên chỉ lộ tên, chức vụ, vai trò (không email, điện thoại, lương) */
 const safeStaff = d => ({ id: d.id, n: d.n, role: d.role, pos: d.pos || '', st: d.st, em: '', ph: '', sd: '', sup: '' });
 
+/* Thông tin hiển thị trên màn hình khóa của phụ huynh: chỉ số tiền và tháng của chính họ, kèm số điện thoại Trung tâm */
+async function lockNotice(l) {
+  const c = await fetchRows('records', 'collection=eq.cfg');
+  const cfg = (c[0] && c[0].data) || {};
+  return { amt: l.amt, months: l.months, due: l.due, today: l.today, tel: String(cfg.tel || ''), name: String(cfg.name || '') };
+}
+const LOCKED_MSG = 'Cổng phụ huynh đang tạm khóa vì học phí quá hạn. Vui lòng liên hệ Trung tâm.';
+
 async function snapshot(me, since, known) {
   const k = await myKids(me.key);
+  const lk = await K.lockForParent(me.key, k.ids);
+  if (lk.locked) return { locked: true, lock: await lockNotice(lk) };
   if (known !== undefined && String(known) !== k.ids.join(',')) return { reload: true };
   const ids = k.ids, sf = since ? '&updated_at=gt.' + U(since.records || '1970-01-01T00:00:00Z') : '', sm = since ? '&updated_at=gt.' + U(since.money || '1970-01-01T00:00:00Z') : '';
   const job = [
@@ -106,6 +119,7 @@ async function put(me, b) {
   const rows = Array.isArray(b.rows) ? b.rows : [], dels = Array.isArray(b.dels) ? b.dels : [];
   if (rows.length > 400 || dels.length > 400) throw new HttpError(400, 'Quá nhiều dòng trong một lần lưu.');
   const { ids } = await myKids(me.key);
+  if ((await K.lockForParent(me.key, ids)).locked) throw new HttpError(423, LOCKED_MSG);
   const deny = m => new HttpError(403, m || 'Không có quyền lưu dữ liệu này.');
   const isMine = d => d && typeof d.hs === 'string' && ids.includes(d.hs);
   const wantIds = c => [...rows.filter(r => r && r.collection === c).map(r => String(r.id)), ...dels.filter(r => r && r.collection === c).map(r => String(r.id))];

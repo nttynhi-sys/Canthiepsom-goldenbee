@@ -248,7 +248,7 @@ function cloudEnter(){
  const a=CLD.role==='ph'?phAccount():staffAccount();
  if(!a){cMsg('Tài khoản này chưa có trong danh sách nhân sự đang làm việc. Trưởng Trung tâm cần thêm hồ sơ nhân sự có đúng email hoặc số điện thoại của tài khoản.');return}
  if(a.role!==CLD.role){cMsg('Vai trò của tài khoản ('+ROLE[CLD.role]+') không khớp với hồ sơ nhân sự ('+ROLE[a.role]+'). Hãy nhờ Trưởng Trung tâm kiểm tra.');return}
- U=a;CLD.stage='app';S.v=ACCESS[a.role][0];S.modal=null;S.menu=false;S.top=1;setSt('ok');render();cloudTimers();accLoad()}
+ U=a;CLD.stage='app';S.v=ACCESS[a.role][0];S.modal=null;S.menu=false;S.top=1;setSt('ok');render();cloudTimers();accLoad();plLoad()}
 function cloudDrop(msg){CLD.ss=null;sbStore(null);U=null;DB=null;CLD.stage='login';CLD.err=msg||'';CLD.snap=new Map();render()}
 async function cloudLogout(){
  try{await cloudFlush()}catch(e){}
@@ -259,10 +259,13 @@ async function cloudLogout(){
 async function phCall(body,again){
  const r=await fetch((typeof window.GB_API==='string'?window.GB_API:'')+'/api/parent',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+CLD.ss.at},body:JSON.stringify(body)});
  if(r.status===401&&!again&&await sbRefresh())return phCall(body,true);
+ if(r.status===423&&CLD.stage==='app')setTimeout(phLoad,0);      /* cổng vừa bị khóa vì quá hạn học phí: tải lại để hiện màn hình khóa */
  return r}
 async function phApi(body){const r=await phCall(body);if(r.status===404)throw new Error('Máy chủ chưa có cổng phụ huynh.');const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('Lỗi '+r.status));return j}
+function phLocked(lock){CLD.lock=lock||{};CLD.stage='locked';DB=null;U=null;CLD.snap=new Map();render()}
 async function phLoad(){
  try{const j=await phApi({action:'load'});
+  if(j.locked){phLocked(j.lock);return}
   if(!j.records.some(r=>r.collection==='cfg')){cMsg('Trung tâm chưa có dữ liệu. Hãy liên hệ Trung tâm.');return}
   DB=cbuild(j.records,j.money);CLD.kids=j.kids;
   CLD.since={records:maxAt(j.records,'1970-01-01T00:00:00Z'),money:maxAt(j.money,'1970-01-01T00:00:00Z')};
@@ -321,6 +324,7 @@ async function cloudPull(){
  try{const withM=canM(),cur=cflat(DB,withM),changed=new Set(),pay={},cfgm={};let any=false;
   const ph=CLD.role==='ph';let got=null;
   if(ph){const r=await phCall({action:'pull',since:CLD.since,known:CLD.kids||[]});if(!r.ok)return;got=await r.json();
+   if(got.locked){phLocked(got.lock);return}
    if(got.reload){await cloudFlush();await cloudLoad();return}}
   for(const t of (ph||withM||CLD.role==='gv'?['records','money']:['records'])){
    let rows;
@@ -337,7 +341,8 @@ async function cloudPull(){
    CFG_MONEY.forEach(k=>{if(cfgm[k]!=null)DB.cfg[k]=cfgm[k]})}
   if(any){const nf=cflat(DB,withM);changed.forEach(k=>{if(nf.has(k))CLD.snap.set(k,nf.get(k).s)});softRender()}}
  catch(e){}
- finally{CLD.pulling=false}}
+ finally{CLD.pulling=false}
+ if(CLD.role!=='ph')plLoad(true)}
 function cloudTimers(){if(CLD.tmr)return;
  CLD.tmr=setInterval(()=>{if(document.visibilityState==='visible')cloudPull()},45000);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')cloudPull();else cloudFlush()})}
@@ -443,6 +448,7 @@ function cloudScreen(){const st=CLD.stage;
  <div class="roles"><button class="btn p" data-a="csetup" data-v="empty"><b>Bắt đầu với dữ liệu trống</b><span>Để nhập dữ liệu thật của trung tâm</span></button>
  <button class="btn" data-a="csetup" data-v="demo"><b>Nạp dữ liệu mẫu để xem thử</b><span>Khoảng 100 trẻ giả lập. Dữ liệu mẫu sẽ nằm cùng dữ liệu thật nếu bạn nhập tiếp</span></button></div>
  <p class="sm mu" style="margin-top:14px">Tài khoản đăng nhập: ${esc(CLD.ss?CLD.ss.email:'')}</p></div></div></div>`;
+ if(st==='locked')return lockHtml(CLD.lock||{});
  if(st==='msg')return`<div class="lg">${lgLeft()}<div class="lgr"><div class="lgc"><h2>Chưa vào được hệ thống</h2><p role="alert">${esc(CLD.msg)}</p><div class="acts" style="margin-top:14px"><button class="btn p" data-a="logout">Đăng xuất</button></div></div></div></div>`;
  return`<div class="lg">${lgLeft()}<div class="lgr"><div class="lgc"><h2>Đăng nhập</h2>
  <form id="login" class="f" autocomplete="on"><div><label for="lg-e">Email hoặc số điện thoại</label><input id="lg-e" name="e" type="text" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(CLD.email||'')}" placeholder="ten@email.com hoặc 0901 234 567"></div><div><label for="lg-p">Mật khẩu</label><input id="lg-p" name="p" type="password" required autocomplete="current-password"></div><div class="err" role="alert">${esc(CLD.err||'')}</div><button class="btn p" type="submit">Đăng nhập</button></form>
@@ -523,7 +529,7 @@ function tkbDefault(groups){const out=[];
 /* ===== Dữ liệu mẫu (giả lập, không phải trẻ thật) ===== */
 function seed(){
  let sd=20261108;const R=()=>(sd=(sd*1664525+1013904223)%4294967296)/4294967296,P=a=>a[Math.floor(R()*a.length)],RI=(a,b)=>a+Math.floor(R()*(b-a+1)),SH=a=>a.slice().sort(()=>R()-.5);
- const D={v:6,hol:[],tkb:[],cfg:{name:'TRUNG TÂM CAN THIỆP SỚM GOLDEN BEE',addr:'28 Trường Thi 1, Quận Hải Châu, TP. Đà Nẵng',tel:'0793502567',p11:180000,pbtDay:380000,pbtDay11:180000,lateAfter:'08:15',cc:26,giamTru:15500000,thue:10,rule:{pLoss:30,ttRefund:100,bvRefund:50,bvRefund11:100,gvKp:50,gvP:0}},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:TPL0.map(x=>({...x})),nt:[],bon:{},rd:{},menu:{}};
+ const D={v:6,hol:[],pul:{},tkb:[],cfg:{name:'TRUNG TÂM CAN THIỆP SỚM GOLDEN BEE',addr:'28 Trường Thi 1, Quận Hải Châu, TP. Đà Nẵng',tel:'0793502567',p11:180000,pbtDay:380000,pbtDay11:180000,lateAfter:'08:15',cc:26,giamTru:15500000,thue:10,rule:{pLoss:30,ttRefund:100,bvRefund:50,bvRefund11:100,gvKp:50,gvP:0}},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:TPL0.map(x=>({...x})),nt:[],bon:{},rd:{},menu:{}};
  DB=D;
  const HO=['Nguyễn','Trần','Lê','Phạm','Hoàng','Huỳnh','Phan','Vũ','Võ','Đặng','Bùi','Đỗ','Hồ','Ngô','Dương','Lý'];
  const SN=['Minh Anh','Thu Trang','Quang Huy','Lan Phương','Hải Yến','Văn Nam','Thanh Hà','Đức Thịnh','Ngọc Lan','Hồng Nhung','Quốc Bảo','Thùy Linh','Khánh Ly','Tuấn Anh','Bích Phượng','Mai Hương','Thanh Tâm','Kim Ngân','Diệu Linh','Xuân Mai','Phương Thảo','Hoài An','Nhật Lệ','Thu Hiền','Trọng Nghĩa','Yến Nhi','Cẩm Tú','Gia Linh','Bảo Trâm','Anh Thư'];
@@ -1148,7 +1154,7 @@ function findAccount(em){em=(em||'').trim().toLowerCase();if(!em)return null;
 function demoAcc(r){
  const pick={ql:'nv01',tt:'nv02',vp:'nv26',gv:'nv04'}[r];
  if(pick){let s=stBy(pick);if(!s||s.role!==r||s.st!=='dang')s=DB.staff.find(x=>x.role===r&&x.st==='dang');return s?findAccount(s.em):null}
- const k=DB.kids.find(x=>x.st==='dang'&&x.m11>0&&x.bt)||DB.kids[0];return findAccount(pkeyOf(k))}
+ const ok=x=>x.st==='dang'&&x.m11>0&&x.bt,k=DB.kids.find(x=>ok(x)&&!phLockOf(pkeyOf(x)).locked)||DB.kids.find(ok)||DB.kids[0];return findAccount(pkeyOf(k))}
 function setUser(u){if(CLOUDMODE&&u&&(!CLD.ss||u.em!==CLD.ss.email))return;U=u;S.modal=null;S.menu=false;S.top=1;
  if(u){S.v=ACCESS[u.role][0];try{localStorage.setItem('gb_u',u.em)}catch(e){}}else{try{localStorage.removeItem('gb_u')}catch(e){}}}
 ACT.demo=r=>{setUser(demoAcc(r))};
@@ -1190,6 +1196,7 @@ function render(){
  if(!DB)return;
  const y=S.top?0:window.scrollY,sd0=$q('.side'),sy=sd0?sd0.scrollTop:0,md0=$q('.mdl'),my=md0?md0.scrollTop:0;S.top=0;
  if(!U){app.innerHTML=vLogin();window.scrollTo(0,y);return}
+ if(U.role==='ph'&&!CLOUDMODE){const lk=phLockOf(U.pkey);if(lk.locked){app.innerHTML=lockHtml(lk);window.scrollTo(0,0);return}}
  if(!ACCESS[U.role].includes(S.v))S.v=ACCESS[U.role][0];
  let body;try{body=VIEWS[S.v]()}catch(e){console.error(e);body=`<div class="card"><h2>Chưa hiển thị được trang này</h2><p class="mu">${esc(e.message)}</p></div>`}
  let mh='';if(S.modal&&MODALS[S.modal.t]){try{mh=MODALS[S.modal.t]()}catch(e){console.error(e);S.modal=null}}
@@ -1210,7 +1217,7 @@ function dashVP(){
   net=st.reduce((a,s)=>a+payroll(s,pm).net,0),noCC=st.filter(s=>tsSt(s.id,WD)==='chua').length,pend=DB.lr.filter(l=>l.s==='cho').length,ds=dayList(WD);
  return head('Xin chào, '+esc(given(U.name)),'Văn phòng · học phí, lương, chấm công và ngày học')
  +`<div class="grid g3">${kpi('Đã thu '+mLow(CM),fmt(fs.paid),'Phải thu '+fmt(fs.due))}${kpi('Công nợ',fmt(totalDebt()),db.length+' gia đình còn nợ',totalDebt()?'er':'ok')}${kpi('Lương '+mLow(pm),fmt(net),st.length+' nhân sự, thực nhận tạm tính')}${kpi('Chưa điểm danh',un,'ngày '+vdm(WD)+', cần chốt trước khi tính phí',un?'er':'ok')}${kpi('Chưa chấm công',noCC,'nhân sự ngày '+vdm(WD),noCC?'er':'ok')}${kpi('Ngày '+vdm(WD),ds.filter(s=>s.kind!=='bt').length+' buổi 1-1',ds.filter(s=>s.kind==='bt').reduce((n,s)=>n+s.kids.length,0)+' trẻ bán trú')}</div>`
- +`<div class="two"><div class="card"><h2>Việc cần làm</h2>${todo(un,'lượt học chưa điểm danh ngày '+vdm(WD)+', chưa tính được phí','dd','er')}${todo(db.length,'gia đình còn nợ học phí','hp','er')}${todo(noCC,'nhân sự chưa chấm công ngày '+vdm(WD),'cc')}${todo(pend,'đơn nghỉ phép nhân sự chờ Quản lý duyệt','cc')}${!un&&!db.length&&!noCC&&!pend?'<p class="empty">Không còn việc tồn đọng.</p>':''}</div>
+ +plockCard()+`<div class="two"><div class="card"><h2>Việc cần làm</h2>${todo(un,'lượt học chưa điểm danh ngày '+vdm(WD)+', chưa tính được phí','dd','er')}${todo(db.length,'gia đình còn nợ học phí','hp','er')}${todo(noCC,'nhân sự chưa chấm công ngày '+vdm(WD),'cc')}${todo(pend,'đơn nghỉ phép nhân sự chờ Quản lý duyệt','cc')}${!un&&!db.length&&!noCC&&!pend?'<p class="empty">Không còn việc tồn đọng.</p>':''}</div>
  <div class="card"><h2>Công nợ lớn nhất</h2>${db.length?db.slice(0,5).map(k=>`<div class="rw"><span><b>${esc(k.n)}</b><br><span class="sm mu">${esc(k.pr)} ${esc(given(k.pn))} · ${esc(k.pp)}</span></span><b>${fmt(balance(k.id))}</b></div>`).join(''):'<p class="empty">Không có gia đình nào còn nợ.</p>'}<div class="acts" style="margin-top:10px"><button class="btn s" data-a="nav" data-v="hp">Mở Học phí</button><button class="btn s" data-a="nav" data-v="tl">Mở bảng lương</button></div></div></div>`}
 function dashLead(){
  const ds=dayList(WD),one=ds.filter(s=>s.kind!=='bt').length,btk=ds.filter(s=>s.kind==='bt').reduce((n,s)=>n+s.kids.length,0),fs=feeStats(CM),act=DB.kids.filter(k=>k.st==='dang'),un=unrecorded(WD),$=canMoney(),
@@ -1219,7 +1226,7 @@ function dashLead(){
  const mix=[['Chỉ can thiệp 1-1',act.filter(k=>k.m11>0&&!k.bt).length],['Cả 1-1 và bán trú',act.filter(k=>k.m11>0&&k.bt).length],['Chỉ bán trú',act.filter(k=>!k.m11&&k.bt).length]];
  return head('Dashboard','Tổng quan vận hành '+esc(DB.cfg.name))
  +`<div class="grid g3">${kpi('Trẻ đang học',act.length,DB.kids.length+' hồ sơ, '+(DB.kids.length-act.length)+' nghỉ hoặc bảo lưu')}${kpi('Nhân sự',DB.staff.filter(s=>s.st==='dang').length,DB.staff.filter(s=>s.role==='gv').length+' giáo viên và trợ giảng')}${kpi('Ngày '+vdm(WD),one+' buổi 1-1',btk+' trẻ bán trú')}${$?kpi('Đã thu '+mLow(CM),fmt(fs.paid),'Phải thu '+fmt(fs.due))+kpi('Công nợ',fmt(totalDebt()),debtors().length+' gia đình còn nợ',totalDebt()?'er':'ok'):kpi('Bán trú',DB.kids.filter(k=>k.st==='dang'&&k.gr).length+' trẻ',btc)+kpi('Chờ xử lý',wait,'đơn nghỉ phép, học bù, báo cáo',wait?'er':'ok')}${kpi('Chưa điểm danh',un,'ngày '+vdm(WD),un?'er':'ok')}</div>`
- +`<div class="two"><div class="card"><h2>Việc cần làm</h2>${todo(DB.lr.filter(l=>l.s==='cho').length,'đơn nghỉ phép chờ duyệt','cc')}${todo(DB.mk.filter(r=>r.s==='dk').length,'yêu cầu học bù chờ xếp lịch','hb')}${todo(DB.rp.filter(r=>r.s==='cho').length,'báo cáo chuyên môn chờ duyệt','bc')}${todo(un,'lượt học chưa điểm danh ngày '+vdm(WD),'dd','er')}${$?todo(debtors().length,'gia đình còn nợ học phí','hp','er'):''}${DB.lr.every(l=>l.s!=='cho')&&!DB.mk.some(r=>r.s==='dk')&&!DB.rp.some(r=>r.s==='cho')&&!un&&!($&&debtors().length)?'<p class="empty">Không còn việc tồn đọng.</p>':''}</div>
+ +plockCard()+`<div class="two"><div class="card"><h2>Việc cần làm</h2>${todo(DB.lr.filter(l=>l.s==='cho').length,'đơn nghỉ phép chờ duyệt','cc')}${todo(DB.mk.filter(r=>r.s==='dk').length,'yêu cầu học bù chờ xếp lịch','hb')}${todo(DB.rp.filter(r=>r.s==='cho').length,'báo cáo chuyên môn chờ duyệt','bc')}${todo(un,'lượt học chưa điểm danh ngày '+vdm(WD),'dd','er')}${$?todo(debtors().length,'gia đình còn nợ học phí','hp','er'):''}${DB.lr.every(l=>l.s!=='cho')&&!DB.mk.some(r=>r.s==='dk')&&!DB.rp.some(r=>r.s==='cho')&&!un&&!($&&debtors().length)?'<p class="empty">Không còn việc tồn đọng.</p>':''}</div>
  <div class="card"><h2>Chuyên cần ${days.length} ngày gần nhất</h2><div style="display:flex;align-items:flex-end;gap:5px;height:120px" role="img" aria-label="Tỷ lệ có mặt theo ngày">${days.map(d=>{const r=attRate(d);return`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:0" title="${vd(d)}: ${r}%"><i style="display:block;height:${r}%;background:${r>=85?'var(--ok)':r>=75?'var(--wa)':'var(--er)'};border-radius:4px 4px 0 0"></i></div>`}).join('')}</div><div style="display:flex;gap:5px;margin-top:4px">${days.map(d=>`<span class="sm mu" style="flex:1;font-size:10px;text-align:center;min-width:0">${vdm(d).slice(0,2)}</span>`).join('')}</div><p class="sm mu" style="margin-top:6px">Chiều cao cột là tỷ lệ có mặt; cột xanh từ 85% trở lên, vàng từ 75%, đỏ dưới 75%.</p></div></div>`
  +`<div class="two"><div class="card"><h2>Cơ cấu chương trình</h2>${mix.map(([l,n])=>`<div class="rw"><span>${l}</span><span style="display:flex;gap:8px;align-items:center;min-width:160px"><div style="flex:1">${bar(n*100/(act.length||1))}</div><b>${n}</b></span></div>`).join('')}</div>
  <div class="card"><h2>Lịch ngày ${vdm(WD)} theo ca</h2>${[...new Set(SLOTS.concat(ds.filter(x=>x.kind!=='bt'&&x.slot).map(x=>x.slot)))].sort().map(s=>{const n=ds.filter(x=>x.slot===s&&x.kind!=='bt').length;return`<div class="rw"><span>${slotLb(s)}</span><span style="display:flex;gap:8px;align-items:center;min-width:140px"><div style="flex:1">${bar(n*100/ROOMS.length)}</div><b>${n}/${ROOMS.length}</b></span></div>`}).join('')}<p class="sm mu" style="margin-top:6px">Số phòng đang dùng trên tổng ${ROOMS.length} phòng.</p></div></div>`}
@@ -1997,7 +2004,7 @@ function hpStaff(){const h=S.hp=Object.assign({tab:'tq',m:CM,st:'',q:''},S.hp),m
  +tabsH(tabs,h.tab,'hptab')+(h.tab==='tq'?hpDebt(h):h.tab==='sao'?hpBook(h):h.tab==='hol'?holTab():hpGen())}
 function hpDebt(h){const m=h.m,q=h.q.toLowerCase();
  const rows=DB.kids.filter(k=>(k.st==='dang'||balance(k.id)!==0)&&(!q||(k.n+' '+k.pn).toLowerCase().includes(q))).map(k=>({k,b:balance(k.id)})).filter(x=>!h.st||(h.st==='no'?x.b>0:h.st==='du'?x.b<0:x.b===0)).sort((a,c)=>c.b-a.b),p=pg('hp',rows,15);
- return`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="hpq">Tìm theo tên bé hoặc phụ huynh</label><input id="hpq" data-i="hpq" value="${esc(h.q)}"></div><div><label for="hpm">Tháng</label><select id="hpm" data-c="hpm">${opts([sm(CM,-2),sm(CM,-1),CM].map(x=>[x,mLabel(x)]),m)}</select></div><div><label for="hps">Tình trạng</label><select id="hps" data-c="hps"><option value="">Tất cả</option>${opts([['no','Còn nợ'],['dd','Đã đủ'],['du','Dư có']],h.st)}</select></div></div>`
+ return plockCard(true)+`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="hpq">Tìm theo tên bé hoặc phụ huynh</label><input id="hpq" data-i="hpq" value="${esc(h.q)}"></div><div><label for="hpm">Tháng</label><select id="hpm" data-c="hpm">${opts([sm(CM,-2),sm(CM,-1),CM].map(x=>[x,mLabel(x)]),m)}</select></div><div><label for="hps">Tình trạng</label><select id="hps" data-c="hps"><option value="">Tất cả</option>${opts([['no','Còn nợ'],['dd','Đã đủ'],['du','Dư có']],h.st)}</select></div></div>`
  +tbl(['Bé','Phụ huynh','>Học phí '+m.slice(5)+'/'+m.slice(0,4),'>Trừ phí dư tháng trước','>Đã thu','>Công nợ','Tình trạng',''],p.rows.map(({k,b})=>`<tr><td><b>${esc(k.n)}</b><br><span class="sm mu">${esc(progShort(k))}</span></td><td>${esc(k.pn)}<br><span class="sm mu">${esc(k.pp)}</span></td><td class="r nw">${fnum(billed(k.id,m))}</td><td class="r nw">${surM(k.id,m)?'-'+fnum(surM(k.id,m)):'–'}</td><td class="r nw">${fnum(paidM(k.id,m))}</td><td class="r nw"><b>${fnum(b)}</b></td><td>${balTag(b,k)}</td><td class="nw"><button class="btn s" data-a="slopen" data-v="${k.id}">Sổ</button>${canMoney()?` <button class="btn s p" data-a="thuopen" data-v="${k.id}">Ghi thu</button>`:''}</td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+`</div>`}
 function hpBook(h){const es=DB.lg.slice().sort((a,c)=>a.date===c.date?(a.id<c.id?1:-1):a.date<c.date?1:-1),p=pg('hpb',es,20);
  return`<div class="card">`+tbl(['Ngày','Bé','Loại','Nội dung','>Số tiền'],p.rows.map(e=>`<tr><td class="nw">${vd(e.date)}</td><td>${esc(kn(e.hs))}</td><td>${tg(LGK[e.kind][0],LGK[e.kind][1])}</td><td>${esc(e.note)}</td><td class="r nw">${LGK[e.kind][2]>0?'':'-'}${fnum(e.amt)}</td></tr>`).join(''),'Chưa có giao dịch.')+p.html+`</div>`}
@@ -2447,6 +2454,90 @@ function feeNextCard(k){const nm=sm(CM,1),f=feeBreak(k,nm),pm=CM;
   ${row('Trừ phí dư '+mLow(pm)+(f.posted?'':' (tạm tính)'),f.sur?'-'+fmt(f.sur):fmt(0),f.sur?'ok':'')}
   ${row('Phải đóng',fmt(f.due),'ok')}
   <p class="sm mu" style="margin-top:6px">Học phí đóng trước đầu tháng. Phí dư là khoản hoàn do bé nghỉ có phép, Trung tâm nghỉ hoặc nhập viện có giấy. Số tạm tính có thể đổi nếu còn buổi chưa điểm danh.</p></div>`}
+/* ===== Khóa cổng phụ huynh khi quá hạn học phí (sau ngày 10 hàng tháng) =====
+   Bản chạy thật tính khóa ở máy chủ (api/_lock.js, api/parent.js); đây là bản tương đương cho chế độ ?demo và phần giao diện.
+   Quy tắc phải khớp api/_lock.js: học phí tháng M trả trước, hạn hết ngày 10 của tháng M.
+   Từ ngày 11 phải đã đóng đủ các tháng đến M; từ ngày 1 đến 10 chỉ cần đủ các tháng đến M-1.
+   Khoản đã thu, giảm giá, hoàn phí, nhận chuyển phí trừ lần lượt vào tháng cũ nhất, gộp mọi bé của cùng phụ huynh. */
+const LKS={hp:1,cfo:1,thu:-1,gg:-1,hoan:-1,cfi:-1},LK_MIN=1000,LK_MAX_DAYS=93;
+const lkDue=t=>+t.slice(8,10)>10?t.slice(0,7):sm(t.slice(0,7),-1);
+const lkNext10=t=>(+t.slice(8,10)<=10?t.slice(0,7):sm(t.slice(0,7),1))+'-10';
+function lkCalc(entries,today,pul){
+ const due=lkDue(today),ch={};let credit=0;
+ (entries||[]).forEach(e=>{const s=LKS[e.kind],a=+e.amt;if(!s||!(a>0))return;
+  if(s<0){credit+=a;return}
+  const m=/^\d{4}-\d{2}$/.test(e.m||'')?e.m:String(e.date||'').slice(0,7);if(/^\d{4}-\d{2}$/.test(m))ch[m]=(ch[m]||0)+a});
+ let amt=0;const months=[];
+ Object.keys(ch).sort().forEach(m=>{const take=Math.min(credit,ch[m]);credit-=take;const rem=ch[m]-take;if(rem>0&&m<=due){amt+=rem;months.push(m)}});
+ const over=amt>=LK_MIN,un=!!(pul&&/^\d{4}-\d{2}-\d{2}$/.test(String(pul.until||''))&&pul.until>=today);
+ return{locked:over&&!un,overdue:over,unlocked:over&&un,amt:over?amt:0,months:over?months:[],due,until:over&&un?pul.until:'',by:(pul&&pul.by)||'',at:(pul&&pul.at)||'',note:(pul&&pul.note)||''}}
+
+/* chế độ ?demo: tính từ sổ học phí trong trình duyệt */
+function phLockOf(key){
+ const ids=DB.kids.filter(k=>pkeyOf(k)===key).map(k=>k.id);
+ return Object.assign(lkCalc(DB.lg.filter(e=>ids.includes(e.hs)),TODAY,(DB.pul||{})[key]),{today:TODAY,tel:DB.cfg.tel||'',name:DB.cfg.name||''})}
+function plRowsLocal(){
+ const by={};DB.kids.forEach(k=>{const key=pkeyOf(k);if(!key)return;const g=by[key]=by[key]||{key,name:k.pn,kids:[],ids:[]};g.kids.push(k.n);g.ids.push(k.id)});
+ return Object.values(by).map(g=>Object.assign({key:g.key,name:g.name,kids:g.kids},lkCalc(DB.lg.filter(e=>g.ids.includes(e.hs)),TODAY,(DB.pul||{})[g.key]))).filter(r=>r.overdue)
+  .sort((a,b)=>(b.locked-a.locked)||(b.amt-a.amt)||(a.name<b.name?-1:1))}
+
+/* ---- màn hình khóa của phụ huynh (chữ lớn, dễ đọc) ---- */
+const lkMonths=ms=>(ms||[]).map(m=>(+m.slice(5,7))+'/'+m.slice(0,4)).join(', ');
+function lockHtml(lk){
+ const tel=lk.tel?`<p class="plg-tel">Liên hệ Trung tâm: <b>${esc(lk.tel)}</b></p>`:'';
+ return`<div class="lg"><div class="lgl"><img src="${LOGO}" alt="Logo Trung tâm Can thiệp sớm Golden Bee"><h1>${esc(lk.name||CL_NAME)}</h1></div>
+ <div class="lgr"><div class="lgc plg"><h2>Cổng phụ huynh đang tạm khóa</h2>
+ <p class="plg-big" role="alert">Học phí ${lk.months&&lk.months.length?'tháng '+esc(lkMonths(lk.months)):''} chưa được thanh toán sau hạn ngày 10.</p>
+ ${lk.amt?`<div class="plg-amt"><span>Số tiền còn phải đóng</span><b>${fmt(lk.amt)}</b></div>`:''}
+ <p>Khi Trung tâm ghi nhận khoản thanh toán, cổng sẽ tự động mở lại. Nếu bạn đã chuyển khoản, hãy báo cho Trung tâm rồi bấm “Kiểm tra lại”.</p>${tel}
+ <div class="acts" style="margin-top:16px"><button class="btn p" data-a="lockchk">Kiểm tra lại</button><button class="btn" data-a="logout">Đăng xuất</button></div></div></div></div>`}
+ACT.lockchk=()=>{if(CLOUDMODE){phLoad();return false}};      /* bản demo: vẽ lại là đủ */
+
+/* ---- phía nhân viên: danh sách phụ huynh quá hạn, mở khóa tạm, khóa lại ---- */
+const canPlock=()=>isTT()||isQL()||isVP();
+const plRows=()=>CLOUDMODE?(CLD.plock?CLD.plock.rows:null):plRowsLocal();
+async function plApi(body,again){
+ const r=await fetch((typeof window.GB_API==='string'?window.GB_API:'')+'/api/plock',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+CLD.ss.at},body:JSON.stringify(body)});
+ if(r.status===401&&!again&&await sbRefresh())return plApi(body,true);
+ if(r.status===404)throw new Error('Máy chủ chưa có chức năng khóa cổng phụ huynh.');
+ const j=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(j.error||('Lỗi '+r.status));
+ return j}
+async function plLoad(quiet){if(!CLOUDMODE||!U||!canPlock())return;
+ try{const j=await plApi({action:'list'});const same=CLD.plock&&JSON.stringify(CLD.plock.rows)===JSON.stringify(j.rows)&&!CLD.plockErr;CLD.plock=j;CLD.plockErr='';if(!same&&CLD.stage==='app')softRender()}
+ catch(e){const was=CLD.plockErr;CLD.plockErr=e.message;if(!quiet||was!==e.message){if(CLD.stage==='app')softRender()}}}
+
+function plStatus(r){return r.locked?tg('Đang khóa','er'):`${tg('Đã mở khóa','wa')}<br><span class="sm mu">đến ${vd(r.until)}</span>`}
+function plockCard(always){
+ if(!canPlock())return'';
+ const err=CLOUDMODE&&CLD.plockErr,rows=plRows();
+ if(err)return`<div class="card"><h2>Cổng phụ huynh quá hạn học phí</h2><p class="note sm">Chưa lấy được danh sách: ${esc(err)}</p></div>`;
+ if(rows===null)return'';
+ if(!rows.length)return always?`<div class="card"><h2>Cổng phụ huynh quá hạn học phí</h2><p class="mu">Không có phụ huynh nào quá hạn. Phụ huynh chưa đóng học phí sau ngày 10 hàng tháng sẽ tự động bị khóa cổng, ghi nhận thu đủ là tự mở lại.</p></div>`:'';
+ const p=pg('plk',rows,8),$=canMoney(),nl=rows.filter(r=>r.locked).length;
+ return`<div class="card" id="plock"><div class="top" style="align-items:center"><h2 style="margin:0">Cổng phụ huynh quá hạn học phí</h2>${tg(nl+' đang khóa',nl?'er':'ok')}</div>
+ <p class="sm mu" style="margin:6px 0 10px">Phụ huynh chưa đóng đủ học phí sau ngày 10 hàng tháng bị khóa cổng tự động; ghi nhận thu đủ là cổng tự mở lại. Trưởng Trung tâm, Quản lý và Văn phòng có thể mở khóa tạm.</p>`
+ +tbl(['Phụ huynh','Quá hạn',...($?['>Số tiền']:[]),'Tình trạng',''],p.rows.map(r=>`<tr><td><b>${esc(r.name||'(chưa có tên)')}</b><br><span class="sm mu">${esc((r.kids||[]).join(', '))}</span></td><td class="nw">${esc(lkMonths(r.months))}</td>${$?`<td class="r nw"><b>${fnum(r.amt)}</b></td>`:''}<td>${plStatus(r)}${r.unlocked&&r.by?`<br><span class="sm mu">bởi ${esc(r.by)}</span>`:''}</td><td class="nw">${r.unlocked?`<button class="btn s" data-a="plrelock" data-v="${esc(r.key)}">Khóa lại</button>`:`<button class="btn s p" data-a="plopen" data-v="${esc(r.key)}">Mở khóa</button>`}</td></tr>`).join(''))+p.html+`</div>`}
+
+ACT.plopen=v=>{if(!canPlock())return false;const r=(plRows()||[]).find(x=>x.key===v);if(!r)return false;S.modal={t:'pl',key:v}};
+MODALS.pl=()=>{const r=(plRows()||[]).find(x=>x.key===S.modal.key);if(!r||!canPlock()){S.modal=null;return''}
+ const d=lkNext10(TODAY);
+ return mdl('Mở khóa cổng phụ huynh',`<p><b>${esc(r.name)}</b> · ${esc((r.kids||[]).join(', '))}</p><p class="sm mu">Quá hạn học phí ${esc(lkMonths(r.months))}${canMoney()?' · '+fmt(r.amt):''}. Mở khóa tạm cho phụ huynh vào xem; đến hết ngày đã chọn cổng sẽ khóa lại nếu vẫn chưa đóng đủ.</p>
+ <form id="plf" class="f"><div class="f2"><div><label for="pl-d">Mở đến hết ngày</label><input id="pl-d" name="until" type="date" value="${d}" min="${TODAY}" max="${addD(TODAY,LK_MAX_DAYS)}" required></div><div><label for="pl-n">Ghi chú (không bắt buộc)</label><input id="pl-n" name="note" maxlength="200" placeholder="Ví dụ: hẹn đóng ngày 15"></div></div>
+ <div class="acts"><button class="btn p" type="submit">Mở khóa</button><button class="btn" type="button" data-a="mx">Hủy</button></div></form>`)};
+FORM.plf=f=>{if(!canPlock())return false;
+ const key=S.modal.key,until=f.elements.until.value,note=f.elements.note.value.trim().slice(0,200);
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(until)||until<TODAY||until>addD(TODAY,LK_MAX_DAYS)){toast('Ngày mở khóa phải từ hôm nay đến '+vd(addD(TODAY,LK_MAX_DAYS)));return false}
+ if(!CLOUDMODE){DB.pul=DB.pul||{};DB.pul[key]={k:key,until,by:U.name,role:U.role,at:TODAY,note};S.modal=null;toast('Đã mở khóa đến hết ngày '+vd(until));return}
+ plRun({action:'unlock',key,until,note},'Đã mở khóa đến hết ngày '+vd(until));return false};
+ACT.plrelock=v=>{if(!canPlock())return false;const r=(plRows()||[]).find(x=>x.key===v);if(!r)return false;
+ ask('Khóa lại cổng của phụ huynh '+(r.name||'')+'? Phụ huynh sẽ không vào được cho đến khi đóng đủ học phí hoặc được mở khóa lại.',()=>{
+  if(!CLOUDMODE){if(DB.pul)delete DB.pul[v];toast('Đã khóa lại');return}
+  plRun({action:'relock',key:v},'Đã khóa lại')},'Khóa lại')};
+async function plRun(body,msg){
+ try{await plApi(body);S.modal=null;toast(msg);await plLoad()}
+ catch(e){toast(e.message)}
+ render()}
 /* ===== Khởi động ===== */
 /* Nâng cấp dữ liệu đã lưu từ bản 2 (chưa có thư viện mục tiêu) lên bản 3, giữ nguyên nhân sự, học sinh, lịch, điểm danh, học phí */
 function migrate(d){
@@ -2500,6 +2591,7 @@ function migrate5(d){
 function migrate6(d){
  DB=d;
  if(!Array.isArray(d.hol))d.hol=[];
+ if(!d.pul||typeof d.pul!=='object'||Array.isArray(d.pul))d.pul={};
  d.v=6}
 const okDB=d=>d&&Array.isArray(d.staff)&&Array.isArray(d.kids)&&d.cfg&&d.cfg.rule&&d.set&&d.rd&&d.att&&Array.isArray(d.rp)&&Array.isArray(d.tpl);
 (function boot(){

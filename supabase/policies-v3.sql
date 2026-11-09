@@ -32,6 +32,7 @@ $$;
 create or replace function private.can_write_records(coll text) returns boolean
 language sql stable security definer set search_path = '' as $$
   select case
+    when coll = 'pul' then false   -- pul: mở khóa cổng phụ huynh quá hạn, chỉ api/plock.js (khóa secret) ghi
     when private.my_role() in ('tt','vp','ql') then true
     when private.my_role() = 'gv' then coll not in ('staff','cfg','hol')   -- hol: ngày nghỉ lễ ảnh hưởng học phí, giáo viên chỉ đọc
     else false end

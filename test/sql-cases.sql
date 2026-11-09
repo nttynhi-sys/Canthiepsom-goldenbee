@@ -70,6 +70,25 @@ do $$ begin
   begin update public.records set data='{"d":"2027-01-02"}' where collection='hol' and id='h1'; if found then raise exception 'FAIL gv sửa được ngày nghỉ lễ'; end if; raise notice 'PASS gv không sửa được ngày nghỉ lễ (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS gv không sửa được ngày nghỉ lễ'; end;
 end $$;
 
+-- Bản ghi mở khóa cổng phụ huynh (pul): trình duyệt không ghi được, kể cả Trưởng Trung tâm; quyền quản trị (máy chủ) ghi được
+select t.as_user('00000000-0000-0000-0000-000000000001','tt@gb.vn');
+do $$ begin
+  begin insert into public.records(collection,id,data) values ('pul','ph@gb.vn','{"until":"2099-01-01"}'); raise exception 'FAIL tt ghi được pul'; exception when insufficient_privilege then raise notice 'PASS tt không ghi được pul'; end;
+end $$;
+select t.as_user('00000000-0000-0000-0000-000000000002','gv@gb.vn');
+do $$ begin
+  begin insert into public.records(collection,id,data) values ('pul','ph@gb.vn','{"until":"2099-01-01"}'); raise exception 'FAIL gv ghi được pul'; exception when insufficient_privilege then raise notice 'PASS gv không ghi được pul'; end;
+end $$;
+reset role;
+insert into public.records(collection,id,data) values ('pul','ph@gb.vn','{"until":"2099-01-01","by":"TT"}');
+set role authenticated;
+select t.as_user('00000000-0000-0000-0000-000000000001','tt@gb.vn');
+do $$ begin
+  begin update public.records set data='{"until":"2099-12-31"}' where collection='pul' and id='ph@gb.vn'; if found then raise exception 'FAIL tt sửa được pul'; end if; raise notice 'PASS tt không sửa được pul (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS tt không sửa được pul'; end;
+  begin delete from public.records where collection='pul' and id='ph@gb.vn'; if found then raise exception 'FAIL tt xóa được pul'; end if; raise notice 'PASS tt không xóa được pul (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS tt không xóa được pul'; end;
+end $$;
+select t.chk('pul vẫn còn nguyên sau khi thử sửa, xóa', (select count(*) from public.records where collection='pul'), 1);
+
 -- Số điện thoại duy nhất
 reset role;
 do $$ begin

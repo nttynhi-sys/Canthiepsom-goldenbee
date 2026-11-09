@@ -135,7 +135,7 @@ function cloudEnter(){
  const a=CLD.role==='ph'?phAccount():staffAccount();
  if(!a){cMsg('Tài khoản này chưa có trong danh sách nhân sự đang làm việc. Trưởng Trung tâm cần thêm hồ sơ nhân sự có đúng email hoặc số điện thoại của tài khoản.');return}
  if(a.role!==CLD.role){cMsg('Vai trò của tài khoản ('+ROLE[CLD.role]+') không khớp với hồ sơ nhân sự ('+ROLE[a.role]+'). Hãy nhờ Trưởng Trung tâm kiểm tra.');return}
- U=a;CLD.stage='app';S.v=ACCESS[a.role][0];S.modal=null;S.menu=false;S.top=1;setSt('ok');render();cloudTimers();accLoad()}
+ U=a;CLD.stage='app';S.v=ACCESS[a.role][0];S.modal=null;S.menu=false;S.top=1;setSt('ok');render();cloudTimers();accLoad();plLoad()}
 function cloudDrop(msg){CLD.ss=null;sbStore(null);U=null;DB=null;CLD.stage='login';CLD.err=msg||'';CLD.snap=new Map();render()}
 async function cloudLogout(){
  try{await cloudFlush()}catch(e){}
@@ -146,10 +146,13 @@ async function cloudLogout(){
 async function phCall(body,again){
  const r=await fetch((typeof window.GB_API==='string'?window.GB_API:'')+'/api/parent',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+CLD.ss.at},body:JSON.stringify(body)});
  if(r.status===401&&!again&&await sbRefresh())return phCall(body,true);
+ if(r.status===423&&CLD.stage==='app')setTimeout(phLoad,0);      /* cổng vừa bị khóa vì quá hạn học phí: tải lại để hiện màn hình khóa */
  return r}
 async function phApi(body){const r=await phCall(body);if(r.status===404)throw new Error('Máy chủ chưa có cổng phụ huynh.');const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('Lỗi '+r.status));return j}
+function phLocked(lock){CLD.lock=lock||{};CLD.stage='locked';DB=null;U=null;CLD.snap=new Map();render()}
 async function phLoad(){
  try{const j=await phApi({action:'load'});
+  if(j.locked){phLocked(j.lock);return}
   if(!j.records.some(r=>r.collection==='cfg')){cMsg('Trung tâm chưa có dữ liệu. Hãy liên hệ Trung tâm.');return}
   DB=cbuild(j.records,j.money);CLD.kids=j.kids;
   CLD.since={records:maxAt(j.records,'1970-01-01T00:00:00Z'),money:maxAt(j.money,'1970-01-01T00:00:00Z')};
@@ -208,6 +211,7 @@ async function cloudPull(){
  try{const withM=canM(),cur=cflat(DB,withM),changed=new Set(),pay={},cfgm={};let any=false;
   const ph=CLD.role==='ph';let got=null;
   if(ph){const r=await phCall({action:'pull',since:CLD.since,known:CLD.kids||[]});if(!r.ok)return;got=await r.json();
+   if(got.locked){phLocked(got.lock);return}
    if(got.reload){await cloudFlush();await cloudLoad();return}}
   for(const t of (ph||withM||CLD.role==='gv'?['records','money']:['records'])){
    let rows;
@@ -224,7 +228,8 @@ async function cloudPull(){
    CFG_MONEY.forEach(k=>{if(cfgm[k]!=null)DB.cfg[k]=cfgm[k]})}
   if(any){const nf=cflat(DB,withM);changed.forEach(k=>{if(nf.has(k))CLD.snap.set(k,nf.get(k).s)});softRender()}}
  catch(e){}
- finally{CLD.pulling=false}}
+ finally{CLD.pulling=false}
+ if(CLD.role!=='ph')plLoad(true)}
 function cloudTimers(){if(CLD.tmr)return;
  CLD.tmr=setInterval(()=>{if(document.visibilityState==='visible')cloudPull()},45000);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')cloudPull();else cloudFlush()})}
@@ -330,6 +335,7 @@ function cloudScreen(){const st=CLD.stage;
  <div class="roles"><button class="btn p" data-a="csetup" data-v="empty"><b>Bắt đầu với dữ liệu trống</b><span>Để nhập dữ liệu thật của trung tâm</span></button>
  <button class="btn" data-a="csetup" data-v="demo"><b>Nạp dữ liệu mẫu để xem thử</b><span>Khoảng 100 trẻ giả lập. Dữ liệu mẫu sẽ nằm cùng dữ liệu thật nếu bạn nhập tiếp</span></button></div>
  <p class="sm mu" style="margin-top:14px">Tài khoản đăng nhập: ${esc(CLD.ss?CLD.ss.email:'')}</p></div></div></div>`;
+ if(st==='locked')return lockHtml(CLD.lock||{});
  if(st==='msg')return`<div class="lg">${lgLeft()}<div class="lgr"><div class="lgc"><h2>Chưa vào được hệ thống</h2><p role="alert">${esc(CLD.msg)}</p><div class="acts" style="margin-top:14px"><button class="btn p" data-a="logout">Đăng xuất</button></div></div></div></div>`;
  return`<div class="lg">${lgLeft()}<div class="lgr"><div class="lgc"><h2>Đăng nhập</h2>
  <form id="login" class="f" autocomplete="on"><div><label for="lg-e">Email hoặc số điện thoại</label><input id="lg-e" name="e" type="text" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(CLD.email||'')}" placeholder="ten@email.com hoặc 0901 234 567"></div><div><label for="lg-p">Mật khẩu</label><input id="lg-p" name="p" type="password" required autocomplete="current-password"></div><div class="err" role="alert">${esc(CLD.err||'')}</div><button class="btn p" type="submit">Đăng nhập</button></form>

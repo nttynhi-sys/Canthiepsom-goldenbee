@@ -76,3 +76,12 @@ button.sc{border:0;cursor:pointer}button.sc:disabled{cursor:default}
 .vbp{margin:0 0 10px}
 .vbp .note label{display:block;margin-bottom:4px}
 .vbp .note select{margin-bottom:8px}
+
+/* Màn hình khóa cổng phụ huynh: chữ lớn, tương phản cao */
+.lgc.plg{font-size:18px;line-height:1.55}
+.lgc.plg h2{font-size:26px}
+.plg-big{font-size:20px;font-weight:600}
+.plg-amt{margin:14px 0;padding:16px 18px;border-radius:14px;border:2px solid var(--er);background:var(--ers)}
+.plg-amt span{display:block;font-size:15px;color:var(--mu)}
+.plg-amt b{display:block;font-size:34px;color:var(--er);letter-spacing:.2px}
+.plg-tel{font-size:18px}

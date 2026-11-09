@@ -51,6 +51,7 @@ function migrate5(d){
 function migrate6(d){
  DB=d;
  if(!Array.isArray(d.hol))d.hol=[];
+ if(!d.pul||typeof d.pul!=='object'||Array.isArray(d.pul))d.pul={};
  d.v=6}
 const okDB=d=>d&&Array.isArray(d.staff)&&Array.isArray(d.kids)&&d.cfg&&d.cfg.rule&&d.set&&d.rd&&d.att&&Array.isArray(d.rp)&&Array.isArray(d.tpl);
 (function boot(){
