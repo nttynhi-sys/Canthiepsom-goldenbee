@@ -6,7 +6,7 @@ const SECRET = 'sb_secret_EMU_KEY';
 const jnorm = v => Array.isArray(v) ? v.map(jnorm) : (v && typeof v === 'object') ? Object.keys(v).sort((a, b) => a.length - b.length || (a < b ? -1 : 1)).reduce((o, k) => (o[k] = jnorm(v[k]), o), {}) : v;
 
 function makeEmu() {
-  const S = { users: new Map(), tokens: {}, profiles: [], recs: new Map(), mon: new Map(), clock: 0, log: [], n: 0, noPhoneCol: false, rejectDomain: '', failProfile: false };
+  const S = { objs: new Map(), signs: new Map(), users: new Map(), tokens: {}, profiles: [], recs: new Map(), mon: new Map(), clock: 0, log: [], n: 0, noPhoneCol: false, rejectDomain: '', failProfile: false };
   const now = () => new Date(Date.UTC(2026, 10, 9, 0, 0, 0) + (++S.clock) * 1000).toISOString().replace('Z', '000+00:00');
   S.addUser = (email, pw, prof) => {
     const u = { id: '00000000-0000-4000-8000-' + String(++S.n).padStart(12, '0'), email: email.toLowerCase(), pw, banned: false, confirmed: true };
@@ -67,8 +67,59 @@ function makeEmu() {
   const canWrite = (a, t, c) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records' && c === 'pul') return false;   /* chỉ khóa secret (máy chủ) ghi bản ghi mở khóa */
     if (t === 'records') return a.role === 'gv' ? !['staff', 'cfg', 'hol'].includes(c) : ['tt', 'vp', 'ql'].includes(a.role); return ['tt', 'vp'].includes(a.role); };
 
+  /* ---- Supabase Storage (bucket riêng tư gb-media, theo supabase/migrations/20261109150000_media_bucket.sql) ---- */
+  const MED_CT = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'text/csv', 'text/plain', 'text/markdown'];
+  S.mediaMax = 50 * 1024 * 1024;
+  function storage(method, path, params, h, buf) {
+    const ok = (status, body, extra) => Object.assign({ status, body }, extra || {});
+    S.log.push(method + ' ' + path);
+    const m = /^\/storage\/v1\/object\/(sign\/)?gb-media(?:\/(.*))?$/.exec(path);
+    if (!m) return ok(404, { message: 'Bucket not found' });
+    const isSign = !!m[1], obj = m[2] ? decodeURIComponent(m[2]) : '';
+    /* tải về bằng đường xem tạm: kiểm tra mã trong địa chỉ, không cần đăng nhập */
+    if (isSign && method === 'GET') {
+      const t = S.signs.get(params.get('token') || '');
+      if (!t || t.exp < Date.now() || t.path !== obj) return ok(400, { statusCode: '400', error: 'InvalidJWT', message: 'invalid or expired token' });
+      const o = S.objs.get(obj); if (!o) return ok(404, { message: 'Object not found' });
+      return ok(200, null, { buf: o.buf, ct: o.ct });
+    }
+    const a = actor(h);
+    if (!a) return ok(401, { statusCode: '401', error: 'Unauthorized', message: 'Invalid JWT' });
+    const staff = a.svc || ['tt', 'vp', 'ql', 'gv'].includes(a.role);
+    if (isSign && method === 'POST' && !obj) {   /* ký nhiều đường dẫn cùng lúc */
+      if (!staff) return ok(400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
+      let b = null; try { b = JSON.parse(buf ? buf.toString() : 'null'); } catch (e) { }
+      if (!b || !Array.isArray(b.paths)) return ok(400, { message: 'paths required' });
+      S.signCount = (S.signCount || 0) + 1;
+      const ttl = Math.max(1, +b.expiresIn || 60) * 1000;
+      return ok(200, b.paths.map(p => {
+        if (!S.objs.has(p)) return { error: 'Either the object does not exist or you do not have access to it', path: p, signedURL: null };
+        const tok = 'sg' + (++S.n) + Math.random().toString(36).slice(2, 8); S.signs.set(tok, { path: p, exp: Date.now() + (S.signTtl || ttl) });
+        return { error: null, path: p, signedURL: '/object/sign/gb-media/' + p + '?token=' + tok };
+      }));
+    }
+    if (!isSign && method === 'POST' && obj) {   /* tải lên */
+      const ct = String(h['content-type'] || '').split(';')[0].trim();
+      if (!staff || !/^m\/[A-Za-z0-9_.\-]{1,80}$/.test(obj)) return ok(400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
+      if (!MED_CT.includes(ct)) return ok(415, { statusCode: '415', error: 'invalid_mime_type', message: 'mime type ' + ct + ' is not supported' });
+      if ((buf ? buf.length : 0) > S.mediaMax) return ok(413, { statusCode: '413', error: 'Payload too large', message: 'The object exceeded the maximum allowed size' });
+      if (S.objs.has(obj)) return ok(400, { statusCode: '409', error: 'Duplicate', message: 'The resource already exists' });
+      if (S.failUpload) return ok(500, { message: 'boom' });
+      S.objs.set(obj, { buf: buf || Buffer.alloc(0), ct, owner: a.svc ? 'svc' : a.uid });
+      return ok(200, { Key: 'gb-media/' + obj, Id: 'o' + S.objs.size });
+    }
+    if (!isSign && method === 'DELETE' && obj) {
+      const o = S.objs.get(obj);
+      const can = o && (a.svc || ['tt', 'vp', 'ql'].includes(a.role) || (a.role === 'gv' && o.owner === a.uid));
+      if (!can) return ok(404, { statusCode: '404', error: 'not_found', message: 'Object not found' });   /* như Supabase thật: tệp ẩn do RLS cũng báo không thấy */
+      S.objs.delete(obj); return ok(200, { message: 'Successfully deleted' });
+    }
+    return ok(405, {});
+  }
+
   /* ---- lõi xử lý một yêu cầu ---- */
-  function core(method, path, params, h, bodyText) {
+  function core(method, path, params, h, bodyText, bodyBuf) {
+    if (path.startsWith('/storage/v1/')) return storage(method, path, params, h, bodyBuf !== undefined ? bodyBuf : (bodyText ? Buffer.from(bodyText) : null));
     const ok = (status, body) => ({ status, body });
     S.log.push(method + ' ' + path + (params.toString() ? '?' + params.toString().slice(0, 120) : ''));
     let b = null; try { b = bodyText ? JSON.parse(bodyText) : null; } catch (e) { b = null; }
@@ -160,12 +211,14 @@ function makeEmu() {
     const req = route.request(), url = new URL(req.url());
     const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' };
     if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    const r = core(req.method(), url.pathname, url.searchParams, req.headers(), req.postData());
+    const st = url.pathname.startsWith('/storage/v1/');
+    const r = core(req.method(), url.pathname, url.searchParams, req.headers(), st ? null : req.postData(), st ? req.postDataBuffer() : undefined);
+    if (r.buf) return route.fulfill({ status: r.status, contentType: r.ct || 'application/octet-stream', headers: cors, body: r.buf });
     route.fulfill({ status: r.status, contentType: 'application/json', headers: cors, body: r.body == null || r.status === 204 ? '' : JSON.stringify(r.body) });
   });
   /* HTTP thật cho các hàm api/*.js */
   S.listen = () => new Promise(res => {
-    const srv = http.createServer((req, rs) => { let body = ''; req.on('data', c => body += c); req.on('end', () => { const u = new URL(req.url, 'http://x'); const r = core(req.method, u.pathname, u.searchParams, req.headers, body); rs.writeHead(r.status, { 'content-type': 'application/json' }); rs.end(r.body == null || r.status === 204 ? '' : JSON.stringify(r.body)); }); });
+    const srv = http.createServer((req, rs) => { let body = ''; req.on('data', c => body += c); req.on('end', () => { const u = new URL(req.url, 'http://x'); const r = core(req.method, u.pathname, u.searchParams, req.headers, body); if (r.buf) { rs.writeHead(r.status, { 'content-type': r.ct || 'application/octet-stream' }); rs.end(r.buf); return; } rs.writeHead(r.status, { 'content-type': 'application/json' }); rs.end(r.body == null || r.status === 204 ? '' : JSON.stringify(r.body)); }); });
     srv.listen(0, () => { S.srv = srv; S.url = 'http://127.0.0.1:' + srv.address().port; process.env.SUPABASE_URL = S.url; process.env.SUPABASE_SECRET_KEY = SECRET; res(S); });
   });
   /* chuyển /api/* của trình duyệt sang các hàm xử lý thật */

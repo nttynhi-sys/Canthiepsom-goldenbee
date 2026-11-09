@@ -10,7 +10,8 @@
 - `api/`: các hàm chạy trên Vercel, dùng khóa secret của Supabase (biến môi trường `SUPABASE_SECRET_KEY` trong Vercel → Settings → Environment Variables; khóa này không bao giờ nằm trong mã hay trình duyệt):
   - `accounts.js`: Trưởng Trung tâm cấp, đặt lại mật khẩu, thu hồi tài khoản nhân viên và phụ huynh ngay trong app.
   - `login.js`: đổi số điện thoại thành email đăng nhập (Supabase đăng nhập bằng email).
-  - `parent.js`: cổng dữ liệu cho phụ huynh (xem phần Phụ huynh).
+  - `parent.js`: cổng dữ liệu cho phụ huynh (xem phần Phụ huynh): tải dữ liệu của bé mình, ghi vài loại hẹp, cấp đường xem tạm cho ảnh/video (`sign`).
+  - `plock.js`, `_lock.js`: khóa cổng phụ huynh quá hạn học phí (xem phần Khóa cổng phụ huynh).
   - `_lib.js`: phần dùng chung.
 - `test/`: kiểm thử. `phone-api.js` (hàm máy chủ), `cloud-phone-ui.js` (giao diện đầu-cuối), `sql-test.sh` (chính sách SQL trên Postgres cục bộ, cả cài mới lẫn nâng cấp từ dự án đang chạy), cùng `cloud-test.js`, `cloud-empty.js`, `cloud-acc-ui.js`, `api-test.js`, `n27-btfee.js` (học phí bán trú, lịch 1-1 linh hoạt, chẩn đoán, thời khóa biểu, lương theo ca).
 - `trung-tam-tri-lieu.html`: bản trình diễn cũ (dữ liệu mẫu trong trình duyệt).
@@ -23,7 +24,33 @@
 - **Thời khóa biểu bán trú** (Lịch học → Thời khóa biểu bán trú): thời khóa biểu lớp kiểu mầm non (đón trẻ, thể dục sáng, ăn, ngủ, hoạt động...) theo từng lớp, sửa được (Trưởng Trung tâm, Quản lý). Giờ 1-1 của từng bé ghép lên thời khóa biểu: tên bé hiện ở ô giờ ra học 1-1; có chế độ xem từng bé. Phụ huynh xem thời khóa biểu của bé mình. Lưu ở bộ sưu tập `tkb` của bảng `records`, không cần chạy thêm SQL.
 - **Chẩn đoán** (hồ sơ bé): chọn nhiều trong thư viện hơn 120 mục chia nhóm (ngôn ngữ, nói, giao tiếp xã hội và phổ tự kỷ, phát triển, thính giác, thần kinh, hành vi và cảm xúc...) kèm mã ICD-10 để tra cứu, có ô lọc nhanh, thêm ô "chẩn đoán khác" và nơi chẩn đoán. Thư viện ở `src/build/p03d-dx.js`.
 - **Lương giáo viên:** giáo viên bán trú lương cố định theo tháng. Giáo viên 1-1 trả theo ca: 60.000 ₫ hoặc 80.000 ₫ tùy người (Nhân sự → hồ sơ → lương). Bé có mặt hoặc dạy bù: trả đủ. Bé nghỉ không phép: 50% (30.000 ₫ hoặc 40.000 ₫). Bé nghỉ có phép, Trung tâm nghỉ, nhập viện: 0% theo mặc định. Các tỉ lệ này chỉnh ở Nhân sự → Cài đặt → Lương giáo viên 1-1 theo ca. Ca của giáo viên tính theo điểm danh của bé trong ca đó.
-- Dữ liệu mẫu bản 5 (`DB.v`): bản cũ tự nâng cấp lên (giá theo ngày, thời khóa biểu, chẩn đoán); phí bán trú theo tháng cũ (`pbtCN`, `pbtKhac`) được thay bằng giá theo ngày.
+- Dữ liệu mẫu bản 6 (`DB.v`): bản cũ tự nâng cấp lên (giá theo ngày, thời khóa biểu, chẩn đoán, danh sách ngày nghỉ `hol`, bản ghi mở khóa `pul`); phí bán trú theo tháng cũ (`pbtCN`, `pbtKhac`) được thay bằng giá theo ngày. Danh mục ảnh, video (`media`) được tạo khi dùng lần đầu.
+
+## Thực đơn, giờ 1-1 và ngày nghỉ
+- **Thực đơn bán trú** nhập từ thứ Hai đến thứ Bảy (6 ngày); sao chép tuần có cả thứ Bảy, Chủ nhật chuyển sang thứ Hai.
+- **Giờ 1-1 chọn tự do** như giờ bán trú: gõ giờ bắt đầu bất kỳ trong khung 07:15 đến 20:00 (ca cuối bắt đầu muộn nhất 19:10), mỗi ca 50 phút, giờ kết thúc tự tính. Trùng giáo viên, bé, phòng kiểm tra theo khoảng giờ chồng nhau (hai ca cách nhau dưới 50 phút là trùng); phòng có thể để "Tự chọn phòng trống". Quy tắc này chạy cả ở trình duyệt và ở `api/parent.js` (phụ huynh đăng ký học bù).
+- **Ngày nghỉ lễ, Trung tâm cho nghỉ** (`hol`, mục Lịch học → Ngày nghỉ): đặt trước để lên học phí đầu tháng. Ngày nghỉ không tính học phí bán trú, ca 1-1 và không cần điểm danh. Học phí tháng sau của phụ huynh = học phí tháng sau trừ phí dư của tháng trước; bé ngưng đột ngột thì phí dư không hoàn ("Dư không hoàn"). Trưởng Trung tâm, Quản lý, Văn phòng sửa được; giáo viên chỉ đọc. Hóa đơn đã lập không tự đổi khi thêm ngày nghỉ sau đó.
+
+## Khóa cổng phụ huynh quá hạn học phí
+- Học phí tháng M đóng trước, hạn hết ngày 10 (giờ Việt Nam). Từ ngày 11, phụ huynh chưa đóng đủ các tháng đến M bị khóa: chỉ thấy màn hình khóa (số tiền, tháng quá hạn, số điện thoại Trung tâm), không nhận dữ liệu của bé, không ghi được (`api/parent.js` trả 423; kể cả đường xem ảnh/video). Khoản thu, giảm giá, hoàn phí, nhận chuyển phí trừ lần lượt vào tháng cũ nhất, gộp mọi bé của cùng phụ huynh; dưới 1.000 ₫ bỏ qua.
+- Ghi nhận thu đủ là cổng tự mở lại. Trưởng Trung tâm, Quản lý, Văn phòng thấy danh sách phụ huynh quá hạn (Quản lý không thấy số tiền) và có thể mở khóa tạm (mặc định đến ngày 10 kế tiếp, tối đa 93 ngày) hoặc khóa lại. Bản ghi mở khóa (`pul`) chỉ `api/plock.js` ghi được (chính sách SQL chặn trình duyệt).
+- Cùng một quy tắc được tính ở `api/_lock.js` và `src/build/p23-lock.js` (chế độ `?demo`); hai nơi phải giữ giống nhau.
+
+## Cổng phụ huynh: hạn chế chụp màn hình
+- Trình duyệt web **không thể chặn hẳn** chụp màn hình của hệ điều hành hay chụp bằng điện thoại khác. `src/build/p24-guard.js` làm khó và răn đe: lớp phủ gắn tên phụ huynh, email hoặc số điện thoại và giờ xem lên mọi khung hình (truy được nguồn nếu ảnh bị đưa ra ngoài), chặn chuột phải, sao chép, in, lưu trang, che nội dung khi bấm PrintScreen hoặc phím chụp của Mac hoặc khi cửa sổ mất tiêu điểm. Chỉ áp dụng cho tài khoản phụ huynh. Chặn thật cần ứng dụng riêng (Android FLAG_SECURE, iOS phát hiện chụp màn hình).
+
+## Mục tiêu: buổi, ngắn hạn, dài hạn
+- Ba tầng: mục tiêu buổi (dòng mục tiêu trong buổi can thiệp, trường `pl`) → mục tiêu ngắn hạn (kế hoạch `h:'n'`, trường `up`) → mục tiêu dài hạn (kế hoạch `h:'d'`). Dữ liệu cũ chưa có `up`, `pl` vẫn chạy (gắn theo cùng mục tiêu; ngắn hạn chưa gắn nằm ở nhóm "chưa gắn"). Logic ở `src/build/p25-tree.js`.
+- Mục tiêu buổi "Đạt" theo số liệu: bé tự làm (mức Độc lập) đúng từ 80% trở lên (ít nhất 5 lượt) trong 3 buổi liên tiếp. Ngắn hạn và dài hạn chỉ là "Đã đạt" khi nhân viên xác nhận; khi mọi mục tiêu con đã đạt thì hiện "Gần đạt".
+- Phụ huynh thấy cây mục tiêu bằng chữ lớn, màu và biểu tượng (không chỉ màu) để biết con đã đạt hay chưa; báo cáo PDF cho phụ huynh có cây mục tiêu, báo cáo tháng thì không.
+
+## Ảnh, video và tài liệu
+- Tệp nằm trong **Supabase Storage, bucket riêng tư `gb-media`** (không công khai; tạo bằng migration `20261109150000_media_bucket.sql`, tối đa 50 MB mỗi tệp, chỉ nhận ảnh JPG/PNG/WebP/GIF, video MP4/WebM/MOV, PDF, Word, Excel, PowerPoint, CSV, văn bản). Danh mục nằm ở bảng `records`, collection `media`: `{id,kind:'img'|'vid'|'doc',t,p (đường dẫn kho),ct,sz,d,by,bn,at,ks:[mã bé],gr (lớp bán trú),sh (chia sẻ),n,cat}`. Không cần bảng mới.
+- Trưởng Trung tâm, Quản lý, Văn phòng và Giáo viên tải lên thẳng từ trình duyệt (không qua hàm Vercel, vì hàm giới hạn nội dung yêu cầu 4,5 MB). Ảnh tự thu nhỏ về tối đa 1600 điểm cạnh dài trước khi tải. Xem bằng đường xem tạm 1 giờ do Storage ký; phụ huynh không có quyền đọc kho, chỉ nhận đường xem tạm 15 phút qua `api/parent.js` (hành động `sign`), sau khi kiểm tra tệp đã chia sẻ, có bé của mình và cổng không bị khóa.
+- **Hoạt động chung của lớp bán trú:** cô bán trú (giáo viên chính hoặc phụ của lớp) tải ảnh, video lên kèm lớp, chưa gắn bé. Mục Ảnh, video và tài liệu → tab Hoạt động chung: giáo viên chọn nhiều ảnh, bấm "Gắn bé", tích những bé có trong ảnh, rồi mới chia sẻ. Phụ huynh chỉ thấy tệp đã chia sẻ có gắn bé của mình, và dữ liệu họ nhận chỉ chứa mã bé của họ (không lộ bé khác trong cùng ảnh). Chỉ gắn những bé gia đình đã đồng ý cho chia sẻ hình ảnh.
+- Xóa: Trưởng Trung tâm, Quản lý, Văn phòng xóa được mọi tệp; giáo viên chỉ xóa tệp mình tải (chính sách Storage kiểm tra cả ở máy chủ). Tài liệu "Hồ sơ trẻ" bắt buộc gắn bé; tài liệu không gắn bé chỉ nhân viên xem.
+- Giáo viên đọc được mọi tệp trong kho nếu biết đường dẫn (cùng mức tin cậy với bảng `records`); giao diện chỉ hiện tệp của bé mình dạy, lớp mình phụ trách và tệp mình tải.
+- `?demo`: ảnh mẫu SVG; ảnh tải lên được thu nhỏ lưu trong trình duyệt, video và tài liệu chỉ giữ trong phiên.
 
 ## Chế độ
 - Mặc định (trên web): đăng nhập Supabase, dữ liệu lưu trên máy chủ.
@@ -54,4 +81,5 @@
 - Chưa có giới hạn số lần đăng nhập sai ngoài giới hạn mặc định của Supabase.
 - Xóa dữ liệu do người khác thực hiện chỉ hiện sau khi tải lại trang.
 - Dữ liệu điểm danh được tải toàn bộ khi đăng nhập; với hàng trăm trẻ dùng nhiều năm cần tải theo tháng.
-- Video và tài liệu giáo viên tải lên cần Supabase Storage (chưa nối).
+- Ảnh, video: gói Supabase Free giới hạn 1 GB lưu trữ và 50 MB mỗi tệp; Trung tâm dùng nhiều video dài cần nâng gói hoặc nén video trước khi tải. Chưa có xem trước cho tài liệu Word, Excel (mở bằng ứng dụng của máy). Xóa bé không xóa ảnh, video của bé trong kho.
+- Hạn chế chụp màn hình chỉ răn đe, không chặn tuyệt đối (xem phần Cổng phụ huynh: hạn chế chụp màn hình).

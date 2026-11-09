@@ -25,7 +25,7 @@ function hsList(){const h=S.hs,q=h.q.toLowerCase();
 ACT.hsopen=v=>{S.modal={t:'hs',id:v,tab:'tt'}};
 ACT.hstab2=v=>{S.modal.tab=v};
 MODALS.hs=()=>{const m=S.modal,k=kidBy(m.id);if(!k||!canKid(k.id)){S.modal=null;return''}
- const T=[['tt','Thông tin'],['lh','Lịch học'],['kh','Kế hoạch mục tiêu'],['bt','Buổi can thiệp'],['tb','Tiến bộ'],['vd','Video'],['td','Tài liệu']];
+ const T=[['tt','Thông tin'],['lh','Lịch học'],['kh','Kế hoạch mục tiêu'],['bt','Buổi can thiệp'],['tb','Tiến bộ'],['vd','Ảnh và video'],['td','Tài liệu']];
  let b;switch(m.tab){case'lh':b=hsSchedule(k);break;case'kh':b=hsPlan(k);break;case'bt':b=hsSess(k);break;case'tb':b=progView(k,{staff:true});break;case'vd':b=vidList(k.id);break;case'td':b=docList(k.id);break;default:b=hsInfo(k)}
  return mdl(k.n+' · '+k.id,tabsH(T,m.tab,'hstab2')+b,1)};
 function hsInfo(k){const g=grBy(k.gr),r=(a,b)=>`<div class="rw"><span class="mu">${a}</span><b>${b}</b></div>`;

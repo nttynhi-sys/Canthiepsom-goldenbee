@@ -2,7 +2,10 @@
    Hàm xác nhận phụ huynh là ai, chỉ trả về dữ liệu của các bé gắn với tài khoản đó, và chỉ cho ghi vài loại dữ liệu hẹp
    (yêu cầu học bù, lịch học bù của chính bé, đánh dấu đã đọc thông báo). Dùng khóa secret ở máy chủ.
    Phụ huynh quá hạn học phí (sau ngày 10 hàng tháng) bị khóa: không nhận dữ liệu của bé và không ghi được, cho đến khi nhân viên
-   ghi nhận thu đủ hoặc mở khóa tạm (xem _lock.js, plock.js). */
+   ghi nhận thu đủ hoặc mở khóa tạm (xem _lock.js, plock.js).
+   Ảnh, video, tài liệu (collection 'media') nằm trong kho riêng tư gb-media của Supabase Storage. Phụ huynh không đọc kho trực tiếp:
+   danh sách chỉ gồm tệp đã chia sẻ có gắn bé của mình (không lộ đường dẫn, không lộ mã bé khác), và đường xem tạm (hết hạn sau 15 phút)
+   chỉ được cấp qua hành động 'sign' sau khi kiểm tra lại quyền và trạng thái khóa. */
 const L = require('./_lib');
 const K = require('./_lock');
 const { HttpError, clean, sbSecret, pkeyOf } = L;
@@ -42,6 +45,16 @@ async function myKids(key) {
 /* Nhân viên chỉ lộ tên, chức vụ, vai trò (không email, điện thoại, lương) */
 const safeStaff = d => ({ id: d.id, n: d.n, role: d.role, pos: d.pos || '', st: d.st, em: '', ph: '', sd: '', sup: '' });
 
+/* Ảnh, video, tài liệu: phụ huynh chỉ thấy tệp đã chia sẻ (sh) và có gắn ít nhất một bé của mình; chỉ giữ mã bé của chính họ, không trả đường dẫn kho */
+const MEDIA_PATH = /^m\/[A-Za-z0-9_.\-]{1,80}$/, SIGN_SECONDS = 900;
+const str = (v, n) => String(v == null ? '' : v).slice(0, n);
+function parentMedia(d, ids) {
+  if (!d || typeof d !== 'object' || !d.sh || !Array.isArray(d.ks)) return null;
+  const own = d.ks.filter(i => typeof i === 'string' && ids.includes(i));
+  if (!own.length || typeof d.p !== 'string' || !MEDIA_PATH.test(d.p)) return null;
+  return { id: str(d.id, 64), kind: ['img', 'vid', 'doc'].includes(d.kind) ? d.kind : 'doc', t: str(d.t, 200), ct: str(d.ct, 100), sz: +d.sz || 0, d: str(d.d, 10), bn: str(d.bn, 100), ks: own, n: str(d.n, 500), cat: str(d.cat, 60), sh: 1 };
+}
+
 /* Thông tin hiển thị trên màn hình khóa của phụ huynh: chỉ số tiền và tháng của chính họ, kèm số điện thoại Trung tâm */
 async function lockNotice(l) {
   const c = await fetchRows('records', 'collection=eq.cfg');
@@ -69,6 +82,7 @@ async function snapshot(me, since, known) {
     job.push(['records', 'collection=eq.att&' + orList(ids, i => 'id.like.*|' + i) + sf]);
     job.push(['money', 'collection=eq.set&' + orList(ids, i => 'id.like.' + i + '|*') + sm]);
     job.push(['money', 'collection=eq.lg&data->>hs=' + inList(ids) + sm]);
+    job.push(['records', 'collection=eq.media' + (since ? '' : '&data->>sh=eq.1') + sf]);
   }
   job.push(['money', 'collection=eq.cfgm' + sm]);
   const res = await Promise.all(job.map(j => fetchRows(j[0] === 'money' ? 'money_records' : 'records', j[1])));
@@ -80,6 +94,13 @@ async function snapshot(me, since, known) {
       if (t === 'money') { money.push(r); return; }
       if (c === 'staff') { records.push({ collection: c, id: r.id, data: safeStaff(r.data || {}), updated_at: r.updated_at }); return; }
       if (c === 'nt') { const n = r.data || {}; if (!(n.tg === 'all' || ids.includes(n.tg) || k.groups.includes(n.tg))) return; }
+      if (c === 'media') {
+        const m = parentMedia(r.data, ids);
+        /* khi đồng bộ thay đổi: tệp vừa bị thu hồi chia sẻ hoặc gỡ bé thì báo "gone" để ẩn, không trả nội dung */
+        if (m) records.push({ collection: c, id: r.id, data: m, updated_at: r.updated_at });
+        else if (since) records.push({ collection: c, id: r.id, data: { id: r.id, gone: 1 }, updated_at: r.updated_at });
+        return;
+      }
       if (c === 'att' && !ids.includes(String(r.id).split('|')[2])) return;
       if (c === 'rd' && !String(r.id).endsWith('|' + me.pid)) return;
       records.push(r);
@@ -162,10 +183,29 @@ async function put(me, b) {
   return { ok: true };
 }
 
+/* ---- đường xem tạm cho ảnh, video, tài liệu ---- */
+async function sign(me, b) {
+  const want = [...new Set((Array.isArray(b.ids) ? b.ids : []).map(String))].filter(i => SAFE_ID.test(i)).slice(0, 40);
+  if (!want.length) return { urls: {}, gone: [] };
+  const { ids } = await myKids(me.key);
+  if ((await K.lockForParent(me.key, ids)).locked) throw new HttpError(423, LOCKED_MSG);
+  const rows = await fetchRows('records', 'collection=eq.media&id=' + inList(want));
+  const okRows = rows.filter(r => parentMedia(r.data, ids));
+  const urls = {};
+  if (okRows.length) {
+    const s = await sbSecret('/storage/v1/object/sign/gb-media', { method: 'POST', body: { expiresIn: SIGN_SECONDS, paths: okRows.map(r => r.data.p) } });
+    if (!s.ok) throw new HttpError(502, 'Chưa lấy được đường xem tệp. Hãy thử lại sau.');
+    const by = new Map((Array.isArray(s.json) ? s.json : []).map(x => [x && x.path, x]));
+    okRows.forEach(r => { const x = by.get(r.data.p); if (x && x.signedURL && !x.error) urls[r.id] = L.sbUrl() + '/storage/v1' + x.signedURL; });
+  }
+  return { urls, gone: want.filter(i => !okRows.some(r => r.id === i)), ttl: SIGN_SECONDS };
+}
+
 module.exports = L.wrap(async (b, req) => {
   const me = await parentOf(req);
   if (b.action === 'load') return snapshot(me);
   if (b.action === 'pull') return snapshot(me, b.since && typeof b.since === 'object' ? b.since : { records: '1970-01-01T00:00:00Z', money: '1970-01-01T00:00:00Z' }, Array.isArray(b.known) ? b.known.join(',') : '');
   if (b.action === 'put') return put(me, b);
+  if (b.action === 'sign') return sign(me, b);
   throw new HttpError(400, 'Thao tác không hợp lệ.');
 });

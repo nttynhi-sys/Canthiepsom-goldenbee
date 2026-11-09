@@ -83,7 +83,7 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  ok('bonus saved',Object.keys(await ev(()=>DB.bon)).length>=1);await page.click('.mdl [data-a="mx"]');
  // Thống kê và tài liệu
  await nav('tk');await page.click('[data-a="tkxl"]');await W(300);await page.click('[data-a="tkpdf"]');await W(300);ok('stats exports do not crash',true);
- await nav('td');ok('docs shows capability note',/chưa khả dụng|Đang tải/.test(await page.$eval('#main',e=>e.innerText)));
+ await nav('td');ok('media page shows private-storage note and upload button',/kho riêng tư của Trung tâm/.test(await page.$eval('#main',e=>e.innerText))&&!!(await page.$('#main [data-a="upm"]')));
  // Cổng phụ huynh (quản lý) -> xem như phụ huynh
  await nav('cp');await page.click('[data-a="viewas"]');await W(80);
  ok('view as parent switches role',(await ev(()=>U.role))==='ph');

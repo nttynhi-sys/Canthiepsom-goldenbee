@@ -64,14 +64,12 @@ ACT.askno=()=>{ASKF=null;S.modal=S.modal.back||null};
 
 /* ===== Quyền lưu trữ và tải tệp (runtime capabilities) ===== */
 const CAP={as:null,db:null,us:null,dl:null,uid:null};
-const SH={videos:[],docs:[],ready:false};
 let BUSY=0;
 function softRender(){const a=document.activeElement;if(BUSY||(a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&a.closest&&a.closest('form')))return;render()}
 async function initCaps(){
  const use=n=>{try{return window.claude&&claude.use?claude.use(n):Promise.resolve(null)}catch(e){return Promise.resolve(null)}};
  try{[CAP.as,CAP.db,CAP.us,CAP.dl]=await Promise.all([use('assets'),use('db'),use('user'),use('downloads')])}catch(e){}
  try{CAP.uid=CAP.us&&CAP.us.id?await CAP.us.id():null}catch(e){}
- if(CAP.db){const sub=(c,k)=>CAP.db.collection(c).orderBy('at','desc').limit(500).onSnapshot(s=>{SH[k]=s.docs.map(d=>Object.assign({id:d.id},d.data()));SH.ready=true;softRender()},()=>{});sub('videos','videos');sub('docs','docs')}
  render()}
 const libs={};
 function loadLib(u){return libs[u]||(libs[u]=new Promise((ok,no)=>{const s=document.createElement('script');s.src=u;s.onload=ok;s.onerror=()=>{delete libs[u];no(new Error('lib'))};document.head.appendChild(s)}))}

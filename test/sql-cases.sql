@@ -96,3 +96,38 @@ do $$ begin
   update public.profiles set phone=null where user_id='00000000-0000-0000-0000-000000000005';
   raise notice 'PASS nhiều tài khoản không có SĐT cùng tồn tại';
 end $$;
+
+-- Kho tệp riêng tư gb-media (ảnh, video, tài liệu)
+reset role;
+insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','m/seed-tt.jpg','00000000-0000-0000-0000-000000000001'),('other','x/o.jpg','00000000-0000-0000-0000-000000000001');
+select t.chk('bucket gb-media riêng tư, giới hạn 50 MB, có danh sách loại tệp', (select count(*) from storage.buckets where id='gb-media' and public=false and file_size_limit=52428800 and 'video/mp4'=any(allowed_mime_types) and not ('text/html'=any(allowed_mime_types)) and not ('image/svg+xml'=any(allowed_mime_types))), 1);
+set role authenticated;
+select t.as_user('00000000-0000-0000-0000-000000000001','tt@gb.vn');
+select t.chk('tt đọc tệp gb-media, không đọc bucket khác', (select count(*) from storage.objects), 1);
+select t.as_user('00000000-0000-0000-0000-000000000002','gv@gb.vn');
+select t.chk('gv đọc tệp gb-media', (select count(*) from storage.objects where bucket_id='gb-media'), 1);
+do $$ begin
+  insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','m/gv1.jpg','00000000-0000-0000-0000-000000000002');
+  raise notice 'PASS gv tải được tệp lên gb-media';
+  begin insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','khac/gv2.jpg','00000000-0000-0000-0000-000000000002'); raise exception 'FAIL gv tải ngoài tiền tố m/'; exception when insufficient_privilege then raise notice 'PASS gv không tải được ngoài tiền tố m/'; end;
+  begin insert into storage.objects(bucket_id,name,owner_id) values ('other','m/gv3.jpg','00000000-0000-0000-0000-000000000002'); raise exception 'FAIL gv tải lên bucket khác'; exception when insufficient_privilege then raise notice 'PASS gv không tải được lên bucket khác'; end;
+end $$;
+delete from storage.objects where name='m/seed-tt.jpg';
+select t.chk('gv không xóa được tệp của người khác', (select count(*) from storage.objects where name='m/seed-tt.jpg'), 1);
+delete from storage.objects where name='m/gv1.jpg';
+select t.chk('gv xóa được tệp của chính mình', (select count(*) from storage.objects where name='m/gv1.jpg'), 0);
+select t.as_user('00000000-0000-0000-0000-000000000004','ph@gb.vn');
+select t.chk('ph không đọc được tệp nào trong kho', (select count(*) from storage.objects), 0);
+do $$ begin
+  begin insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','m/ph.jpg','00000000-0000-0000-0000-000000000004'); raise exception 'FAIL ph tải được tệp lên'; exception when insufficient_privilege then raise notice 'PASS ph không tải được tệp lên'; end;
+end $$;
+select t.as_user('00000000-0000-0000-0000-000000000001','tt@gb.vn');
+delete from storage.objects where name='m/seed-tt.jpg';
+select t.chk('tt xóa được tệp trong kho', (select count(*) from storage.objects where name='m/seed-tt.jpg'), 0);
+reset role;
+set role anon;
+do $$ begin
+  begin perform count(*) from storage.objects; raise exception 'FAIL anon đọc được kho tệp'; exception when insufficient_privilege then raise notice 'PASS anon không đọc được kho tệp'; end;
+end $$;
+reset role;
+delete from storage.objects;

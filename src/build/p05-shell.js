@@ -4,11 +4,11 @@ const PW='123456';
 const ACCESS={
  ql:['dash','ns','hs','pc','lh','tn','cc','dd','hb','mt','bc','td','cp','tb','tk'],
  tt:['dash','ns','hs','pc','lh','tn','cc','dd','hb','hp','tl','mt','bc','td','cp','tb','tk'],
- vp:['dash','tn','cc','dd','hp','tl','tb','tk'],
+ vp:['dash','tn','cc','dd','hp','tl','td','tb','tk'],
  gv:['dash','hs','lh','tn','cc','dd','hb','tl','mt','bc','td','tb'],
  ph:['cp','lh','tn','hb','hp','tb']};
-const NAV=[['dash','Dashboard','Tổng quan'],['ns','Nhân sự','Con người'],['hs','Học sinh'],['pc','Phân công'],['lh','Lịch học','Vận hành'],['tn','Thực đơn bán trú'],['cc','Chấm công'],['dd','Điểm danh'],['hb','Học bù'],['hp','Học phí','Tài chính'],['tl','Tiền lương'],['mt','Ngân hàng mục tiêu','Chuyên môn'],['bc','Báo cáo chuyên môn'],['td','Quản lý tài liệu'],['cp','Cổng phụ huynh','Phụ huynh'],['tb','Thông báo'],['tk','Thống kê','Báo cáo']];
-const VLAB={gv:{hs:'Học sinh của tôi',lh:'Lịch dạy của tôi',cc:'Chấm công của tôi',dd:'Điểm danh',tl:'Phiếu lương của tôi',bc:'Báo cáo của tôi',td:'Tài liệu và video'},ph:{cp:'Cổng phụ huynh',hp:'Học phí',lh:'Lịch học của bé',tn:'Thực đơn bán trú'},vp:{cc:'Chấm công nhân sự',dd:'Ngày học và phép'}};
+const NAV=[['dash','Dashboard','Tổng quan'],['ns','Nhân sự','Con người'],['hs','Học sinh'],['pc','Phân công'],['lh','Lịch học','Vận hành'],['tn','Thực đơn bán trú'],['cc','Chấm công'],['dd','Điểm danh'],['hb','Học bù'],['hp','Học phí','Tài chính'],['tl','Tiền lương'],['mt','Ngân hàng mục tiêu','Chuyên môn'],['bc','Báo cáo chuyên môn'],['td','Ảnh, video và tài liệu'],['cp','Cổng phụ huynh','Phụ huynh'],['tb','Thông báo'],['tk','Thống kê','Báo cáo']];
+const VLAB={gv:{hs:'Học sinh của tôi',lh:'Lịch dạy của tôi',cc:'Chấm công của tôi',dd:'Điểm danh',tl:'Phiếu lương của tôi',bc:'Báo cáo của tôi',td:'Ảnh, video và tài liệu'},ph:{cp:'Cổng phụ huynh',hp:'Học phí',lh:'Lịch học của bé',tn:'Thực đơn bán trú'},vp:{cc:'Chấm công nhân sự',dd:'Ngày học và phép'}};
 /* tiêu đề nhóm riêng cho từng vai trò (khi nhóm gốc không hiện ra với vai trò đó) */
 const NAVG={vp:{tn:'Vận hành',tb:'Liên lạc'},ph:{cp:'Tổng quan',lh:'Lịch học',tb:'Liên lạc'}};
 const vlab=v=>((VLAB[U&&U.role]||{})[v])||NAV.find(n=>n[0]===v)[1];
@@ -39,6 +39,7 @@ function badge(v){if(!U)return 0;const ks=myKids().map(k=>k.id);
  if(v==='hb')return DB.mk.filter(r=>ks.includes(r.hs)&&(isPH()?r.s==='tt':r.s==='dk')).length;
  if(v==='bc'&&isLead())return DB.rp.filter(r=>r.s==='cho').length;
  if(v==='bc'&&isGV())return DB.rp.filter(r=>r.au===U.id&&(r.s==='nhap')).length;
+ if(v==='td'&&canUpload())return medWait().filter(medEdit).length;
  if(v==='tb')return unread();
  if(v==='hp'&&isPH())return ks.some(h=>balance(h)>0)?1:0;
  return 0}

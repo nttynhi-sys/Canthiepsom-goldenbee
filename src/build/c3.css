@@ -199,3 +199,34 @@ label.gi-n{cursor:pointer}
 .tkc{font-size:12.5px;line-height:1.3;margin-bottom:3px}.tkc.dim{opacity:.5;text-decoration:line-through}
 .tko{margin-top:3px}.kc{display:inline-block;font-size:12px;background:var(--acs);border-radius:999px;padding:1px 8px;margin:0 3px 3px 0;line-height:1.35}.kc small{color:var(--mu);font-size:11px}
 .tkrow{margin-bottom:10px}
+/* Ảnh, video, tài liệu: thư viện và xem lớn */
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr));gap:12px}
+.mg.big{grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:14px}
+.mc{position:relative;display:flex;flex-direction:column;min-width:0;background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+.mc.on{border-color:var(--c1);box-shadow:0 0 0 2px var(--c1)}
+.mth{position:relative;aspect-ratio:4/3;background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mth .mi{width:100%;height:100%;object-fit:cover;display:block;background:var(--bg)}
+.mplay{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;padding-left:3px;pointer-events:none}
+.mdoc{font:700 20px/1 'Baloo 2','Be Vietnam Pro',sans-serif;color:var(--mu);letter-spacing:.04em}
+.msel{position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:6px;margin:0;padding:6px 10px;min-height:36px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:999px;font-size:13px;cursor:pointer}
+.msel input{width:18px;height:18px;margin:0}
+.mb{display:flex;flex-direction:column;gap:6px;padding:10px 12px 12px;min-width:0}
+.mt{overflow-wrap:anywhere;line-height:1.3}
+.mtags{display:flex;flex-wrap:wrap;gap:4px}
+.mkid{display:inline-block;font-size:12.5px;line-height:1.35;padding:1px 9px;border-radius:999px;background:var(--acs);color:var(--tx)}
+.mact{margin-top:2px;gap:6px}.mact .btn{padding:6px 10px;font-size:13px}
+.mmo{margin:18px 0 8px;font-size:17px}
+.mg.big .mt{font-size:16px}.mg.big .mb{font-size:15px}
+.empty.big{font-size:16px;padding:22px 8px}
+.mv{background:#000;border-radius:12px;overflow:hidden;display:flex;justify-content:center}
+.mbig{display:block;max-width:100%;max-height:68vh;width:auto;height:auto;margin:0 auto;background:#000}
+.mvi{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.mkl{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px 14px;max-height:220px;overflow:auto;padding:8px 10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);margin-top:6px}
+.mkl .chk{padding:5px 0;min-width:0;overflow-wrap:anywhere}.mkl .chk input{width:18px;height:18px;flex:none}
+.mtl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.mtx{display:block;width:72px;height:54px;border-radius:8px;overflow:hidden;background:var(--bg);position:relative}
+.mtx .mi{width:100%;height:100%;object-fit:cover;display:block}.mtx .mplay{width:24px;height:24px;margin:-12px 0 0 -12px;font-size:11px}
+a.off{pointer-events:none;color:var(--mu)}
+/* cổng phụ huynh: không cho kéo ảnh, bôi chọn */
+body.gph .mi,body.gph .mbig{-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
+@media (max-width:600px){.mg,.mg.big{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mg.big .mt{font-size:15px}.mkl{grid-template-columns:minmax(0,1fr)}}

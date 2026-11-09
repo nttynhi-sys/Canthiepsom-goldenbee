@@ -12,7 +12,7 @@ const closeModal=async page=>{await page.evaluate(()=>{S.modal=null;render()});a
 const EXP={
  ql:['dash','ns','hs','pc','lh','tn','cc','dd','hb','mt','bc','td','cp','tb','tk'],
  tt:['dash','ns','hs','pc','lh','tn','cc','dd','hb','hp','tl','mt','bc','td','cp','tb','tk'],
- vp:['dash','tn','cc','dd','hp','tl','tb','tk'],
+ vp:['dash','tn','cc','dd','hp','tl','td','tb','tk'],
  gv:['dash','hs','lh','tn','cc','dd','hb','tl','mt','bc','td','tb'],
  ph:['cp','lh','tn','hb','hp','tb']};
 (async()=>{
@@ -43,7 +43,7 @@ const EXP={
   const vpl=await page.$$eval('.nav button[data-v] span:first-child',e=>e.map(x=>x.textContent));
   ok('nhãn thanh bên Văn phòng',vpl.includes('Chấm công nhân sự')&&vpl.includes('Ngày học và phép')&&vpl.includes('Học phí')&&vpl.includes('Tiền lương'),vpl);
   /* vai trò bị chặn các mục không được cấp: ép mở thì quay về trang đầu */
-  for(const [r,deny] of [['vp',['ns','hs','pc','hb','mt','bc','td','cp','lh']],['ql',['hp','tl']],['gv',['hp','ns','pc','cp','tk']],['ph',['dash','hs','ns','tl','tk','mt']]]){
+  for(const [r,deny] of [['vp',['ns','hs','pc','hb','mt','bc','cp','lh']],['ql',['hp','tl']],['gv',['hp','ns','pc','cp','tk']],['ph',['dash','hs','ns','tl','tk','mt']]]){
    await sw(page,r);
    const res=await page.evaluate(d=>d.map(v=>{go(v);render();return v+':'+S.v}),deny);
    ok('vai trò '+r+' bị chặn các mục không cấp ('+deny.join(',')+')',res.every(x=>x.split(':')[1]===EXP[r][0]),res);
