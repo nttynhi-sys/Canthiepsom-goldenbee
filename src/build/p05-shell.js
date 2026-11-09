@@ -23,7 +23,7 @@ const lockAcc=s=>!isTT()&&!!s&&(s.role==='tt'||s.role==='vp'||(s.role==='ql'&&(!
 const myGroups=()=>isGV()?DB.groups.filter(g=>g.gv===U.id||g.tg===U.id):[];
 function myKids(){if(!U)return[];if(seesAll())return DB.kids;
  if(isGV()){const gs=myGroups().map(g=>g.id);return DB.kids.filter(k=>k.gv===U.id||(k.gr&&gs.includes(k.gr))||DB.lich.some(l=>l.type==='bu'&&l.gv===U.id&&l.hs===k.id))}
- return DB.kids.filter(k=>k.pe===U.pe)}
+ return DB.kids.filter(k=>pkeyOf(k)===U.pkey)}
 const canKid=id=>myKids().some(k=>k.id===id);
 const rdKey=n=>n.id+'|'+(U?U.id:'');
 function noticesFor(){if(!U)return[];
@@ -44,22 +44,25 @@ function badge(v){if(!U)return 0;const ks=myKids().map(k=>k.id);
  return 0}
 
 /* --- tài khoản --- */
+/* em: email, hoặc 'tel:số' (số điện thoại đã chuẩn hóa) cho tài khoản chỉ có số điện thoại */
 function findAccount(em){em=(em||'').trim().toLowerCase();if(!em)return null;
- const s=DB.staff.find(x=>x.em.toLowerCase()===em&&x.st==='dang'&&x.role!=='hc');
- if(s)return{role:s.role,id:s.id,name:s.n,em:s.em};
- const ks=DB.kids.filter(k=>k.pe.toLowerCase()===em);
- return ks.length?{role:'ph',id:'ph|'+em,name:ks[0].pn,pe:ks[0].pe,em:ks[0].pe}:null}
+ const tel=em.startsWith('tel:')?em.slice(4):'';
+ const s=DB.staff.find(x=>x.st==='dang'&&x.role!=='hc'&&(tel?telNorm(x.ph)===tel:x.em&&x.em.toLowerCase()===em));
+ if(s)return{role:s.role,id:s.id,name:s.n,em:s.em||em};
+ const ks=DB.kids.filter(k=>pkeyOf(k)===em);
+ return ks.length?{role:'ph',id:'ph|'+em,name:ks[0].pn,pe:ks[0].pe,em:ks[0].pe||em,pkey:em}:null}
 function demoAcc(r){
  const pick={ql:'nv01',tt:'nv02',vp:'nv26',gv:'nv04'}[r];
  if(pick){let s=stBy(pick);if(!s||s.role!==r||s.st!=='dang')s=DB.staff.find(x=>x.role===r&&x.st==='dang');return s?findAccount(s.em):null}
- const k=DB.kids.find(x=>x.st==='dang'&&x.m11>0&&x.bt)||DB.kids[0];return findAccount(k.pe)}
+ const k=DB.kids.find(x=>x.st==='dang'&&x.m11>0&&x.bt)||DB.kids[0];return findAccount(pkeyOf(k))}
 function setUser(u){if(CLOUDMODE&&u&&(!CLD.ss||u.em!==CLD.ss.email))return;U=u;S.modal=null;S.menu=false;S.top=1;
  if(u){S.v=ACCESS[u.role][0];try{localStorage.setItem('gb_u',u.em)}catch(e){}}else{try{localStorage.removeItem('gb_u')}catch(e){}}}
 ACT.demo=r=>{setUser(demoAcc(r))};
 ACT.logout=()=>{if(CLOUDMODE){cloudLogout();return false}setUser(null)};
 CHG.role=r=>{setUser(demoAcc(r))};
-FORM.login=f=>{if(CLOUDMODE){cloudLogin(f.elements.e.value.trim().toLowerCase(),f.elements.p.value);return false}const a=findAccount(f.elements.e.value);
- if(!a||f.elements.p.value!==PW){S.err='Email hoặc mật khẩu chưa đúng. Bản trình diễn dùng mật khẩu chung 123456.';return}
+FORM.login=f=>{if(CLOUDMODE){cloudLogin(f.elements.e.value.trim(),f.elements.p.value);return false}
+ const v=f.elements.e.value.trim(),a=findAccount(v.includes('@')||!telNorm(v)?v:'tel:'+telNorm(v));
+ if(!a||f.elements.p.value!==PW){S.err='Email, số điện thoại hoặc mật khẩu chưa đúng. Bản trình diễn dùng mật khẩu chung 123456.';return}
  S.err='';setUser(a)};
 ACT.theme=()=>{const h=document.documentElement,dark=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches,cur=h.dataset.theme||(dark?'dark':'light'),nx=cur==='dark'?'light':'dark';h.dataset.theme=nx;try{localStorage.setItem('gb_th',nx)}catch(e){}};
 

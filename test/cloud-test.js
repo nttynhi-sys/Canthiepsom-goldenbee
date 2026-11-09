@@ -111,11 +111,11 @@ async function login(page,e,p){await page.waitForSelector('#login');await page.f
  ok('Giáo viên sửa hồ sơ trẻ được lưu, sửa hồ sơ nhân sự bị máy chủ từ chối',srv2.recs.get('kids|hs001').data.nd==='gv sửa hồ sơ trẻ'&&srv2.recs.get('staff|nv04').data.em===gvStaff&&(await page.evaluate(()=>CLD.st))==='err');
  await ctx.close();
  /* --- F. Phụ huynh và tài khoản không có vai trò --- */
- ({ctx,page}=await newPage(b,srv2,errs));await login(page,'ph@gb.vn','pw1');await page.waitForSelector('[role=alert]');
- ok('Tài khoản phụ huynh: báo cổng phụ huynh chưa mở, không tải dữ liệu',/Cổng phụ huynh chưa mở/.test(await page.textContent('.lgc'))&&!srv2.log.some(l=>/ph@gb|GET \/rest\/v1\/records.*u-ph/.test(l)));
+ const li=srv2.log.length;({ctx,page}=await newPage(b,srv2,errs));await login(page,'ph@gb.vn','pw1');await page.waitForSelector('[role=alert]');
+ ok('Tài khoản phụ huynh: không đọc thẳng bảng dữ liệu (chỉ qua cổng riêng /api/parent, ở đây chưa có máy chủ)',!srv2.log.slice(li).some(l=>/GET \/rest\/v1\/(records|money_records)/.test(l))&&(await page.evaluate(()=>CLD.stage))==='login');
  await ctx.close();
  ({ctx,page}=await newPage(b,srv2,errs));await login(page,'noprofile@gb.vn','pw1');await page.waitForSelector('[role=alert]');
- ok('Tài khoản có vai trò lạ không vào được',/chưa mở|chưa được cấp/.test(await page.textContent('.lgc')));
+ ok('Tài khoản có vai trò lạ không vào được',/chưa được hỗ trợ|chưa được cấp/.test(await page.textContent('.lgc')),await page.textContent('.lgc'));
  await ctx.close();
  /* --- G. Tải tệp trên web thường (không có khả năng tải của artifact) --- */
  ({ctx,page}=await newPage(b,srv2,errs));await login(page,'vp@gb.vn','pw1').catch(()=>{});

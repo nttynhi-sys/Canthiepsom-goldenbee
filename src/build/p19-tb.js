@@ -1,7 +1,7 @@
 /* ===== 14. Thông báo ===== */
 const tgLabel=n=>n.aud==='nb'?'Toàn bộ nhân viên':n.tg==='all'?'Mọi phụ huynh':grBy(n.tg)?'Phụ huynh '+grBy(n.tg).n:'Phụ huynh bé '+kn(n.tg);
 function recips(n){if(n.aud==='nb')return DB.staff.filter(s=>s.st==='dang'&&s.role!=='hc').map(s=>s.id);
- return[...new Set(DB.kids.filter(k=>n.tg==='all'||k.id===n.tg||k.gr===n.tg).map(k=>'ph|'+k.pe))]}
+ return[...new Set(DB.kids.filter(k=>n.tg==='all'||k.id===n.tg||k.gr===n.tg).filter(k=>pkeyOf(k)).map(k=>'ph|'+pkeyOf(k)))]}
 const readCount=n=>recips(n).filter(r=>DB.rd[n.id+'|'+r]).length;
 VIEWS.tb=()=>{const ns=noticesFor();
  return head('Thông báo',unread()?unread()+' thông báo chưa đọc':'Bạn đã đọc hết thông báo',(unread()?'<button class="btn" data-a="rdall">Đánh dấu đã đọc tất cả</button>':'')+(isPH()?'':'<button class="btn p" data-a="tbnew">Soạn thông báo</button>'))

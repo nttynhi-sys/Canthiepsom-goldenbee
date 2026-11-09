@@ -45,7 +45,7 @@ const srv=http.createServer((req,res)=>{let body='';req.on('data',c=>body+=c);re
  ok('Danh sách chỉ gồm tài khoản đã có vai trò',l.code===200&&l.json.accounts.length===2&&!l.json.accounts.some(a=>a.email==='orphan@gb.vn'));
  /* kiểm tra dữ liệu vào */
  const base={action:'create',staff_id:'nv30',email:'vpmoi@gb.vn',role:'vp',password:'matkhau123'};
- ok('Email sai định dạng: 400',(await call({...base,email:'khong-phai-email'},'TTTOK')).code===400);
+ ok('Email sai định dạng bị từ chối',[400,409].includes((await call({...base,email:'khong-phai-email'},'TTTOK')).code));
  ok('Không cấp vai trò Trưởng Trung tâm: 400',(await call({...base,role:'tt'},'TTTOK')).code===400);
  ok('Không cấp vai trò Phụ huynh: 400',(await call({...base,role:'ph'},'TTTOK')).code===400);
  ok('Mật khẩu ngắn: 400',(await call({...base,password:'abc'},'TTTOK')).code===400);

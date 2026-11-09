@@ -23,7 +23,7 @@ MODALS.hs=()=>{const m=S.modal,k=kidBy(m.id);if(!k||!canKid(k.id)){S.modal=null;
  return mdl(k.n+' · '+k.id,tabsH(T,m.tab,'hstab2')+b,1)};
 function hsInfo(k){const g=grBy(k.gr),r=(a,b)=>`<div class="rw"><span class="mu">${a}</span><b>${b}</b></div>`;
  return`<div class="two"><div>${r('Giới tính',k.g==='M'?'Nam':'Nữ')}${r('Ngày sinh',vd(k.dob)+' ('+age(k.dob)+')')}${r('Ngày nhập học',vd(k.sd))}${r('Nhu cầu',esc(k.nd))}${r('Trạng thái',tg(KST[k.st],k.st==='dang'?'ok':'gy'))}${r('Chương trình',esc(progOf(k)))}${r('Giáo viên 1-1',k.gv?esc(sn(k.gv)):'Không có')}${r('Nhóm bán trú',g?esc(g.n):'Không có')}</div>
- <div>${r('Phụ huynh',esc(k.pr)+' '+esc(k.pn))}${r('Điện thoại',esc(k.pp))}${r('Email cổng phụ huynh',esc(k.pe))}${canMoney()?r('Công nợ',fmt(balance(k.id))):''}<div class="acts" style="margin-top:12px">${isLead()?`<button class="btn p" data-a="hsedit" data-v="${k.id}">Sửa hồ sơ</button>`:''}<button class="btn" data-a="ddkid" data-v="${k.id}">Bảng chấm công của bé</button></div></div></div>`}
+ <div>${r('Phụ huynh',esc(k.pr)+' '+esc(k.pn))}${r('Điện thoại',esc(k.pp))}${r('Email cổng phụ huynh',esc(k.pe||'—'))}${canMoney()?r('Công nợ',fmt(balance(k.id))):''}<div class="acts" style="margin-top:12px">${isLead()?`<button class="btn p" data-a="hsedit" data-v="${k.id}">Sửa hồ sơ</button>`:''}<button class="btn" data-a="ddkid" data-v="${k.id}">Bảng chấm công của bé</button></div></div></div>`}
 /* --- thêm, sửa hồ sơ --- */
 ACT.hsnew=()=>{S.modal={t:'hsf',id:''}};
 ACT.hsedit=v=>{S.modal={t:'hsf',id:v}};
@@ -32,12 +32,12 @@ MODALS.hsf=()=>{const id=S.modal.id,k=id?kidBy(id):{n:'',g:'M',dob:addD(TODAY,-3
  return mdl(id?'Sửa hồ sơ '+k.n:'Thêm học sinh',`<form id="hsff" class="f"><div class="f2">${f('n','Họ và tên bé',k.n,'text','required')}<div><label for="hf-g">Giới tính</label><select id="hf-g" name="g">${opts([['M','Nam'],['F','Nữ']],k.g)}</select></div>${f('dob','Ngày sinh',k.dob,'date','required max="'+TODAY+'"')}${f('sd','Ngày nhập học',k.sd,'date')}<div><label for="hf-nd">Nhu cầu chính</label><select id="hf-nd" name="nd">${opts(NEEDS.map(x=>[x,x]),k.nd)}</select></div><div><label for="hf-st">Trạng thái</label><select id="hf-st" name="st">${opts(Object.entries(KST),k.st)}</select></div>
  <div><label for="hf-bt">Bán trú</label><select id="hf-bt" name="bt">${opts([['0','Không'],['1','Có']],k.bt?'1':'0')}</select></div><div><label for="hf-gr">Nhóm bán trú</label><select id="hf-gr" name="gr"><option value="">Tự chọn theo tuổi</option>${opts(DB.groups.map(g=>[g.id,g.n]),k.gr)}</select></div>
  ${id?'':`<div><label for="hf-gv">Giáo viên 1-1</label><select id="hf-gv" name="gv"><option value="">Chưa phân công</option>${opts(DB.staff.filter(s=>s.role==='gv'&&s.st==='dang').map(s=>[s.id,s.n]),'')}</select></div>`}</div>
- <h3>Phụ huynh</h3><div class="f2"><div><label for="hf-pr">Quan hệ</label><select id="hf-pr" name="pr">${opts(['Mẹ','Bố','Ông bà','Người giám hộ'].map(x=>[x,x]),k.pr)}</select></div>${f('pn','Họ tên phụ huynh',k.pn,'text','required')}${f('pp','Điện thoại',k.pp,'tel','required')}${f('pe','Email đăng nhập cổng phụ huynh',k.pe,'email','required')}</div>
+ <h3>Phụ huynh</h3><div class="f2"><div><label for="hf-pr">Quan hệ</label><select id="hf-pr" name="pr">${opts(['Mẹ','Bố','Ông bà','Người giám hộ'].map(x=>[x,x]),k.pr)}</select></div>${f('pn','Họ tên phụ huynh',k.pn,'text','required')}${f('pp','Điện thoại',k.pp,'tel','required')}${f('pe','Email cổng phụ huynh (hoặc dùng số điện thoại)',k.pe,'email')}</div>
  ${id?'<p class="note sm">Buổi 1-1 và giáo viên được thay đổi ở mục Lịch học và Phân công để hệ thống kiểm tra trùng lịch.</p>':'<p class="note sm">Sau khi thêm, hãy xếp các buổi 1-1 ở mục Lịch học.</p>'}
  <div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu hồ sơ</button></div></form>`)};
 FORM.hsff=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.id,isNew=!id;
  const k=isNew?{id:'hs'+String(Math.max(...DB.kids.map(x=>+x.id.slice(2)))+1).padStart(3,'0'),m11:0,gv:g('gv')||null}:kidBy(id);
- if(!g('n')||!g('pn')||!g('pe')){toast('Vui lòng nhập đủ tên bé, tên và email phụ huynh');return false}
+ if(!g('n')||!g('pn')||(!g('pe')&&!telNorm(g('pp')))){toast('Vui lòng nhập tên bé, tên phụ huynh và email hoặc số điện thoại phụ huynh');return false}
  const bt=g('bt')==='1';Object.assign(k,{n:g('n'),g:g('g'),dob:g('dob'),sd:g('sd')||TODAY,st:g('st'),nd:g('nd'),bt,gr:bt?(g('gr')||grByAge(g('dob'))):'',pr:g('pr'),pn:g('pn'),pp:g('pp'),pe:g('pe').toLowerCase()});
  if(isNew)DB.kids.push(k);if(!bt)k.gr='';
  S.modal={t:'hs',id:k.id,tab:'tt'};toast(isNew?'Đã thêm học sinh':'Đã lưu hồ sơ')};

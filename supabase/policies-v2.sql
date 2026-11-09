@@ -1,3 +1,4 @@
+-- LƯU Ý: tệp này đã được thay bằng policies-v3.sql (gồm cả phần này). Chỉ cần chạy v3.
 -- Golden Bee: chính sách bảo mật v2. Chạy MỘT LẦN trong SQL Editor, sau schema.sql.
 -- Thay các chính sách cũ: phụ huynh chưa đọc được gì, lương của giáo viên chỉ đọc phần của mình,
 -- giáo viên không sửa được hồ sơ nhân sự và cấu hình.
