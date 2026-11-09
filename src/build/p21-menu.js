@@ -4,17 +4,17 @@ const MENU_S=['Cháo thịt bằm rau củ','Phở gà','Bánh mì trứng ốp 
 const MENU_T=['Cơm, cá hồi áp chảo, canh bí đỏ nấu thịt, rau cải luộc','Cơm, thịt kho trứng cút, canh rau ngót','Cơm, gà kho gừng, canh bầu nấu tôm','Cơm, thịt heo xào đậu que, canh bí xanh','Cơm, cá basa sốt cà chua, canh chua rau muống','Cơm, trứng chiên thịt bằm, canh mồng tơi','Cơm, sườn non rim, canh khoai tây cà rốt'];
 const MENU_X=['Sữa chua, trái cây theo mùa','Bánh flan','Chè đậu xanh','Bánh bao nhân thịt','Sữa tươi, bánh quy','Sinh tố chuối','Cháo đậu xanh'];
 const menuEdit=()=>isLead()||isVP();
-const bday=d=>{while(dow(d)<1||dow(d)>5)d=addD(d,1);return d};
+const bday=d=>{while(dow(d)===0)d=addD(d,1);return d};   /* thực đơn T2–T7: chủ nhật chuyển sang thứ Hai */
 const menuDay=()=>bday(TODAY);
 const menuDayLb=()=>'· '+DAYN[dow(menuDay())]+' '+vdm(menuDay())+(menuDay()===TODAY?' (hôm nay)':'');
 function seedMenu(D){D.menu=D.menu||{};const w0=monOf(menuDay());let c=0;
- for(const w of[-1,0,1])for(let i=0;i<5;i++){const d=addD(w0,7*w+i);D.menu[d]={s:MENU_S[c%7],t:MENU_T[(c*2+1)%7],x:MENU_X[(c*3+2)%7],n:''};c++}}
+ for(const w of[-1,0,1])for(let i=0;i<6;i++){const d=addD(w0,7*w+i);D.menu[d]={s:MENU_S[c%7],t:MENU_T[(c*2+1)%7],x:MENU_X[(c*3+2)%7],n:''};c++}}
 const menuMini=d=>{const m=DB.menu[d];if(!m)return'<p class="empty">Chưa có thực đơn ngày này.</p>';
  return[['Bữa sáng',m.s],['Bữa trưa',m.t],['Bữa xế',m.x]].filter(x=>x[1]).map(([l,v])=>`<div class="rw" style="align-items:flex-start;flex-wrap:nowrap"><span class="mu sm" style="width:68px;flex:none">${l}</span><span style="flex:1;min-width:0">${esc(v)}</span></div>`).join('')+(m.n?`<p class="sm mu" style="margin-top:6px">${esc(m.n)}</p>`:'')};
-VIEWS.tn=()=>{const t=S.tn=Object.assign({wk:monOf(menuDay())},S.tn),mon=t.wk,days=[0,1,2,3,4].map(i=>addD(mon,i)),E=menuEdit(),mine=isPH()?myKids().filter(k=>k.st==='dang'&&k.gr):[],cls=DB.groups.map(g=>esc(g.n)).join(' và ');
- return head('Thực đơn bán trú','Lớp '+cls+' · '+BTLB+', thứ Hai đến thứ Sáu',E?'<button class="btn s" data-a="tncopy">Sao chép từ tuần trước</button>':'')
+VIEWS.tn=()=>{const t=S.tn=Object.assign({wk:monOf(menuDay())},S.tn),mon=t.wk,days=[0,1,2,3,4,5].map(i=>addD(mon,i)),E=menuEdit(),mine=isPH()?myKids().filter(k=>k.st==='dang'&&k.gr):[],cls=DB.groups.map(g=>esc(g.n)).join(' và ');
+ return head('Thực đơn bán trú','Lớp '+cls+' · '+BTLB+', thứ Hai đến thứ Bảy',E?'<button class="btn s" data-a="tncopy">Sao chép từ tuần trước</button>':'')
  +(isPH()?`<div class="note sm" style="margin-bottom:12px">${mine.length?mine.map(k=>esc(given(k.n))+' học lớp '+esc((grBy(k.gr)||{}).n||'')).join('; ')+'. Thực đơn áp dụng chung cho hai lớp bán trú.':'Bé chưa đăng ký bán trú. Thực đơn dưới đây là của hai lớp bán trú '+cls+'.'}</div>`:'')
- +`<div class="card"><div class="acts" style="justify-content:space-between;margin-bottom:10px"><div class="acts"><button class="btn s" data-a="tnwk" data-v="-7">Tuần trước</button><button class="btn s" data-a="tnwk" data-v="0">Tuần này</button><button class="btn s" data-a="tnwk" data-v="7">Tuần sau</button></div><b>${vd(days[0])} đến ${vd(days[4])}</b></div>
+ +`<div class="card"><div class="acts" style="justify-content:space-between;margin-bottom:10px"><div class="acts"><button class="btn s" data-a="tnwk" data-v="-7">Tuần trước</button><button class="btn s" data-a="tnwk" data-v="0">Tuần này</button><button class="btn s" data-a="tnwk" data-v="7">Tuần sau</button></div><b>${vd(days[0])} đến ${vd(days[5])}</b></div>
  <div class="menu">${days.map(d=>`<div class="mday ${d===TODAY?'now':''}"><div class="mh"><b>${DAYN[dow(d)]}</b> <span class="mu sm">${vdm(d)}</span>${d===TODAY?' '+tg('Hôm nay','y'):''}</div>${menuMini(d)}${E?`<div class="acts" style="margin-top:8px"><button class="btn s" data-a="tnedit" data-v="${d}">${DB.menu[d]?'Sửa':'Thêm thực đơn'}</button></div>`:''}</div>`).join('')}</div>
  ${E?'<p class="sm mu" style="margin-top:10px">Thực đơn được phụ huynh và giáo viên xem theo từng tuần. Bấm “Sửa” ở từng ngày để nhập bữa sáng, trưa, xế.</p>':''}</div>`};
 ACT.tnwk=v=>{S.tn.wk=v==='0'?monOf(menuDay()):addD(S.tn.wk,+v)};
@@ -25,5 +25,5 @@ FORM.tndf=f=>{if(!menuEdit())return false;const e=f.elements,d=S.modal.d,v={s:e.
  if(!v.s&&!v.t&&!v.x&&!v.n)delete DB.menu[d];else DB.menu[d]=v;S.modal=null;toast('Đã lưu thực đơn '+vdm(d))};
 ACT.tnclr=v=>{if(!menuEdit())return false;ask('Xóa thực đơn ngày '+vdm(v)+'?',()=>{delete DB.menu[v];toast('Đã xóa thực đơn')},'Xóa')};
 ACT.tncopy=()=>{if(!menuEdit())return false;const mon=S.tn.wk,prev=addD(mon,-7);let n=0,has=0;
- for(let i=0;i<5;i++){const a=addD(prev,i),b=addD(mon,i);if(DB.menu[a]){has++;if(!DB.menu[b]){DB.menu[b]=Object.assign({},DB.menu[a]);n++}}}
+ for(let i=0;i<6;i++){const a=addD(prev,i),b=addD(mon,i);if(DB.menu[a]){has++;if(!DB.menu[b]){DB.menu[b]=Object.assign({},DB.menu[a]);n++}}}
  toast(!has?'Tuần trước chưa có thực đơn để sao chép':n?'Đã sao chép '+n+' ngày, ngày đã có thực đơn được giữ nguyên':'Các ngày của tuần này đã có thực đơn')};

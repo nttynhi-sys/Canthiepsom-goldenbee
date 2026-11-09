@@ -70,7 +70,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  /* thêm buổi 1-1 cho nhiều ngày */
  await page.waitForSelector('#lsmf');
  await page.selectOption('#lsmf [name=gv]','gvt0');
- await page.selectOption('#lsmf [name=slot]',SL1);
+ await page.fill('#lsmf [name=slot]',SL1);
  await page.click('#lsmf [data-a="dayset"][data-v="d|"]');
  for(const w of [2,4])await page.check(`#lsmf [name=d${w}]`);
  await page.click('#lsmf button[type=submit]');await W(80);
@@ -80,7 +80,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  await ev(sv=>{const o=DB.kids.find(x=>x.bt&&x.id!=='tst1'&&x.st==='dang');DB.lich=DB.lich.filter(l=>!(l.hs===o.id&&l.day===3));DB.lich.push({id:'tcf',type:'11',day:3,slot:sv,gv:'gvt0',hs:o.id,room:'Phòng 4'});S.modal={t:'hs',id:'tst1',tab:'lh'};render()},SL2);
  await page.waitForSelector('#lsmf');
  await page.selectOption('#lsmf [name=gv]','gvt0');
- await page.selectOption('#lsmf [name=slot]',SL2);
+ await page.fill('#lsmf [name=slot]',SL2);
  await page.click('#lsmf [data-a="dayset"][data-v="d|"]');
  for(const w of [3,5])await page.check(`#lsmf [name=d${w}]`);
  await page.click('#lsmf button[type=submit]');await W(80);

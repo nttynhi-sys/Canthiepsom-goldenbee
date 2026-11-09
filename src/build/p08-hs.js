@@ -85,7 +85,7 @@ function hsSchedule(k){const lead=isLead(),m=S.modal,bd=btOf(k),g=grBy(k.gr),$$=
  const res=m.res?`<div class="note sm" style="margin-bottom:10px">${m.res.ok?'<b>Đã thêm '+m.res.ok+' buổi.</b> ':''}${m.res.bad.length?'<b>Không thêm được:</b> '+esc(m.res.bad.join('; '))+'. ':''}${m.res.warn.length?'<b>Lưu ý:</b> '+esc(m.res.warn.join('; ')):''}</div>`:'';
  const pool=pool11(),one=`<div class="card"><h2>Các buổi 1-1 hằng tuần</h2>${res}${miss.length?`<p class="note sm" style="margin-bottom:10px">Ngày bán trú chưa có ca 1-1: ${esc(miss.map(w=>DAYS[w]).join(', '))}.</p>`:''}`
   +tbl(['Thứ','Ca','Giáo viên','Phòng','Loại'].concat(lead?['']:[]),rows,'Bé chưa có buổi 1-1 cố định.')
-  +(lead?`<form id="lsmf" class="f" style="margin-top:14px"><h3>Thêm buổi 1-1 cho nhiều ngày cùng lúc</h3><div class="f2"><div><label for="lm-g">Giáo viên</label><select id="lm-g" name="gv"><option value="">Chọn giáo viên</option>${opts(pool.map(s=>[s.id,s.n]),k.gv&&pool.some(s=>s.id===k.gv)?k.gv:'')}</select></div><div><label for="lm-s">Ca học</label><select id="lm-s" name="slot">${opts(SLOTS.map(s=>[s,slotLb(s)]),m.slot||SLOTS[1])}</select></div><div><label for="lm-r">Phòng</label><select id="lm-r" name="room"><option value="">Tự chọn phòng trống</option>${opts(ROOMS.map(r=>[r,r]),'')}</select></div></div>
+  +(lead?`<form id="lsmf" class="f" style="margin-top:14px"><h3>Thêm buổi 1-1 cho nhiều ngày cùng lúc</h3><div class="f2"><div><label for="lm-g">Giáo viên</label><select id="lm-g" name="gv"><option value="">Chọn giáo viên</option>${opts(pool.map(s=>[s.id,s.n]),k.gv&&pool.some(s=>s.id===k.gv)?k.gv:'')}</select></div><div><label for="lm-s">Giờ bắt đầu</label>${slotInput('lm-s',m.slot||SLOTS[1])}<small class="mu">Ca ${SLOT_MIN} phút, tự tính giờ kết thúc.</small></div><div><label for="lm-r">Phòng</label><select id="lm-r" name="room"><option value="">Tự chọn phòng trống</option>${opts(ROOMS.map(r=>[r,r]),'')}</select></div></div>
    <div><span class="lbl">Học vào các ngày</span>${dayBoxes('d',bd.length?bd:[])}</div>
    <p class="sm mu">Mỗi bé chọn ngày riêng: có bé học T2–T7, có bé chỉ vài buổi mỗi tuần. Hệ thống kiểm tra trùng giáo viên, bé, phòng ở từng ngày và chỉ thêm những ngày còn trống.</p>
    <div class="acts" style="justify-content:flex-end"><button class="btn p" type="submit">Thêm các buổi</button></div></form>`:'')+`</div>`;
@@ -95,8 +95,9 @@ FORM.btf=f=>{if(!isLead())return false;const k=kidBy(S.modal.id),bt=f.elements.b
  if(bt&&!bd.length){toast('Hãy chọn ít nhất một ngày bán trú');return false}
  k.bt=bt;if(bt){k.gr=f.elements.gr.value||grByAge(k.dob);k.btd=bd}else{k.gr='';delete k.btd}
  S.modal.res=null;toast('Đã lưu lịch bán trú')};
-FORM.lsmf=f=>{if(!isLead())return false;const k=kidBy(S.modal.id),e=f.elements,gv=e.gv.value,slot=e.slot.value,days=daysOf(f,'d');
+FORM.lsmf=f=>{if(!isLead())return false;const k=kidBy(S.modal.id),e=f.elements,gv=e.gv.value,slot=String(e.slot.value||'').slice(0,5),days=daysOf(f,'d');
  if(!gv){toast('Hãy chọn giáo viên');return false}
+ if(!slotValid(slot)){toast(slotMsg);return false}
  if(!days.length){toast('Hãy chọn ít nhất một ngày');return false}
  const res={ok:0,bad:[],warn:[]};
  days.forEach(w=>{const room=e.room.value||ROOMS.find(r=>!conflict({day:w,slot,gv,hs:k.id,room:r}))||'',x={id:'l'+uid(),type:'11',day:w,slot,gv,hs:k.id,room},c=room?conflict(x):(conflict(Object.assign({},x,{room:''}))||'Không còn phòng trống');   /* hết phòng vì giáo viên hoặc bé đã bận thì báo đúng lý do */

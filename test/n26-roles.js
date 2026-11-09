@@ -125,7 +125,7 @@ const EXP={
   /* thực đơn: sửa được */
   await nav(page,'tn');
   const ed=await page.$$eval('#main [data-a="tnedit"]',e=>e.length);
-  ok('Văn phòng: sửa được thực đơn bán trú (5 ngày)',ed===5,ed);
+  ok('Văn phòng: sửa được thực đơn bán trú (6 ngày)',ed===6,ed);
   /* thông báo học phí: Văn phòng thấy */
   const nt=await page.evaluate(()=>noticesFor().filter(n=>n.fin).length);
   ok('Văn phòng: thấy thông báo học phí',nt>0,nt);
@@ -217,7 +217,7 @@ const EXP={
   await page.evaluate(()=>{S.modal=null;render()});
   /* thực đơn chỉ xem */
   await nav(page,'tn');
-  ok('Giáo viên: xem thực đơn, không có nút sửa',(await page.$$eval('#main .mday',e=>e.length))===5&&!(await page.$('#main [data-a="tnedit"]'))&&!(await page.$('#main [data-a="tncopy"]')));
+  ok('Giáo viên: xem thực đơn, không có nút sửa',(await page.$$eval('#main .mday',e=>e.length))===6&&!(await page.$('#main [data-a="tnedit"]'))&&!(await page.$('#main [data-a="tncopy"]')));
   const g=await page.evaluate(()=>{const d=Object.keys(DB.menu)[0],b=JSON.stringify(DB.menu);return{a:ACT.tnedit(d),c:ACT.tnclr(d),cp:ACT.tncopy(),f:(S.modal={t:'tnd',d},FORM.tndf({elements:{s:{value:'x'},t:{value:''},x:{value:''},n:{value:''}}})),same:JSON.stringify(DB.menu)===b}});
   ok('Giáo viên: gọi thẳng sửa thực đơn bị từ chối',g.a===false&&g.c===false&&g.cp===false&&g.f===false&&g.same,g);
   await page.evaluate(()=>{S.modal=null;render()});
@@ -254,13 +254,13 @@ const EXP={
   ok('Phụ huynh: lịch học không có nút sửa lịch',!(await page.$('#main [data-a="lsadd"],#main [data-a="lsopen"]')));
   await nav(page,'tn');
   const tn=await main(page);
-  ok('Phụ huynh: Thực đơn bán trú 5 ngày, đủ ba bữa',(await page.$$eval('#main .mday',e=>e.length))===5&&(tn.match(/Bữa sáng/g)||[]).length>=4&&(tn.match(/Bữa trưa/g)||[]).length>=4&&(tn.match(/Bữa xế/g)||[]).length>=4,tn.slice(0,300));
+  ok('Phụ huynh: Thực đơn bán trú 6 ngày (T2–T7), đủ ba bữa',(await page.$$eval('#main .mday',e=>e.length))===6&&(tn.match(/Bữa sáng/g)||[]).length>=5&&(tn.match(/Bữa trưa/g)||[]).length>=5&&(tn.match(/Bữa xế/g)||[]).length>=5,tn.slice(0,300));
   ok('Phụ huynh: thực đơn nêu lớp của bé',new RegExp('học lớp '+gname).test(tn)&&/Ong non và Ong mật/.test(tn),tn.slice(0,300));
   ok('Phụ huynh: thực đơn chỉ xem (không có Sửa, Sao chép)',!(await page.$('#main [data-a="tnedit"],#main [data-a="tncopy"]')));
   ok('Phụ huynh: thực đơn đánh dấu hôm nay hoặc tuần này',await page.evaluate(()=>!!document.querySelector('#main .mday.now')||true));
   const wk=await page.evaluate(()=>{const a=document.querySelector('#main [data-a="tnwk"][data-v="7"]');a.click();return S.tn.wk});
   await page.waitForTimeout(60);
-  ok('Phụ huynh: xem được thực đơn tuần sau',(await page.$$eval('#main .mday',e=>e.length))===5&&!/Chưa có thực đơn/.test((await main(page)).slice(0,2000)),wk);
+  ok('Phụ huynh: xem được thực đơn tuần sau',(await page.$$eval('#main .mday',e=>e.length))===6&&!/Chưa có thực đơn/.test((await main(page)).slice(0,2000)),wk);
   ok('Phụ huynh: thực đơn không lộ tên bé gia đình khác',!info.other.some(n=>tn.includes(n)));
   const g=await page.evaluate(()=>{const d=Object.keys(DB.menu)[0];return[ACT.tnedit(d),ACT.tnclr(d),ACT.tncopy()]});
   ok('Phụ huynh: gọi thẳng sửa thực đơn bị từ chối',g.every(x=>x===false),g);
@@ -275,7 +275,7 @@ const EXP={
    await nav(page,'lh');const t1=await main(page);
    ok('PH bé không bán trú: lịch học nêu "chưa đăng ký bán trú", không có dòng 07:30–17:00',/chưa đăng ký bán trú/.test(t1)&&!(await page.$$eval('#main table.wkt tbody th',e=>e.map(x=>x.textContent))).includes('07:30–17:00'),t1.slice(0,300));
    await nav(page,'tn');const t2=await main(page);
-   ok('PH bé không bán trú: trang thực đơn vẫn xem được kèm ghi chú chưa đăng ký',/chưa đăng ký bán trú/.test(t2)&&(await page.$$eval('#main .mday',e=>e.length))===5,t2.slice(0,200));
+   ok('PH bé không bán trú: trang thực đơn vẫn xem được kèm ghi chú chưa đăng ký',/chưa đăng ký bán trú/.test(t2)&&(await page.$$eval('#main .mday',e=>e.length))===6,t2.slice(0,200));
    await nav(page,'cp');
    ok('PH bé không bán trú: Cổng phụ huynh không có thẻ thực đơn',!(await page.$('#main [data-a="nav"][data-v="tn"]')));
   }else ok('có bé không bán trú để thử',false);
@@ -287,7 +287,7 @@ const EXP={
   const {b,page,errs}=await open();
   await login(page,role);await nav(page,'tn');
   const days=await page.$$eval('#main [data-a="tnedit"]',e=>e.map(x=>x.dataset.v));
-  ok(role+': thực đơn có 5 nút Sửa cho 5 ngày thứ Hai–thứ Sáu',days.length===5&&days.every(d=>{const w=new Date(d+'T00:00:00').getDay();return w>=1&&w<=5}),days);
+  ok(role+': thực đơn có 6 nút Sửa cho 6 ngày thứ Hai–thứ Bảy',days.length===6&&days.every(d=>{const w=new Date(d+'T00:00:00').getDay();return w>=1&&w<=6}),days);
   ok(role+': có nút sao chép tuần trước',!!(await page.$('#main [data-a="tncopy"]')));
   const d=days[2];
   await page.click(`#main [data-a="tnedit"][data-v="${d}"]`);await page.waitForSelector('#tndf');
@@ -314,13 +314,13 @@ const EXP={
   ok(role+': lưu rỗng thì xóa thực đơn ngày đó',(await page.evaluate(d=>DB.menu[d],d1))===undefined);
   /* sao chép từ tuần trước: sang tuần chưa có thực đơn */
   await page.click('#main [data-a="tnwk"][data-v="7"]');await page.click('#main [data-a="tnwk"][data-v="7"]');await page.waitForTimeout(60);
-  const wkInfo=await page.evaluate(()=>{const mon=S.tn.wk,prev=addD(mon,-7);return{mon,has:[0,1,2,3,4].filter(i=>DB.menu[addD(mon,i)]).length,prevHas:[0,1,2,3,4].filter(i=>DB.menu[addD(prev,i)]).length}});
+  const wkInfo=await page.evaluate(()=>{const mon=S.tn.wk,prev=addD(mon,-7);return{mon,has:[0,1,2,3,4,5].filter(i=>DB.menu[addD(mon,i)]).length,prevHas:[0,1,2,3,4,5].filter(i=>DB.menu[addD(prev,i)]).length}});
   await page.click('#main [data-a="tnwk"][data-v="-7"]');await page.click('#main [data-a="tnwk"][data-v="7"]');await page.waitForTimeout(40);
   await page.evaluate(()=>{});
   /* tuần sau nữa (tuần +2) không có thực đơn → sao chép từ tuần +1 */
-  const cp=await page.evaluate(()=>{const mon=S.tn.wk,prev=addD(mon,-7);const before=[0,1,2,3,4].filter(i=>DB.menu[addD(mon,i)]).length,pv=[0,1,2,3,4].filter(i=>DB.menu[addD(prev,i)]).length;return{mon,before,pv}});
+  const cp=await page.evaluate(()=>{const mon=S.tn.wk,prev=addD(mon,-7);const before=[0,1,2,3,4,5].filter(i=>DB.menu[addD(mon,i)]).length,pv=[0,1,2,3,4,5].filter(i=>DB.menu[addD(prev,i)]).length;return{mon,before,pv}});
   await page.click('#main [data-a="tncopy"]');await page.waitForTimeout(80);
-  const aft=await page.evaluate(()=>[0,1,2,3,4].filter(i=>DB.menu[addD(S.tn.wk,i)]).length);
+  const aft=await page.evaluate(()=>[0,1,2,3,4,5].filter(i=>DB.menu[addD(S.tn.wk,i)]).length);
   ok(role+': sao chép từ tuần trước ('+cp.pv+' ngày có sẵn → '+aft+')',aft>=cp.before&&(cp.pv===0||aft>=Math.min(5,cp.pv)),[cp,aft]);
   ok(role+': không có lỗi JS (thực đơn)',errs.length===0,errs);
   await b.close()}
@@ -340,7 +340,7 @@ const EXP={
    o.attRows=Object.keys(DB.att).filter(k=>/\|G\d+\|/.test(k)).every(k=>/\|G[12]\|/.test(k));
    /* không trùng giờ: một giáo viên, một bé, một phòng không ở 2 buổi cùng lúc */
    const seen={};let dup=0;DB.lich.filter(l=>l.type==='11').forEach(l=>[l.gv,l.hs,l.room].forEach(x=>{const k=x+l.day+l.slot;if(seen[k])dup++;seen[k]=1}));o.dup=dup;
-   o.menu=Object.keys(DB.menu).length;o.menuDays=Object.keys(DB.menu).every(d=>{const w=dow(d);return w>=1&&w<=5});
+   o.menu=Object.keys(DB.menu).length;o.menuDays=Object.keys(DB.menu).every(d=>{const w=dow(d);return w>=1&&w<=6});
    o.nt=DB.nt.some(n=>n.t==='Giờ học 1-1 và bán trú');
    o.vp=DB.staff.filter(s=>s.role==='vp').map(s=>s.id+':'+s.pos);o.v=DB.v;
    o.fin=DB.nt.filter(n=>n.fin).map(n=>n.t);
@@ -353,7 +353,7 @@ const EXP={
   ok('dữ liệu mẫu: bé bán trú xếp lớp theo tuổi (dưới 6 tuổi Ong non)',r.byAge,r);
   ok('dữ liệu mẫu: điểm danh bán trú chỉ có lớp G1, G2; học bù dùng ca mới',r.attRows&&r.mk,r);
   ok('dữ liệu mẫu: không trùng giáo viên, bé, phòng cùng lúc',r.dup===0,r.dup);
-  ok('dữ liệu mẫu: thực đơn 3 tuần, chỉ thứ Hai–thứ Sáu',r.menu===15&&r.menuDays,[r.menu,r.menuDays]);
+  ok('dữ liệu mẫu: thực đơn 3 tuần, thứ Hai–thứ Bảy',r.menu===18&&r.menuDays,[r.menu,r.menuDays]);
   ok('dữ liệu mẫu: có thông báo giờ 1-1 và bán trú; thông báo học phí có cờ fin',r.nt&&r.fin.length>=1,r.fin);
   ok('dữ liệu mẫu: có đúng nhân sự Văn phòng và dữ liệu bản 5',r.vp.length===1&&/văn phòng/i.test(r.vp[0])&&r.v===5,r.vp);
   /* thêm buổi 1-1 theo khung mới: ca 18:55 được, trùng thì báo */

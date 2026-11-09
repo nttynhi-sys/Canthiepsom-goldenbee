@@ -13,6 +13,12 @@ const dayTx=a=>{const s=a.slice().sort((x,y)=>x-y);if(s.join()==='1,2,3,4,5')ret
 const LOAD_MAX=30; /* số buổi 1-1 mỗi tuần được coi là đủ tải của một giáo viên */
 const slotEnd=s=>{const [h,m]=s.split(':').map(Number),t=h*60+m+SLOT_MIN;return pad(Math.floor(t/60))+':'+pad(t%60)};
 const slotLb=s=>s+'–'+slotEnd(s);
+/* Giờ bắt đầu ca 1-1 được chọn tự do (mỗi ca vẫn kéo dài SLOT_MIN phút, giờ kết thúc tự tính). SLOTS chỉ là các mốc gợi ý xếp liên tiếp. */
+const SLOT_LAST=(()=>{const [h,m]=DAY_CLOSE.split(':').map(Number),t=h*60+m-SLOT_MIN;return pad(Math.floor(t/60))+':'+pad(t%60)})();
+const slotValid=s=>/^([01]\d|2[0-3]):[0-5]\d$/.test(String(s||''))&&s>=DAY_OPEN&&s<=SLOT_LAST;
+const slotOver=(a,b)=>Math.abs(tmin(a)-tmin(b))<SLOT_MIN;   /* hai ca chồng giờ khi cách nhau dưới SLOT_MIN phút */
+const slotMsg='Giờ bắt đầu phải từ '+DAY_OPEN+' đến '+SLOT_LAST+' để ca '+SLOT_MIN+' phút kết thúc trước '+DAY_CLOSE;
+const slotInput=(id,val)=>`<input id="${id}" name="slot" type="time" step="60" value="${esc(val||'')}" list="slotdl"><datalist id="slotdl">${SLOTS.map(s=>`<option value="${s}"></option>`).join('')}</datalist>`;
 const ROOMS=['Phòng 1','Phòng 2','Phòng 3','Phòng 4','Phòng 5','Phòng 6','Phòng 7','Phòng 8'];
 const AC={cm:'Có mặt',p:'Nghỉ P',kp:'Nghỉ KP',tt:'TT/GV nghỉ',bv:'Nhập viện'};
 const NEEDS=['Chậm nói','Khó khăn giao tiếp xã hội','Rối loạn phát âm','Chậm phát triển ngôn ngữ','Cần hỗ trợ đa lĩnh vực'];

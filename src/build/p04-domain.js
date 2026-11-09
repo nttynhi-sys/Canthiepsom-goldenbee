@@ -72,9 +72,11 @@ const balance=h=>DB.lg.filter(e=>e.hs===h).reduce((s,e)=>s+LGK[e.kind][2]*e.amt,
 
 /* --- Lịch học --- */
 function lichAt(w,slot,date){return DB.lich.filter(l=>l.slot===slot&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)))}
+/* các buổi chồng giờ với ca bắt đầu lúc `slot` (dùng để kiểm tra trùng khi giờ bắt đầu chọn tự do) */
+function lichNear(w,slot,date){return DB.lich.filter(l=>l.slot&&slotOver(l.slot,slot)&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)))}
 function conflict(x){const w=x.date?dow(x.date):x.day;
  if(DB.groups.some(g=>(g.gv===x.gv||g.tg===x.gv)&&grOpen(g,w)))return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
- const same=lichAt(w,x.slot,x.date).filter(l=>l.id!==x.id);
+ const same=lichNear(w,x.slot,x.date).filter(l=>l.id!==x.id);
  if(same.some(l=>l.gv===x.gv))return 'Giáo viên đã có buổi khác ở khung giờ này';
  if(same.some(l=>l.hs===x.hs))return 'Trẻ đã có buổi khác ở khung giờ này';
  if(x.room&&same.some(l=>l.room===x.room))return 'Phòng đã được dùng ở khung giờ này';
