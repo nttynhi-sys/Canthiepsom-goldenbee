@@ -33,6 +33,8 @@ function invoice(k,m){if(k.st!=='dang'||k.sd.slice(0,7)>m)return 0;const xs=sche
  return xs.filter(x=>x.kind==='11'&&!x.inc).length*fee11(k)+xs.filter(x=>x.kind==='bt').length*(DB.cfg.pbtDay||0)}
 const makeupFor=(h,d,s)=>DB.mk.find(r=>r.hs===h&&r.from.d===d&&r.from.sid===s&&(r.s==='xn'||r.s==='xong'));
 const CL={cm:'x',p:'P',kp:'K',tt:'N',bv:'V'};
+/* Nhập viện có giấy, ngày bán trú: phí bán trú (không gồm ca 1-1) hoàn bvRefund% (mặc định 50%), riêng phí ca 1-1 trong ngày hoàn bvRefund11% (mặc định 100%) */
+const bv11=R=>{const v=R&&R.bvRefund11;return v==null||v===''||isNaN(+v)?100:Math.max(0,Math.min(100,+v))};
 function feeOf(k,kind,d,sid,code,m){
  const R=DB.cfg.rule,f=fee11(k),dAll=DB.cfg.pbtDay||0,dCN=Math.min(DB.cfg.pbtDay11||0,dAll);
  let rf=0,ls=0,note='';
@@ -43,7 +45,8 @@ function feeOf(k,kind,d,sid,code,m){
  else{
   if(code==='p'){rf=dCN;ls=dAll-dCN;note='Báo trước 1 ngày hoặc trước 7g sáng: hoàn phí can thiệp cá nhân (ca 1-1 trong ngày), không hoàn chi phí khác'}
   else if(code==='kp'){ls=dAll;note='Báo muộn hoặc không báo: không hoàn phí'}
-  else if(code==='bv'){rf=dAll*R.bvRefund/100;note='Nhập viện có giấy: hoàn '+R.bvRefund+'% phí của ngày nhập viện'}
+  else if(code==='bv'){const rB=Math.max(dAll-dCN,0),r11=bv11(R),a=rB*R.bvRefund/100,b=dCN*r11/100;rf=a+b;ls=dAll-rf;
+   note='Nhập viện có giấy: hoàn '+R.bvRefund+'% phí bán trú ('+fmt(a)+') và '+r11+'% phí ca 1-1 trong ngày ('+fmt(b)+')'}
   else if(code==='tt'){note='Trung tâm cho nghỉ (thiên tai, dịch bệnh...): xếp học bù, không tính phí nghỉ'}}
  return{rf:Math.round(rf),ls:Math.round(ls),note}}
 function settle(k,m){

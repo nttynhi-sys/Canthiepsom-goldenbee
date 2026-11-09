@@ -85,7 +85,7 @@ Mục này mô tả chi tiết mã nguồn hiện có. Mục 2 đã được ch�
 
 ### Quy tắc nghiệp vụ đang áp dụng
 - Ca 1-1: 07:15 đến 20:00, mỗi ca 50 phút. Lớp bán trú Ong non, Ong mật: 07:30 đến 17:00.
-- Học phí bán trú 380.000 ₫ mỗi ngày, gồm 1 ca 1-1 (180.000 ₫). Bé chọn ngày bán trú riêng (T2–T6, T2–T7 hoặc tùy chọn). Ca 1-1 sớm nhất mỗi ngày bán trú là ca nằm trong gói, ca khác tính riêng.
+- Học phí bán trú 380.000 ₫ mỗi ngày, gồm phí bán trú 200.000 ₫ và 1 ca 1-1 180.000 ₫. Mỗi buổi 1-1 tính riêng 180.000 ₫. Buổi 1-1 riêng: nghỉ P mất 30% hoàn 70%, nghỉ KP mất 100%, Trung tâm hoặc giáo viên nghỉ hoàn 100%. Bán trú nhập viện có giấy: hoàn 50% phí bán trú (100.000 ₫) và 100% ca 1-1 (180.000 ₫). Mọi khoản hoàn trừ vào học phí tháng sau. Bé chọn ngày bán trú riêng (T2–T6, T2–T7 hoặc tùy chọn). Ca 1-1 sớm nhất mỗi ngày bán trú là ca nằm trong gói, ca khác tính riêng.
 - Lương: giáo viên bán trú lương cố định; giáo viên 1-1 theo ca (60.000 ₫ hoặc 80.000 ₫ tùy người). Bé nghỉ không phép: 50%; dạy bù: 100%; nghỉ có phép và Trung tâm nghỉ: 0% theo mặc định, chỉnh ở Nhân sự → Cài đặt.
 - Giao diện và thông báo bằng tiếng Việt.
 

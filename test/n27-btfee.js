@@ -10,9 +10,10 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  await login(page,'tt');
 
  /* ---------- 1. cấu hình và dữ liệu mẫu ---------- */
- const cf=await ev(()=>({v:DB.v,day:DB.cfg.pbtDay,d11:DB.cfg.pbtDay11,kp:DB.cfg.rule.gvKp,p:DB.cfg.rule.gvP,old:[DB.cfg.pbtCN,DB.cfg.pbtKhac]}));
+ const cf=await ev(()=>({v:DB.v,p11:DB.cfg.p11,bv11:DB.cfg.rule.bvRefund11,pl:DB.cfg.rule.pLoss,tt:DB.cfg.rule.ttRefund,bv:DB.cfg.rule.bvRefund,day:DB.cfg.pbtDay,d11:DB.cfg.pbtDay11,kp:DB.cfg.rule.gvKp,p:DB.cfg.rule.gvP,old:[DB.cfg.pbtCN,DB.cfg.pbtKhac]}));
  ok('giá bán trú 380.000/ngày, trong đó 180.000 là ca 1-1; dữ liệu bản 5',cf.v===5&&cf.day===380000&&cf.d11===180000&&cf.old[0]===undefined&&cf.old[1]===undefined,cf);
  ok('lương giáo viên khi bé nghỉ KP mặc định 50%, nghỉ có phép 0%',cf.kp===50&&cf.p===0,cf);
+ ok('mặc định: 1-1 mỗi buổi 180.000; P mất 30%; Trung tâm nghỉ hoàn 100%; nhập viện hoàn 50% phí bán trú và 100% ca 1-1',cf.p11===180000&&cf.pl===30&&cf.tt===100&&cf.bv===50&&cf.bv11===100,cf);
  const sd=await ev(()=>{const bt=DB.kids.filter(k=>k.bt&&k.st==='dang');
   return{n:bt.length,sat:bt.filter(k=>btHas(k,6)).length,fri:bt.filter(k=>!btHas(k,6)).length,
    miss:bt.filter(k=>btOf(k).some(w=>!DB.lich.some(l=>l.type==='11'&&l.hs===k.id&&l.day===w))).length,
@@ -102,12 +103,27 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
   const gone=DB.att[d+'|'+li+'|tst1']===undefined&&DB.att[d+'|'+g+'|tst1']===undefined;
   ACT.att([d,g,'tst1','kp'].join('|'));
   const rows2=settle(k,sm(CM,-1)).rows.filter(x=>x.d===d).map(x=>[x.kind,x.rf,x.ls]);
+  ACT.att([d,g,'tst1','bv'].join('|'));
+  const rowsBv=settle(k,sm(CM,-1)).rows.filter(x=>x.d===d).map(x=>[x.kind,x.rf,x.ls]);
+  ACT.att([d,g,'tst1','bv'].join('|'));
+  ACT.att([d,g,'tst1','tt'].join('|'));
+  const rowsTt=settle(k,sm(CM,-1)).rows.filter(x=>x.d===d).map(x=>[x.kind,x.rf,x.ls]);
   DB.att[d+'|'+g+'|tst1']=undefined;delete DB.att[d+'|'+g+'|tst1'];delete DB.att[d+'|'+li+'|tst1'];
-  return{d,li,mir,rfP,gone,rows2}});
+  /* quy tắc nhập viện chỉnh được: 50% phí bán trú, 100% ca 1-1 (mặc định); đổi ca 1-1 thành 0% */
+  const old11=DB.cfg.rule.bvRefund11;DB.cfg.rule.bvRefund11=0;DB.att[d+'|'+g+'|tst1']='bv';
+  const rowsBv0=settle(k,sm(CM,-1)).rows.filter(x=>x.d===d).map(x=>[x.kind,x.rf,x.ls]);
+  DB.cfg.rule.bvRefund11=old11;delete DB.cfg.rule.bvRefund11;const rowsBvDef=settle(k,sm(CM,-1)).rows.filter(x=>x.d===d).map(x=>[x.kind,x.rf,x.ls]);
+  DB.cfg.rule.bvRefund11=old11;if(old11===undefined)delete DB.cfg.rule.bvRefund11;
+  delete DB.att[d+'|'+g+'|tst1'];
+  return{d,li,mir,rfP,gone,rows2,rowsBv,rowsTt,rowsBv0,rowsBvDef}});
  ok('ghi nghỉ ngày bán trú: ca 1-1 trong gói nghỉ theo',at.mir==='p',at);
  ok('nghỉ có phép: hoàn 180.000 (phí 1-1), mất 200.000; chỉ một dòng quyết toán',at.rfP.length===1&&at.rfP[0][0]==='bt'&&at.rfP[0][1]===180000&&at.rfP[0][2]===200000,at);
  ok('bỏ điểm danh ngày bán trú thì ca 1-1 trong gói cũng bỏ',at.gone,at);
  ok('nghỉ không phép: mất cả 380.000, không hoàn',at.rows2.length===1&&at.rows2[0][1]===0&&at.rows2[0][2]===380000,at);
+ ok('nhập viện có giấy: hoàn 50% phí bán trú 200.000 (=100.000) và 100% ca 1-1 180.000, tổng 280.000',at.rowsBv.length===1&&at.rowsBv[0][1]===280000&&at.rowsBv[0][2]===100000,at.rowsBv);
+ ok('nhập viện: đổi hoàn ca 1-1 về 0% thì chỉ hoàn 100.000',at.rowsBv0.length===1&&at.rowsBv0[0][1]===100000&&at.rowsBv0[0][2]===280000,at.rowsBv0);
+ ok('nhập viện: cấu hình cũ chưa có bvRefund11 vẫn hoàn 100% ca 1-1',at.rowsBvDef.length===1&&at.rowsBvDef[0][1]===280000,at.rowsBvDef);
+ ok('Trung tâm nghỉ ngày bán trú: không tính phí nghỉ, xếp học bù',at.rowsTt.length===1&&at.rowsTt[0][1]===0&&at.rowsTt[0][2]===0,at.rowsTt);
 
  /* ---------- 5. lương giáo viên ---------- */
  const pay=await ev(()=>{
