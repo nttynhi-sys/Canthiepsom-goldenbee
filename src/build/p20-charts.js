@@ -65,10 +65,11 @@ const readHelp=par=>`<details class="tvw"><summary class="sm"><b>Cách đọc c�
 /* --- trang Tiến bộ (cổng phụ huynh và hồ sơ bé) --- */
 ACT.prp=v=>{S.pr=Object.assign({p:'90'},S.pr,{p:v})};
 function periodChips(st){return`<div class="chips" role="group" aria-label="Khoảng thời gian" style="margin-bottom:12px">${PRD.map(([v,l])=>`<button type="button" class="chip ${st.p===v?'on':''}" data-a="prp" data-v="${v}" aria-pressed="${st.p===v}">${l}</button>`).join('')}</div>`}
+const gtCard=(k,par)=>`<div class="card gt-card"><h2>${par?'Mục tiêu của bé: bé đã đạt chưa?':'Cây mục tiêu của bé'}</h2>${par?'':'<p class="sm mu" style="margin:-4px 0 10px">Tính đến hôm nay, không phụ thuộc khoảng thời gian chọn bên dưới.</p>'}${gtParent(k.id)}</div>`;
 function progView(k,o){o=o||{};const par=!!o.parent,st=S.pr=Object.assign({p:'90'},S.pr),R=prRange(st.p),P=progData(k.id,R.from,R.to);
- if(!P.ss)return periodChips(st)+`<div class="card"><p class="empty">${par?'Chưa có buổi can thiệp nào được ghi trong khoảng thời gian này. Khi giáo viên ghi buổi học, biểu đồ tiến bộ của bé sẽ hiện ở đây.':'Chưa có buổi can thiệp nào được ghi trong khoảng thời gian này.'}</p></div>`;
+ if(!P.ss)return gtCard(k,par)+periodChips(st)+`<div class="card"><p class="empty">${par?'Chưa có buổi can thiệp nào được ghi trong khoảng thời gian này. Khi giáo viên ghi buổi học, biểu đồ tiến bộ của bé sẽ hiện ở đây.':'Chưa có buổi can thiệp nào được ghi trong khoảng thời gian này.'}</p></div>`;
  const recent=sessOf(k.id,R.from,R.to).filter(s=>s.note).slice(-3).reverse();
- return periodChips(st)+`<p class="mu sm" style="margin:-4px 0 12px">Từ ${vd(R.from)} đến ${vd(R.to)}${par?'':' · '+esc(k.n)}</p>`
+ return gtCard(k,par)+periodChips(st)+`<p class="mu sm" style="margin:-4px 0 12px">Từ ${vd(R.from)} đến ${vd(R.to)}${par?'':' · '+esc(k.n)}</p>`
  +`<div class="card">${heroFig(P,par)}</div>`+tiles(k,P)
  +`<div class="card"><h2>${par?'Bé tiến bộ ở lĩnh vực nào?':'Tiến bộ theo lĩnh vực'}</h2>${chDom(P)}${par?'':tvDom(P)}</div>`
  +`<div class="card"><h2>${par?'Bé cần cô hỗ trợ ít dần':'Mức hỗ trợ theo '+(P.unit==='m'?'tháng':'tuần')}</h2>${chStack(P,par)}${par?'':tvStack(P)}</div>`
@@ -78,12 +79,12 @@ function progView(k,o){o=o||{};const par=!!o.parent,st=S.pr=Object.assign({p:'90
  +`<div class="card"><h2>Gợi ý luyện tập tại nhà</h2>${tipsBox(k,P)}${recent.length?`<h3 style="margin-top:12px">Nhận xét gần đây của giáo viên</h3>${recent.map(s=>`<div class="rw"><span><b>${vd(s.date)}</b> · ${esc(s.note)}</span></div>`).join('')}`:''}</div>`
  +`<div class="card">${readHelp(par)}<div class="acts" style="margin-top:12px"><button class="btn p" data-a="prpdf" data-v="${k.id}">Tải báo cáo tiến bộ (PDF)</button></div></div>`}
 /* bản gọn cho trang Tổng quan của phụ huynh */
-function progMini(k){const R=prRange('90'),P=progData(k.id,R.from,R.to);
- if(!P.ss)return'<p class="empty">Chưa có số liệu buổi can thiệp. Khi giáo viên ghi buổi học, biểu đồ sẽ hiện ở đây.</p>';
- return heroFig(P,true)+`<h3 style="margin:14px 0 8px">Bé tiến bộ ở lĩnh vực nào?</h3>`+chDom(P)+`<div class="acts" style="margin-top:12px"><button class="btn p" data-a="cptab" data-v="tb">Xem đầy đủ tiến bộ của bé</button></div>`}
+function progMini(k){const R=prRange('90'),P=progData(k.id,R.from,R.to),gt=gtParent(k.id,{mini:1});
+ if(!P.ss)return(/class="empty"/.test(gt)?'':gt)+'<p class="empty">Chưa có số liệu buổi can thiệp. Khi giáo viên ghi buổi học, biểu đồ sẽ hiện ở đây.</p>';
+ return(/class="empty"/.test(gt)?'':'<h3 style="margin:0 0 8px">Bé đã đạt mục tiêu chưa?</h3>'+gt+'<h3 style="margin:18px 0 8px">Chỉ số tự làm của bé</h3>')+heroFig(P,true)+`<h3 style="margin:14px 0 8px">Bé tiến bộ ở lĩnh vực nào?</h3>`+chDom(P)+`<div class="acts" style="margin-top:12px"><button class="btn p" data-a="cptab" data-v="tb">Xem đầy đủ tiến bộ của bé</button></div>`}
 /* khối biểu đồ đưa vào báo cáo chuyên môn hằng tháng và tệp PDF (mỗi khối .nb không bị cắt giữa hai trang PDF) */
 function progBlocks(P,T,k,pdf,o){const nb=(t,h)=>`<div class="nb"><h4>${t}</h4>${h}</div>`,rg=`từ ${vd(T.from)} đến ${vd(T.to)}`;
- return`<div class="nb">${heroFig(P,true)}</div>`
+ return(o&&o.tree?nb('Mục tiêu của bé: bé đã đạt chưa?',gtParent(k.id,{pdf:pdf})):'')+`<div class="nb">${heroFig(P,true)}</div>`
   +nb('Tiến bộ theo lĩnh vực'+(o&&o.m?' trong tháng':''),chDom(P))
   +nb('Bé cần cô hỗ trợ ít dần <span class="mu">('+rg+')</span>',chStack(T,true))
   +nb('Xu hướng chỉ số tự làm theo tuần <span class="mu">('+rg+')</span>',chTrend(T,pdf))
@@ -93,5 +94,5 @@ function progReport(k,per,pdf){const from=per+'-01',to=mDates(per).slice(-1)[0],
  if(!P.ss)return'';
  return`<div class="prg"><h3 style="margin-top:14px">Biểu đồ tiến bộ của bé trong ${mLow(per)}</h3>${progBlocks(P,progData(k.id,addD(from,-60),to),k,pdf,{m:1})}</div>`}
 ACT.prpdf=v=>{const k=kidBy(v);if(!k||!canKid(k.id))return false;const st=S.pr||{p:'90'},R=prRange(st.p),P=progData(k.id,R.from,R.to);
- const html=`<h2 style="margin:0 0 4px;font:700 17px 'Baloo 2','Be Vietnam Pro',sans-serif">BÁO CÁO TIẾN BỘ CỦA BÉ</h2><p style="margin-bottom:8px"><b>${esc(k.n)}</b> · ${age(k.dob)} · Từ ${vd(R.from)} đến ${vd(R.to)}</p><div class="prg">${P.ss?progBlocks(P,P,k,true,{tips:1}):'<p>Chưa có buổi can thiệp nào được ghi trong khoảng thời gian này.</p>'}</div>`;
+ const html=`<h2 style="margin:0 0 4px;font:700 17px 'Baloo 2','Be Vietnam Pro',sans-serif">BÁO CÁO TIẾN BỘ CỦA BÉ</h2><p style="margin-bottom:8px"><b>${esc(k.n)}</b> · ${age(k.dob)} · Từ ${vd(R.from)} đến ${vd(R.to)}</p><div class="prg">${P.ss?progBlocks(P,P,k,true,{tips:1,tree:1}):'<p>Chưa có buổi can thiệp nào được ghi trong khoảng thời gian này.</p>'}</div>`;
  exportPDF('tien-bo-'+ascii(k.n)+'-'+R.to+'.pdf',html);return false};

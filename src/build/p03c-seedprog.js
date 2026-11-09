@@ -32,7 +32,9 @@ function seedProg(D){
  kids.forEach(k=>{
   const m=mo(k.dob),doms=(NEED[k.nd]||NEED['Cần hỗ trợ đa lĩnh vực']),n=RI(5,7),taken=[];k.sp=.5+R()*1.2;
   const from=k.sd>W0?k.sd:W0;
-  for(let i=0;i<n;i++){const dom=doms[i%doms.length],long=i>=n-1||(n>=7&&i===n-2),g=pickGoal(dom,m,taken,long);if(!g)continue;taken.push(g.id);addPlan(k,g.id,long?'d':'n',from)}});
+  for(let i=0;i<n;i++){const dom=doms[i%doms.length],long=i>=n-1||(n>=7&&i===n-2),g=pickGoal(dom,m,taken,long);if(!g)continue;taken.push(g.id);addPlan(k,g.id,long?'d':'n',from)}
+  /* mục tiêu ngắn hạn thuộc mục tiêu dài hạn cùng lĩnh vực (nếu không có thì mục tiêu dài hạn đầu tiên) */
+  const ls=(plansOf[k.id]||[]).filter(p=>p.h==='d');(plansOf[k.id]||[]).filter(p=>p.h==='n').forEach(p=>{const l=ls.find(x=>gDom(x.g)===gDom(p.g))||ls[0];if(l)p.up=l.id})});
  /* các buổi đã diễn ra trong khoảng 11 tuần gần đây */
  const slotsOf=k=>{const out=[];
   for(let d=W0;d<WD;d=addD(d,1)){if(!isW(d))continue;const w=dow(d);
@@ -46,11 +48,11 @@ function seedProg(D){
    const pick=act.slice(0,Math.min(act.length,RI(3,4))),it=[],doms=[];
    pick.forEach(p=>{const s=sk[p.id],z=cl(s.z+(R()-.5)*.07,0,1),B=[.16,.30,.46,.62,.78,1.001],ix=B.findIndex(b=>z<b),sup=SUPK[5-ix],lo=ix?B[ix-1]:0,u=(z-lo)/(B[ix]-lo),po=sup==='I'?.58+.42*u:.32+.55*u,n=P([10,10,10,10,10,8,5]);
     let tr='';for(let i=0;i<10;i++)tr+=i<n?(R()<po?'V':'X'):'.';
-    it.push({g:p.g,sup,tr});const dm=gDom(p.g);if(!doms.includes(dm))doms.push(dm);
+    it.push(p.h==='n'?{g:p.g,sup,tr,pl:p.id}:{g:p.g,sup,tr});const dm=gDom(p.g);if(!doms.includes(dm))doms.push(dm);
     s.last=sl.d;s.z=Math.min(1.02,s.z+s.r*k.sp*(.5+R()));
     s.hist.push(sup==='I'&&n>=5&&trOk(tr)/n>=.8?1:0);s.lastSup=sup;
     if(s.hist.length>=3&&s.hist.slice(-3).every(x=>x)&&p.s==='dang'){p.s='dat';p.dt=sl.d;
-     const nx=nextOf(p.g);if(nx&&!(plansOf[k.id]||[]).some(q=>q.g===nx.id)&&sl.d<addD(WD,-14))addPlan(k,nx.id,p.h,addD(sl.d,1))}});
+     const nx=nextOf(p.g);if(nx&&!(plansOf[k.id]||[]).some(q=>q.g===nx.id)&&sl.d<addD(WD,-14)){const np=addPlan(k,nx.id,p.h,addD(sl.d,1));if(p.up)np.up=p.up}}});
    const o={id:'s'+(++sn),k:k.id,date:sl.d,by:sl.by||k.gv||'nv04',st:'xong',dom:doms,it,note:R()<.5?P(NOTES):'',home:R()<.3?HOMETIP[P(doms)]:''};
    D.sess.push(o)})});
  /* kế hoạch buổi cho ngày làm việc kế tiếp (chưa ghi kết quả) */
@@ -58,6 +60,6 @@ function seedProg(D){
  D.lich.forEach(l=>{if(l.type!=='11'||l.day!==dow(nd))return;const k=D.kids.find(x=>x.id===l.hs);if(!k||k.st!=='dang')return;
   const act=(plansOf[k.id]||[]).filter(p=>p.s==='dang');if(!act.length)return;
   act.sort((a,b)=>(sk[a.id].last<sk[b.id].last?-1:1));
-  const it=act.slice(0,3).map(p=>({g:p.g,sup:sk[p.id].lastSup||'GP',tr:TR0}));
+  const it=act.slice(0,3).map(p=>Object.assign({g:p.g,sup:sk[p.id].lastSup||'GP',tr:TR0},p.h==='n'?{pl:p.id}:{}));
   D.sess.push({id:'s'+(++sn),k:k.id,date:nd,by:l.gv,st:'kh',dom:[...new Set(it.map(x=>gDom(x.g)))],it,note:'',home:''})});
  kids.forEach(k=>{delete k.sp})}
