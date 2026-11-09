@@ -355,7 +355,7 @@ const EXP={
   ok('dữ liệu mẫu: không trùng giáo viên, bé, phòng cùng lúc',r.dup===0,r.dup);
   ok('dữ liệu mẫu: thực đơn 3 tuần, thứ Hai–thứ Bảy',r.menu===18&&r.menuDays,[r.menu,r.menuDays]);
   ok('dữ liệu mẫu: có thông báo giờ 1-1 và bán trú; thông báo học phí có cờ fin',r.nt&&r.fin.length>=1,r.fin);
-  ok('dữ liệu mẫu: có đúng nhân sự Văn phòng và dữ liệu bản 5',r.vp.length===1&&/văn phòng/i.test(r.vp[0])&&r.v===5,r.vp);
+  ok('dữ liệu mẫu: có đúng nhân sự Văn phòng và dữ liệu bản 6',r.vp.length===1&&/văn phòng/i.test(r.vp[0])&&r.v===6,r.vp);
   /* thêm buổi 1-1 theo khung mới: ca 18:55 được, trùng thì báo */
   const c=await page.evaluate(()=>{const gv=pool11()[0].id,k=DB.kids.find(x=>x.st==='dang'&&!x.gr),x={id:'lt',type:'11',day:6,slot:'18:55',gv,hs:k.id,room:'Phòng 8'};return{ok:conflict(x),again:(DB.lich.push(x),conflict({id:'lt2',type:'11',day:6,slot:'18:55',gv,hs:'zz',room:'Phòng 7'}))}});
   ok('lịch: thêm ca 18:55 không bị báo trùng; ca trùng giáo viên bị báo',!c.ok&&!!c.again,c);

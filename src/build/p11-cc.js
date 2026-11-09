@@ -1,6 +1,6 @@
 /* ===== 6. Chấm công nhân viên ===== */
 const hm=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
-const CSYM={ok:['x','Đủ công'],late:['M','Đi muộn'],leave:['P','Nghỉ phép'],kl:['K','Nghỉ không lương'],abs:['A','Vắng không phép'],chua:['·','Chưa chấm']};
+const CSYM={ok:['x','Đủ công'],late:['M','Đi muộn'],leave:['P','Nghỉ phép'],kl:['K','Nghỉ không lương'],abs:['A','Vắng không phép'],chua:['·','Chưa chấm'],hol:['L','Nghỉ lễ']};
 const LRT={phep:'Nghỉ phép',om:'Nghỉ ốm',kl:'Nghỉ không lương'};
 const LRS={cho:['Chờ duyệt','wa'],duyet:['Đã duyệt','ok'],tuchoi:['Từ chối','er']};
 const lrDays=l=>{let n=0;for(let d=l.f;d<=l.t;d=addD(d,1))if(isW(d))n++;return n};

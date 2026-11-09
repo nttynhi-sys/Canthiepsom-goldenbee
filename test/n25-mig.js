@@ -27,7 +27,7 @@ let fails=0;const ok=(n,c,x)=>{if(c)console.log('PASS',n);else{fails++;console.l
    o.addr=DB.cfg.addr;
    o.v5={pbtDay:DB.cfg.pbtDay,pbtDay11:DB.cfg.pbtDay11,old:[DB.cfg.pbtCN,DB.cfg.pbtKhac],kp:DB.cfg.rule.gvKp,p:DB.cfg.rule.gvP,tkb:DB.tkb.length,tkbG:[...new Set(DB.tkb.map(r=>r.gr))].sort().join(),dx:DB.kids.every(k=>Array.isArray(k.dx)),btd:DB.kids.every(k=>k.btd===undefined),inv:DB.kids.filter(k=>k.bt&&k.gr&&k.st==='dang').slice(0,3).map(k=>invoice(k,CM))};
    return o});
-  ok('nâng cấp: v=5 và đã lưu lại v=5',r.v===5&&r.stored===5,[r.v,r.stored]);
+  ok('nâng cấp: v=6 và đã lưu lại v=6',r.v===6&&r.stored===6,[r.v,r.stored]);
   ok('mọi ca 1-1 nằm trong khung giờ mới',r.slotsIn);
   const MAP={'07:30':'07:15','08:30':'08:55','09:30':'09:45','10:30':'10:35','13:30':'13:55','14:30':'14:45','15:30':'15:35','16:30':'16:25'};
   const exp=MARK.lichSlots.map(x=>{const [id,s]=x.split('|');return id+'|'+MAP[s]});
@@ -57,7 +57,7 @@ let fails=0;const ok=(n,c,x)=>{if(c)console.log('PASS',n);else{fails++;console.l
   // tải lại: dùng thẳng dữ liệu bản 5, không nâng cấp lại
   await page.reload();await page.waitForSelector('.lg');
   const r2=await page.evaluate(()=>({v:DB.v,k:DB.kids[0].n,nv99:DB.staff.some(s=>s.id==='nv99'),menu:Object.keys(DB.menu).length,g:DB.groups.length}));
-  ok('tải lại trang vẫn giữ dữ liệu đã nâng cấp',r2.v===5&&r2.k==='Bé Thử Nâng Cấp'&&r2.nv99&&r2.menu>=15&&r2.g===2,r2);
+  ok('tải lại trang vẫn giữ dữ liệu đã nâng cấp',r2.v===6&&r2.k==='Bé Thử Nâng Cấp'&&r2.nv99&&r2.menu>=15&&r2.g===2,r2);
   ok('không có lỗi JS sau khi tải lại',errs.length===0,errs);
   await b.close();
  }
@@ -67,7 +67,7 @@ let fails=0;const ok=(n,c,x)=>{if(c)console.log('PASS',n);else{fails++;console.l
   fs.writeFileSync(__dirname+'/mig/snap-v2.json',JSON.stringify(d));
   const {b,page,errs}=await open({ls:__dirname+'/mig/snap-v2.json'});
   const r=await page.evaluate(()=>({v:DB.v,pl:DB.plans.length,se:DB.sess.length,cg:DB.cg.length,k:DB.kids[0].n,g:DB.groups.length,menu:Object.keys(DB.menu).length,rpSec:DB.rp.filter(x=>x.sec).length}));
-  ok('bản 2 nâng thẳng lên bản 5 (thư viện mục tiêu + khung giờ mới)',r.v===5&&r.pl>0&&r.se>0&&r.cg>0&&r.k==='Bé Thử Nâng Cấp'&&r.g===2&&r.menu>=15,r);
+  ok('bản 2 nâng thẳng lên bản 6 (thư viện mục tiêu + khung giờ mới)',r.v===6&&r.pl>0&&r.se>0&&r.cg>0&&r.k==='Bé Thử Nâng Cấp'&&r.g===2&&r.menu>=15,r);
   ok('không có lỗi JS với dữ liệu bản 2',errs.length===0,errs);
   await b.close();
  }
@@ -78,7 +78,7 @@ let fails=0;const ok=(n,c,x)=>{if(c)console.log('PASS',n);else{fails++;console.l
   fs.writeFileSync(__dirname+'/mig/snap-bad.json',txt);
   const {b,page,errs}=await open({ls:__dirname+'/mig/snap-bad.json'});
   const r=await page.evaluate(()=>({v:DB.v,k:DB.kids.length,g:DB.groups.length,menu:Object.keys(DB.menu).length,ok:!!document.querySelector('.lg')}));
-  ok('hỏng: '+name+' → tạo lại dữ liệu mẫu bản 5',r.v===5&&r.k>50&&r.g===2&&r.menu>=15&&r.ok,r);
+  ok('hỏng: '+name+' → tạo lại dữ liệu mẫu bản 6',r.v===6&&r.k>50&&r.g===2&&r.menu>=15&&r.ok,r);
   ok('hỏng: '+name+' → không có lỗi JS chưa bắt',errs.length===0,errs);
   await b.close();
  }

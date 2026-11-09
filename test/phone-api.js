@@ -41,6 +41,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   R('lich', 'l2', { id: 'l2', type: '11', hs: 'hs004', day: 3, slot: '08:00', gv: 'nv11', room: 'P2' });
   R('lich', 'l3', { id: 'l3', type: '11', hs: 'hs001', day: 5, slot: '09:00', gv: 'nv10', room: 'P1' });
   R('lich', 'lb9', { id: 'lb9', type: 'bu', hs: 'hs004', date: '2026-11-13', slot: '10:00', gv: 'nv11', room: 'P3', mk: 'mk9' });
+  R('hol', 'hl1', { id: 'hl1', d: '2026-11-18', n: 'Nghỉ thử', k: 'tt' });
   R('sess', 's1', { id: 's1', k: 'hs001', note: 'Tốt' }); R('sess', 's2', { id: 's2', k: 'hs004', note: 'Khá' });
   R('rp', 'r1', { id: 'r1', hs: 'hs001', s: 'gui' }); R('rp', 'r2', { id: 'r2', hs: 'hs001', s: 'nhap' }); R('rp', 'r3', { id: 'r3', hs: 'hs004', s: 'gui' });
   R('mk', 'mk1', { id: 'mk1', hs: 'hs001', s: 'dk' }); R('mk', 'mk9', { id: 'mk9', hs: 'hs004', s: 'xn' });
@@ -130,6 +131,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   const ids = c => (J.records || []).filter(r => r.collection === c).map(r => r.id).sort().join(',');
   const mids = c => (J.money || []).filter(r => r.collection === c).map(r => r.id).sort().join(',');
   ok('parent A: chỉ thấy 2 bé của mình', la.code === 200 && ids('kids') === 'hs001,hs002' && J.kids.join() === 'hs001,hs002', la.body.slice(0, 200));
+  ok('parent A: nhận được danh sách ngày nghỉ của Trung tâm', ids('hol') === 'hl1');
   ok('parent A: lịch, buổi học, kế hoạch chỉ của bé mình', ids('lich') === 'l1,l3' && ids('sess') === 's1' && ids('plans') === 'p1' && ids('mk') === 'mk1');
   ok('parent A: chỉ báo cáo đã gửi, không có bản nháp hay của bé khác', ids('rp') === 'r1');
   ok('parent A: điểm danh của các bé mình', ids('att') === '2026-11-02|l1|hs001,2026-11-03|G1|hs002');
@@ -180,6 +182,17 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   ok('put: trùng phòng cùng khung giờ bị chặn (403)', cf2.code === 403, cf2.body);
   const cf3 = await pw([lb1('lb24', { gv: 'nv10', date: '2026-11-11', slot: '08:00', room: 'P7' })]);
   ok('put: trùng buổi 1-1 cố định cùng thứ trong tuần bị chặn (403)', cf3.code === 403 && /đã có buổi khác/.test(cf3.json.error), cf3.body);
+  const cf5 = await pw([lb1('lb26', { gv: 'nv11', date: '2026-11-13', slot: '10:30', room: 'P6' })]);   /* nv11 có buổi bù 10:00 cùng ngày: chồng giờ dù khác mốc */
+  ok('put: chồng giờ (10:30 so với 10:00) với buổi khác của giáo viên bị chặn (403)', cf5.code === 403 && /đã có buổi khác/.test(cf5.json.error) && !E.recs.has('lich|lb26'), cf5.body);
+  const cf6 = await pw([lb1('lb27', { gv: 'nv11', date: '2026-11-13', slot: '10:50', room: 'P6' })]);   /* cách đúng 50 phút: không chồng */
+  ok('put: giờ bắt đầu tự chọn cách đủ 50 phút thì được lưu', cf6.code === 200 && E.recs.has('lich|lb27'), cf6.body);
+  await pw([], [{ collection: 'lich', id: 'lb27' }]);
+  for (const bad of ['06:00', '19:30', '25:99', '8:00', '']) {
+    const r = await pw([lb1('lb28', { slot: bad, date: '2026-11-16' })]);
+    ok('put: giờ không hợp lệ "' + bad + '" bị từ chối (403)', r.code === 403 && !E.recs.has('lich|lb28'), r.body);
+  }
+  const cf7 = await pw([lb1('lb29', { date: '2026-11-18', slot: '14:00', room: 'P2' })]);
+  ok('put: ngày Trung tâm nghỉ không đăng ký học bù được (403)', cf7.code === 403 && /Trung tâm nghỉ/.test(cf7.json.error) && !E.recs.has('lich|lb29'), cf7.body);
   const cf4 = await pw([lb1('lb25', { gv: 'nv05', date: '2026-11-16', slot: '10:00', room: 'P8' })]);   /* nv05 phụ trách lớp bán trú, thứ Hai */
   ok('put: giáo viên đang phụ trách lớp bán trú bị chặn (403)', cf4.code === 403 && /bán trú/.test(cf4.json.error), cf4.body);
   ok('put: dời giờ buổi bù của mình', (await pw([lb1('lb20', { date: '2026-11-17' })])).code === 200 && E.recs.get('lich|lb20').data.date === '2026-11-17');

@@ -13,7 +13,7 @@ function telNorm(s){let t=String(s==null?'':s).trim();if(!t)return'';
 /* Khóa phụ huynh: email (nếu có), nếu không thì số điện thoại. Mọi bé cùng khóa thuộc cùng một tài khoản phụ huynh. */
 const pkeyOf=k=>{const e=String(k&&k.pe||'').trim().toLowerCase();if(e&&e.includes('@'))return e;const t=telNorm(k&&k.pp);return t?'tel:'+t:''};
 /* Hình dạng từng nhóm dữ liệu: danh sách có mã (id hoặc k), bảng khóa, mục đơn */
-const CSH={arr:['staff','kids','cg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon'],one:['cfg']};
+const CSH={arr:['staff','kids','cg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb','hol'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon'],one:['cfg']};
 /* Nhóm dữ liệu tiền: chỉ Trưởng Trung tâm và Văn phòng đọc và ghi được (giáo viên chỉ đọc lương của mình) */
 const MONEYC=['lg','set','bon'],CFG_MONEY=['p11','pbtDay','pbtDay11','giamTru','thue'],CFG_DEF={pbtDay:380000,pbtDay11:180000};   /* dữ liệu cũ chưa có giá bán trú theo ngày thì lấy giá mặc định */
 const PAY_STUB=()=>({mode:'thang',base:0,rate:0,rateBt:0,allow:0,bh:0,latePen:0});
@@ -59,7 +59,7 @@ function cflat(db,withMoney){const M=new Map();
  return M}
 
 /* ---- dựng DB từ các dòng đã tải ---- */
-function cEmpty(){return{v:5,tkb:[],cfg:{},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
+function cEmpty(){return{v:6,hol:[],tkb:[],cfg:{},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
 function cApply(D,t,r,pay,cfgm){const c=r.collection;
  if(t==='money'&&c==='pay'){pay[r.id]=r.data;return}
  if(t==='money'&&c==='cfgm'){Object.assign(cfgm,r.data);cfgm._has=1;return}

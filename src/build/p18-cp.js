@@ -16,7 +16,7 @@ function cpHome(k){const up=upcoming(k,6),last=DB.sess.filter(s=>s.k===k.id&&s.n
  +`<div class="card"><h2>Tiến bộ của bé</h2>${progMini(k)}</div>`}
 ACT.cplh=v=>{go('lh',{lh:Object.assign(S.lh||{},{kid:v})})};
 function cpMonth(k){const c=S.cp,m=c.m,r=settle(k,m),ds=mDates(m),lead=(dow(ds[0])+6)%7,billedM=billed(k.id,m),nm=sm(m,1);
- const cells=Array.from({length:lead},()=>'<div style="border:0"></div>').concat(ds.map(d=>`<div class="${dow(d)===0?'sun':''}"><b>${pd(d).getDate()}</b><div>${(r.cells[d]||[]).map(x=>`<i class="sc sc-${symCls(x)}">${x}</i>`).join('')}</div></div>`)).join('');
+ const cells=Array.from({length:lead},()=>'<div style="border:0"></div>').concat(ds.map(d=>`<div class="${dow(d)===0?'sun':''}"><b>${pd(d).getDate()}</b><div>${isClosed(d)&&dow(d)!==0?`<i class="sc sc-L" title="${esc(holOf(d).n)}">L</i>`:(r.cells[d]||[]).map(x=>`<i class="sc sc-${symCls(x)}">${x}</i>`).join('')}</div></div>`)).join('');
  return`<div class="card"><div class="top"><h2>${mLabel(m)}</h2><div class="acts"><button class="btn s" data-a="cpm" data-v="-1">Tháng trước</button><button class="btn s" data-a="cpm" data-v="1" ${m>=CM?'disabled':''}>Tháng sau</button></div></div>
  <div class="legend">${Object.entries(SYM).map(([x,l])=>`<span><i class="sc sc-${symCls(x)}">${x}</i> ${l}</span>`).join('')}</div>
  <div class="cal" role="img" aria-label="Lịch điểm danh ${mLabel(m)}">${['T2','T3','T4','T5','T6','T7','CN'].map(x=>`<span class="sm mu" style="text-align:center">${x}</span>`).join('')}${cells}</div>

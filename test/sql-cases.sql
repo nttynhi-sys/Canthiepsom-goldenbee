@@ -57,6 +57,17 @@ do $$ begin
   raise notice 'PASS gv ghi được sess';
   begin insert into public.records(collection,id,data) values ('staff','nv99','{}'); raise exception 'FAIL gv ghi được staff'; exception when insufficient_privilege then raise notice 'PASS gv không ghi được staff'; end;
   begin insert into public.money_records(collection,id,data) values ('lg','e9','{}'); raise exception 'FAIL gv ghi được money'; exception when insufficient_privilege then raise notice 'PASS gv không ghi được money'; end;
+  begin insert into public.records(collection,id,data) values ('hol','h1','{"d":"2027-01-01"}'); raise exception 'FAIL gv ghi được ngày nghỉ lễ'; exception when insufficient_privilege then raise notice 'PASS gv không ghi được ngày nghỉ lễ'; end;
+end $$;
+select t.as_user('00000000-0000-0000-0000-000000000001','tt@gb.vn');
+do $$ begin
+  insert into public.records(collection,id,data) values ('hol','h1','{"d":"2027-01-01","n":"Tết Dương lịch","k":"le"}');
+  raise notice 'PASS tt ghi được ngày nghỉ lễ';
+end $$;
+select t.as_user('00000000-0000-0000-0000-000000000002','gv@gb.vn');
+select t.chk('gv đọc được ngày nghỉ lễ', (select count(*) from public.records where collection='hol'), 1);
+do $$ begin
+  begin update public.records set data='{"d":"2027-01-02"}' where collection='hol' and id='h1'; if found then raise exception 'FAIL gv sửa được ngày nghỉ lễ'; end if; raise notice 'PASS gv không sửa được ngày nghỉ lễ (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS gv không sửa được ngày nghỉ lễ'; end;
 end $$;
 
 -- Số điện thoại duy nhất

@@ -1,5 +1,5 @@
 /* ===== Bảng chấm công học sinh ===== */
-const SYM={x:'Có mặt',P:'Nghỉ có phép',K:'Nghỉ không phép',N:'Trung tâm/GV nghỉ',V:'Nhập viện (bán trú)',B:'Học bù có mặt','?':'Chưa ghi'};
+const SYM={L:'Nghỉ lễ, Trung tâm nghỉ',x:'Có mặt',P:'Nghỉ có phép',K:'Nghỉ không phép',N:'Trung tâm/GV nghỉ',V:'Nhập viện (bán trú)',B:'Học bù có mặt','?':'Chưa ghi'};
 const symCls=c=>c==='?'?'q':c;
 const billed=(h,m)=>{const e=DB.lg.filter(x=>x.hs===h&&x.kind==='hp'&&x.m===m);return e.length?e.reduce((s,x)=>s+x.amt,0):invoice(kidBy(h),m)};
 const progShort=k=>{const bd=btOf(k),e=ex11(k);return [bd.length?'Bán trú '+dayTx(bd):'',e>0?'1-1 x'+e+(bd.length?' thêm':''):''].filter(Boolean).join(' + ')||(k.bt?'Bán trú':'–')};
@@ -11,7 +11,7 @@ function sheetRows(){const t=S.dd,m=t.m;if(t.fl==='ref'&&!canMoney())t.fl='';con
 ACT.ddm=v=>{S.dd.m=sm(S.dd.m,+v);S.pg.ddsh=1};
 ACT.ddclr=()=>{S.dd.kid='';S.pg.ddsh=1};
 INP.ddq=v=>{S.dd.q=v;S.pg.ddsh=1};CHG.ddpr=v=>{S.dd.pr=v;S.pg.ddsh=1};CHG.ddfl=v=>{S.dd.fl=v;S.pg.ddsh=1};
-const cellH=(k,r,d)=>{if(dow(d)===0)return'<td class="dc sun"></td>';const c=r.cells[d];
+const cellH=(k,r,d)=>{if(dow(d)===0)return'<td class="dc sun"></td>';if(isClosed(d))return`<td class="dc"><i class="sc sc-L" title="${esc(holOf(d).n)}">L</i></td>`;const c=r.cells[d];
  return`<td class="dc">${c?`<button class="dcell" data-a="scopen" data-v="${k.id}|${d}" title="${vd(d)}">${c.map(x=>`<i class="sc sc-${symCls(x)}">${x}</i>`).join('')}</button>`:''}</td>`};
 function ddSheet(){const t=S.dd,m=t.m,ds=mDates(m),rows=sheetRows(),L=canMoney(),p=pg('ddsh',rows,20);
  const T=rows.reduce((a,x)=>({inv:a.inv+x.inv,lost:a.lost+x.r.lost,ref:a.ref+x.r.refund,none:a.none+x.r.none,cm:a.cm+x.r.cm,ab:a.ab+x.r.p+x.r.kp+x.r.tt+x.r.bv}),{inv:0,lost:0,ref:0,none:0,cm:0,ab:0});

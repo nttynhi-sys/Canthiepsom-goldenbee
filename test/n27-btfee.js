@@ -11,7 +11,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
 
  /* ---------- 1. cấu hình và dữ liệu mẫu ---------- */
  const cf=await ev(()=>({v:DB.v,p11:DB.cfg.p11,bv11:DB.cfg.rule.bvRefund11,pl:DB.cfg.rule.pLoss,tt:DB.cfg.rule.ttRefund,bv:DB.cfg.rule.bvRefund,day:DB.cfg.pbtDay,d11:DB.cfg.pbtDay11,kp:DB.cfg.rule.gvKp,p:DB.cfg.rule.gvP,old:[DB.cfg.pbtCN,DB.cfg.pbtKhac]}));
- ok('giá bán trú 380.000/ngày, trong đó 180.000 là ca 1-1; dữ liệu bản 5',cf.v===5&&cf.day===380000&&cf.d11===180000&&cf.old[0]===undefined&&cf.old[1]===undefined,cf);
+ ok('giá bán trú 380.000/ngày, trong đó 180.000 là ca 1-1; dữ liệu bản 6',cf.v===6&&cf.day===380000&&cf.d11===180000&&cf.old[0]===undefined&&cf.old[1]===undefined,cf);
  ok('lương giáo viên khi bé nghỉ KP mặc định 50%, nghỉ có phép 0%',cf.kp===50&&cf.p===0,cf);
  ok('mặc định: 1-1 mỗi buổi 180.000; P mất 30%; Trung tâm nghỉ hoàn 100%; nhập viện hoàn 50% phí bán trú và 100% ca 1-1',cf.p11===180000&&cf.pl===30&&cf.tt===100&&cf.bv===50&&cf.bv11===100,cf);
  const sd=await ev(()=>{const bt=DB.kids.filter(k=>k.bt&&k.st==='dang');

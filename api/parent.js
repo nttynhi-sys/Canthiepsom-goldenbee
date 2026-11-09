@@ -44,7 +44,7 @@ async function snapshot(me, since, known) {
   if (known !== undefined && String(known) !== k.ids.join(',')) return { reload: true };
   const ids = k.ids, sf = since ? '&updated_at=gt.' + U(since.records || '1970-01-01T00:00:00Z') : '', sm = since ? '&updated_at=gt.' + U(since.money || '1970-01-01T00:00:00Z') : '';
   const job = [
-    ['records', 'collection=in.(cfg,groups,menu,tpl,cg,tkb)' + sf],
+    ['records', 'collection=in.(cfg,groups,menu,tpl,cg,tkb,hol)' + sf],
     ['records', 'collection=eq.staff' + sf],
     ['records', 'collection=eq.nt&data->>aud=eq.ph' + sf],
     ['records', 'collection=eq.rd&id=like.' + U('*|' + me.pid) + sf]
@@ -82,12 +82,20 @@ async function existing(coll, ids) {
   const rows = await fetchRows('records', 'collection=eq.' + coll + '&id=' + inList(ids));
   return new Map(rows.map(r => [r.id, r.data || {}]));
 }
+/* Giờ bắt đầu ca 1-1 chọn tự do, mỗi ca 50 phút: hai ca chồng giờ khi cách nhau dưới 50 phút */
+const SLOT_MIN = 50, SLOT_FIRST = '07:15', SLOT_LAST = '19:10';   /* ca 50 phút trong khung 07:15 đến 20:00 */
+const slotOk = v => typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) && v >= SLOT_FIRST && v <= SLOT_LAST;
+const tmin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
+const slotOver = (a, b) => Math.abs(tmin(a) - tmin(b)) < SLOT_MIN;
 async function lichConflict(x) {
   const w = dowOf(x.date);
+  const hol = await fetchRows('records', 'collection=eq.hol');
+  const closed = hol.find(r => r.data && r.data.d === x.date);
+  if (closed) return 'Trung tâm nghỉ ngày này (' + (closed.data.n || 'nghỉ lễ') + ')';
   const gs = await fetchRows('records', 'collection=eq.groups');
   if (w >= 1 && w <= 5 && gs.some(g => g.data && (g.data.gv === x.gv || g.data.tg === x.gv))) return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
-  const ls = await fetchRows('records', 'collection=eq.lich&data->>slot=eq.' + U(x.slot) + '&' + orList([1], () => 'data->>date.eq.' + x.date + ',data->>day.eq.' + w));
-  const same = ls.map(r => r.data).filter(l => l.id !== x.id && ((l.type === 'bu' && l.date === x.date) || (l.type === '11' && +l.day === w)));
+  const ls = await fetchRows('records', 'collection=eq.lich&' + orList([1], () => 'data->>date.eq.' + x.date + ',data->>day.eq.' + w));
+  const same = ls.map(r => r.data).filter(l => l.id !== x.id && l.slot && slotOver(l.slot, x.slot) && ((l.type === 'bu' && l.date === x.date) || (l.type === '11' && +l.day === w)));
   if (same.some(l => l.gv === x.gv)) return 'Giáo viên đã có buổi khác ở khung giờ này';
   if (same.some(l => l.hs === x.hs)) return 'Trẻ đã có buổi khác ở khung giờ này';
   if (x.room && same.some(l => l.room === x.room)) return 'Phòng đã được dùng ở khung giờ này';
@@ -110,7 +118,7 @@ async function put(me, b) {
     if (c === 'mk') {
       if (!SAFE_ID.test(r.id) || !isMine(d) || (old.mk.has(r.id) && !isMine(old.mk.get(r.id)))) throw deny();
     } else if (c === 'lich') {
-      if (!SAFE_ID.test(r.id) || !isMine(d) || d.type !== 'bu' || typeof d.date !== 'string' || typeof d.slot !== 'string') throw deny();
+      if (!SAFE_ID.test(r.id) || !isMine(d) || d.type !== 'bu' || typeof d.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d.date) || !slotOk(d.slot)) throw deny('Giờ học bù không hợp lệ.');
       const o = old.lich.get(r.id);
       if (o && (!isMine(o) || o.type !== 'bu')) throw deny();
       if (!o || o.date !== d.date || o.slot !== d.slot || o.gv !== d.gv || o.room !== d.room) {

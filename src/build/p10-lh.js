@@ -5,7 +5,7 @@ VIEWS.lh=()=>isPH()?lhParent():lhStaff();
 const lhStaff=()=>{const h=S.lh=Object.assign({tab:'wk',mode:'gv',wk:monOf(WD),gv:'',room:ROOMS[0],kid:''},S.lh);
  if(isGV()){h.mode='gv';h.gv=U.id}else if(!h.gv)h.gv=(pool11()[0]||{}).id||'';
  if(!h.kid)h.kid=(myKids().find(k=>k.st==='dang'&&wk11(k.id))||{}).id||'';
- return head(isGV()?'Lịch dạy của tôi':'Lịch học','Lịch 1-1 cố định theo tuần ('+DAY_OPEN+'–'+DAY_CLOSE+', mỗi ca '+SLOT_MIN+' phút), lịch học bù và thời khóa biểu bán trú')+tabsH([['wk','Lịch 1-1 theo tuần'],['bt','Thời khóa biểu bán trú']],h.tab,'lhtab')+(h.tab==='wk'?lhWeek(h):lhBt())};
+ return head(isGV()?'Lịch dạy của tôi':'Lịch học','Lịch 1-1 cố định theo tuần ('+DAY_OPEN+'–'+DAY_CLOSE+', mỗi ca '+SLOT_MIN+' phút), lịch học bù và thời khóa biểu bán trú')+tabsH([['wk','Lịch 1-1 theo tuần'],['bt','Thời khóa biểu bán trú'],['hol','Ngày nghỉ lễ']],h.tab,'lhtab')+(h.tab==='wk'?lhWeek(h):h.tab==='hol'?holTab():lhBt())};
 ACT.lhtab=v=>{S.lh.tab=v};
 ACT.lhwk=v=>{S.lh.wk=v==='0'?monOf(WD):addD(S.lh.wk,+v)};
 CHG.lhmode=v=>{S.lh.mode=v};CHG.lhgv=v=>{S.lh.gv=v};CHG.lhroom=v=>{S.lh.room=v};CHG.lhkid=v=>{S.lh.kid=v};
@@ -19,9 +19,9 @@ function lhWeek(h){const mon=h.wk,days=[0,1,2,3,4,5].map(i=>addD(mon,i));
  const rows=slotRows(days,mineL).map(s=>`<tr><th class="nw">${slotLb(s)}${SLOTS.includes(s)?'':'<br><small class="mu">giờ riêng</small>'}</th>${days.map((d,i)=>lhCell(h,d,i+1,s)).join('')}</tr>`).join('');
  return`<div class="card">${ctl}<div class="acts" style="justify-content:space-between;margin-bottom:10px"><div class="acts"><button class="btn s" data-a="lhwk" data-v="-7">Tuần trước</button><button class="btn s" data-a="lhwk" data-v="0">Tuần này</button><button class="btn s" data-a="lhwk" data-v="7">Tuần sau</button></div><b>${vd(days[0])} đến ${vd(days[5])}</b></div>
  ${gr?`<p class="note sm" style="margin-bottom:10px">${esc(sn(h.gv))} phụ trách ${esc(gr.n)} (${gr.gv===h.gv?'giáo viên chính':'trợ giảng'}) từ thứ Hai đến thứ Sáu nên không có ca 1-1 các ngày này.</p>`:''}
- <div class="tw"><table class="wkt"><thead><tr><th></th>${days.map(d=>`<th>${DAYN[dow(d)]}<br><span class="mu">${vdm(d)}</span></th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
+ <div class="tw"><table class="wkt"><thead><tr><th></th>${days.map(d=>`<th>${DAYN[dow(d)]}<br><span class="mu">${vdm(d)}</span>${isClosed(d)?'<br>'+tg('Nghỉ','in'):''}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
  <p class="sm mu" style="margin-top:8px">Ô vàng là buổi học bù, ô đỏ nhạt là buổi nghỉ. ${isLead()&&h.mode==='gv'?'Bấm dấu cộng để thêm buổi cố định cho giáo viên đang chọn.':''}</p></div>`}
-function lhCell(h,d,w,s){const ls=lichAt(w,s,d);
+function lhCell(h,d,w,s){if(isClosed(d))return`<td class="cell off"><span class="sm mu">${esc(holOf(d).n)}</span></td>`;const ls=lichAt(w,s,d);
  if(h.mode==='all')return`<td class="cell"><span class="tag ${ls.length>=ROOMS.length?'er':ls.length?'in':'gy'}">${ls.length}/${ROOMS.length}</span></td>`;
  const mine=ls.filter(l=>h.mode==='gv'?l.gv===h.gv:h.mode==='room'?l.room===h.room:l.hs===h.kid),off=h.mode==='gv'&&onLeave(h.gv,d);
  const it=l=>{const k=kidBy(l.hs),c=DB.att[d+'|'+l.id+'|'+l.hs],sub=h.mode==='gv'?l.room:h.mode==='room'?given(sn(l.gv)):given(sn(l.gv))+' · '+l.room;
@@ -124,4 +124,4 @@ function lhParent(){const ks=myKids().filter(k=>k.st==='dang');
  return head('Lịch học của bé','Giờ học 1-1 và giờ bán trú của bé trong tuần')+(ks.length>1?tabsH(ks.map(x=>[x.id,given(x.n)]),h.kid,'lhk'):'')
  +`<div class="grid"><div class="card kpi"><div class="mu sm">Học 1-1</div><div class="big">${ls.length} buổi</div><div class="sm mu">mỗi tuần${ls.length?', '+esc(given(mainGV(k))):''}</div></div><div class="card kpi"><div class="mu sm">Bán trú</div><div class="big">${g?esc(g.n):'Không'}</div><div class="sm mu">${g?BTLB+', '+esc(dayTx(btOf(k))):'Bé chưa đăng ký bán trú'}</div></div></div>`
  +`<div class="card"><h2>Thời khóa biểu của ${esc(given(k.n))}</h2>${kidWeek(k)}<p class="sm mu" style="margin-top:8px">Can thiệp 1-1 nhận bé từ ${DAY_OPEN} đến ${DAY_CLOSE}, mỗi ca ${SLOT_MIN} phút. Khi cần nghỉ hoặc đổi giờ, phụ huynh báo trong nhóm chung hoặc đăng ký học bù ở mục Học bù.</p></div>`
- +`<div class="card"><h2>Lịch 14 ngày tới</h2>${days.length?days.map(({d,xs})=>`<div class="mday" style="margin-bottom:8px"><div class="mh"><b>${DAYN[dow(d)]}</b> <span class="mu sm">${vdm(d)}</span>${d===TODAY?' '+tg('Hôm nay','y'):''}</div>${xs.map(x=>line(d,x)).join('')}</div>`).join(''):'<p class="empty">Chưa có lịch trong 14 ngày tới.</p>'}<div class="acts" style="margin-top:10px">${g?'<button class="btn s" data-a="nav" data-v="tn">Thực đơn bán trú</button>':''}<button class="btn s" data-a="nav" data-v="hb">Đăng ký học bù</button></div></div>`}
+ +`${holCard(60)}<div class="card"><h2>Lịch 14 ngày tới</h2>${days.length?days.map(({d,xs})=>`<div class="mday" style="margin-bottom:8px"><div class="mh"><b>${DAYN[dow(d)]}</b> <span class="mu sm">${vdm(d)}</span>${d===TODAY?' '+tg('Hôm nay','y'):''}</div>${xs.map(x=>line(d,x)).join('')}</div>`).join(''):'<p class="empty">Chưa có lịch trong 14 ngày tới.</p>'}<div class="acts" style="margin-top:10px">${g?'<button class="btn s" data-a="nav" data-v="tn">Thực đơn bán trú</button>':''}<button class="btn s" data-a="nav" data-v="hb">Đăng ký học bù</button></div></div>`}
