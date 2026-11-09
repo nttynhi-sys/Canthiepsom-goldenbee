@@ -4,15 +4,25 @@
 
 ## Cấu trúc
 - `index.html`: bản chạy trên web (Vercel). Đăng nhập thật bằng Supabase, dữ liệu dùng chung.
-- `src/build/`: mã nguồn chia nhỏ. Chạy `src/build/build-web.sh` để ghép lại thành `index.html`.
+- `src/build/`: mã nguồn chia nhỏ (`p03-seed.js` dữ liệu mẫu, `p03d-dx.js` thư viện chẩn đoán, `p04-domain.js` học phí, lịch, lương). Chạy `src/build/build-web.sh` để ghép lại thành `index.html`.
 - `supabase/schema.sql`, `supabase/policies-v3.sql`: bảng và chính sách bảo mật. Chạy theo thứ tự này trong SQL Editor (v3 chạy lại nhiều lần vẫn an toàn và thay thế `policies-v2.sql`).
 - `api/`: các hàm chạy trên Vercel, dùng khóa secret của Supabase (biến môi trường `SUPABASE_SECRET_KEY` trong Vercel → Settings → Environment Variables; khóa này không bao giờ nằm trong mã hay trình duyệt):
   - `accounts.js`: Trưởng Trung tâm cấp, đặt lại mật khẩu, thu hồi tài khoản nhân viên và phụ huynh ngay trong app.
   - `login.js`: đổi số điện thoại thành email đăng nhập (Supabase đăng nhập bằng email).
   - `parent.js`: cổng dữ liệu cho phụ huynh (xem phần Phụ huynh).
   - `_lib.js`: phần dùng chung.
-- `test/`: kiểm thử. `phone-api.js` (hàm máy chủ), `cloud-phone-ui.js` (giao diện đầu-cuối), `sql-test.sh` (chính sách SQL trên Postgres cục bộ), cùng `cloud-test.js`, `cloud-empty.js`, `cloud-acc-ui.js`, `api-test.js`.
+- `test/`: kiểm thử. `phone-api.js` (hàm máy chủ), `cloud-phone-ui.js` (giao diện đầu-cuối), `sql-test.sh` (chính sách SQL trên Postgres cục bộ), cùng `cloud-test.js`, `cloud-empty.js`, `cloud-acc-ui.js`, `api-test.js`, `n27-btfee.js` (học phí bán trú, lịch 1-1 linh hoạt, chẩn đoán, thời khóa biểu, lương theo ca).
 - `trung-tam-tri-lieu.html`: bản trình diễn cũ (dữ liệu mẫu trong trình duyệt).
+
+## Bán trú, học phí và lương
+- **Học phí bán trú:** 380.000 ₫ mỗi ngày, đã gồm 1 ca can thiệp 1-1 (50 phút, 180.000 ₫). Đặt ở Nhân sự → Cài đặt (`pbtDay`, `pbtDay11`). Hóa đơn tháng = số ngày bán trú của bé × 380.000 + số ca 1-1 tính riêng × giá ca (`p11`).
+- **Ngày bán trú riêng từng bé:** mở hồ sơ bé → thẻ Lịch học. Chọn T2–T6, T2–T7 hoặc từng ngày (`btd`; bé cũ chưa có thì mặc định T2–T6). Lớp chỉ mở thứ Bảy khi có bé chọn T7.
+- **Lịch 1-1 linh hoạt:** cùng thẻ Lịch học, thêm cùng lúc nhiều ngày cho một giáo viên và một ca. Hệ thống kiểm tra trùng giáo viên, bé, phòng, lớp bán trú từng ngày, chỉ thêm các ngày còn trống và báo ngày không thêm được kèm lý do. Bé không bán trú học vài buổi mỗi tuần thì chỉ tính theo số buổi.
+- **Ca 1-1 trong gói:** mỗi ngày bán trú, ca 1-1 sớm nhất của bé là ca nằm trong gói (không tính riêng). Ca thứ hai trở đi trong ngày tính riêng. Ghi nghỉ ở ngày bán trú thì ca trong gói nghỉ theo. Nghỉ có phép (báo trước) hoàn 180.000 ₫ phí 1-1, mất phần còn lại; nghỉ không phép mất cả ngày.
+- **Thời khóa biểu bán trú** (Lịch học → Thời khóa biểu bán trú): thời khóa biểu lớp kiểu mầm non (đón trẻ, thể dục sáng, ăn, ngủ, hoạt động...) theo từng lớp, sửa được (Trưởng Trung tâm, Quản lý). Giờ 1-1 của từng bé ghép lên thời khóa biểu: tên bé hiện ở ô giờ ra học 1-1; có chế độ xem từng bé. Phụ huynh xem thời khóa biểu của bé mình. Lưu ở bộ sưu tập `tkb` của bảng `records`, không cần chạy thêm SQL.
+- **Chẩn đoán** (hồ sơ bé): chọn nhiều trong thư viện hơn 120 mục chia nhóm (ngôn ngữ, nói, giao tiếp xã hội và phổ tự kỷ, phát triển, thính giác, thần kinh, hành vi và cảm xúc...) kèm mã ICD-10 để tra cứu, có ô lọc nhanh, thêm ô "chẩn đoán khác" và nơi chẩn đoán. Thư viện ở `src/build/p03d-dx.js`.
+- **Lương giáo viên:** giáo viên bán trú lương cố định theo tháng. Giáo viên 1-1 trả theo ca: 60.000 ₫ hoặc 80.000 ₫ tùy người (Nhân sự → hồ sơ → lương). Bé có mặt hoặc dạy bù: trả đủ. Bé nghỉ không phép: 50% (30.000 ₫ hoặc 40.000 ₫). Bé nghỉ có phép, Trung tâm nghỉ, nhập viện: 0% theo mặc định. Các tỉ lệ này chỉnh ở Nhân sự → Cài đặt → Lương giáo viên 1-1 theo ca. Ca của giáo viên tính theo điểm danh của bé trong ca đó.
+- Dữ liệu mẫu bản 5 (`DB.v`): bản cũ tự nâng cấp lên (giá theo ngày, thời khóa biểu, chẩn đoán); phí bán trú theo tháng cũ (`pbtCN`, `pbtKhac`) được thay bằng giá theo ngày.
 
 ## Chế độ
 - Mặc định (trên web): đăng nhập Supabase, dữ liệu lưu trên máy chủ.

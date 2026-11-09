@@ -70,7 +70,7 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  ok('parent cannot see other kids',await ev(()=>DB.kids.filter(k=>canKid(k.id)).every(k=>k.pe===U.pe)));
  // makeup cross-role
  const kid=info.k[0];
- await ev(k=>{if(!mkCands(k).length){const l=DB.lich.find(x=>x.hs===k&&x.type==='11');const d=addD(WD,-3);const dd=isW(d)?d:addD(d,-1);const dd2=dow(dd)===l.day?dd:(()=>{let x=dd;while(dow(x)!==l.day)x=addD(x,-1);return x})();DB.att[dd2+'|'+l.id+'|'+k]='kp'}render()},kid);
+ await ev(k=>{if(!mkCands(k).length){const l={id:'lt1',type:'11',day:1,slot:'18:55',gv:(kidBy(k).gv||'nv04'),hs:k,room:'Phòng 8'};DB.lich.push(l);let x=addD(WD,-3);while(dow(x)!==1)x=addD(x,-1);DB.att[x+'|'+l.id+'|'+k]='kp'}render()},kid);   /* ca 1-1 tính riêng (không nằm trong gói bán trú) */
  await nav('hb');await page.click('[data-a="mknew"]');await page.waitForSelector('#mknf');
  const mk0=await ev(()=>DB.mk.length);await page.click('#mknf button[type=submit]');await W(80);
  ok('parent registers makeup',(await ev(()=>DB.mk.length))===mk0+1&&(await ev(()=>DB.mk[DB.mk.length-1].by))==='ph');
@@ -85,7 +85,7 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  const st=await ev(i=>DB.mk.find(r=>r.id===i).s,rid);ok('parent picks slot -> confirmed',st==='xn');
  const lb=await ev(i=>DB.lich.find(l=>l.mk===i),rid);ok('makeup session created in timetable',!!lb&&lb.type==='bu',JSON.stringify(lb));
  // original absence now exempt
- const ex=await ev(i=>{const r=DB.mk.find(x=>x.id===i),k=kidBy(r.hs),s=settle(k,r.from.d.slice(0,7));return s.rows.find(x=>x.d===r.from.d)},rid);
+ const ex=await ev(i=>{const r=DB.mk.find(x=>x.id===i),k=kidBy(r.hs),s=settle(k,r.from.d.slice(0,7));return s.rows.find(x=>x.d===r.from.d&&x.kind==='11')},rid);
  ok('absence with confirmed makeup has no penalty',ex&&ex.ls===0&&ex.rf===0&&/học bù/i.test(ex.note),JSON.stringify(ex));
  // hp view
  await page.click('.mdl [data-a="mx"]');await nav('hp');ok('parent fee view',/Học phí/.test(await page.$eval('#main',e=>e.innerText)));

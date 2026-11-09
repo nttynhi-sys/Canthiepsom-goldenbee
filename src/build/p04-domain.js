@@ -8,35 +8,51 @@ const policyH=k=>`<div class="note"><b>${esc(POLICY[k].t)}</b>${POLICY[k].p.map(
 
 /* --- Học phí và bảng tính chấm công học sinh --- */
 const fee11=k=>k.f11||DB.cfg.p11;
-const btDays=m=>mDates(m).filter(d=>{const w=dow(d);return w>=1&&w<=5}).length;
-function sched(k,m){const out=[],ls=DB.lich.filter(l=>l.hs===k.id);
+/* --- Thời khóa biểu bán trú và giờ 1-1 --- */
+const tmin=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m};
+const tkbRows=gid=>(DB.tkb||[]).filter(r=>r.gr===gid||!r.gr).slice().sort((a,b)=>tmin(a.s)-tmin(b.s)||tmin(a.e)-tmin(b.e));
+/* nhắc khi ca 1-1 của bé bán trú nằm ngoài giờ bán trú hoặc trùng giờ ăn, ngủ trưa của lớp */
+function btWarn(k,w,slot){if(!btHas(k,w))return'';const e=slotEnd(slot);
+ if(tmin(slot)<tmin(BT.s)||tmin(e)>tmin(BT.e))return'ca nằm ngoài giờ bán trú ('+BTLB+')';
+ const hit=tkbRows(k.gr).find(r=>(r.k==='an'||r.k==='ngu')&&tmin(slot)<tmin(r.e)&&tmin(e)>tmin(r.s));
+ return hit?'trùng giờ "'+hit.n.toLowerCase()+'" của lớp ('+hit.s+'–'+hit.e+')':''}
+/* Ca 1-1 nằm trong gói bán trú: mỗi ngày bán trú của bé có đúng một ca 1-1 (ca sớm nhất trong ngày) tính vào phí bán trú, không tính riêng. */
+function incIdW(k,w){if(!k||!btHas(k,w))return '';let b=null;DB.lich.forEach(l=>{if(l.type==='11'&&l.hs===k.id&&l.day===w&&(!b||l.slot<b.slot))b=l});return b?b.id:''}
+const incSession=(k,d)=>incIdW(k,dow(d));
+/* lớp bán trú có học vào thứ này không: thứ Hai đến thứ Sáu luôn mở; thứ Bảy chỉ mở khi có bé đăng ký học thứ Bảy */
+const grOpen=(g,w)=>w>=1&&w<=5||(w===6&&DB.kids.some(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,6)));
+function sched(k,m){const out=[],ls=DB.lich.filter(l=>l.hs===k.id),bd=btOf(k);
  for(const d of mDates(m)){const w=dow(d);if(!w)continue;
-  ls.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===d))out.push({d,sid:l.id,kind:l.type,slot:l.slot})});
-  if(k.gr&&w<=5)out.push({d,sid:k.gr,kind:'bt',slot:BT.s})}
+  const day=ls.filter(l=>l.type==='11'&&l.day===w).sort((x,y)=>x.slot<y.slot?-1:x.slot>y.slot?1:0),inBt=bd.includes(w);
+  day.forEach((l,i)=>out.push({d,sid:l.id,kind:'11',slot:l.slot,inc:inBt&&i===0}));
+  ls.forEach(l=>{if(l.type==='bu'&&l.date===d)out.push({d,sid:l.id,kind:'bu',slot:l.slot})});
+  if(inBt)out.push({d,sid:k.gr,kind:'bt',slot:BT.s})}
  return out}
-function invoice(k,m){if(k.st!=='dang'||k.sd.slice(0,7)>m)return 0;return sched(k,m).filter(x=>x.kind==='11').length*fee11(k)+(k.bt?DB.cfg.pbtCN+DB.cfg.pbtKhac:0)}
+/* Học phí tháng = số ca 1-1 tính riêng × giá ca + số ngày bán trú × giá ngày bán trú (gồm sẵn 1 ca 1-1 mỗi ngày) */
+function invoice(k,m){if(k.st!=='dang'||k.sd.slice(0,7)>m)return 0;const xs=sched(k,m);
+ return xs.filter(x=>x.kind==='11'&&!x.inc).length*fee11(k)+xs.filter(x=>x.kind==='bt').length*(DB.cfg.pbtDay||0)}
 const makeupFor=(h,d,s)=>DB.mk.find(r=>r.hs===h&&r.from.d===d&&r.from.sid===s&&(r.s==='xn'||r.s==='xong'));
 const CL={cm:'x',p:'P',kp:'K',tt:'N',bv:'V'};
 function feeOf(k,kind,d,sid,code,m){
- const R=DB.cfg.rule,f=fee11(k),bd=btDays(m)||1,dCN=DB.cfg.pbtCN/bd,dAll=(DB.cfg.pbtCN+DB.cfg.pbtKhac)/bd;
+ const R=DB.cfg.rule,f=fee11(k),dAll=DB.cfg.pbtDay||0,dCN=Math.min(DB.cfg.pbtDay11||0,dAll);
  let rf=0,ls=0,note='';
  if(kind==='11'){const mk=makeupFor(k.id,d,sid);
   if(code==='p'){if(mk)note='Đã thỏa thuận học bù nên không tính phí nghỉ';else{rf=f*(100-R.pLoss)/100;ls=f*R.pLoss/100;note='Có phép: mất '+R.pLoss+'% phí buổi, hoàn '+(100-R.pLoss)+'% trừ vào học phí tháng sau'}}
   else if(code==='kp'){if(mk)note='Đã thỏa thuận học bù nên không tính phí nghỉ';else{ls=f;note='Không phép: mất 100% phí buổi'}}
   else if(code==='tt'){if(mk)note='Trung tâm hoặc giáo viên nghỉ, hai bên đã thỏa thuận học bù';else{rf=f*R.ttRefund/100;note='Trung tâm hoặc giáo viên nghỉ, không học bù: hoàn '+R.ttRefund+'% phí buổi'}}}
  else{
-  if(code==='p'){rf=dCN;ls=dAll-dCN;note='Báo trước 1 ngày hoặc trước 7g sáng: hoàn phí can thiệp cá nhân, không hoàn chi phí khác'}
+  if(code==='p'){rf=dCN;ls=dAll-dCN;note='Báo trước 1 ngày hoặc trước 7g sáng: hoàn phí can thiệp cá nhân (ca 1-1 trong ngày), không hoàn chi phí khác'}
   else if(code==='kp'){ls=dAll;note='Báo muộn hoặc không báo: không hoàn phí'}
   else if(code==='bv'){rf=dAll*R.bvRefund/100;note='Nhập viện có giấy: hoàn '+R.bvRefund+'% phí của ngày nhập viện'}
   else if(code==='tt'){note='Trung tâm cho nghỉ (thiên tai, dịch bệnh...): xếp học bù, không tính phí nghỉ'}}
  return{rf:Math.round(rf),ls:Math.round(ls),note}}
 function settle(k,m){
- const r={k:k.id,m,rows:[],cells:{},plan:0,planBt:0,cm:0,p:0,kp:0,tt:0,bv:0,bu:0,none:0,lost:0,refund:0,stop:k.st==='nghi'};
+ const r={k:k.id,m,rows:[],cells:{},plan:0,planInc:0,planBt:0,cm:0,p:0,kp:0,tt:0,bv:0,bu:0,none:0,lost:0,refund:0,stop:k.st==='nghi'};
  const put=(d,c)=>{const a=r.cells[d]=r.cells[d]||[];if(!a.includes(c))a.push(c)};
  for(const x of sched(k,m)){
   const code=DB.att[x.d+'|'+x.sid+'|'+k.id]||'';
   if(x.kind==='bu'){if(code==='cm'){r.bu++;put(x.d,'B')}else if(x.d<WD)put(x.d,'?');continue}
-  if(x.kind==='11')r.plan++;else r.planBt++;
+  if(x.kind==='11'){if(x.inc){r.planInc++;continue}r.plan++}else r.planBt++;   /* ca 1-1 trong gói bán trú tính theo ngày bán trú, không tính riêng */
   if(!code){if(x.d<WD){r.none++;put(x.d,'?')}continue}
   put(x.d,CL[code]);r[code]++;
   if(code==='cm')continue;
@@ -54,7 +70,7 @@ const balance=h=>DB.lg.filter(e=>e.hs===h).reduce((s,e)=>s+LGK[e.kind][2]*e.amt,
 /* --- Lịch học --- */
 function lichAt(w,slot,date){return DB.lich.filter(l=>l.slot===slot&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)))}
 function conflict(x){const w=x.date?dow(x.date):x.day;
- if(DB.groups.some(g=>(g.gv===x.gv||g.tg===x.gv)&&w>=1&&w<=5))return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
+ if(DB.groups.some(g=>(g.gv===x.gv||g.tg===x.gv)&&grOpen(g,w)))return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
  const same=lichAt(w,x.slot,x.date).filter(l=>l.id!==x.id);
  if(same.some(l=>l.gv===x.gv))return 'Giáo viên đã có buổi khác ở khung giờ này';
  if(same.some(l=>l.hs===x.hs))return 'Trẻ đã có buổi khác ở khung giờ này';
@@ -65,21 +81,32 @@ function freeSlots(gv,hs,from,n){const out=[];let d=from;
  for(let i=0;i<28&&out.length<n;i++,d=addD(d,1)){if(!isW(d))continue;let c=0;
   for(const s of SLOTS){if(c>=2)break;const room=ROOMS.find(r=>!conflict({date:d,slot:s,gv,hs,room:r}));if(room){out.push({date:d,slot:s,room});c++}}}
  return out}
-function dayList(date){const w=dow(date),out=[];
- DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:l.gv,slot:l.slot,room:l.room,kids:[k]})}});
- if(w>=1&&w<=5)DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang');if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',gv:g.gv,tg:g.tg,slot:BT.s,room:'',kids:ks})});
+function dayList(date){const w=dow(date),out=[],first={};
+ DB.lich.forEach(l=>{if(l.type==='11'&&l.day===w&&(!first[l.hs]||l.slot<first[l.hs].slot))first[l.hs]=l});
+ DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);
+  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:l.gv,slot:l.slot,room:l.room,kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
+ DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',gv:g.gv,tg:g.tg,slot:BT.s,room:'',kids:ks})});
  return out.sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0)}
 
 /* --- Chấm công nhân viên và lương --- */
 function tsSt(id,d){const l=DB.lr.find(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t);if(l)return l.type==='kl'?'kl':'leave';
  const r=DB.ts[id+'|'+d];if(r&&r.i)return r.i>DB.cfg.lateAfter?'late':'ok';
  if(d>TODAY||!isW(d))return '';return d>=WD?'chua':'abs'}
+/* Tỉ lệ lương một ca 1-1 theo tình trạng của bé: có mặt và dạy bù trả đủ 100%; bé nghỉ không phép được 50%; các trường hợp còn lại do Trung tâm đặt */
+function gvPct(){const R=DB.cfg.rule||{},n=(v,d)=>v==null||v===''||isNaN(+v)?d:Math.max(0,Math.min(100,+v));
+ return{cm:100,kp:n(R.gvKp,50),p:n(R.gvP,0),tt:n(R.gvTt,0),bv:n(R.gvBv,0)}}
 function payroll(s,m){
- const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id),isGr=DB.groups.some(g=>g.gv===s.id||g.tg===s.id);
- let cong=0,late=0,teach=0,btd=0,leave=0,abs=0;
- for(const d of dts){const t=tsSt(s.id,d);
-  if(t==='ok'||t==='late'){cong++;if(t==='late')late++;mine.forEach(l=>{if((l.type==='11'&&l.day===dow(d))||(l.type==='bu'&&l.date===d))teach++});if(isGr&&dow(d)<=5)btd++}
-  else if(t==='leave'){cong++;leave++}else if(t==='abs'||t==='kl')abs++}
- const byDay=f.mode==='buoi'?0:(f.base||0)*Math.min(cong,cfg.cc)/cfg.cc,bySess=f.mode==='thang'?0:teach*(f.rate||0),byBt=btd*(f.rateBt||0),allow=f.allow||0,bonus=DB.bon[s.id+'|'+m]||0,pen=late*(f.latePen||0),bh=(f.base||0)*(f.bh||0)/100;
+ const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id),pc=gvPct();
+ const myGr=DB.groups.filter(g=>g.gv===s.id||g.tg===s.id),open6=myGr.some(g=>grOpen(g,6));
+ let cong=0,late=0,btd=0,leave=0,abs=0;
+ const ss={cm:0,kp:0,p:0,tt:0,bv:0,bu:0,none:0};
+ for(const d of dts){const t=tsSt(s.id,d),w=dow(d),worked=t==='ok'||t==='late';
+  if(worked){cong++;if(t==='late')late++;if(myGr.length&&(w<=5||(w===6&&open6)))btd++}
+  else if(t==='leave'){cong++;leave++}else if(t==='abs'||t==='kl')abs++;
+  /* ca 1-1 tính theo điểm danh của bé trong ca đó */
+  mine.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===d)){const c=DB.att[d+'|'+l.id+'|'+l.hs];
+   if(c&&ss[c]!=null){ss[c]++;if(l.type==='bu'&&c==='cm')ss.bu++}else if(!c&&worked)ss.none++}})}
+ const teach=ss.cm,units=ss.cm*pc.cm+ss.kp*pc.kp+ss.p*pc.p+ss.tt*pc.tt+ss.bv*pc.bv;
+ const byDay=f.mode==='buoi'?0:(f.base||0)*Math.min(cong,cfg.cc)/cfg.cc,bySess=f.mode==='thang'?0:units/100*(f.rate||0),byBt=btd*(f.rateBt||0),allow=f.allow||0,bonus=DB.bon[s.id+'|'+m]||0,pen=late*(f.latePen||0),bh=(f.base||0)*(f.bh||0)/100;
  const gross=byDay+bySess+byBt+allow+bonus-pen,tax=Math.max(0,gross-bh-cfg.giamTru)*cfg.thue/100;
- return{cong,late,teach,btd,leave,abs,byDay,bySess,byBt,allow,bonus,pen,bh,gross,tax,net:gross-bh-tax}}
+ return{cong,late,teach,kp:ss.kp,p:ss.p,tt:ss.tt,bv:ss.bv,bu:ss.bu,none:ss.none,pc,btd,leave,abs,byDay,bySess,byBt,allow,bonus,pen,bh,gross,tax,net:gross-bh-tax}}

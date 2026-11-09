@@ -62,14 +62,19 @@ async function login(page,e,p){await page.waitForSelector('#login');await page.f
  ok('Tải lại từ máy chủ cho đúng số liệu đã lưu',dbA===dbB,dbA+' vs '+dbB);
  const n1=srv2.log.length;await sleep(1500);
  ok('Tải xong không ghi thừa (dữ liệu mẫu)',srv2.log.slice(n1).filter(x=>/^(POST|DELETE)/.test(x)).length===0);
+ ok('Thời khóa biểu bán trú lên máy chủ (bảng chung), giá bán trú theo ngày ở bảng tiền',cnt('tkb')>=20&&!JSON.stringify(srv2.recs.get('cfg|_').data).match(/pbtDay/)&&srv2.mon.get('cfgm|_').data.pbtDay===380000&&srv2.mon.get('cfgm|_').data.pbtDay11===180000,[cnt('tkb'),srv2.mon.get('cfgm|_')]);
+ await page.evaluate(()=>{const r=DB.tkb.find(x=>x.gr==='G1');r.n='Hoạt động đã sửa';DB.kids.find(k=>k.bt&&k.st==='dang').btd=[1,2,3,4,5,6];render()});
+ await sleep(1500);
+ ok('Sửa thời khóa biểu và ngày bán trú của bé được lưu lên máy chủ',[...srv2.recs.values()].some(r=>r.collection==='tkb'&&r.data.n==='Hoạt động đã sửa')&&[...srv2.recs.values()].some(r=>r.collection==='kids'&&Array.isArray(r.data.btd)&&r.data.btd.length===6));
  const ttState=await page.evaluate(()=>({kids:JSON.stringify(DB.kids),staff:JSON.stringify(DB.staff.map(s=>s.pay.mode))}));
  await ctx.close();
  /* --- C. Quản lý: không thấy tiền --- */
  const qlStaff=srv2.recs.get('staff|nv01').data.em;srv2.users[qlStaff]=Object.assign({},srv2.users['huynhminhanh@goldenbee.vn'],{email:qlStaff});
  const qi=srv2.log.length;({ctx,page}=await newPage(b,srv2,errs));await login(page,qlStaff,'pw1');await page.waitForSelector('.nav',{timeout:30000});
- const ql=await page.evaluate(()=>({lg:DB.lg.length,set:Object.keys(DB.set).length,bon:Object.keys(DB.bon).length,pays:DB.staff.every(s=>s.pay.base===0&&s.pay.rate===0&&s.pay.allow===0),cfg:[DB.cfg.p11,DB.cfg.pbtCN,DB.cfg.giamTru,DB.cfg.thue],role:U.role}));
+ const ql=await page.evaluate(()=>({lg:DB.lg.length,set:Object.keys(DB.set).length,bon:Object.keys(DB.bon).length,pays:DB.staff.every(s=>s.pay.base===0&&s.pay.rate===0&&s.pay.allow===0),cfg:[DB.cfg.p11,DB.cfg.pbtDay,DB.cfg.pbtDay11,DB.cfg.giamTru,DB.cfg.thue],role:U.role}));
  ok('Quản lý: không nhận sổ học phí, quyết toán, thưởng',ql.lg===0&&ql.set===0&&ql.bon===0,JSON.stringify(ql));
  ok('Quản lý: lương và đơn giá chỉ là giá trị rỗng, không có số thật',ql.pays&&ql.cfg.every(x=>x===0));
+ ok('Quản lý: thấy thời khóa biểu bán trú nhưng không có giá bán trú',(await page.evaluate(()=>DB.tkb.length))>=20);
  ok('Quản lý không hề gọi bảng tiền',!srv2.log.slice(qi).some(l=>/money_records/.test(l)));
  let bad=[];const views=await page.evaluate(()=>ACCESS[U.role]);
  for(const v of views){await page.evaluate(v=>{go(v);render()},v);await sleep(60);const t=await page.textContent('#main');if(/\d\s?₫|Tiền lương|Học phí và công nợ/.test(t))bad.push(v)}

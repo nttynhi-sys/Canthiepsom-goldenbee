@@ -44,7 +44,7 @@ async function snapshot(me, since, known) {
   if (known !== undefined && String(known) !== k.ids.join(',')) return { reload: true };
   const ids = k.ids, sf = since ? '&updated_at=gt.' + U(since.records || '1970-01-01T00:00:00Z') : '', sm = since ? '&updated_at=gt.' + U(since.money || '1970-01-01T00:00:00Z') : '';
   const job = [
-    ['records', 'collection=in.(cfg,groups,menu,tpl,cg)' + sf],
+    ['records', 'collection=in.(cfg,groups,menu,tpl,cg,tkb)' + sf],
     ['records', 'collection=eq.staff' + sf],
     ['records', 'collection=eq.nt&data->>aud=eq.ph' + sf],
     ['records', 'collection=eq.rd&id=like.' + U('*|' + me.pid) + sf]

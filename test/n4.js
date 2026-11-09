@@ -32,7 +32,7 @@ const {open,login}=require('./h.js');
  log('items now',await page.locator('.si').count());
  // chọn từ thư viện
  await page.click('[data-a="sepick"]');await page.waitForSelector('.gp-f');
- await page.fill('#lf-q','gọi tên');await page.waitForTimeout(80);
+ await page.locator('.mdc .chip:has-text("Tất cả lĩnh vực")').first().click().catch(()=>{});await page.waitForTimeout(60);await page.fill('#lf-q','gọi tên');await page.waitForTimeout(80);
  log('picker session mode, hits',await page.$eval('.acts .sm b',e=>e.textContent));
  await page.locator('.gi input[type=checkbox]:not([disabled])').nth(0).check();
  await page.screenshot({path:'o6-pick-ses.png'});

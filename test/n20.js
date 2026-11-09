@@ -49,7 +49,7 @@ const {open,login}=require('./h.js');
  // form ghi buổi: nút theo lĩnh vực
  const k2=await page.evaluate(()=>myKids().find(k=>k.st==='dang').id);
  await page.evaluate(k=>{ACT.senew(k+'|'+WD);render()},k2);await page.waitForSelector('.si');
- await page.click('.mdc [data-a="sedom"][data-v="cy"]').catch(()=>{});await page.waitForTimeout(40);
+ if(!(await page.$('.mdc [data-a="sepick"][data-v="cy"]'))){await page.click('.mdc [data-a="sedom"][data-v="cy"]').catch(()=>{});await page.waitForTimeout(40)}   /* chỉ bật lĩnh vực Chú ý khi chưa bật (dữ liệu mẫu mỗi bé khác nhau) */
  log('session picker buttons',JSON.stringify(await page.$$eval('.mdc [data-a="sepick"]',e=>e.map(x=>x.textContent.trim()))));
  await page.click('.mdc [data-a="sepick"][data-v="cy"]');await page.waitForSelector('.gp-f');
  log('picker opened pre-filtered:',await page.evaluate(()=>S.modal.f.dom),'| active chip',await page.$eval('.mdc .chip.on',e=>e.textContent));

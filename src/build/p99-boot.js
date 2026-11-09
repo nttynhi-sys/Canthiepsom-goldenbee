@@ -37,12 +37,22 @@ function migrate4(d){
  if(!d.nt.some(n=>n.t==='Giờ học 1-1 và bán trú'))d.nt.push({id:'n'+uid(),aud:'ph',tg:'all',t:'Giờ học 1-1 và bán trú',b:'Can thiệp 1-1 nhận bé từ '+DAY_OPEN+' đến '+DAY_CLOSE+', mỗi ca '+SLOT_MIN+' phút. Bán trú hai lớp Ong non và Ong mật học từ '+BT.s+' đến '+BT.e+' (thứ Hai đến thứ Sáu). Phụ huynh xem lịch học và giờ 1-1 của bé ở mục Lịch học của bé, thực đơn bán trú ở mục Thực đơn bán trú.',by:'nv02',at:TODAY,pin:false,fin:false});
  if(!d.menu||typeof d.menu!=='object')seedMenu(d);
  d.v=4}
+/* Bản 5: bán trú tính theo ngày (380.000 ₫/ngày gồm 180.000 ₫ ca 1-1), ngày bán trú theo từng bé, chẩn đoán, thời khóa biểu bán trú, lương giáo viên 1-1 theo ca.
+   Giữ nguyên học sinh, lịch, điểm danh, công nợ. Phí bán trú theo tháng cũ được bỏ; hóa đơn đã ghi vào công nợ không đổi. */
+function migrate5(d){
+ DB=d;const c=d.cfg;
+ if(c.pbtDay==null)c.pbtDay=380000;if(c.pbtDay11==null)c.pbtDay11=180000;
+ delete c.pbtCN;delete c.pbtKhac;
+ c.rule=Object.assign({gvKp:50,gvP:0},c.rule);
+ if(!Array.isArray(d.tkb)||!d.tkb.length)d.tkb=tkbDefault(d.groups);
+ d.kids.forEach(k=>{if(!Array.isArray(k.dx))k.dx=[]});
+ d.v=5}
 const okDB=d=>d&&Array.isArray(d.staff)&&Array.isArray(d.kids)&&d.cfg&&d.cfg.rule&&d.set&&d.rd&&d.att&&Array.isArray(d.rp)&&Array.isArray(d.tpl);
 (function boot(){
  if(CLOUDMODE){try{const th=localStorage.getItem('gb_th');if(th)document.documentElement.dataset.theme=th}catch(e){}cloudBoot();initCaps();return}
  let d=null;try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
- if(okDB(d)&&d.v===4&&Array.isArray(d.plans)&&Array.isArray(d.sess)&&Array.isArray(d.cg)&&d.menu&&Array.isArray(d.groups))DB=d;
- else if(okDB(d)&&(d.v===2||d.v===3)){try{if(d.v===2)migrate(d);migrate4(d);save()}catch(e){DB=null;seed();save()}}
+ if(okDB(d)&&d.v===5&&Array.isArray(d.plans)&&Array.isArray(d.sess)&&Array.isArray(d.cg)&&d.menu&&Array.isArray(d.groups)&&Array.isArray(d.tkb))DB=d;
+ else if(okDB(d)&&d.v>=2&&d.v<=4){try{if(d.v===2)migrate(d);if(d.v<=3)migrate4(d);migrate5(d);save()}catch(e){DB=null;seed();save()}}
  else{seed();save()}
  try{const th=localStorage.getItem('gb_th');if(th)document.documentElement.dataset.theme=th}catch(e){}
  try{const em=localStorage.getItem('gb_u');if(em){const a=findAccount(em);if(a){U=a;S.v=ACCESS[a.role][0]}}}catch(e){}

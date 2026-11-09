@@ -243,10 +243,11 @@ const EXP={
   const lh=await main(page);
   ok('Phụ huynh: Lịch học của bé nêu giờ 1-1 07:15–20:00, ca 50 phút',/Can thiệp 1-1 nhận bé từ 07:15 đến 20:00, mỗi ca 50 phút/.test(lh),lh.slice(-400));
   const ths=await page.$$eval('#main table.wkt tbody th',e=>e.map(x=>x.textContent));
-  const slotsOK=await page.evaluate(t=>t.filter(x=>x!==BTLB).every(x=>{const s=x.split('–')[0];return SLOTS.includes(s)&&slotLb(s)===x}),ths);
-  ok('Phụ huynh: mọi dòng giờ 1-1 đúng khung 50 phút',ths.length>=2&&slotsOK,ths);
+  /* bé bán trú: bảng là thời khóa biểu lớp ghép giờ 1-1; bé chỉ 1-1: bảng theo ca 50 phút */
   const kid=info.ks.find(k=>k.gr);const gname=await page.evaluate(g=>grBy(g).n,kid.gr);
-  ok('Phụ huynh: dòng bán trú 07:30–17:00 và tên lớp '+gname,ths.includes('07:30–17:00')&&new RegExp('Bán trú[\\s\\S]*'+gname).test(lh),ths);
+  const tkbOK=await page.evaluate(t=>t.every(x=>{const [a,b]=x.split('–');return /^\d\d:\d\d$/.test(a)&&/^\d\d:\d\d$/.test(b)&&tmin(a)<tmin(b)}),ths);
+  ok('Phụ huynh: mọi dòng giờ là khung giờ hợp lệ của thời khóa biểu hoặc ca 1-1',ths.length>=2&&tkbOK,ths);
+  ok('Phụ huynh: thời khóa biểu bán trú bắt đầu 07:30, kết thúc 17:00 và nêu lớp '+gname,ths[0]==='07:30–08:15'&&ths.includes('16:15–17:00')&&new RegExp('Bán trú[\\s\\S]*'+gname).test(lh),ths);
   ok('Phụ huynh: thẻ Bán trú nêu tên lớp',new RegExp('Bán trú\\s+'+gname).test(lh));
   ok('Phụ huynh: lịch 14 ngày tới có dòng bán trú và 1-1',/Bán trú .*07:30–17:00/.test(lh)&&/Can thiệp 1-1 \d\d:\d\d–\d\d:\d\d/.test(lh),lh.slice(lh.indexOf('Lịch 14'),lh.indexOf('Lịch 14')+400));
   ok('Phụ huynh: lịch học không lộ tên bé của gia đình khác',!info.other.some(n=>lh.includes(n)));
@@ -354,7 +355,7 @@ const EXP={
   ok('dữ liệu mẫu: không trùng giáo viên, bé, phòng cùng lúc',r.dup===0,r.dup);
   ok('dữ liệu mẫu: thực đơn 3 tuần, chỉ thứ Hai–thứ Sáu',r.menu===15&&r.menuDays,[r.menu,r.menuDays]);
   ok('dữ liệu mẫu: có thông báo giờ 1-1 và bán trú; thông báo học phí có cờ fin',r.nt&&r.fin.length>=1,r.fin);
-  ok('dữ liệu mẫu: có đúng nhân sự Văn phòng và dữ liệu bản 4',r.vp.length===1&&/văn phòng/i.test(r.vp[0])&&r.v===4,r.vp);
+  ok('dữ liệu mẫu: có đúng nhân sự Văn phòng và dữ liệu bản 5',r.vp.length===1&&/văn phòng/i.test(r.vp[0])&&r.v===5,r.vp);
   /* thêm buổi 1-1 theo khung mới: ca 18:55 được, trùng thì báo */
   const c=await page.evaluate(()=>{const gv=pool11()[0].id,k=DB.kids.find(x=>x.st==='dang'&&!x.gr),x={id:'lt',type:'11',day:6,slot:'18:55',gv,hs:k.id,room:'Phòng 8'};return{ok:conflict(x),again:(DB.lich.push(x),conflict({id:'lt2',type:'11',day:6,slot:'18:55',gv,hs:'zz',room:'Phòng 7'}))}});
   ok('lịch: thêm ca 18:55 không bị báo trùng; ca trùng giáo viên bị báo',!c.ok&&!!c.again,c);

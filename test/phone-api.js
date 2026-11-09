@@ -36,7 +36,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   R('kids', 'hs001', kid('hs001', 'An', 'A@x.vn', '0912345678', 'G1')); R('kids', 'hs002', kid('hs002', 'Bình', 'a@x.vn', '0912345678', 'G1'));
   R('kids', 'hs003', kid('hs003', 'Chi', '', '0933 111 222', 'G2')); R('kids', 'hs004', kid('hs004', 'Dũng', 'b@x.vn', '0912345678', 'G2')); R('kids', 'hs005', kid('hs005', 'Em', '', '', ''));
   R('groups', 'G1', { id: 'G1', n: 'Ong non', gv: 'nv04', tg: 'nv05' }); R('groups', 'G2', { id: 'G2', n: 'Ong mật', gv: 'nv05', tg: '' });
-  R('cfg', '_', { name: 'Golden Bee', cc: 26 }); R('menu', '2026-11-09', { a: 'Cháo' }); R('tpl', 'x', { k: 'x' }); R('cg', '1', { id: '1', t: 'mục tiêu' });
+  R('cfg', '_', { name: 'Golden Bee', cc: 26 }); R('menu', '2026-11-09', { a: 'Cháo' }); R('tpl', 'x', { k: 'x' }); R('cg', '1', { id: '1', t: 'mục tiêu' }); R('tkb', 'tkG1-01', { id: 'tkG1-01', gr: 'G1', s: '07:30', e: '08:15', n: 'Đón trẻ', k: 'don' });
   R('lich', 'l1', { id: 'l1', type: '11', hs: 'hs001', day: 3, slot: '08:00', gv: 'nv10', room: 'P1' });
   R('lich', 'l2', { id: 'l2', type: '11', hs: 'hs004', day: 3, slot: '08:00', gv: 'nv11', room: 'P2' });
   R('lich', 'l3', { id: 'l3', type: '11', hs: 'hs001', day: 5, slot: '09:00', gv: 'nv10', room: 'P1' });
@@ -136,6 +136,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   ok('parent A: thông báo cho phụ huynh đúng đối tượng (chung, bé mình, lớp mình)', ids('nt') === 'n1,n2,n5');
   ok('parent A: dấu đã đọc chỉ của mình', ids('rd') === 'n1|ph|a@x.vn');
   ok('parent A: có cấu hình, nhóm lớp, thực đơn, mẫu', ids('cfg') === '_' && ids('groups') === 'G1,G2' && ids('menu') === '2026-11-09' && ids('tpl') === 'x' && ids('cg') === '1');
+  ok('parent A: nhận thời khóa biểu bán trú của lớp', ids('tkb') === 'tkG1-01');
   const stf = (J.records || []).filter(r => r.collection === 'staff');
   ok('parent A: nhân viên chỉ lộ tên và chức vụ (không email, điện thoại, ngày vào làm, lương)', stf.length === 8 && stf.every(s => s.data.em === '' && s.data.ph === '' && !s.data.sd && !s.data.pay) && stf.find(s => s.id === 'nv04').data.n === 'Cô Lan');
   ok('parent A: học phí và công nợ chỉ của bé mình, không có lương', mids('lg') === 'e1' && mids('set') === 'hs001|2026-10' && mids('cfgm') === '_' && !mids('pay') && !(J.records || []).some(r => r.collection === 'ts' || r.collection === 'lr'));

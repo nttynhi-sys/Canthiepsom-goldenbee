@@ -13,9 +13,9 @@ function telNorm(s){let t=String(s==null?'':s).trim();if(!t)return'';
 /* Khóa phụ huynh: email (nếu có), nếu không thì số điện thoại. Mọi bé cùng khóa thuộc cùng một tài khoản phụ huynh. */
 const pkeyOf=k=>{const e=String(k&&k.pe||'').trim().toLowerCase();if(e&&e.includes('@'))return e;const t=telNorm(k&&k.pp);return t?'tel:'+t:''};
 /* Hình dạng từng nhóm dữ liệu: danh sách có mã (id hoặc k), bảng khóa, mục đơn */
-const CSH={arr:['staff','kids','cg','plans','sess','groups','lich','lr','mk','lg','rp','nt'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon'],one:['cfg']};
+const CSH={arr:['staff','kids','cg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon'],one:['cfg']};
 /* Nhóm dữ liệu tiền: chỉ Trưởng Trung tâm và Văn phòng đọc và ghi được (giáo viên chỉ đọc lương của mình) */
-const MONEYC=['lg','set','bon'],CFG_MONEY=['p11','pbtCN','pbtKhac','giamTru','thue'];
+const MONEYC=['lg','set','bon'],CFG_MONEY=['p11','pbtDay','pbtDay11','giamTru','thue'],CFG_DEF={pbtDay:380000,pbtDay11:180000};   /* dữ liệu cũ chưa có giá bán trú theo ngày thì lấy giá mặc định */
 const PAY_STUB=()=>({mode:'thang',base:0,rate:0,rateBt:0,allow:0,bh:0,latePen:0});
 const canM=()=>MONEY_ROLES.includes(CLD.role);
 const KEYF=c=>CSH.arrk[c]||'id';
@@ -59,10 +59,10 @@ function cflat(db,withMoney){const M=new Map();
  return M}
 
 /* ---- dựng DB từ các dòng đã tải ---- */
-function cEmpty(){return{v:4,cfg:{},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
+function cEmpty(){return{v:5,tkb:[],cfg:{},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
 function cApply(D,t,r,pay,cfgm){const c=r.collection;
  if(t==='money'&&c==='pay'){pay[r.id]=r.data;return}
- if(t==='money'&&c==='cfgm'){Object.assign(cfgm,r.data);return}
+ if(t==='money'&&c==='cfgm'){Object.assign(cfgm,r.data);cfgm._has=1;return}
  if(c==='cfg'){Object.assign(D.cfg,r.data);return}
  if(CSH.map.includes(c)){D[c][r.id]=r.data;return}
  if(CSH.arr.includes(c)||CSH.arrk[c]){const x=Object.assign({},r.data);
@@ -71,7 +71,7 @@ function cApply(D,t,r,pay,cfgm){const c=r.collection;
 function cFinish(D,pay,cfgm){
  CSH.arr.concat(Object.keys(CSH.arrk)).forEach(c=>{const kf=KEYF(c);D[c].sort((a,b)=>{const x=CLD.ord[c+'|'+a[kf]],y=CLD.ord[c+'|'+b[kf]];return (x==null?1e12:x)-(y==null?1e12:y)||(String(a[kf])<String(b[kf])?-1:1)})});
  D.staff.forEach(s=>{s.pay=pay[s.id]||PAY_STUB()});
- CFG_MONEY.forEach(k=>{D.cfg[k]=cfgm[k]!=null?cfgm[k]:0});
+ CFG_MONEY.forEach(k=>{D.cfg[k]=cfgm[k]!=null?cfgm[k]:(cfgm._has&&CFG_DEF[k]!=null?CFG_DEF[k]:0)});
  if(!D.tpl.length)D.tpl=TPL0.map(x=>({...x}));
  return D}
 function cbuild(rr,mr){const D=cEmpty(),pay={},cfgm={};CLD.ord={};CLD.maxo=0;
@@ -120,7 +120,9 @@ async function cloudLoad(){
    cMsg('Trung tâm chưa có dữ liệu. Hãy nhờ Trưởng Trung tâm đăng nhập và khởi tạo trước.');return}
   DB=cbuild(rr,mr);CLD.since={records:maxAt(rr,'1970-01-01T00:00:00Z'),money:maxAt(mr,'1970-01-01T00:00:00Z')};
   CLD.snap=new Map();cflat(DB,canM()).forEach((v,k)=>CLD.snap.set(k,v.s));
-  cloudEnter()}
+  /* máy chủ chưa có thời khóa biểu bán trú: dùng bản mẫu (mã dòng cố định nên nhiều người mở cùng lúc không bị trùng) và lưu lên */
+  const needTkb=!DB.tkb.length&&DB.groups.length>0;if(needTkb)DB.tkb=tkbDefault(DB.groups);
+  cloudEnter();if(needTkb&&CLD.stage==='app')cloudSave()}
  catch(e){CLD.stage='login';CLD.err=viLoginErr(e.message);render()}}
 /* Tài khoản nhân viên: ghép theo mã nhân viên trong hồ sơ vai trò; chưa có mã (tài khoản Trưởng Trung tâm tạo tay) thì ghép theo email */
 function staffAccount(){
@@ -164,7 +166,7 @@ async function cloudSetup(kind){
  else{
   const me={id:'nv01',n:name,role:'tt',pos:'Trưởng Trung tâm',ph:'',em:email,st:'dang',sd:TODAY,sup:'',pay:PAY_STUB()};
   DB.staff=[me];['kids','cg','plans','sess','lich','lr','mk','lg','rp','nt'].forEach(k=>{DB[k]=[]});['att','ts','set','rd','menu','bon'].forEach(k=>{DB[k]={}});
-  DB.groups=[{id:'G1',n:BTN[0],gv:'',tg:''},{id:'G2',n:BTN[1],gv:'',tg:''}]}
+  DB.groups=[{id:'G1',n:BTN[0],gv:'',tg:''},{id:'G2',n:BTN[1],gv:'',tg:''}];DB.tkb=tkbDefault(DB.groups)}
  CLD.snap=new Map();CLD.ord={};CLD.maxo=0;
  cloudEnter();if(CLD.stage==='app')cloudFlush()}
 ACT.csetup=v=>{cloudSetup(v);return false};
