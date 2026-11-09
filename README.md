@@ -5,13 +5,14 @@
 ## Cấu trúc
 - `index.html`: bản chạy trên web (Vercel). Đăng nhập thật bằng Supabase, dữ liệu dùng chung.
 - `src/build/`: mã nguồn chia nhỏ (`p03-seed.js` dữ liệu mẫu, `p03d-dx.js` thư viện chẩn đoán, `p04-domain.js` học phí, lịch, lương). Chạy `src/build/build-web.sh` để ghép lại thành `index.html`.
-- `supabase/schema.sql`, `supabase/policies-v3.sql`: bảng và chính sách bảo mật. Chạy theo thứ tự này trong SQL Editor (v3 chạy lại nhiều lần vẫn an toàn và thay thế `policies-v2.sql`).
+- `supabase/schema.sql`, `supabase/policies-v3.sql`: bảng và chính sách bảo mật. Chạy theo thứ tự này trong SQL Editor (v3 chạy lại nhiều lần vẫn an toàn và thay thế `policies-v2.sql`). Các hàm hỗ trợ chính sách nằm ở schema `private` (không lộ ra API công khai).
+- `supabase/migrations/`: các thay đổi lược đồ đã áp dụng lên dự án thật, theo thứ tự thời gian, mỗi tệp có cách hoàn tác. Dự án mới chỉ cần `schema.sql` và `policies-v3.sql`, không cần chạy migration.
 - `api/`: các hàm chạy trên Vercel, dùng khóa secret của Supabase (biến môi trường `SUPABASE_SECRET_KEY` trong Vercel → Settings → Environment Variables; khóa này không bao giờ nằm trong mã hay trình duyệt):
   - `accounts.js`: Trưởng Trung tâm cấp, đặt lại mật khẩu, thu hồi tài khoản nhân viên và phụ huynh ngay trong app.
   - `login.js`: đổi số điện thoại thành email đăng nhập (Supabase đăng nhập bằng email).
   - `parent.js`: cổng dữ liệu cho phụ huynh (xem phần Phụ huynh).
   - `_lib.js`: phần dùng chung.
-- `test/`: kiểm thử. `phone-api.js` (hàm máy chủ), `cloud-phone-ui.js` (giao diện đầu-cuối), `sql-test.sh` (chính sách SQL trên Postgres cục bộ), cùng `cloud-test.js`, `cloud-empty.js`, `cloud-acc-ui.js`, `api-test.js`, `n27-btfee.js` (học phí bán trú, lịch 1-1 linh hoạt, chẩn đoán, thời khóa biểu, lương theo ca).
+- `test/`: kiểm thử. `phone-api.js` (hàm máy chủ), `cloud-phone-ui.js` (giao diện đầu-cuối), `sql-test.sh` (chính sách SQL trên Postgres cục bộ, cả cài mới lẫn nâng cấp từ dự án đang chạy), cùng `cloud-test.js`, `cloud-empty.js`, `cloud-acc-ui.js`, `api-test.js`, `n27-btfee.js` (học phí bán trú, lịch 1-1 linh hoạt, chẩn đoán, thời khóa biểu, lương theo ca).
 - `trung-tam-tri-lieu.html`: bản trình diễn cũ (dữ liệu mẫu trong trình duyệt).
 
 ## Bán trú, học phí và lương
@@ -47,6 +48,7 @@
 - Phụ huynh: chỉ qua `api/parent.js`, chỉ dữ liệu của bé mình.
 
 ## Giới hạn đã biết
+- Chưa bật "Leaked password protection" của Supabase Auth (chỉ bật được ở bảng điều khiển Supabase → Authentication; có thể cần gói trả phí).
 - Tài khoản Trưởng Trung tâm đầu tiên tạo trong Supabase (Authentication) kèm một dòng `tt` trong bảng `profiles`. Các tài khoản khác cấp trong app: Nhân sự → mở hồ sơ → Tài khoản đăng nhập.
 - Chưa có "quên mật khẩu": Trưởng Trung tâm đặt lại mật khẩu cho nhân viên và phụ huynh (phụ huynh chỉ có số điện thoại cũng không nhận được thư đặt lại).
 - Chưa có giới hạn số lần đăng nhập sai ngoài giới hạn mặc định của Supabase.
