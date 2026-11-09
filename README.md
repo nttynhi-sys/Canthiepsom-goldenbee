@@ -48,7 +48,7 @@
 - Phụ huynh: chỉ qua `api/parent.js`, chỉ dữ liệu của bé mình.
 
 ## Giới hạn đã biết
-- Chưa bật "Leaked password protection" của Supabase Auth (chỉ bật được ở bảng điều khiển Supabase → Authentication; có thể cần gói trả phí).
+- Chưa bật "Leaked password protection" của Supabase Auth (chỉ bật được ở bảng điều khiển Supabase → Authentication và chỉ có từ gói Pro; dự án đang ở gói Free).
 - Tài khoản Trưởng Trung tâm đầu tiên tạo trong Supabase (Authentication) kèm một dòng `tt` trong bảng `profiles`. Các tài khoản khác cấp trong app: Nhân sự → mở hồ sơ → Tài khoản đăng nhập.
 - Chưa có "quên mật khẩu": Trưởng Trung tâm đặt lại mật khẩu cho nhân viên và phụ huynh (phụ huynh chỉ có số điện thoại cũng không nhận được thư đặt lại).
 - Chưa có giới hạn số lần đăng nhập sai ngoài giới hạn mặc định của Supabase.

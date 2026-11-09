@@ -4,12 +4,12 @@
 Bạn là Senior Full-stack Developer, Database Architect và DevOps Engineer phụ trách phát triển ứng dụng quản lý Trung tâm can thiệp sớm Golden Bee.
 
 ## 2. Kiến trúc
-- Frontend: Next.js / React.
-- Source code: GitHub.
-- Hosting: Vercel.
+- Frontend: HTML/JS thuần, một tệp `index.html` ghép từ `src/build/` (hiện chưa dùng Next.js / React; chỉ đổi khi chủ dự án yêu cầu).
+- Source code: GitHub (`nttynhi-sys/canthiepsom-goldenbee`).
+- Hosting: Vercel, kèm các hàm máy chủ trong `api/`.
 - Database: Supabase PostgreSQL.
 - Authentication: Supabase Auth.
-- File storage: Supabase Storage.
+- File storage: Supabase Storage (dự kiến, chưa dùng).
 
 ## 3. Nguyên tắc làm việc
 - Chủ động kiểm tra cấu trúc dự án trước khi chỉnh sửa.
@@ -63,7 +63,7 @@ Sau mỗi nhiệm vụ, phải báo cáo:
 ---
 
 ## 10. Thực trạng dự án (ghi chú kỹ thuật)
-Mục này mô tả đúng mã nguồn hiện có. Khi mâu thuẫn với mục 2, theo mục này, và không đổi công nghệ nếu chủ dự án chưa yêu cầu. Các mục 1 đến 9 vẫn giữ nguyên hiệu lực.
+Mục này mô tả chi tiết mã nguồn hiện có. Mục 2 đã được chỉnh cho khớp thực tế; nếu hai mục lệch nhau, theo mục này, và không đổi công nghệ nếu chủ dự án chưa yêu cầu. Các mục 1 đến 9 vẫn giữ nguyên hiệu lực.
 
 ### Kiến trúc thực tế
 - Frontend không dùng Next.js hay React. Đây là ứng dụng HTML/JS thuần, một tệp `index.html` ghép từ `src/build/p*.js` và `src/build/c3.css`. Không sửa tay `index.html`: sửa trong `src/build/`, chạy `bash src/build/build-web.sh` (sinh `index.html` và `src/build/page-test.html`), rồi commit cả hai.
@@ -95,4 +95,4 @@ Mục này mô tả đúng mã nguồn hiện có. Khi mâu thuẫn với mục 
 - Kết nối đã nối (Vercel và Supabase): Vercel team `team_clATcD9ZczgEhpgreeeIpLpz` (slug `nhi-8476`), dự án `prj_rwQ9LbyeIVpwzFTw7RWMo41NL13R` (`canthiepsom_goldenbee`), Production tại https://canthiepsomgoldenbee.vercel.app, mã nguồn ở GitHub `nttynhi-sys/canthiepsom-goldenbee`. Supabase dự án `bqvwibipmzyrkrwlfoqf` (ap-southeast-2, Postgres 17). Chỉ xem tên biến môi trường (`filter_project_envs`), không giải mã giá trị.
 - Quy trình khi hoàn thành: đẩy nhánh, rồi kiểm tra Preview. Nếu Vercel không tự tạo Preview cho nhánh vừa đẩy, tạo bằng `create_deployment` (gitSource: GitHub, `nttynhi-sys`, `Canthiepsom-goldenbee`, `ref` là tên nhánh). Preview có bảo vệ đăng nhập Vercel, lấy liên kết xem được bằng `get_access_to_vercel_url`. Kiểm tra `get_deployment` ở trạng thái READY và `get_runtime_errors` không có lỗi mới.
 - Lưu ý Preview: biến `SUPABASE_SECRET_KEY` chỉ có ở Production, nên các hàm trong `api/` không chạy đủ trên Preview; và Preview dùng chung cơ sở dữ liệu Production, vì vậy không ghi thử dữ liệu thật khi xem Preview. Thay đổi lược đồ áp dụng vào cơ sở dữ liệu dùng chung ngay, nên phải có hoàn tác sẵn.
-- Việc không làm được qua kết nối, cần chủ dự án thao tác: xóa dự án Vercel (kết nối trả liên kết xóa để chủ dự án bấm), bật "Leaked password protection" ở Supabase → Authentication (cài đặt chỉ có trên bảng điều khiển).
+- Việc không làm được qua kết nối, cần chủ dự án thao tác: xóa dự án Vercel (kết nối trả liên kết xóa để chủ dự án bấm), bật "Leaked password protection" ở Supabase → Authentication (cài đặt chỉ có trên bảng điều khiển và chỉ dùng được từ gói Pro trở lên; tổ chức hiện ở gói Free, nên đây là quyết định về chi phí của chủ dự án).
