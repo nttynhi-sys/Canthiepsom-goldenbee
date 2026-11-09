@@ -85,3 +85,12 @@ button.sc{border:0;cursor:pointer}button.sc:disabled{cursor:default}
 .plg-amt span{display:block;font-size:15px;color:var(--mu)}
 .plg-amt b{display:block;font-size:34px;color:var(--er);letter-spacing:.2px}
 .plg-tel{font-size:18px}
+
+/* Cổng phụ huynh: lớp phủ truy vết, chặn chọn/kéo, che khi mất tiêu điểm hoặc chụp/in (xem p24-guard.js) */
+#gmark{position:fixed;inset:0;z-index:2147483000;pointer-events:none;background-repeat:repeat}
+body.gph{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.gph input,body.gph textarea,body.gph select{-webkit-user-select:text;user-select:text}
+body.gph img,body.gph video{-webkit-user-drag:none;user-drag:none}
+body.gph.gaway #app,body.gph.gcover #app{filter:blur(22px);pointer-events:none}
+body.gph.gaway::after,body.gph.gcover::after{content:"Nội dung được che khi cửa sổ không hoạt động, khi chụp hoặc in màn hình.";position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;font-size:20px;font-weight:700;color:var(--tx);z-index:2147483001;pointer-events:none}
+@media print{body.gph #app,body.gph #gmark{display:none!important}body.gph::after{content:"Cổng phụ huynh không cho in. Vui lòng xem trực tiếp trên màn hình.";display:block;position:static;padding:40px;font-size:20px;color:#000}}
