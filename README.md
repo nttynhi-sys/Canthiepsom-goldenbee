@@ -52,6 +52,24 @@
 - Giáo viên đọc được mọi tệp trong kho nếu biết đường dẫn (cùng mức tin cậy với bảng `records`); giao diện chỉ hiện tệp của bé mình dạy, lớp mình phụ trách và tệp mình tải.
 - `?demo`: ảnh mẫu SVG; ảnh tải lên được thu nhỏ lưu trong trình duyệt, video và tài liệu chỉ giữ trong phiên.
 
+## Hình thức học khi thêm hồ sơ bé
+- Form thêm/sửa bé có khối **Hình thức học**: tích Bán trú và/hoặc Can thiệp 1-1; mỗi hình thức tích các buổi (thứ) cụ thể. Bán trú chọn lớp (Ong non, Ong mật) và ngày học (T2–T6, T2–T7 hoặc tùy chọn); 1-1 chọn từng ngày và giờ riêng (ca 50 phút, trong khung 07:15 đến 20:00, kiểm tra trùng giờ). Bé học cả hai thì ca 1-1 sớm nhất mỗi ngày bán trú là ca nằm trong gói, ca khác tính riêng. Lưu vào `k.bt`, `k.gr`, `k.btd` và lịch 1-1 `DB.lich`, nên dữ liệu cũ vẫn chạy. Mã: `hthField` ở `src/build/p08-hs.js`.
+
+## Ngân hàng mục tiêu: Thang chơi biểu tượng Westby
+- Lĩnh vực Chơi và tương tác xã hội (`xh`) có thêm hai bộ công cụ: **Westby** (`we`, 10 giai đoạn I–X, 35 mục tiêu cụ thể, kèm "ngôn ngữ thường đi cùng" từng giai đoạn) và **Chuỗi chơi 0–4 tuổi** (`cp`, 6 tiêu đề, 34 mục). Dữ liệu ở `src/build/p03e-westby.js`; lọc theo bộ công cụ, tiêu đề, mốc tuổi hoặc tìm bằng từ khóa. Mức "giả vờ theo thứ bậc" mức 5 không có mốc tuổi trong tài liệu gốc nên để trống mốc tuổi (`m:-1`), không tự đoán.
+- Mục tiêu Westby thêm vào kế hoạch của bé như mọi mục khác trong ngân hàng; mục tiếp theo của chuỗi đi sang giai đoạn sau.
+
+## Tài liệu tham khảo (chung cho mọi phụ huynh)
+- Collection `ref` trong `records`: hướng dẫn, video mẫu để phụ huynh dạy con tại nhà. **Chỉ Trưởng Trung tâm và Quản lý tải lên, sửa, ẩn, xóa**; Văn phòng và Giáo viên chỉ đọc; phụ huynh không đọc bảng trực tiếp. Phụ huynh thấy tab **Tài liệu tham khảo** (mọi phụ huynh thấy như nhau, không phụ thuộc bé). Mỗi tài liệu nhận PDF, ảnh hoặc video (tệp Word cần lưu thành PDF trước).
+- Tệp nằm ở tiền tố `r/` của bucket riêng tư `gb-media`; chỉ `tt` và `ql` ghi, xóa được tiền tố này (chính sách Storage, migration `20261109210000_ref_tri_collections.sql`). `api/parent.js` chỉ trả `{id,t,k,d,n,cat,ct,...}` đã lọc: không có đường dẫn kho, không có mã bé, không có tên nhân viên; ký đường xem 15 phút theo từng lần mở (khóa `r:<id>`), và vẫn trả 423 khi cổng phụ huynh bị khóa vì quá hạn học phí.
+- **Không cho tải về, không chụp màn hình** ở mức trình duyệt cho phép: PDF vẽ từng trang lên canvas bằng pdf.js (đóng gói sẵn ở `vendor/pdfjs/`, không gọi CDN; biến `window.GB_PDFJS` đổi đường dẫn khi thử), video có `controlsList="nodownload noremoteplayback"` và tắt hình trong hình, ảnh vẽ qua thẻ `img` không có đường tải. Cộng với lớp phủ tên, liên hệ, giờ xem và chặn chuột phải, sao chép, in của cổng phụ huynh. Trình duyệt **không thể chặn tuyệt đối** người cố tình chụp màn hình hay mở công cụ nhà phát triển để lấy đường xem tạm; chỉ làm khó và truy được nguồn.
+- Mục "Tài liệu" cũ của từng bé (hồ sơ, giáo án nội bộ) đổi tên thành **Hồ sơ, giáo án** ở phía nhân viên; phụ huynh vẫn xem "Tài liệu riêng của bé" như trước.
+
+## Góc tri ân (bé tốt nghiệp, tiến bộ, lời cảm ơn)
+- Collection `tri` trong `records`: ảnh bé tốt nghiệp hoặc tiến bộ (tối đa 4 ảnh, chỉ ảnh, không video) và lời cảm ơn chung. Chỉ `tt` và `ql` đăng, sửa, ẩn, xóa (tiền tố `t/` của `gb-media`). Phụ huynh thấy tab **Góc tri ân**, mọi phụ huynh thấy như nhau, bản chia sẻ mới hiện.
+- Bắt buộc tích **gia đình đã đồng ý** và ghi chú cách đồng ý (`cs`, `cn`) mới chia sẻ được; ghi chú đồng ý chỉ nhân viên thấy. Phụ huynh chỉ thấy tên viết tắt (ví dụ "Phụ huynh bé T."), không thấy tên bé, mã bé, tên nhân viên hay đường dẫn kho. Liên kết với hồ sơ bé (`k`) là tùy chọn và chỉ nội bộ. Đồng ý là lời khai của người đăng, ứng dụng không kiểm chứng được.
+- Xóa hoặc ẩn xong, máy phụ huynh tự bỏ mục đó ở lần đồng bộ sau (API trả danh sách `live`).
+
 ## Chế độ
 - Mặc định (trên web): đăng nhập Supabase, dữ liệu lưu trên máy chủ.
 - Thêm `?demo` vào địa chỉ: bản trình diễn dùng dữ liệu mẫu trong trình duyệt, không lưu lên máy chủ.
@@ -83,3 +101,4 @@
 - Dữ liệu điểm danh được tải toàn bộ khi đăng nhập; với hàng trăm trẻ dùng nhiều năm cần tải theo tháng.
 - Ảnh, video: gói Supabase Free giới hạn 1 GB lưu trữ và 50 MB mỗi tệp; Trung tâm dùng nhiều video dài cần nâng gói hoặc nén video trước khi tải. Chưa có xem trước cho tài liệu Word, Excel (mở bằng ứng dụng của máy). Xóa bé không xóa ảnh, video của bé trong kho.
 - Hạn chế chụp màn hình chỉ răn đe, không chặn tuyệt đối (xem phần Cổng phụ huynh: hạn chế chụp màn hình).
+- Tài liệu tham khảo và Góc tri ân: tệp đã mở xem trong trình duyệt phụ huynh thì kỹ thuật viên vẫn lấy được đường xem tạm 15 phút từ công cụ nhà phát triển; không có cách chặn hẳn trên web. Tài liệu tham khảo chỉ nhận PDF, ảnh, video. Thêm pdf.js tự lưu (`vendor/pdfjs/`) làm bản triển khai nặng thêm khoảng 1,8 MB.

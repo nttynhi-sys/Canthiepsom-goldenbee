@@ -64,7 +64,7 @@ const SP = process.env.SP || '/tmp';
   await gv1.setInputFiles('#um-f', [{ name: 'virus.exe', mimeType: 'application/octet-stream', buffer: Buffer.from('MZ') }]); await gv1.selectOption('#um-g', info.g); await gv1.click('#upmf button[type=submit]'); await sleep(200);
   ok('tệp .exe bị từ chối trước khi tải', /định dạng chưa hỗ trợ/.test(await gv1.textContent('#upmf .err')) && E.objs.size === 0, await gv1.textContent('#upmf .err'));
   await gv1.setInputFiles('#um-f', [{ name: 'doc.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') }]); await gv1.click('#upmf button[type=submit]'); await sleep(200);
-  ok('tài liệu ở nút tải ảnh: hướng sang mục Tài liệu', /mục Tài liệu/.test(await gv1.textContent('#upmf .err')) && E.objs.size === 0);
+  ok('tài liệu ở nút tải ảnh: hướng sang mục Hồ sơ, giáo án', /mục Hồ sơ, giáo án/.test(await gv1.textContent('#upmf .err')) && E.objs.size === 0);
   require('fs').writeFileSync(SP + '/big51.mp4', Buffer.alloc(51 * 1024 * 1024, 1)); await gv1.setInputFiles('#um-f', SP + '/big51.mp4'); await gv1.click('#upmf button[type=submit]'); await sleep(400);
   ok('video lớn hơn 50 MB bị chặn ở trình duyệt, không gửi lên máy chủ', /lớn hơn 50 MB/.test(await gv1.textContent('#upmf .err')) && E.objs.size === 0 && !gv1.sb.some(r => /POST \/storage\/v1\/object\/gb-media\/m\//.test(r)), gv1.sb.slice(-4));
   /* tải hợp lệ: một ảnh và một video, hoạt động chung của lớp, chưa gắn bé */

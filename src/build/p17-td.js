@@ -92,7 +92,9 @@ VIEWS.td=()=>{const t=S.td=Object.assign({tab:'gal',k:'',q:'',kind:'',m:'',gr:''
  const kidSel=`<div><label for="tdk">Lọc theo bé</label><select id="tdk" data-c="tdk"><option value="">Tất cả</option>${opts(myKids().filter(k=>k.st==='dang').map(k=>[k.id,k.n]),t.k)}</select></div>`;
  const qBox=`<div><label for="tdq">Tìm theo tên tệp hoặc tên bé</label><input id="tdq" data-i="tdq" value="${esc(t.q)}"></div>`;
  let body;
- if(t.tab==='doc'){const ds=medDocs().filter(m=>has(m)&&(!t.k||medKs(m).includes(t.k)));
+ if(t.tab==='ref')body=refStaffBody();
+ else if(t.tab==='tri')body=triStaffBody();
+ else if(t.tab==='doc'){const ds=medDocs().filter(m=>has(m)&&(!t.k||medKs(m).includes(t.k)));
   body=`<div class="card"><div class="f2" style="margin-bottom:12px">${kidSel}${qBox}</div>${medDocTable(ds)}</div>`}
  else if(t.tab==='grp'){
   const gs=(isLead()||isVP()?DB.groups:myGroups().length?myGroups():DB.groups.filter(g=>medAV().some(m=>m.gr===g.id)));
@@ -105,9 +107,10 @@ VIEWS.td=()=>{const t=S.td=Object.assign({tab:'gal',k:'',q:'',kind:'',m:'',gr:''
  else{let ls=medAV().filter(m=>medKs(m).length&&has(m)&&(!t.k||medKs(m).includes(t.k))&&(!t.kind||m.kind===t.kind)&&(!t.m||String(m.d).slice(0,7)===t.m));
   const p=pg('mg',ls,12);
   body=`<div class="card"><div class="f2" style="margin-bottom:12px">${kidSel}${qBox}<div><label for="tdkind">Loại</label><select id="tdkind" data-c="tdkind">${opts([['','Ảnh và video'],['img','Chỉ ảnh'],['vid','Chỉ video']],t.kind)}</select></div><div><label for="tdm">Tháng</label><input id="tdm" type="month" data-c="tdm" value="${esc(t.m)}"></div></div>${medGrid(p.rows,{list:'gal'})}${p.html}</div>`}
- return head('Ảnh, video và tài liệu','Hình ảnh hoạt động, video buổi can thiệp, giáo án, biểu mẫu và hồ sơ',canUpload()?`<button class="btn p" data-a="upm" data-v="${t.tab==='doc'?'doc':'av'}">${t.tab==='doc'?'Tải tài liệu lên':'Tải ảnh, video lên'}</button>`:'')
-  +tabsH([['gal','Ảnh và video'],['grp','Hoạt động chung'+(nw?' · '+nw+' chờ gắn bé':'')],['doc','Tài liệu']],t.tab,'tdtab')+upNote()+body};
-ACT.tdtab=v=>{S.td.tab=v;S.td.sel=[];S.pg.mg=1};CHG.tdk=v=>{S.td.k=v;S.pg.mg=1};CHG.tdg=v=>{S.td.gr=v;S.pg.mg=1;S.td.sel=[]};CHG.tds=v=>{S.td.st=v;S.pg.mg=1;S.td.sel=[]};CHG.tdkind=v=>{S.td.kind=v;S.pg.mg=1};CHG.tdm=v=>{S.td.m=v;S.pg.mg=1};
+ const btn=t.tab==='ref'?(canRef()?`<button class="btn p" data-a="rfm">Thêm tài liệu tham khảo</button>`:''):t.tab==='tri'?(canRef()?`<button class="btn p" data-a="trm">Thêm mục tri ân</button>`:''):canUpload()?`<button class="btn p" data-a="upm" data-v="${t.tab==='doc'?'doc':'av'}">${t.tab==='doc'?'Tải hồ sơ, giáo án lên':'Tải ảnh, video lên'}</button>`:'';
+ return head('Ảnh, video và tài liệu','Ảnh hoạt động, tài liệu tham khảo cho phụ huynh, góc tri ân, giáo án và hồ sơ',btn)
+  +tabsH([['gal','Ảnh và video'],['grp','Hoạt động chung'+(nw?' · '+nw+' chờ gắn bé':'')],['ref','Tài liệu tham khảo'],['tri','Góc tri ân'],['doc','Hồ sơ, giáo án']],t.tab,'tdtab')+(t.tab==='ref'||t.tab==='tri'?'':upNote())+body};
+ACT.tdtab=v=>{S.td.tab=v;S.td.sel=[];S.pg.mg=1;S.pg.rf=1;S.pg.tri=1};CHG.tdk=v=>{S.td.k=v;S.pg.mg=1};CHG.tdg=v=>{S.td.gr=v;S.pg.mg=1;S.td.sel=[]};CHG.tds=v=>{S.td.st=v;S.pg.mg=1;S.td.sel=[]};CHG.tdkind=v=>{S.td.kind=v;S.pg.mg=1};CHG.tdm=v=>{S.td.m=v;S.pg.mg=1};
 INP.tdq=v=>{S.td.q=v;S.pg.mg=1};
 CHG.msel=(v,t)=>{const a=S.td.sel=S.td.sel||[],i=a.indexOf(v);if(t.checked&&i<0)a.push(v);if(!t.checked&&i>=0)a.splice(i,1)};
 ACT.mselall=v=>{const a=S.td.sel=S.td.sel||[];v.split(',').filter(Boolean).forEach(id=>{if(!a.includes(id))a.push(id)})};
@@ -123,7 +126,7 @@ function mediaParent(k){const all=medList().filter(m=>medSee(m)&&medKs(m).includ
  const p=pg('pm'+k,av,12),mo={};p.rows.forEach(m=>{(mo[String(m.d).slice(0,7)]=mo[String(m.d).slice(0,7)]||[]).push(m)});
  return`<div class="card"><h2>Ảnh và video của bé</h2><p class="sm mu" style="margin-bottom:10px">Chỉ dành cho gia đình bé. Xin vui lòng không đăng hoặc gửi cho người khác để bảo vệ hình ảnh các bé.</p>`
  +(av.length?Object.keys(mo).sort().reverse().map(m=>`<h3 class="mmo">Tháng ${+m.slice(5,7)}/${m.slice(0,4)}</h3>${medGrid(mo[m],{big:1,list:'ph:'+k})}`).join('')+p.html:'<p class="empty big">Chưa có ảnh hoặc video nào của bé. Khi giáo viên chia sẻ, ảnh và video sẽ hiện ở đây.</p>')+`</div>`
- +`<div class="card"><h2>Tài liệu từ Trung tâm</h2>${medDocTable(ds,'Chưa có tài liệu nào cho bé.')}</div>`}
+ +`<div class="card"><h2>Tài liệu riêng của bé</h2>${medDocTable(ds,'Chưa có tài liệu riêng nào cho bé.')}</div>`}
 const vidList=k=>mediaKid(k,'av'),docList=k=>mediaKid(k,'doc');
 
 /* bàn phím: Enter hoặc Space trên ảnh, video để mở xem */
@@ -229,7 +232,7 @@ FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
   if(!k)return fail('“'+file.name+'” có định dạng chưa hỗ trợ. '+(/\.(heic|heif)$/i.test(file.name)?'Ảnh HEIC của iPhone: hãy chọn ảnh JPEG (Cài đặt máy ảnh → Định dạng → Tương thích nhất).':''))
   if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn 50 MB. Hãy cắt ngắn hoặc nén rồi tải lại.')
   if(doc&&k.kind==='vid')return fail('“'+file.name+'” là video; hãy dùng nút “Tải ảnh, video lên”.')
-  if(!doc&&k.kind==='doc')return fail('“'+file.name+'” là tài liệu; hãy dùng mục Tài liệu.')
+  if(!doc&&k.kind==='doc')return fail('“'+file.name+'” là tài liệu; hãy dùng mục Hồ sơ, giáo án.')
   jobs.push({file,k})}
  S.up.busy=true;BUSY++;S.up.msg='Đang tải 1/'+jobs.length+'...';
  (async()=>{let ok=0;

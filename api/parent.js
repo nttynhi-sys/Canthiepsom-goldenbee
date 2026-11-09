@@ -5,7 +5,9 @@
    ghi nhận thu đủ hoặc mở khóa tạm (xem _lock.js, plock.js).
    Ảnh, video, tài liệu (collection 'media') nằm trong kho riêng tư gb-media của Supabase Storage. Phụ huynh không đọc kho trực tiếp:
    danh sách chỉ gồm tệp đã chia sẻ có gắn bé của mình (không lộ đường dẫn, không lộ mã bé khác), và đường xem tạm (hết hạn sau 15 phút)
-   chỉ được cấp qua hành động 'sign' sau khi kiểm tra lại quyền và trạng thái khóa. */
+   chỉ được cấp qua hành động 'sign' sau khi kiểm tra lại quyền và trạng thái khóa.
+   Tài liệu tham khảo (collection 'ref') và Góc tri ân (collection 'tri') là nội dung CHUNG cho mọi phụ huynh: chỉ mục đã đăng (sh) và, với tri ân,
+   đã ghi nhận gia đình đồng ý (cs). Không lộ đường dẫn kho, mã bé, tên nhân viên đăng. Phụ huynh không ghi được hai nhóm này (chỉ tt, ql ghi, xem RLS). */
 const L = require('./_lib');
 const K = require('./_lock');
 const { HttpError, clean, sbSecret, pkeyOf } = L;
@@ -55,6 +57,19 @@ function parentMedia(d, ids) {
   return { id: str(d.id, 64), kind: ['img', 'vid', 'doc'].includes(d.kind) ? d.kind : 'doc', t: str(d.t, 200), ct: str(d.ct, 100), sz: +d.sz || 0, d: str(d.d, 10), bn: str(d.bn, 100), ks: own, n: str(d.n, 500), cat: str(d.cat, 60), sh: 1 };
 }
 
+/* Tài liệu tham khảo: chung cho mọi phụ huynh, chỉ mục đã đăng. Tệp ở kho riêng tư, tiền tố r/ */
+const REF_PATH = /^r\/[A-Za-z0-9_.\-]{1,80}$/, TRI_PATH = /^t\/[A-Za-z0-9_.\-]{1,80}$/;
+function parentRef(d) {
+  if (!d || typeof d !== 'object' || !d.sh || typeof d.p !== 'string' || !REF_PATH.test(d.p)) return null;
+  return { id: str(d.id, 64), kind: ['img', 'vid', 'doc'].includes(d.kind) ? d.kind : 'doc', t: str(d.t, 200), ct: str(d.ct, 100), sz: +d.sz || 0, d: str(d.d, 10), n: str(d.n, 1500), cat: str(d.cat, 60), sh: 1 };
+}
+/* Góc tri ân: cần đã đăng (sh) và đã ghi nhận gia đình đồng ý (cs). Chỉ trả loại tệp, số tệp (không đường dẫn), tên hiển thị đã rút gọn; không trả mã bé, người đăng */
+function parentTri(d) {
+  if (!d || typeof d !== 'object' || !d.sh || !d.cs) return null;
+  const ph = (Array.isArray(d.ph) ? d.ph : []).filter(f => f && typeof f.p === 'string' && TRI_PATH.test(f.p)).slice(0, 4).map(f => ({ ct: str(f.ct, 100) }));
+  return { id: str(d.id, 64), cat: ['tn', 'tb', 'cm'].includes(d.cat) ? d.cat : 'cm', t: str(d.t, 200), n: str(d.n, 1500), who: str(d.who, 80), d: str(d.d, 10), ph, sh: 1, cs: 1 };
+}
+
 /* Thông tin hiển thị trên màn hình khóa của phụ huynh: chỉ số tiền và tháng của chính họ, kèm số điện thoại Trung tâm */
 async function lockNotice(l) {
   const c = await fetchRows('records', 'collection=eq.cfg');
@@ -85,6 +100,8 @@ async function snapshot(me, since, known) {
     job.push(['records', 'collection=eq.media' + (since ? '' : '&data->>sh=eq.1') + sf]);
   }
   job.push(['money', 'collection=eq.cfgm' + sm]);
+  /* nội dung chung cho mọi phụ huynh (không phụ thuộc bé): lần đầu chỉ lấy mục đã đăng; khi đồng bộ lấy cả mục vừa gỡ để báo "gone" */
+  job.push(['records', 'collection=in.(ref,tri)' + (since ? '' : '&data->>sh=eq.1') + sf]);
   const res = await Promise.all(job.map(j => fetchRows(j[0] === 'money' ? 'money_records' : 'records', j[1])));
   const records = [], money = [];
   res.forEach((rows, i) => {
@@ -101,12 +118,24 @@ async function snapshot(me, since, known) {
         else if (since) records.push({ collection: c, id: r.id, data: { id: r.id, gone: 1 }, updated_at: r.updated_at });
         return;
       }
+      if (c === 'ref' || c === 'tri') {
+        const m = c === 'ref' ? parentRef(r.data) : parentTri(r.data);
+        if (m) records.push({ collection: c, id: r.id, data: m, updated_at: r.updated_at });
+        else if (since) records.push({ collection: c, id: r.id, data: { id: r.id, gone: 1 }, updated_at: r.updated_at });
+        return;
+      }
       if (c === 'att' && !ids.includes(String(r.id).split('|')[2])) return;
       if (c === 'rd' && !String(r.id).endsWith('|' + me.pid)) return;
       records.push(r);
     });
   });
-  return { records, money, kids: ids };
+  /* khi đồng bộ: kèm danh sách mã Tài liệu tham khảo, Góc tri ân đang được đăng, để trình duyệt gỡ ngay mục đã bị xóa (dòng bị xóa thì không còn để báo "gone") */
+  const out = { records, money, kids: ids };
+  if (since) {
+    const all = await fetchRows('records', 'collection=in.(ref,tri)&data->>sh=eq.1');
+    out.live = { ref: all.filter(r => r.collection === 'ref' && parentRef(r.data)).map(r => r.id), tri: all.filter(r => r.collection === 'tri' && parentTri(r.data)).map(r => r.id) };
+  }
+  return out;
 }
 
 /* ---- ghi: chỉ vài loại dữ liệu, chỉ của bé thuộc tài khoản ---- */
@@ -185,20 +214,34 @@ async function put(me, b) {
 
 /* ---- đường xem tạm cho ảnh, video, tài liệu ---- */
 async function sign(me, b) {
-  const want = [...new Set((Array.isArray(b.ids) ? b.ids : []).map(String))].filter(i => SAFE_ID.test(i)).slice(0, 40);
-  if (!want.length) return { urls: {}, gone: [] };
+  const list = v => [...new Set((Array.isArray(v) ? v : []).map(String))];
+  const want = list(b.ids).filter(i => SAFE_ID.test(i)).slice(0, 40);
+  const wantRef = list(b.refs).filter(i => SAFE_ID.test(i)).slice(0, 40);
+  const wantTri = list(b.tris).filter(i => /^[A-Za-z0-9_.\-]{1,64}:[0-3]$/.test(i)).slice(0, 40);
+  if (!want.length && !wantRef.length && !wantTri.length) return { urls: {}, gone: [] };
   const { ids } = await myKids(me.key);
   if ((await K.lockForParent(me.key, ids)).locked) throw new HttpError(423, LOCKED_MSG);
-  const rows = await fetchRows('records', 'collection=eq.media&id=' + inList(want));
-  const okRows = rows.filter(r => parentMedia(r.data, ids));
+  /* mỗi mục: khóa trả về, đường dẫn trong kho, và có được xem không */
+  const todo = [];
+  if (want.length) (await fetchRows('records', 'collection=eq.media&id=' + inList(want))).forEach(r => { if (parentMedia(r.data, ids)) todo.push({ key: r.id, p: r.data.p }); });
+  if (wantRef.length) (await fetchRows('records', 'collection=eq.ref&id=' + inList(wantRef))).forEach(r => { if (parentRef(r.data)) todo.push({ key: 'r:' + r.id, p: r.data.p }); });
+  if (wantTri.length) {
+    const tids = [...new Set(wantTri.map(x => x.split(':')[0]))];
+    (await fetchRows('records', 'collection=eq.tri&id=' + inList(tids))).forEach(r => {
+      if (!parentTri(r.data)) return;
+      const files = (r.data.ph || []).filter(f => f && typeof f.p === 'string' && TRI_PATH.test(f.p)).slice(0, 4);
+      wantTri.forEach(x => { const [id, n] = x.split(':'); if (id === r.id && files[+n]) todo.push({ key: 't:' + x, p: files[+n].p }); });
+    });
+  }
   const urls = {};
-  if (okRows.length) {
-    const s = await sbSecret('/storage/v1/object/sign/gb-media', { method: 'POST', body: { expiresIn: SIGN_SECONDS, paths: okRows.map(r => r.data.p) } });
+  if (todo.length) {
+    const s = await sbSecret('/storage/v1/object/sign/gb-media', { method: 'POST', body: { expiresIn: SIGN_SECONDS, paths: todo.map(x => x.p) } });
     if (!s.ok) throw new HttpError(502, 'Chưa lấy được đường xem tệp. Hãy thử lại sau.');
     const by = new Map((Array.isArray(s.json) ? s.json : []).map(x => [x && x.path, x]));
-    okRows.forEach(r => { const x = by.get(r.data.p); if (x && x.signedURL && !x.error) urls[r.id] = L.sbUrl() + '/storage/v1' + x.signedURL; });
+    todo.forEach(t => { const x = by.get(t.p); if (x && x.signedURL && !x.error) urls[t.key] = L.sbUrl() + '/storage/v1' + x.signedURL; });
   }
-  return { urls, gone: want.filter(i => !okRows.some(r => r.id === i)), ttl: SIGN_SECONDS };
+  const all = want.concat(wantRef.map(i => 'r:' + i), wantTri.map(i => 't:' + i));
+  return { urls, gone: all.filter(k => !todo.some(t => t.key === k)), ttl: SIGN_SECONDS };
 }
 
 module.exports = L.wrap(async (b, req) => {

@@ -184,5 +184,5 @@ function seed(){
  seedMenu(D);
  /* ngày nghỉ lễ: mẫu một ngày dương lịch sắp tới để thấy cách tính; thực tế Trung tâm tự nhập trước mỗi kỳ học phí */
  D.hol=[{id:'hl1',d:(+TODAY.slice(0,4)+1)+'-01-01',n:'Tết Dương lịch',k:'le'}];
- seedMedia(D);
+ seedMedia(D);seedRef(D);
  return D}

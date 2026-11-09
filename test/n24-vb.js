@@ -21,11 +21,11 @@ let fails=0;const ok=(c,m,x)=>{if(!c){fails++;console.log('FAIL',m,x===undefined
    vbc:VBC['vb:YC1'],vbc2:VBC['vb:GT2'],
    gSrc:gSrc(GL['vb:YC1a']),goalOf:!!goalOf('vb:CXH7')}});
  console.log(JSON.stringify(d));
- ok(d.total===1599+900,'tổng mục tiêu 1.599 + 900 = 2.499',d.total);
+ ok(d.total===1599+900+69,'tổng mục tiêu 1.599 + 900 VB-MAPP + 69 Westby/chuỗi chơi = 2.568',d.total);
  ok(d.vb===900&&d.ms===155&&d.st===745,'VB-MAPP 900 mục: 155 mốc + 745 bước',[d.vb,d.ms,d.st]);
  ok(d.ids===d.total,'không trùng mã mục tiêu');
  ok(d.undef===0,'không có chữ undefined/null');
- ok(JSON.stringify(d.keys)===JSON.stringify(['ab','ed','vb','mn','ot','cu']),'thứ tự bộ công cụ',d.keys);
+ ok(JSON.stringify(d.keys)===JSON.stringify(['ab','ed','vb','mn','ot','we','cp','cu']),'thứ tự bộ công cụ',d.keys);
  ok(d.dom.nd===306&&d.dom.nh===146&&d.dom.cy===115&&d.dom.xh===168&&d.dom.nt===165&&!d.dom.vt&&!d.dom.vth&&!d.dom.tl,'phân bổ lĩnh vực',d.dom);
  ok(d.heads.length===14,'14 tiêu đề kỹ năng',d.heads);
  ok(d.per.YC.ms===15&&d.per.YC.st===78&&d.per.BC.ms===10&&d.per.DOC.ms===5&&d.per.TOAN.st===24,'số mục từng trang',d.per);
@@ -42,7 +42,7 @@ let fails=0;const ok=(c,m,x)=>{if(!c){fails++;console.log('FAIL',m,x===undefined
  await page.click('.nav button[data-v="mt"]');await page.waitForTimeout(150);
  const intro=await page.evaluate(()=>document.querySelector('main').innerText.replace(/\s+/g,' ').slice(0,420));
  console.log('intro:',intro);
- ok(/2\.499 mục tiêu/.test(intro)&&/VB-MAPP/.test(intro),'dòng giới thiệu có VB-MAPP và 2.499');
+ ok(/2\.568 mục tiêu/.test(intro)&&/VB-MAPP/.test(intro),'dòng giới thiệu có VB-MAPP và 2.568');
  const srcOpts=await page.$$eval('#bk-s option',e=>e.map(x=>x.textContent));
  ok(srcOpts.includes('VB-MAPP'),'ô Bộ công cụ có VB-MAPP',srcOpts);
  await page.selectOption('#bk-s','vb');await page.waitForTimeout(120);

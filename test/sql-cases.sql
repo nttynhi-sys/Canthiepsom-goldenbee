@@ -130,4 +130,74 @@ do $$ begin
   begin perform count(*) from storage.objects; raise exception 'FAIL anon đọc được kho tệp'; exception when insufficient_privilege then raise notice 'PASS anon không đọc được kho tệp'; end;
 end $$;
 reset role;
+-- Tài liệu tham khảo (ref) và Góc tri ân (tri): chỉ tt, ql ghi; vp, gv chỉ đọc; ph không đọc bảng; tiền tố kho r/ và t/ chỉ tt, ql tải lên, xóa
+reset role;
+insert into auth.users values ('00000000-0000-0000-0000-000000000006','ql@gb.vn'),('00000000-0000-0000-0000-000000000007','vp@gb.vn');
+insert into public.profiles(user_id,role,staff_id,full_name,phone) values
+ ('00000000-0000-0000-0000-000000000006','ql','nv07','QL',null),
+ ('00000000-0000-0000-0000-000000000007','vp','nv08','VP',null);
+set role authenticated;
+select t.as_user('00000000-0000-0000-0000-000000000001','tt@gb.vn');
+insert into public.records(collection,id,data) values ('ref','r1','{"t":"Hướng dẫn chơi xếp khối","sh":1,"p":"r/r1.pdf"}'),('tri','t1','{"t":"Cảm ơn Trung tâm","sh":1,"cs":1}');
+select t.chk('tt ghi được ref và tri', (select count(*) from public.records where collection in ('ref','tri')), 2);
+select t.as_user('00000000-0000-0000-0000-000000000006','ql@gb.vn');
+insert into public.records(collection,id,data) values ('ref','r2','{"t":"Video mẫu","sh":1}'),('tri','t2','{"t":"Bé tiến bộ","sh":1,"cs":1}');
+update public.records set data='{"t":"Video mẫu (sửa)","sh":1}' where collection='ref' and id='r2';
+select t.chk('ql ghi, sửa được ref và tri', (select count(*) from public.records where collection in ('ref','tri') and id in ('r2','t2')), 2);
+delete from public.records where collection='tri' and id='t2';
+select t.chk('ql xóa được mục tri', (select count(*) from public.records where collection='tri'), 1);
+select t.as_user('00000000-0000-0000-0000-000000000007','vp@gb.vn');
+select t.chk('vp đọc được ref và tri', (select count(*) from public.records where collection in ('ref','tri')), 3);
+do $$ begin
+  begin insert into public.records(collection,id,data) values ('ref','rv','{"t":"x"}'); raise exception 'FAIL vp ghi được ref'; exception when insufficient_privilege then raise notice 'PASS vp không ghi được ref'; end;
+  begin insert into public.records(collection,id,data) values ('tri','tv','{"t":"x"}'); raise exception 'FAIL vp ghi được tri'; exception when insufficient_privilege then raise notice 'PASS vp không ghi được tri'; end;
+  begin update public.records set data='{"t":"hack"}' where collection='ref' and id='r1'; if found then raise exception 'FAIL vp sửa được ref'; end if; raise notice 'PASS vp không sửa được ref (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS vp không sửa được ref'; end;
+  begin delete from public.records where collection='tri' and id='t1'; if found then raise exception 'FAIL vp xóa được tri'; end if; raise notice 'PASS vp không xóa được tri (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS vp không xóa được tri'; end;
+end $$;
+select t.as_user('00000000-0000-0000-0000-000000000002','gv@gb.vn');
+select t.chk('gv đọc được ref và tri', (select count(*) from public.records where collection in ('ref','tri')), 3);
+do $$ begin
+  begin insert into public.records(collection,id,data) values ('ref','rg','{"t":"x"}'); raise exception 'FAIL gv ghi được ref'; exception when insufficient_privilege then raise notice 'PASS gv không ghi được ref'; end;
+  begin insert into public.records(collection,id,data) values ('tri','tg','{"t":"x"}'); raise exception 'FAIL gv ghi được tri'; exception when insufficient_privilege then raise notice 'PASS gv không ghi được tri'; end;
+  begin delete from public.records where collection='ref' and id='r1'; if found then raise exception 'FAIL gv xóa được ref'; end if; raise notice 'PASS gv không xóa được ref (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS gv không xóa được ref'; end;
+end $$;
+select t.as_user('00000000-0000-0000-0000-000000000004','ph@gb.vn');
+select t.chk('ph không đọc được ref, tri trực tiếp', (select count(*) from public.records where collection in ('ref','tri')), 0);
+do $$ begin
+  begin insert into public.records(collection,id,data) values ('ref','rp','{"t":"x"}'); raise exception 'FAIL ph ghi được ref'; exception when insufficient_privilege then raise notice 'PASS ph không ghi được ref'; end;
+end $$;
+-- kho tệp
+select t.as_user('00000000-0000-0000-0000-000000000006','ql@gb.vn');
+do $$ begin
+  insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','r/r1.pdf','00000000-0000-0000-0000-000000000006'),('gb-media','t/t1-0.jpg','00000000-0000-0000-0000-000000000006');
+  raise notice 'PASS ql tải được tệp lên r/ và t/';
+end $$;
+select t.as_user('00000000-0000-0000-0000-000000000007','vp@gb.vn');
+do $$ begin
+  insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','m/vp1.jpg','00000000-0000-0000-0000-000000000007');
+  raise notice 'PASS vp vẫn tải được tệp ở m/';
+  begin insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','r/vp.pdf','00000000-0000-0000-0000-000000000007'); raise exception 'FAIL vp tải lên r/'; exception when insufficient_privilege then raise notice 'PASS vp không tải được lên r/'; end;
+  begin insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','t/vp.jpg','00000000-0000-0000-0000-000000000007'); raise exception 'FAIL vp tải lên t/'; exception when insufficient_privilege then raise notice 'PASS vp không tải được lên t/'; end;
+end $$;
+delete from storage.objects where name in ('r/r1.pdf','t/t1-0.jpg');
+select t.chk('vp không xóa được tệp r/ và t/', (select count(*) from storage.objects where name in ('r/r1.pdf','t/t1-0.jpg')), 2);
+delete from storage.objects where name='m/vp1.jpg';
+select t.chk('vp vẫn xóa được tệp m/', (select count(*) from storage.objects where name='m/vp1.jpg'), 0);
+select t.as_user('00000000-0000-0000-0000-000000000002','gv@gb.vn');
+do $$ begin
+  begin insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','r/gv.pdf','00000000-0000-0000-0000-000000000002'); raise exception 'FAIL gv tải lên r/'; exception when insufficient_privilege then raise notice 'PASS gv không tải được lên r/'; end;
+  begin insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','t/gv.jpg','00000000-0000-0000-0000-000000000002'); raise exception 'FAIL gv tải lên t/'; exception when insufficient_privilege then raise notice 'PASS gv không tải được lên t/'; end;
+end $$;
+delete from storage.objects where name='r/r1.pdf';
+select t.chk('gv không xóa được tệp r/', (select count(*) from storage.objects where name='r/r1.pdf'), 1);
+select t.as_user('00000000-0000-0000-0000-000000000006','ql@gb.vn');
+delete from storage.objects where name in ('r/r1.pdf','t/t1-0.jpg');
+select t.chk('ql xóa được tệp r/ và t/', (select count(*) from storage.objects where name in ('r/r1.pdf','t/t1-0.jpg')), 0);
+select t.as_user('00000000-0000-0000-0000-000000000004','ph@gb.vn');
+do $$ begin
+  begin insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','r/ph.pdf','00000000-0000-0000-0000-000000000004'); raise exception 'FAIL ph tải lên r/'; exception when insufficient_privilege then raise notice 'PASS ph không tải được lên r/'; end;
+end $$;
+reset role;
+delete from public.records where collection in ('ref','tri');
+
 delete from storage.objects;

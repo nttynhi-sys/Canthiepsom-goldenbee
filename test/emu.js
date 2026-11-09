@@ -64,7 +64,8 @@ function makeEmu() {
     return { uid, u, role: p ? p.role : null, sid: p ? p.staff_id : null };
   }
   const canRead = (a, t, r) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records') return ['tt', 'vp', 'ql', 'gv'].includes(a.role); if (['tt', 'vp'].includes(a.role)) return true; if (a.role === 'gv') return r.collection === 'cfgm' || (r.collection === 'pay' && r.id === a.sid) || (r.collection === 'bon' && r.id.split('|')[0] === a.sid); return false; };
-  const canWrite = (a, t, c) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records' && c === 'pul') return false;   /* chỉ khóa secret (máy chủ) ghi bản ghi mở khóa */
+  const canWrite = (a, t, c) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records' && (c === 'ref' || c === 'tri')) return ['tt', 'ql'].includes(a.role);   /* tài liệu tham khảo, góc tri ân: chỉ tt, ql */
+    if (t === 'records' && c === 'pul') return false;   /* chỉ khóa secret (máy chủ) ghi bản ghi mở khóa */
     if (t === 'records') return a.role === 'gv' ? !['staff', 'cfg', 'hol'].includes(c) : ['tt', 'vp', 'ql'].includes(a.role); return ['tt', 'vp'].includes(a.role); };
 
   /* ---- Supabase Storage (bucket riêng tư gb-media, theo supabase/migrations/20261109150000_media_bucket.sql) ---- */
@@ -100,7 +101,8 @@ function makeEmu() {
     }
     if (!isSign && method === 'POST' && obj) {   /* tải lên */
       const ct = String(h['content-type'] || '').split(';')[0].trim();
-      if (!staff || !/^m\/[A-Za-z0-9_.\-]{1,80}$/.test(obj)) return ok(400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
+      const pre = (/^([mrt])\/[A-Za-z0-9_.\-]{1,80}$/.exec(obj) || [])[1];
+      if (!staff || !pre || (pre !== 'm' && !a.svc && !['tt', 'ql'].includes(a.role))) return ok(400, { statusCode: '403', error: 'Unauthorized', message: 'new row violates row-level security policy' });
       if (!MED_CT.includes(ct)) return ok(415, { statusCode: '415', error: 'invalid_mime_type', message: 'mime type ' + ct + ' is not supported' });
       if ((buf ? buf.length : 0) > S.mediaMax) return ok(413, { statusCode: '413', error: 'Payload too large', message: 'The object exceeded the maximum allowed size' });
       if (S.objs.has(obj)) return ok(400, { statusCode: '409', error: 'Duplicate', message: 'The resource already exists' });
@@ -110,7 +112,7 @@ function makeEmu() {
     }
     if (!isSign && method === 'DELETE' && obj) {
       const o = S.objs.get(obj);
-      const can = o && (a.svc || ['tt', 'vp', 'ql'].includes(a.role) || (a.role === 'gv' && o.owner === a.uid));
+      const can = o && (a.svc || (/^[rt]\//.test(obj) ? ['tt', 'ql'].includes(a.role) : (['tt', 'vp', 'ql'].includes(a.role) || (a.role === 'gv' && o.owner === a.uid))));
       if (!can) return ok(404, { statusCode: '404', error: 'not_found', message: 'Object not found' });   /* như Supabase thật: tệp ẩn do RLS cũng báo không thấy */
       S.objs.delete(obj); return ok(200, { message: 'Successfully deleted' });
     }
@@ -218,7 +220,7 @@ function makeEmu() {
   });
   /* HTTP thật cho các hàm api/*.js */
   S.listen = () => new Promise(res => {
-    const srv = http.createServer((req, rs) => { let body = ''; req.on('data', c => body += c); req.on('end', () => { const u = new URL(req.url, 'http://x'); const r = core(req.method, u.pathname, u.searchParams, req.headers, body); if (r.buf) { rs.writeHead(r.status, { 'content-type': r.ct || 'application/octet-stream' }); rs.end(r.buf); return; } rs.writeHead(r.status, { 'content-type': 'application/json' }); rs.end(r.body == null || r.status === 204 ? '' : JSON.stringify(r.body)); }); });
+    const srv = http.createServer((req, rs) => { let body = ''; req.on('data', c => body += c); req.on('end', () => { const u = new URL(req.url, 'http://x'); const r = core(req.method, u.pathname, u.searchParams, req.headers, body); if (r.buf) { rs.writeHead(r.status, { 'content-type': r.ct || 'application/octet-stream', 'access-control-allow-origin': '*' }); rs.end(r.buf); return; }   /* Supabase Storage trả CORS * cho đường xem tạm; trình duyệt cần để fetch PDF */ rs.writeHead(r.status, { 'content-type': 'application/json' }); rs.end(r.body == null || r.status === 204 ? '' : JSON.stringify(r.body)); }); });
     srv.listen(0, () => { S.srv = srv; S.url = 'http://127.0.0.1:' + srv.address().port; process.env.SUPABASE_URL = S.url; process.env.SUPABASE_SECRET_KEY = SECRET; res(S); });
   });
   /* chuyển /api/* của trình duyệt sang các hàm xử lý thật */

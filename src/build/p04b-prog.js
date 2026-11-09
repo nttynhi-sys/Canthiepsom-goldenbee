@@ -38,6 +38,7 @@ function libHeads(f){const m=new Map();libAll().forEach(i=>{if(f.dom&&i.d!==f.do
 /* mục tiếp theo: với VB-MAPP đi theo thứ tự dạy (các bước nhỏ a, b, c... rồi đến mốc), còn lại theo thứ tự trong ngân hàng */
 function nextOf(id){const g=GL[id];if(!g)return null;
  if(g.s==='vb'){const o=x=>x.ms*30+(x.st?x.st.charCodeAt(0)-96:29),a=LIBI.filter(x=>x.s==='vb'&&x.hi===g.hi).sort((p,q)=>o(p)-o(q));return a[a.indexOf(g)+1]||null}
+ if(g.s==='we'||g.s==='cp'){const a=LIBI.filter(x=>x.s===g.s);return a[a.indexOf(g)+1]||null}   /* chuỗi phát triển chơi: đi tiếp sang giai đoạn sau */
  const n=LIBI[LIBI.indexOf(g)+1];return n&&n.hi===g.hi?n:null}
 
 /* --- lượt thử: chuỗi 10 ký tự, V đúng, X sai, . chưa làm --- */

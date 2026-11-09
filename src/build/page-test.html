@@ -417,6 +417,31 @@ a.off{pointer-events:none;color:var(--mu)}
 /* cổng phụ huynh: không cho kéo ảnh, bôi chọn */
 body.gph .mi,body.gph .mbig{-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
 @media (max-width:600px){.mg,.mg.big{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mg.big .mt{font-size:15px}.mkl{grid-template-columns:minmax(0,1fr)}}
+/* Hình thức học trong hồ sơ bé: Bán trú, Can thiệp 1-1 và các buổi tích cụ thể */
+.hth{display:grid;gap:10px;margin:6px 0 4px}
+.hth-c{border:1px solid var(--bd);border-radius:12px;padding:10px 12px;min-width:0}
+.hth-h{font-size:15px;padding:2px 0}.hth-h input{width:20px;height:20px;flex:none}
+.hth-b{margin-top:10px;display:grid;gap:10px;min-width:0}.hth-b[hidden]{display:none}
+.d11{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:3px 0}.d11 .chk{width:62px;flex:none}.d11 input[type=time]{width:140px;flex:none}
+
+/* Tài liệu tham khảo, Góc tri ân, xem PDF trong trang */
+.pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.rf-n{margin:6px 0 0}
+.pdfv{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px;text-align:center;min-height:120px;min-width:0}
+#pdfc{display:block;width:100%;height:auto;background:#fff;margin:0 auto;border-radius:6px;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
+.trg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.trg.big{grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr))}
+.tri{display:flex;flex-direction:column;min-width:0;background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+.tri .tr-h{padding:10px 12px 0;display:flex;flex-wrap:wrap;gap:6px}
+.tri .tr-b{padding:10px 12px 12px;display:grid;gap:6px;min-width:0}
+.tri h3{margin:0;font-size:17px}
+.tri .tr-n{margin:0;font-size:15px;line-height:1.55}
+.trg.big .tr-n{font-size:16px}
+.tri .tr-f{margin:0}
+.tph{display:grid;gap:3px;margin-top:10px}.tph.n1{grid-template-columns:minmax(0,1fr)}.tph.n2,.tph.n3,.tph.n4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tph .mth{aspect-ratio:4/3}
+.trc{border:1px solid var(--bd);border-radius:12px;padding:10px 12px;display:grid;gap:10px;min-width:0;margin:0}.trc legend{font-weight:600;padding:0 6px}
+body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
 </style></head><body>
 <div id="app"></div>
 <script>
@@ -546,7 +571,7 @@ function telNorm(s){let t=String(s==null?'':s).trim();if(!t)return'';
 /* Khóa phụ huynh: email (nếu có), nếu không thì số điện thoại. Mọi bé cùng khóa thuộc cùng một tài khoản phụ huynh. */
 const pkeyOf=k=>{const e=String(k&&k.pe||'').trim().toLowerCase();if(e&&e.includes('@'))return e;const t=telNorm(k&&k.pp);return t?'tel:'+t:''};
 /* Hình dạng từng nhóm dữ liệu: danh sách có mã (id hoặc k), bảng khóa, mục đơn */
-const CSH={arr:['staff','kids','cg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb','hol','media'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon'],one:['cfg']};
+const CSH={arr:['staff','kids','cg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb','hol','media','ref','tri'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon'],one:['cfg']};
 /* Nhóm dữ liệu tiền: chỉ Trưởng Trung tâm và Văn phòng đọc và ghi được (giáo viên chỉ đọc lương của mình) */
 const MONEYC=['lg','set','bon'],CFG_MONEY=['p11','pbtDay','pbtDay11','giamTru','thue'],CFG_DEF={pbtDay:380000,pbtDay11:180000};   /* dữ liệu cũ chưa có giá bán trú theo ngày thì lấy giá mặc định */
 const PAY_STUB=()=>({mode:'thang',base:0,rate:0,rateBt:0,allow:0,bh:0,latePen:0});
@@ -592,7 +617,7 @@ function cflat(db,withMoney){const M=new Map();
  return M}
 
 /* ---- dựng DB từ các dòng đã tải ---- */
-function cEmpty(){return{v:6,media:[],hol:[],tkb:[],cfg:{},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
+function cEmpty(){return{v:6,media:[],ref:[],tri:[],hol:[],tkb:[],cfg:{},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
 function cApply(D,t,r,pay,cfgm){const c=r.collection;
  if(t==='money'&&c==='pay'){pay[r.id]=r.data;return}
  if(t==='money'&&c==='cfgm'){Object.assign(cfgm,r.data);cfgm._has=1;return}
@@ -759,6 +784,9 @@ async function cloudPull(){
     cApply(DB,t,x,pay,cfgm);changed.add(k);any=true});
    Object.keys(pay).forEach(id=>{const s=DB.staff.find(y=>y.id===id);if(s)s.pay=pay[id]});
    CFG_MONEY.forEach(k=>{if(cfgm[k]!=null)DB.cfg[k]=cfgm[k]})}
+  /* mục chung (tài liệu tham khảo, tri ân) đã bị xóa hoặc gỡ: máy chủ gửi danh sách đang đăng, bỏ những mục không còn */
+  if(ph&&got&&got.live)['ref','tri'].forEach(c=>{const keep=new Set(got.live[c]||[]),a=DB[c]||[],n=a.filter(x=>keep.has(x.id));
+   if(n.length!==a.length){a.filter(x=>!keep.has(x.id)).forEach(x=>CLD.snap.delete('records|'+c+'|'+x.id));DB[c]=n;any=true}});
   if(any){const nf=cflat(DB,withM);changed.forEach(k=>{if(nf.has(k))CLD.snap.set(k,nf.get(k).s)});softRender()}}
  catch(e){}
  finally{CLD.pulling=false}
@@ -1064,7 +1092,7 @@ function seed(){
  seedMenu(D);
  /* ngày nghỉ lễ: mẫu một ngày dương lịch sắp tới để thấy cách tính; thực tế Trung tâm tự nhập trước mỗi kỳ học phí */
  D.hol=[{id:'hl1',d:(+TODAY.slice(0,4)+1)+'-01-01',n:'Tết Dương lịch',k:'le'}];
- seedMedia(D);
+ seedMedia(D);seedRef(D);
  return D}
 /* ===== Thư viện mục tiêu: 8 lĩnh vực, tiêu đề và mục tiêu cụ thể (chuẩn hóa từ dữ liệu của Trung tâm) ===== */
 const LDOM=[{"id":"nh","n":"Ngôn ngữ hiểu","s":"Hiểu","d":"Bé hiểu lời nói và làm theo chỉ dẫn"},{"id":"nd","n":"Ngôn ngữ diễn đạt","s":"Diễn đạt","d":"Bé dùng lời, cử chỉ hoặc tranh để nói điều mình muốn"},{"id":"cy","n":"Chú ý, bắt chước và nề nếp","s":"Chú ý","d":"Bé tập trung, hợp tác, bắt chước và theo nề nếp lớp học"},{"id":"xh","n":"Chơi và tương tác xã hội","s":"Xã hội","d":"Bé chơi, giao tiếp và kết bạn với người khác"},{"id":"nt","n":"Nhận thức và học tập","s":"Nhận thức","d":"Bé nhận biết, so sánh, đếm, đọc và viết"},{"id":"vt","n":"Vận động tinh","s":"Vận động tinh","d":"Đôi tay khéo léo: cầm, nắm, cài, tô, vẽ"},{"id":"vth","n":"Vận động thô và thăng bằng","s":"Vận động thô","d":"Bé đi, chạy, nhảy, leo trèo và giữ thăng bằng"},{"id":"tl","n":"Tự lập, giác quan và hành vi","s":"Tự lập","d":"Bé tự ăn, mặc, vệ sinh; điều hòa cảm giác và hành vi"}];
@@ -1298,6 +1326,138 @@ function seedDx(R,k){const pick=a=>a[Math.floor(R()*a.length)],m={
   'Chậm phát triển ngôn ngữ':[['dld'],['langdelay'],['dldex','dldre'],['langdelay','hl1']],
   'Cần hỗ trợ đa lĩnh vực':[['gdd'],['down'],['cpspa','dldex'],['asd3','id2'],['adhdc','dcd']]}[k.nd]||[['pending']];
  return pick(m).slice()}
+/* ===== Thang chơi biểu tượng Westby và chuỗi phát triển chơi 0–4 tuổi =====
+   Bổ sung vào Ngân hàng mục tiêu, lĩnh vực "Chơi và tương tác xã hội" (xh), theo tài liệu "Kỹ năng chơi" (môn Phát triển ngôn ngữ không điển hình thuở ấu thơ).
+   Hai bộ công cụ mới:
+   - we: Thang chơi biểu tượng Westby (1980), 10 giai đoạn từ 9 tháng đến 5 tuổi, kèm ngôn ngữ thường đi cùng mỗi giai đoạn.
+   - cp: Chuỗi phát triển chơi từ chơi thực hành đến chơi biểu tượng (Piaget 1951, McCune 1995, Nicolich 1977).
+   Mỗi mục: c mã, n mục tiêu, o mô tả biểu hiện, x ví dụ (nếu tài liệu có), a và m mốc tuổi, lg ngôn ngữ đi cùng (chỉ Westby), rf nguồn.
+   Tài liệu gốc không ghi mốc tuổi cho "Giả vờ theo thứ bậc" (mức 5): các mục đó để m = -1 và ghi rõ, không tự suy đoán tuổi. */
+(function(){
+ const WRF='Westby, C.E. (1980). Assessment of cognitive and language abilities through play. Language, Speech, and Hearing Services in Schools, 11, 154–168.';
+ const CRF='Piaget (1951), McCune (1995), Nicolich (1977); mốc theo tuổi: Rosenblatt (1975, 1977), Fenson và cộng sự (1976).';
+ /* đặt hai bộ mới trước mục "Trung tâm tự thêm" cho gọn danh sách chọn */
+ const cu=LSRC.cu;delete LSRC.cu;
+ LSRC.we={n:'Westby',d:'Thang chơi biểu tượng Westby: 10 giai đoạn chơi từ 9 tháng đến 5 tuổi, đối chiếu với phát triển ngôn ngữ'};
+ LSRC.cp={n:'Chuỗi chơi 0–4 tuổi',d:'Chuỗi phát triển chơi từ chơi thực hành đến chơi biểu tượng. Mốc thường gặp: 9 tháng hơn 90% trẻ chơi tâm vận động với đồ chơi; 12 tháng khoảng 80% vẫn chơi tâm vận động với đồ chơi đơn, bắt đầu thể hiện sự đại diện nhưng chưa thường xuyên; 15 tháng chơi chức năng là hoạt động chủ yếu; 18 tháng chơi tâm vận động còn dưới 20% và hơn 50% hoạt động chơi là chơi thể hiện với đồ chơi đơn.'};
+ LSRC.cu=cu;
+ const D='xh';
+ /* ---- 1. Thang Westby: [tiêu đề, tuổi, mốc lọc, ngôn ngữ đi cùng, [[mục tiêu, mô tả, ví dụ], ...]] ---- */
+ const WE=[
+  ['Giai đoạn I · 9–12 tháng','9–12 tháng',0,'Chưa dùng ngôn ngữ thật; có thể có những “từ” gắn với cả hành động hoặc tình huống. Thể hiện các chức năng giao tiếp: đề nghị (instrumental) và ra lệnh, đòi hỏi (regulatory).',[
+   ['Tìm đồ chơi được giấu dưới khăn','Ý thức rằng đồ vật vẫn tồn tại khi không nhìn thấy.','Giấu đồ chơi dưới khăn, bé kéo khăn ra để lấy.'],
+   ['Bò hoặc đi tới lấy thứ mình muốn, kéo đồ chơi có dây','Hành vi có chủ đích để đạt được thứ bé muốn.','Bò tới lấy xe, kéo xe đồ chơi theo dây.'],
+   ['Dùng một số đồ chơi đúng cách thay vì cho vào miệng hoặc đập mọi thứ','Không còn cho vào miệng hoặc đập tất cả đồ chơi; dùng một số đồ phù hợp.','']]],
+  ['Giai đoạn II · 13–17 tháng','13–17 tháng',1,'Dùng từ đơn còn phụ thuộc ngữ cảnh, ví dụ nói “xe” khi đang ngồi trên xe nhưng không nói khi nhìn thấy xe; từ mới dần vào vốn từ. Chức năng giao tiếp: đề nghị, phản đối, ra lệnh, gọi tên, tương tác, hồi đáp, cá nhân, chào hỏi.',[
+   ['Khám phá đồ chơi có mục đích bằng thử sai','Tìm hiểu cấu tạo của đồ chơi thông qua thử sai, dùng nhiều cách vận động khác nhau.','Xoay, ấn, kéo, lắc hộp nhạc để tìm cách làm nó kêu.'],
+   ['Đưa đồ chơi cho người lớn khi không tự mở được','Biết nhờ người lớn giúp khi gặp khó.',''],
+   ['Đổ hết đồ trong chai ra','Hành động khám phá với đồ đựng.',''],
+   ['Tìm đồ vật được giấu ở nhiều nơi khác nhau','Ý thức rằng đồ vật tồn tại tách biệt với nơi chốn.','']]],
+  ['Giai đoạn III · 17–19 tháng','17–19 tháng',1,'Bắt đầu giao tiếp bằng lời thực sự. Các từ có chức năng và quan hệ ngữ nghĩa: tiếp diễn, chủ thể, sự tồn tại, tác nhân hoặc vật, sự không tồn tại, hành động hoặc trạng thái, sự từ chối, sự khước từ, địa điểm, đồ vật hoặc người liên quan đến đồ vật hoặc địa điểm.',[
+   ['Chơi giả vờ lần đầu với chính mình','Giả vờ làm những việc của bản thân.','Giả vờ đi ngủ, uống từ cái cốc không, ăn từ cái thìa không.'],
+   ['Dùng đúng cách các đồ vật và đồ chơi thông dụng nhất','','Dùng thìa để ăn, lược để chải tóc.'],
+   ['Dùng vật trung gian để lấy đồ chơi','Sử dụng công cụ (tool-use).','Dùng cái que để với đồ chơi.'],
+   ['Tìm đồ chơi được giấu trong hộp hoặc dưới hộp úp trên khăn','Tìm đồ chơi dù không nhìn thấy lúc giấu.','']]],
+  ['Giai đoạn IV · 19–22 tháng','19–22 tháng',1,'Hướng đến đồ vật và người không có mặt. Bắt đầu kết hợp từ theo các quan hệ ngữ nghĩa: chủ thể–hành động, hành động–địa điểm, hành động–tác nhân, tác nhân–địa điểm, chủ thể–tác nhân, sở hữu, đặc điểm, dative.',[
+   ['Chơi với búp bê: chải tóc, cho ăn, đắp chăn','Tính biểu tượng mở rộng hơn bản thân bé.','Chải tóc cho búp bê, cho búp bê ăn bằng chai, đắp chăn cho búp bê.'],
+   ['Giả vờ với hơn một người hoặc đồ vật','Hoạt động giả vờ không chỉ hướng vào bản thân.','Tự ăn, rồi cho búp bê ăn, rồi cho mẹ và bạn ăn.'],
+   ['Kết hợp hai đồ chơi trong chơi giả vờ','','Đút cái thìa vào chảo; rót nước từ bình vào cốc.']]],
+  ['Giai đoạn V · 24 tháng','24 tháng',2,'Dùng các chức năng ngữ dụng sớm hơn và các quan hệ ngữ nghĩa trong cụm từ, câu ngắn. Xuất hiện dấu hiệu hình thái: thể tiếp diễn ở động từ, số nhiều, sở hữu.',[
+   ['Tái hiện trải nghiệm hằng ngày: chơi gia đình mẹ, bố, con','Đồ vật được dùng như thực tế và gần với kích thước của đời sống.',''],
+   ['Chơi các sự kiện ngắn và rời rạc, chuỗi tự giới hạn','Chưa có chuỗi thật; một số chuỗi tự giới hạn.','Cho đồ ăn vào chảo, khuấy, rồi ăn.'],
+   ['Chơi khối vuông: xếp chồng lên rồi đổ xuống','',''],
+   ['Chơi cát và nước: đổ vào, rót vào, đập ấn xuống','','']]],
+  ['Giai đoạn VI · 2½ tuổi','2½ tuổi',2,'Trả lời phù hợp các câu hỏi có từ để hỏi trong bối cảnh: cái gì, ai, của ai, ở đâu, làm gì; tự hỏi câu hỏi có từ để hỏi, thường đặt ở đầu câu. Chưa trả lời phù hợp câu hỏi TẠI SAO, trừ những thói quen nổi bật như “Tại sao bác sĩ lại ở đây? … Em bé ốm”. Có hỏi TẠI SAO nhưng thường không phù hợp hoặc không chú ý đến câu trả lời.',[
+   ['Chơi giả vờ vai bác sĩ, y tá, em bé ốm','Tái hiện sự kiện ít trải nghiệm, đặc biệt những sự kiện gây ấn tượng hoặc tổn thương. Sự kiện còn ngắn và tách biệt, vẫn cần vật liệu thật; vai nhân vật đổi rất nhanh.',''],
+   ['Chơi giả vờ vai giáo viên và học trò','Sự kiện còn ngắn và tách biệt, vai đổi rất nhanh.',''],
+   ['Chơi giả vờ cửa hàng, bán hàng','Vẫn cần vật liệu thật.','']]],
+  ['Giai đoạn VII · 3 tuổi','3 tuổi',3,'Dùng thì quá khứ, ví dụ “Con đã ăn bánh”, “Con đã đi bộ”. Dùng dạng tương lai, ví dụ “Con sẽ đi rửa bát”.',[
+   ['Chơi giả vờ theo chuỗi các sự kiện nối tiếp nhau','Tiếp tục hoạt động giả vờ của giai đoạn V và VI nhưng giờ chơi đã theo chuỗi, các sự kiện không tách rời. Chuỗi xuất hiện nhưng chưa được lên kế hoạch.','Trộn bánh, nướng, ăn, rửa bát. Bác sĩ khám bệnh nhân, gọi xe cứu thương, đưa bệnh nhân đi viện và mổ.'],
+   ['Chơi bù (compensatory play)','Tái hiện lại sự kiện đã trải qua bằng những hệ quả mới.',''],
+   ['Chơi tương tác với bạn (associative play)','','']]],
+  ['Giai đoạn VIII · 3–3½ tuổi','3–3½ tuổi',3,'Từ miêu tả được mở rộng khi bé ý thức hơn về đặc tính tri giác: dùng các từ chỉ hình dạng, kích cỡ, màu, bề mặt, quan hệ không gian (nhưng chưa phải lúc nào cũng đúng). Tạo hội thoại với búp bê và rối. Dùng siêu ngôn ngữ, ví dụ “Anh ấy nói…”. Dùng lời đề nghị gián tiếp, ví dụ “Mẹ cho phép con ăn bánh quy để ăn sáng.” Thay đổi lời nói dựa vào người nghe.',[
+   ['Chơi giả vờ với nhà búp bê và bộ đồ chơi chuồng trại, ga-ra, sân bay, làng','Thực hiện các hoạt động chơi của giai đoạn trước với nhà búp bê và đồ chơi kiểu Fisher-Price.',''],
+   ['Dùng khối vuông hoặc hộp cát để chơi tưởng tượng','Khối vuông chủ yếu để xây, quây lại (hàng rào, nhà) cho vật nuôi và búp bê.',''],
+   ['Dùng một đồ vật để thể hiện cho vật khác','Chơi chưa hoàn toàn dựa vào kích thích.',''],
+   ['Dùng búp bê hoặc con rối như người tham gia trò chơi','','']]],
+  ['Giai đoạn IX · 3½–4 tuổi','3½–4 tuổi',3,'Nói ra bằng lời các chủ định và sự kiện tương lai có thể xảy ra. Dùng các trợ động từ (có thể, sẽ, …) và liên từ (và, nhưng, nếu, vì thế, bởi vì); năng lực đầy đủ chưa phát triển cho đến sau 10–13 tuổi. Bắt đầu trả lời phù hợp câu hỏi TẠI SAO và NHƯ THẾ NÀO cần suy luận về tri giác.',[
+   ['Chơi các sự kiện cần giải quyết vấn đề, có kế hoạch từ trước','Sự kiện chưa từng trải nghiệm; bé đưa ra giả định “điều gì xảy ra nếu…”.',''],
+   ['Dùng búp bê và rối để diễn các tình huống','',''],
+   ['Xây cấu trúc 3 chiều bằng khối vuông để tái hiện công trình đã nhìn thấy','','']]],
+  ['Giai đoạn X · 5 tuổi','5 tuổi',4,'Dùng các từ chỉ quan hệ (sau đó, khi nào, đầu tiên, tiếp theo, cuối cùng, trong khi, trước đó). Khả năng đầy đủ chưa phát triển cho đến khoảng 10–12 tuổi.',[
+   ['Lên kế hoạch chuỗi sự kiện giả vờ, sắp xếp đồ vật và các bạn theo ý muốn','Tổ chức sắp xếp những gì bé muốn, cả đồ vật lẫn trẻ khác.',''],
+   ['Phối hợp nhiều hơn một sự kiện diễn ra cùng lúc','',''],
+   ['Tưởng tượng cao: dựng bối cảnh không có dấu tích của thực tế','',''],
+   ['Chơi phối hợp hoàn toàn với bạn','','']]]
+ ];
+ /* ---- 2. Chuỗi phát triển chơi: [tiêu đề, [[tên giai đoạn con, tuổi, mốc lọc, [[mục tiêu, mô tả, ví dụ], ...]], ...]] ---- */
+ const CP=[
+  ['Chơi thực hành · 2–18 tháng',[
+   ['Chơi thực hành tâm vận động','2–5 tháng',0,[['Chơi thực hành tâm vận động','Giai đoạn đầu của chơi thực hành. Tài liệu gốc không liệt kê thêm biểu hiện cụ thể.','']]],
+   ['Cấu trúc phối hợp thứ cấp','5–10 tháng',0,[
+    ['Khám phá đồ vật: cầm, xoa, đưa vào miệng, di chuyển, thao tác, lắc, ném, đập','',''],
+    ['Làm gì đó với đồ vật, thích thú với chính hoạt động','Chưa cần mang tính chức năng; thích thú với bản thân hoạt động, không nhất thiết theo cách thông thường hay mang tính đại diện.',''],
+    ['Lắp ráp và thực hiện các hoạt động với đồ vật','Hoạt động lắp ráp; các hoạt động với đồ vật (instrumental activities).',''],
+    ['Chơi hai hoặc nhiều đồ chơi nhưng chưa dùng cùng nhau','','']]],
+   ['Thành tố hoạt động theo thói quen','10–18 tháng',[0,1],[
+    ['Khám phá đồ vật phức tạp hơn, dùng nhiều đồ chơi bán-phù hợp','',''],
+    ['Dùng đồ vật đúng cách nhưng chưa lâu, chưa định hướng chính xác','Đồ vật được dùng đúng nhưng không được lâu; có thể chưa định hướng chính xác.','Chải đầu với cái lược cầm ngược.'],
+    ['Gom các đồ vật lại với nhau','Có thể chưa phân loại chính xác hoặc theo chủ đề nào.','Đặt các thứ vào một cái hộp.'],
+    ['Chơi với nhiều hơn một đồ vật cùng lúc, phối kết hợp không thông thường','','Cầm thìa ấn vào quả bóng; xếp chồng các đồ chơi; cho các đồ chơi va chạm vào nhau.']]]]],
+  ['Chơi tiền biểu tượng và chơi chức năng · dưới 18 tháng',[
+   ['Cấu trúc chơi tiền biểu tượng (biểu tượng mức 1)','dưới 18 tháng',[0,1],[
+    ['Thể hiện hiểu biết về cách dùng hoặc ý nghĩa của đồ vật thông thường','',''],
+    ['Dùng cử chỉ ngắn để nhận diện cách dùng đồ vật','','Lấy cái lược, chạm vào tóc, rồi làm rơi lược.'],
+    ['Dùng thông dụng các đồ vật nhưng chưa sắp xếp hoặc phân biệt tốt','Chưa giả vờ. Đặc tính của đồ vật cung cấp kích thích, chưa phải chức năng cần thiết. Bé thể hiện sự nghiêm túc hơn là thư giãn khi chơi.','Có thể chải tóc với lược, rồi chải lên sàn nhà, vào cốc, vào mặt.']]],
+   ['Chơi chức năng','12–18 tháng',1,[
+    ['Bắt đầu có chủ đề chơi theo các hoạt động xã hội thông thường','',''],
+    ['Dùng đồ vật theo chức năng, thông dụng hoặc đặc trưng','Chơi chức năng nhiều hơn chơi thể hiện hay biểu tượng và dần có ưu thế.','']]]]],
+  ['Chơi biểu tượng lần đầu · 18–24 tháng (mức 2)',[
+   ['Cấu trúc chơi biểu tượng lần đầu (autosymbolic)','18–24 tháng',1,[
+    ['Giả vờ ở những hoạt động liên quan đến bản thân','Tính biểu tượng liên quan trực tiếp đến cơ thể bé; bé thể hiện sự vui đùa, dường như đã ý thức về việc giả vờ.','Giả vờ uống từ cái cốc đồ chơi, ăn từ cái thìa không, nhắm mắt và đưa tay áp má để giả vờ ngủ.'],
+    ['Dùng đồ vật quen thuộc theo cách xã hội hoặc theo chức năng','','']]],
+   ['Dự đoán biểu tượng với đồ vật mới (1A)','18 tháng',1,[
+    ['Hướng hành động quen thuộc từ bản thân sang đồ vật và người khác','Các hành động hướng vào bản thân trở thành hướng sang đối tượng khác.','Cho gấu bông lên giường đi ngủ.'],
+    ['Chơi với gấu bông, búp bê là người chơi thụ động','Bé làm với chúng những hoạt động như ôm, hôn, cho ăn.','']]],
+   ['Dự đoán cấu trúc bắt chước với đồ vật mới (1B)','18 tháng',1,[
+    ['Bắt chước hành động của người khác','Các hành động không nhất thiết là một phần hoạt động hoặc thói quen đặc trưng của bé.','']]]]],
+  ['Chơi biểu tượng đơn cấu trúc · 24–36 tháng (mức 3)',[
+   ['Các trò chơi biểu tượng đơn cấu trúc','24–36 tháng',2,[
+    ['Mở rộng tính biểu tượng sang chủ thể hoặc đồ vật khác của hành động','',''],
+    ['Giả vờ hoạt động của người khác hoặc vật khác','','Cho búp bê ăn, chải tóc cho búp bê, giả vờ đọc sách, quét nhà, cho xe ô tô đồ chơi chạy và làm tiếng xe chạy.']]],
+   ['Nhận diện đơn giản một đồ vật với đồ vật khác (IIA)','24–30 tháng',2,[
+    ['Giả vờ một đồ vật là một đồ vật “thật” khác','Biểu tượng đã phi ngữ cảnh rõ ràng; bé thay thế đồ vật này cho đồ vật khác.','Dùng khối vuông như một cái xe; dùng vật khác giả vờ là đồ ăn.'],
+    ['Cho búp bê, gấu bông làm bạn chơi chủ động','Búp bê và gấu bông được phối hợp vào các thói quen biểu tượng.','Búp bê và gấu bông thơm nhau; búp bê đi dạo.'],
+    ['Thể hiện lại đồ vật vắng mặt','','Tưởng tượng có điện thoại; đội cái nón tưởng tượng lên đầu búp bê.']]],
+   ['Nhận diện cơ thể mình với người khác và vật khác (IIB)','24–30 tháng',2,[
+    ['Giả vờ mình là con vật hoặc đồ vật khác','','Giả vờ là con chó, xe, sư tử, cá, mèo, chuột.']]]]],
+  ['Kết hợp các trò chơi biểu tượng · 24 tháng – 4 tuổi (mức 4)',[
+   ['Kết hợp các trò chơi biểu tượng','24–36 tháng',2,[
+    ['Lặp lại một hành động giả vờ với nhiều người hoặc nhiều đối tượng nhận khác nhau','Kết hợp theo chủ đề đơn, gồm cả bản thân.','Uống từ cái chai đồ chơi rồi cho búp bê uống từ chai đó. Đưa cái thìa không vào miệng mẹ, người lớn khác rồi vào miệng mình.'],
+    ['Kết hợp nhiều hành động giả vờ liên quan nhau theo trật tự chuỗi','Kết hợp đa chủ đề: các hành động chơi giả vờ có liên quan theo một mạch.','Cho điện thoại vào tai, bấm số. Thơm búp bê, cho vào giường, đắp chăn.']]],
+   ['Những kết hợp đơn giản (IIIA)','3–4 tuổi',3,[
+    ['Đưa các chi tiết vào cùng một cảnh, tạo lại cảnh đơn giản từ thực tế','Dùng đồ vật tưởng tượng, như thật và thay thế. Còn cường điệu hóa một chút các hành động.','Tái hiện buổi tiệc trà, hoặc quá trình trọn vẹn rửa bát hay mặc quần áo.']]],
+   ['Những kết hợp bù trừ (IIIB)','3–4 tuổi',3,[
+    ['Sửa chữa thực tế ngay trong lúc giả vờ','Theo trình tự giả vờ, bé cố sửa chữa thực tế thay vì chỉ bắt chước; một số khía cạnh tiêu cực của thực tế được hoàn tác ngay trong tình huống trước mắt.','Không được phép chơi với nước thì lấy cốc, chơi gần xô và giả vờ rót nước.']]],
+   ['Những kết hợp giải tỏa (IIIC, liquidating combinations)','3–4 tuổi',3,[
+    ['Tái hiện lại tình huống khó khăn hoặc khó chịu sau khi sự việc đã xảy ra','Bé cố sửa chữa hoặc thay đổi một số thực tế, thường là sau sự kiện hoặc phi ngữ cảnh hơn; có thể là bản dựng lại sự kiện trong quá khứ.','']]]]],
+  ['Giả vờ theo thứ bậc (mức 5)',[
+   ['Giả vờ theo thứ bậc (hierarchical pretend)','chưa ghi mốc tuổi trong tài liệu gốc',-1,[
+    ['Chơi biểu tượng hành động đơn có kế hoạch từ trước','Trò chơi hoặc chuỗi được lên kế hoạch rõ ràng trước khi diễn ra; kế hoạch có thể nói ra hoặc không.','Chuẩn bị không gian cho chuỗi biểu tượng: dọn các con vật trang trại đi và sắp xếp để cho búp bê ăn.'],
+    ['Chơi chuỗi hành động biểu tượng nhiều tầng có kế hoạch','','Đặt đồ chơi nội thất vào chỗ để tổ chức tiệc trà, sắp bát đĩa, tổ chức tiệc, dọn dẹp sau tiệc. Lên kế hoạch cho búp bê ăn rồi cho búp bê đi ngủ.']]],
+   ['Những kết hợp dự đoán (IIID, anticipatory combinations)','3–4 tuổi',3,[
+    ['Lên kế hoạch, dự đoán kết quả và thích ứng hành động khi chơi','Có ý thức sáng tạo linh hoạt về kết quả dự kiến hoặc hệ quả; thể hiện được khả năng về các hệ quả thay thế nếu chọn hoặc không chọn một hành động cụ thể.',''],
+    ['Giả vờ theo chuỗi dựa vào câu chuyện hoặc sự kiện đã biết','Không cần dựa vào việc tái dựng sự kiện đã qua; có thể dựa vào các sự kiện bé chưa tự trải qua.','']]]]]
+ ];
+ const add=(src,hi,code,n,o,x,a,m,extra)=>{const it=Object.assign({id:src+':'+code,s:src,c:code,d:D,hi,t:LHEAD[hi][1],n,o:o||'',x:x||'',a,m,sc:null,lg:'',rf:src==='we'?WRF:CRF},extra);
+  it.k=ascii(it.c+' '+it.n+' '+it.t+' '+it.o+' '+it.x+' '+LSRC[src].n);LIBI.push(it);GL[it.id]=it};
+ const RN=['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+ WE.forEach((st,i)=>{LHEAD.push(['we',st[0]]);const hi=LHEAD.length-1;
+  st[4].forEach((g,j)=>add('we',hi,'GĐ '+RN[i]+'.'+(j+1),g[0],g[1],g[2],st[1],st[2],{lg:st[3]}))});
+ let cn=0;
+ CP.forEach(h=>{LHEAD.push(['cp',h[0]]);const hi=LHEAD.length-1;
+  h[1].forEach(sub=>sub[3].forEach(g=>{cn++;add('cp',hi,'CP'+cn,g[0],(sub[0]+'. '+(g[1]||'')).trim(),g[2],sub[1],sub[2])}))});
+})();
 /* ===== Nghiệp vụ: tra cứu, học phí, hoàn phí, lịch, chấm công, lương ===== */
 const kidBy=id=>DB.kids.find(k=>k.id===id);
 const stBy=id=>DB.staff.find(s=>s.id===id);
@@ -1463,6 +1623,7 @@ function libHeads(f){const m=new Map();libAll().forEach(i=>{if(f.dom&&i.d!==f.do
 /* mục tiếp theo: với VB-MAPP đi theo thứ tự dạy (các bước nhỏ a, b, c... rồi đến mốc), còn lại theo thứ tự trong ngân hàng */
 function nextOf(id){const g=GL[id];if(!g)return null;
  if(g.s==='vb'){const o=x=>x.ms*30+(x.st?x.st.charCodeAt(0)-96:29),a=LIBI.filter(x=>x.s==='vb'&&x.hi===g.hi).sort((p,q)=>o(p)-o(q));return a[a.indexOf(g)+1]||null}
+ if(g.s==='we'||g.s==='cp'){const a=LIBI.filter(x=>x.s===g.s);return a[a.indexOf(g)+1]||null}   /* chuỗi phát triển chơi: đi tiếp sang giai đoạn sau */
  const n=LIBI[LIBI.indexOf(g)+1];return n&&n.hi===g.hi?n:null}
 
 /* --- lượt thử: chuỗi 10 ký tự, V đúng, X sai, . chưa làm --- */
@@ -1758,7 +1919,7 @@ function hsList(){const h=S.hs,q=h.q.toLowerCase();
 ACT.hsopen=v=>{S.modal={t:'hs',id:v,tab:'tt'}};
 ACT.hstab2=v=>{S.modal.tab=v};
 MODALS.hs=()=>{const m=S.modal,k=kidBy(m.id);if(!k||!canKid(k.id)){S.modal=null;return''}
- const T=[['tt','Thông tin'],['lh','Lịch học'],['kh','Kế hoạch mục tiêu'],['bt','Buổi can thiệp'],['tb','Tiến bộ'],['vd','Ảnh và video'],['td','Tài liệu']];
+ const T=[['tt','Thông tin'],['lh','Lịch học'],['kh','Kế hoạch mục tiêu'],['bt','Buổi can thiệp'],['tb','Tiến bộ'],['vd','Ảnh và video'],['td','Hồ sơ, giáo án']];
  let b;switch(m.tab){case'lh':b=hsSchedule(k);break;case'kh':b=hsPlan(k);break;case'bt':b=hsSess(k);break;case'tb':b=progView(k,{staff:true});break;case'vd':b=vidList(k.id);break;case'td':b=docList(k.id);break;default:b=hsInfo(k)}
  return mdl(k.n+' · '+k.id,tabsH(T,m.tab,'hstab2')+b,1)};
 function hsInfo(k){const g=grBy(k.gr),r=(a,b)=>`<div class="rw"><span class="mu">${a}</span><b>${b}</b></div>`;
@@ -1784,27 +1945,58 @@ document.addEventListener('input',e=>{const t=e.target;if(!t.dataset||!t.dataset
  root.querySelectorAll('[data-ft]').forEach(el=>{el.hidden=!!q&&!el.dataset.ft.includes(q)});
  root.querySelectorAll('details[data-fg]').forEach(d=>{const any=!!d.querySelector('[data-ft]:not([hidden])');d.hidden=!any;if(q&&any)d.open=true})});
 document.addEventListener('change',e=>{const t=e.target;if(!t||t.name!=='dx')return;const f=t.closest('form'),s=f&&f.querySelector('#dxsum');if(s)s.textContent=dxSumTx(f.querySelectorAll('input[name=dx]:checked').length)});
+/* khối "Hình thức học": tích Bán trú và/hoặc Can thiệp 1-1; mỗi hình thức tích các buổi (thứ) học cụ thể, buổi 1-1 chọn được giờ riêng từng ngày */
+function hthField(k,edit){const bt=!!k.bt,bd=btOf(k),ls=edit?DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).sort((a,b)=>a.day-b.day||(a.slot<b.slot?-1:a.slot>b.slot?1:0)):[],has=ls.length>0,pool=pool11();
+ const ex=has?`<div class="note sm"><b>Bé đang có ${ls.length} buổi 1-1:</b> ${ls.map(l=>DAYS[l.day]+' '+slotLb(l.slot)+' ('+esc(given(sn(l.gv)))+')').join('; ')}. Đổi giờ hoặc xóa buổi cũ ở thẻ Lịch học; phần bên dưới để thêm buổi mới.</div>`:'';
+ const rows=DAY_ALL.map(w=>`<div class="d11"><label class="chk"><input type="checkbox" name="d${w}"> ${DAYS[w]}</label><input type="time" name="t${w}" step="60" list="slotdl" aria-label="Giờ bắt đầu ${DAYN[w]} (để trống thì dùng giờ chung)"></div>`).join('');
+ return`<h3>Hình thức học</h3><p class="sm mu" style="margin-bottom:6px">Tích hình thức bé học rồi tích các buổi cụ thể. Bé có thể học cả hai: bán trú và thêm các ca 1-1.</p><div class="hth">
+ <div class="hth-c"><label class="chk hth-h" for="hf-hbt"><input type="checkbox" id="hf-hbt" name="hbt" ${bt?'checked':''}> <b>Bán trú</b></label>
+  <div class="hth-b" id="hth-bt" ${bt?'':'hidden'}><div><label for="hf-gr">Lớp bán trú</label><select id="hf-gr" name="gr"><option value="">Tự chọn theo tuổi</option>${opts(DB.groups.map(g=>[g.id,g.n]),k.gr)}</select></div>
+   <div><span class="lbl">Các buổi bán trú trong tuần (tích ngày bé học, ${BTLB})</span>${dayBoxes('bd',bd.length?bd:DAY_BT)}</div>
+   <p class="sm mu">Mỗi ngày bán trú có một ca 1-1 nằm trong gói bán trú. Thứ Bảy chỉ tích khi bé học thứ Bảy.</p></div></div>
+ <div class="hth-c"><label class="chk hth-h" for="hf-h11"><input type="checkbox" id="hf-h11" name="h11" ${has?'checked':''}> <b>Can thiệp 1-1</b></label>
+  <div class="hth-b" id="hth-11" ${has?'':'hidden'}>${ex}
+   <div class="f2"><div><label for="hf-gv">Giáo viên 1-1</label><select id="hf-gv" name="gv"><option value="">Chọn giáo viên</option>${opts(pool.map(s=>[s.id,s.n]),k.gv&&pool.some(s=>s.id===k.gv)?k.gv:'')}</select></div><div><label for="hf-sl">Giờ bắt đầu chung</label>${slotInput('hf-sl',SLOTS[1])}</div><div><label for="hf-rm">Phòng</label><select id="hf-rm" name="room"><option value="">Tự chọn phòng trống</option>${opts(ROOMS.map(r=>[r,r]),'')}</select></div></div>
+   <div><span class="lbl">Các buổi 1-1 trong tuần (tích ngày; ô giờ riêng để trống thì dùng giờ chung, mỗi ca ${SLOT_MIN} phút)</span>${rows}
+    <div class="acts" style="margin-top:6px"><button class="btn s" type="button" data-a="dayset" data-v="d|1,2,3,4,5">T2–T6</button><button class="btn s" type="button" data-a="dayset" data-v="d|1,2,3,4,5,6">T2–T7</button><button class="btn s" type="button" data-a="d11bt">Trùng ngày bán trú</button><button class="btn s" type="button" data-a="dayset" data-v="d|">Bỏ chọn</button></div></div>
+   <p class="sm mu">Mỗi bé chọn ngày riêng: có bé học T2–T7, có bé chỉ vài buổi mỗi tuần. Chỉ thêm những ngày còn trống giáo viên, bé và phòng.</p></div></div></div>`}
+document.addEventListener('change',e=>{const t=e.target;if(!t||(t.name!=='hbt'&&t.name!=='h11'))return;const f=t.closest('form'),p=f&&f.querySelector(t.name==='hbt'?'#hth-bt':'#hth-11');if(p)p.hidden=!t.checked});
+ACT.d11bt=()=>{const f=$q('#hsff');if(!f)return false;DAY_ALL.forEach(w=>{const a=f.elements['bd'+w],c=f.elements['d'+w];if(a&&c)c.checked=a.checked});return false};
+/* thêm các buổi 1-1 cho một bé: mỗi buổi {w: thứ, slot: giờ bắt đầu}; kiểm tra trùng giáo viên, bé, phòng từng ngày */
+function add11(k,picks,gv,room){const res={ok:0,bad:[],warn:[]};
+ picks.forEach(p=>{const w=p.w,slot=p.slot,rm=room||ROOMS.find(r=>!conflict({day:w,slot,gv,hs:k.id,room:r}))||'',x={id:'l'+uid(),type:'11',day:w,slot,gv,hs:k.id,room:rm},c=rm?conflict(x):(conflict(Object.assign({},x,{room:''}))||'Không còn phòng trống');   /* hết phòng vì giáo viên hoặc bé đã bận thì báo đúng lý do */
+  if(c){res.bad.push(DAYS[w]+': '+c);return}
+  DB.lich.push(x);res.ok++;const wn=btWarn(k,w,slot);if(wn)res.warn.push(DAYS[w]+': '+wn)});
+ if(res.ok&&!k.gv)k.gv=gv;k.m11=wk11(k.id);return res}
 MODALS.hsf=()=>{const id=S.modal.id,k=id?kidBy(id):{n:'',g:'M',dob:addD(TODAY,-365*4),sd:TODAY,st:'dang',nd:NEEDS[0],bt:false,gr:'',gv:'',pn:'',pr:'Mẹ',pp:'',pe:'',dx:[]};
  const f=(n,l,v,t,x)=>`<div><label for="hf-${n}">${l}</label><input id="hf-${n}" name="${n}" type="${t||'text'}" value="${esc(v)}" ${x||''}></div>`;
  return mdl(id?'Sửa hồ sơ '+k.n:'Thêm học sinh',`<form id="hsff" class="f"><div class="f2">${f('n','Họ và tên bé',k.n,'text','required')}<div><label for="hf-g">Giới tính</label><select id="hf-g" name="g">${opts([['M','Nam'],['F','Nữ']],k.g)}</select></div>${f('dob','Ngày sinh',k.dob,'date','required max="'+TODAY+'"')}${f('sd','Ngày nhập học',k.sd,'date')}<div><label for="hf-nd">Nhu cầu chính</label><select id="hf-nd" name="nd">${opts(NEEDS.map(x=>[x,x]),k.nd)}</select></div><div><label for="hf-st">Trạng thái</label><select id="hf-st" name="st">${opts(Object.entries(KST),k.st)}</select><small class="mu">Chọn “Đã nghỉ” khi bé ngưng can thiệp: học phí đã đóng và phí dư không được hoàn.</small></div>
- <div><label for="hf-bt">Bán trú</label><select id="hf-bt" name="bt">${opts([['0','Không'],['1','Có']],k.bt?'1':'0')}</select></div><div><label for="hf-gr">Nhóm bán trú</label><select id="hf-gr" name="gr"><option value="">Tự chọn theo tuổi</option>${opts(DB.groups.map(g=>[g.id,g.n]),k.gr)}</select></div>
- ${id?'':`<div><label for="hf-gv">Giáo viên 1-1</label><select id="hf-gv" name="gv"><option value="">Chưa phân công</option>${opts(DB.staff.filter(s=>s.role==='gv'&&s.st==='dang').map(s=>[s.id,s.n]),'')}</select></div>`}</div>
- <div style="margin-top:10px"><span class="lbl">Ngày học bán trú trong tuần (chỉ dùng khi chọn Có bán trú)</span>${dayBoxes('bd',k.btd&&k.btd.length?k.btd:DAY_BT)}</div>
+ </div>
+ ${hthField(k,!!id)}
  ${dxField(k)}
  <h3>Phụ huynh</h3><div class="f2"><div><label for="hf-pr">Quan hệ</label><select id="hf-pr" name="pr">${opts(['Mẹ','Bố','Ông bà','Người giám hộ'].map(x=>[x,x]),k.pr)}</select></div>${f('pn','Họ tên phụ huynh',k.pn,'text','required')}${f('pp','Điện thoại',k.pp,'tel','required')}${f('pe','Email cổng phụ huynh (hoặc dùng số điện thoại)',k.pe,'email')}</div>
- ${id?'<p class="note sm">Các buổi 1-1 hằng tuần của bé xếp ở thẻ Lịch học trong hồ sơ bé, hoặc ở mục Lịch học, để hệ thống kiểm tra trùng giáo viên, phòng.</p>':'<p class="note sm">Sau khi thêm, mở hồ sơ bé, vào thẻ Lịch học để chọn ngày bán trú và xếp các buổi 1-1.</p>'}
+ <p class="note sm">Hệ thống kiểm tra trùng giáo viên, bé và phòng khi thêm buổi 1-1. Muốn đổi giờ hoặc xóa một buổi đã có, vào thẻ Lịch học trong hồ sơ bé.</p>
  <div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu hồ sơ</button></div></form>`)};
 FORM.hsff=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.id,isNew=!id;
- const k=isNew?{id:'hs'+String(Math.max(...DB.kids.map(x=>+x.id.slice(2)))+1).padStart(3,'0'),m11:0,gv:g('gv')||null}:kidBy(id);
+ const old=isNew?null:kidBy(id);
  if(!g('n')||!g('pn')||(!g('pe')&&!telNorm(g('pp')))){toast('Vui lòng nhập tên bé, tên phụ huynh và email hoặc số điện thoại phụ huynh');return false}
- const bt=g('bt')==='1',bd=daysOf(f,'bd'),wasSt=isNew?'dang':k.st;
- if(bt&&!bd.length){toast('Hãy chọn ít nhất một ngày học bán trú');return false}
+ const bt=f.elements.hbt.checked,h11=f.elements.h11.checked,bd=daysOf(f,'bd'),wasSt=isNew?'dang':old.st;
+ if(bt&&!bd.length){toast('Hãy tích ít nhất một buổi bán trú trong tuần');return false}
+ const slot0=String(f.elements.slot.value||'').slice(0,5),room=f.elements.room.value,gv=g('gv'),
+  picks=h11?DAY_ALL.filter(w=>f.elements['d'+w]&&f.elements['d'+w].checked).map(w=>({w,slot:String((f.elements['t'+w]&&f.elements['t'+w].value)||slot0).slice(0,5)})):[],old11=isNew?0:wk11(id);
+ if(!h11&&old11){toast('Bé đang có '+old11+' buổi 1-1. Muốn bỏ hình thức 1-1, hãy xóa từng buổi ở thẻ Lịch học của hồ sơ bé');return false}
+ if(h11&&!picks.length&&!old11){toast('Hãy tích ít nhất một buổi 1-1 (hoặc bỏ tích Can thiệp 1-1)');return false}
+ if(picks.length){if(!gv){toast('Hãy chọn giáo viên 1-1');return false}
+  const bad=picks.find(p=>!slotValid(p.slot));if(bad){toast(DAYS[bad.w]+': '+slotMsg);return false}}
+ const k=isNew?{id:'hs'+String(Math.max(...DB.kids.map(x=>+x.id.slice(2)))+1).padStart(3,'0'),m11:0,gv:picks.length?gv:null}:old;
  Object.assign(k,{n:g('n'),g:g('g'),dob:g('dob'),sd:g('sd')||TODAY,st:g('st'),nd:g('nd'),bt,gr:bt?(g('gr')||grByAge(g('dob'))):'',pr:g('pr'),pn:g('pn'),pp:g('pp'),pe:g('pe').toLowerCase(),
   dx:[...f.querySelectorAll('input[name=dx]:checked')].map(x=>x.value),dxo:g('dxo'),dxn:g('dxn')});
  if(bt)k.btd=bd;else delete k.btd;
  if(wasSt!=='nghi'&&k.st==='nghi')k.stopAt=TODAY;else if(k.st!=='nghi')delete k.stopAt;   /* ngưng đột ngột: không hoàn phí dư nào (xem settle) */
  if(isNew)DB.kids.push(k);if(!bt)k.gr='';
- S.modal={t:'hs',id:k.id,tab:'tt'};toast(isNew?'Đã thêm học sinh':wasSt!=='nghi'&&k.st==='nghi'?'Đã lưu: bé ngưng can thiệp, học phí đã đóng và phí dư không hoàn':'Đã lưu hồ sơ')};
+ const res=picks.length?add11(k,picks,gv,room):null,flag=res&&(res.bad.length||res.warn.length);
+ S.modal={t:'hs',id:k.id,tab:flag?'lh':'tt',res:res||null};
+ toast(flag?'Đã lưu hồ sơ. Có buổi 1-1 chưa thêm được hoặc cần lưu ý, xem thẻ Lịch học':isNew?'Đã thêm học sinh'+(res?' và '+res.ok+' buổi 1-1':''):wasSt!=='nghi'&&k.st==='nghi'?'Đã lưu: bé ngưng can thiệp, học phí đã đóng và phí dư không hoàn':'Đã lưu hồ sơ'+(res?', thêm '+res.ok+' buổi 1-1':''))};
 
 /* --- thẻ Lịch học trong hồ sơ bé: ngày bán trú, các buổi 1-1 hằng tuần, thời khóa biểu --- */
 function hsSchedule(k){const lead=isLead(),m=S.modal,bd=btOf(k),g=grBy(k.gr),$$=canMoney();
@@ -1833,11 +2025,8 @@ FORM.lsmf=f=>{if(!isLead())return false;const k=kidBy(S.modal.id),e=f.elements,g
  if(!gv){toast('Hãy chọn giáo viên');return false}
  if(!slotValid(slot)){toast(slotMsg);return false}
  if(!days.length){toast('Hãy chọn ít nhất một ngày');return false}
- const res={ok:0,bad:[],warn:[]};
- days.forEach(w=>{const room=e.room.value||ROOMS.find(r=>!conflict({day:w,slot,gv,hs:k.id,room:r}))||'',x={id:'l'+uid(),type:'11',day:w,slot,gv,hs:k.id,room},c=room?conflict(x):(conflict(Object.assign({},x,{room:''}))||'Không còn phòng trống');   /* hết phòng vì giáo viên hoặc bé đã bận thì báo đúng lý do */
-  if(c){res.bad.push(DAYS[w]+': '+c);return}
-  DB.lich.push(x);res.ok++;const wn=btWarn(k,w,slot);if(wn)res.warn.push(DAYS[w]+': '+wn)});
- if(res.ok&&!k.gv)k.gv=gv;k.m11=wk11(k.id);S.modal.res=res;S.modal.slot=slot;
+ const res=add11(k,days.map(w=>({w,slot})),gv,e.room.value);
+ S.modal.res=res;S.modal.slot=slot;
  if(res.ok&&!res.bad.length)toast('Đã thêm '+res.ok+' buổi 1-1')};
 ACT.hslsdel=v=>{const l=DB.lich.find(x=>x.id===v),k=l&&kidBy(l.hs),back=S.modal;if(!l||!k||!isLead())return false;
  ask('Xóa buổi 1-1 '+DAYN[l.day]+' '+slotLb(l.slot)+' của bé '+k.n+'? Các lần điểm danh trước đây vẫn được giữ.',()=>{DB.lich=DB.lich.filter(x=>x.id!==v);k.m11=wk11(k.id);S.modal=Object.assign({},back,{res:null});toast('Đã xóa buổi học')},'Xóa buổi')};
@@ -1985,7 +2174,7 @@ function vbPanel(f,P){const open=!!f.vbo,sk=f.vbd||(f.head!==''&&f.head!=null&&V
  +(open?`<div class="note" style="margin-top:8px"><label for="${P}-vd">Kỹ năng</label><select id="${P}-vd" data-c="lfvbd">${opts(LVBS,sk)}</select>${ks.map(k=>`<div class="rw" style="align-items:flex-start;flex-wrap:nowrap"><span class="sm" style="width:58px;flex:none"><b>${k===0?'Điểm 0':'Mốc '+k}</b></span><span class="sm" style="flex:1;min-width:0">${vbBul(D[k])}</span></div>`).join('')}</div>`:'')+`</div>`}
 function libDetail(i){if(i.s==='vb')return`<details class="gd"><summary class="sm">Chi tiết</summary><div class="sm">${vbDetail(i)}</div></details>`;
  const x=i.s==='ot'?'Cách làm gợi ý':'Ví dụ';
- return`<details class="gd"><summary class="sm">Chi tiết</summary><div class="sm">${i.o?`<p><b>${i.s==='ot'?'Mục đích':'Mô tả'}:</b> ${esc(i.o)}</p>`:''}${i.x?`<p><b>${x}:</b> ${esc(i.x)}</p>`:''}${i.sc&&i.sc.length?`<p><b>Tiêu chí chấm ABLLS-R:</b></p><ul>${i.sc.map(c=>`<li>Điểm ${esc(c[0])}: ${esc(c[1])}</li>`).join('')}</ul>`:''}${i.a?`<p><b>Mốc phát triển:</b> ${esc(i.a)}</p>`:''}${!i.o&&!i.x&&!i.a&&!(i.sc&&i.sc.length)?'<p class="mu">Không có mô tả thêm trong dữ liệu gốc.</p>':''}</div></details>`}
+ return`<details class="gd"><summary class="sm">Chi tiết</summary><div class="sm">${i.o?`<p><b>${i.s==='ot'?'Mục đích':'Mô tả'}:</b> ${esc(i.o)}</p>`:''}${i.x?`<p><b>${x}:</b> ${esc(i.x)}</p>`:''}${i.sc&&i.sc.length?`<p><b>Tiêu chí chấm ABLLS-R:</b></p><ul>${i.sc.map(c=>`<li>Điểm ${esc(c[0])}: ${esc(c[1])}</li>`).join('')}</ul>`:''}${i.a?`<p><b>Mốc phát triển:</b> ${esc(i.a)}</p>`:''}${i.lg?`<p><b>Ngôn ngữ thường đi cùng ở giai đoạn này:</b> ${esc(i.lg)}</p>`:''}${i.rf?`<p class="mu">Nguồn: ${esc(i.rf)}</p>`:''}${!i.o&&!i.x&&!i.a&&!(i.sc&&i.sc.length)?'<p class="mu">Không có mô tả thêm trong dữ liệu gốc.</p>':''}</div></details>`}
 function libItem(i,o){const tk=o.taken&&o.taken.includes(i.id),on=o.sel&&o.sel.includes(i.id),cnt=DB.plans.filter(p=>p.g===i.id&&p.s==='dang').length;
  return`<div class="gi ${tk?'tk':''}">${o.pick?`<input type="checkbox" id="${o.idp?o.idp+'c':'gc'}-${esc(i.id)}" data-c="${o.cn||'gpsel'}" value="${esc(i.id)}" ${on?'checked':''} ${tk?'disabled':''}>`:''}<div class="gi-b"><${o.pick?`label for="${o.idp?o.idp+'c':'gc'}-${esc(i.id)}"`:'div'} class="gi-n">${i.s==='vb'?tg(i.st?'Bước '+i.ms+i.st:'Mốc '+i.ms,i.st?'gy':'y')+' ':''}${esc(i.n)}</${o.pick?'label':'div'}><div class="sm mu">${domTag(i.d)} ${esc(i.t)} · ${esc(gSrc(i))}${i.a?' · '+esc(i.a):''}${tk?' · <b>Đã có</b>':''}${(!o.pick||o.edit)&&cnt?' · '+cnt+' bé đang luyện':''}</div>${libDetail(i)}</div>${o.edit&&i.s==='cu'&&isLead()?`<button class="btn s" data-a="cgedit" data-v="${esc(i.id.slice(3))}">Sửa</button>`:''}</div>`}
 function libPanel(f,o){const P=o.idp||'lf',hs=libHeads(f),all=libFind(f),p=pg(LPG(),all,o.per||20),hasF=f.dom||f.src||f.head||f.age||f.q;
@@ -2001,7 +2190,7 @@ function hsLib(){const b=bkInit(),ks=bkKids(),nc=(DB.cg||[]).length;
  if(!ks.some(k=>k.id===b.kid))b.kid=ks.length===1?ks[0].id:'';
  const kid=b.kid?kidBy(b.kid):null,own=kid?kidPlans(kid.id).filter(p=>p.s!=='dat'):[],taken=own.map(p=>p.g);
  b.sel=b.sel.filter(g=>!taken.includes(g));
- return`<div class="card"><p class="mu sm" style="margin-bottom:12px">${dots(LIBI.length)} mục tiêu chia theo 8 lĩnh vực (ABLLS-R, ESDM/Denver, VB-MAPP, mốc phát triển Mầm non, hoạt động OT)${nc?' và '+nc+' mục tiêu do Trung tâm tự thêm':''}. Cách chọn: chọn bé, chọn lĩnh vực rồi tick các mục tiêu cần luyện, sau đó bấm “Thêm vào kế hoạch”. Khi ghi buổi can thiệp, bạn cũng chọn mục tiêu theo lĩnh vực từ ngân hàng này.</p>
+ return`<div class="card"><p class="mu sm" style="margin-bottom:12px">${dots(LIBI.length)} mục tiêu chia theo 8 lĩnh vực (ABLLS-R, ESDM/Denver, VB-MAPP, mốc phát triển Mầm non, hoạt động OT, thang chơi Westby và chuỗi phát triển chơi)${nc?' và '+nc+' mục tiêu do Trung tâm tự thêm':''}. Cách chọn: chọn bé, chọn lĩnh vực rồi tick các mục tiêu cần luyện, sau đó bấm “Thêm vào kế hoạch”. Khi ghi buổi can thiệp, bạn cũng chọn mục tiêu theo lĩnh vực từ ngân hàng này.</p>
  <div class="bk-w"><label for="bk-k"><b>Chọn mục tiêu cho bé</b></label><select id="bk-k" data-c="bkkid"><option value="">${ks.length?'Chọn bé…':'Chưa có bé nào để chọn'}</option>${opts(ks.map(k=>[k.id,k.n+' · '+age(k.dob)]),b.kid)}</select>${kid?`<span class="sm mu">${esc(kid.nd)} · đang có ${own.length} mục tiêu trong kế hoạch</span>`:'<span class="sm mu">Chọn bé để thêm mục tiêu vào kế hoạch. Chưa chọn bé vẫn xem và tìm mục tiêu được.</span>'}</div>`
  +libPanel(S.hs.lib,{pick:true,cn:'bksel',idp:'bk',edit:true,sel:b.sel,taken,per:20})
  +`<div class="bk-f"><span class="bk-s sm"><b id="bk-cnt">${b.sel.length}</b> mục đã chọn${kid?' cho '+esc(kid.n):''}</span><button class="btn s" id="bk-clr" data-a="bkclr" ${b.sel.length?'':'disabled'}>Bỏ chọn</button><select id="bk-hz" data-c="bkhz" aria-label="Loại mục tiêu" title="Ngắn hạn: 1–3 tháng. Dài hạn: 6–12 tháng." style="width:auto">${opts([['n','Ngắn hạn'],['d','Dài hạn']],b.hz)}</select><select id="bk-up" data-c="bkup" aria-label="Thuộc mục tiêu dài hạn" title="Chỉ áp dụng cho mục tiêu ngắn hạn" style="width:auto;max-width:100%" ${kid&&b.hz==='n'?'':'disabled'}>${opts([['','Chưa gắn mục tiêu dài hạn']].concat(kid?kidPlans(kid.id).filter(p=>p.h==='d'&&p.s!=='dat').map(p=>[p.id,'Thuộc: '+gName(p.g)]):[]),b.up)}</select><button class="btn p" data-a="bkok">Thêm vào kế hoạch</button></div></div>`}
@@ -2652,7 +2841,9 @@ VIEWS.td=()=>{const t=S.td=Object.assign({tab:'gal',k:'',q:'',kind:'',m:'',gr:''
  const kidSel=`<div><label for="tdk">Lọc theo bé</label><select id="tdk" data-c="tdk"><option value="">Tất cả</option>${opts(myKids().filter(k=>k.st==='dang').map(k=>[k.id,k.n]),t.k)}</select></div>`;
  const qBox=`<div><label for="tdq">Tìm theo tên tệp hoặc tên bé</label><input id="tdq" data-i="tdq" value="${esc(t.q)}"></div>`;
  let body;
- if(t.tab==='doc'){const ds=medDocs().filter(m=>has(m)&&(!t.k||medKs(m).includes(t.k)));
+ if(t.tab==='ref')body=refStaffBody();
+ else if(t.tab==='tri')body=triStaffBody();
+ else if(t.tab==='doc'){const ds=medDocs().filter(m=>has(m)&&(!t.k||medKs(m).includes(t.k)));
   body=`<div class="card"><div class="f2" style="margin-bottom:12px">${kidSel}${qBox}</div>${medDocTable(ds)}</div>`}
  else if(t.tab==='grp'){
   const gs=(isLead()||isVP()?DB.groups:myGroups().length?myGroups():DB.groups.filter(g=>medAV().some(m=>m.gr===g.id)));
@@ -2665,9 +2856,10 @@ VIEWS.td=()=>{const t=S.td=Object.assign({tab:'gal',k:'',q:'',kind:'',m:'',gr:''
  else{let ls=medAV().filter(m=>medKs(m).length&&has(m)&&(!t.k||medKs(m).includes(t.k))&&(!t.kind||m.kind===t.kind)&&(!t.m||String(m.d).slice(0,7)===t.m));
   const p=pg('mg',ls,12);
   body=`<div class="card"><div class="f2" style="margin-bottom:12px">${kidSel}${qBox}<div><label for="tdkind">Loại</label><select id="tdkind" data-c="tdkind">${opts([['','Ảnh và video'],['img','Chỉ ảnh'],['vid','Chỉ video']],t.kind)}</select></div><div><label for="tdm">Tháng</label><input id="tdm" type="month" data-c="tdm" value="${esc(t.m)}"></div></div>${medGrid(p.rows,{list:'gal'})}${p.html}</div>`}
- return head('Ảnh, video và tài liệu','Hình ảnh hoạt động, video buổi can thiệp, giáo án, biểu mẫu và hồ sơ',canUpload()?`<button class="btn p" data-a="upm" data-v="${t.tab==='doc'?'doc':'av'}">${t.tab==='doc'?'Tải tài liệu lên':'Tải ảnh, video lên'}</button>`:'')
-  +tabsH([['gal','Ảnh và video'],['grp','Hoạt động chung'+(nw?' · '+nw+' chờ gắn bé':'')],['doc','Tài liệu']],t.tab,'tdtab')+upNote()+body};
-ACT.tdtab=v=>{S.td.tab=v;S.td.sel=[];S.pg.mg=1};CHG.tdk=v=>{S.td.k=v;S.pg.mg=1};CHG.tdg=v=>{S.td.gr=v;S.pg.mg=1;S.td.sel=[]};CHG.tds=v=>{S.td.st=v;S.pg.mg=1;S.td.sel=[]};CHG.tdkind=v=>{S.td.kind=v;S.pg.mg=1};CHG.tdm=v=>{S.td.m=v;S.pg.mg=1};
+ const btn=t.tab==='ref'?(canRef()?`<button class="btn p" data-a="rfm">Thêm tài liệu tham khảo</button>`:''):t.tab==='tri'?(canRef()?`<button class="btn p" data-a="trm">Thêm mục tri ân</button>`:''):canUpload()?`<button class="btn p" data-a="upm" data-v="${t.tab==='doc'?'doc':'av'}">${t.tab==='doc'?'Tải hồ sơ, giáo án lên':'Tải ảnh, video lên'}</button>`:'';
+ return head('Ảnh, video và tài liệu','Ảnh hoạt động, tài liệu tham khảo cho phụ huynh, góc tri ân, giáo án và hồ sơ',btn)
+  +tabsH([['gal','Ảnh và video'],['grp','Hoạt động chung'+(nw?' · '+nw+' chờ gắn bé':'')],['ref','Tài liệu tham khảo'],['tri','Góc tri ân'],['doc','Hồ sơ, giáo án']],t.tab,'tdtab')+(t.tab==='ref'||t.tab==='tri'?'':upNote())+body};
+ACT.tdtab=v=>{S.td.tab=v;S.td.sel=[];S.pg.mg=1;S.pg.rf=1;S.pg.tri=1};CHG.tdk=v=>{S.td.k=v;S.pg.mg=1};CHG.tdg=v=>{S.td.gr=v;S.pg.mg=1;S.td.sel=[]};CHG.tds=v=>{S.td.st=v;S.pg.mg=1;S.td.sel=[]};CHG.tdkind=v=>{S.td.kind=v;S.pg.mg=1};CHG.tdm=v=>{S.td.m=v;S.pg.mg=1};
 INP.tdq=v=>{S.td.q=v;S.pg.mg=1};
 CHG.msel=(v,t)=>{const a=S.td.sel=S.td.sel||[],i=a.indexOf(v);if(t.checked&&i<0)a.push(v);if(!t.checked&&i>=0)a.splice(i,1)};
 ACT.mselall=v=>{const a=S.td.sel=S.td.sel||[];v.split(',').filter(Boolean).forEach(id=>{if(!a.includes(id))a.push(id)})};
@@ -2683,7 +2875,7 @@ function mediaParent(k){const all=medList().filter(m=>medSee(m)&&medKs(m).includ
  const p=pg('pm'+k,av,12),mo={};p.rows.forEach(m=>{(mo[String(m.d).slice(0,7)]=mo[String(m.d).slice(0,7)]||[]).push(m)});
  return`<div class="card"><h2>Ảnh và video của bé</h2><p class="sm mu" style="margin-bottom:10px">Chỉ dành cho gia đình bé. Xin vui lòng không đăng hoặc gửi cho người khác để bảo vệ hình ảnh các bé.</p>`
  +(av.length?Object.keys(mo).sort().reverse().map(m=>`<h3 class="mmo">Tháng ${+m.slice(5,7)}/${m.slice(0,4)}</h3>${medGrid(mo[m],{big:1,list:'ph:'+k})}`).join('')+p.html:'<p class="empty big">Chưa có ảnh hoặc video nào của bé. Khi giáo viên chia sẻ, ảnh và video sẽ hiện ở đây.</p>')+`</div>`
- +`<div class="card"><h2>Tài liệu từ Trung tâm</h2>${medDocTable(ds,'Chưa có tài liệu nào cho bé.')}</div>`}
+ +`<div class="card"><h2>Tài liệu riêng của bé</h2>${medDocTable(ds,'Chưa có tài liệu riêng nào cho bé.')}</div>`}
 const vidList=k=>mediaKid(k,'av'),docList=k=>mediaKid(k,'doc');
 
 /* bàn phím: Enter hoặc Space trên ảnh, video để mở xem */
@@ -2789,7 +2981,7 @@ FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
   if(!k)return fail('“'+file.name+'” có định dạng chưa hỗ trợ. '+(/\.(heic|heif)$/i.test(file.name)?'Ảnh HEIC của iPhone: hãy chọn ảnh JPEG (Cài đặt máy ảnh → Định dạng → Tương thích nhất).':''))
   if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn 50 MB. Hãy cắt ngắn hoặc nén rồi tải lại.')
   if(doc&&k.kind==='vid')return fail('“'+file.name+'” là video; hãy dùng nút “Tải ảnh, video lên”.')
-  if(!doc&&k.kind==='doc')return fail('“'+file.name+'” là tài liệu; hãy dùng mục Tài liệu.')
+  if(!doc&&k.kind==='doc')return fail('“'+file.name+'” là tài liệu; hãy dùng mục Hồ sơ, giáo án.')
   jobs.push({file,k})}
  S.up.busy=true;BUSY++;S.up.msg='Đang tải 1/'+jobs.length+'...';
  (async()=>{let ok=0;
@@ -2826,6 +3018,287 @@ function seedMedia(D){
   mk('md3','Hát múa buổi sáng','#ffd1dc','#d9b8ff',{}),
   mk('md4','Xếp hình khối','#d4f1c5','#9fd4e6',{d:d1,ks:[]})];
  if(gk[0])D.media.push({id:'md5',kind:'doc',t:'Hướng dẫn luyện tập tại nhà',ct:'text/plain',sz:140,d:d1,by,bn,at:d1+'T10:00:00.000Z',ks:[gk[0].id],gr:'',sh:1,n:'Gợi ý trò chơi 10 phút mỗi ngày',cat:'Hướng dẫn phụ huynh',u:'data:text/plain;charset=utf-8,'+encodeURIComponent('Hướng dẫn luyện tập tại nhà (mẫu)\n1. Gọi tên đồ vật quen thuộc.\n2. Chơi xếp khối cùng bé 10 phút.\n'),demo:1})}
+/* ===== 12b. Tài liệu tham khảo và Góc tri ân =====
+   Hai nội dung CHUNG cho mọi phụ huynh, do Trưởng Trung tâm và Quản lý đăng (RLS: chỉ tt, ql ghi; vp, gv chỉ đọc; ph không đọc bảng trực tiếp).
+   - ref = Tài liệu tham khảo (hướng dẫn, video mẫu để dạy bé tại nhà): {id,kind:'img'|'vid'|'doc',t,p:'r/<mã>.<đuôi>',ct,sz,d,by,bn,at,sh,n,cat}.
+     Tài liệu chỉ nhận PDF (Word, Excel, PowerPoint cần lưu thành PDF trước) vì PDF xem được ngay trong trang mà không cần tải về.
+   - tri = Góc tri ân (ảnh bé tốt nghiệp, tiến bộ, lời cảm ơn): {id,cat:'tn'|'tb'|'cm',t,n,who,d,ph:[{p:'t/<mã>-<số>.jpg',ct,sz}],cs:1,cn,k,sh,by,bn,at}.
+     Bắt buộc ghi nhận gia đình đồng ý (cs) mới đăng; who là tên hiển thị đã rút gọn; k (bé liên quan) và cn (cách đồng ý) chỉ nhân viên thấy.
+   - Tệp ở kho riêng tư gb-media, tiền tố r/ và t/. Phụ huynh nhận bản đã lọc qua /api/parent (không lộ đường dẫn, mã bé, người đăng)
+     và đường xem tạm 15 phút qua hành động sign.
+   - Phụ huynh chỉ XEM trong trang: không có nút tải, video tắt nút tải, PDF vẽ lên canvas bằng pdf.js (vendor/pdfjs), cổng phụ huynh có lớp phủ tên và chặn chuột phải, sao chép, in.
+     Trình duyệt web KHÔNG chặn hẳn được chụp màn hình hay người rành kỹ thuật lấy địa chỉ tệp (xem p24-guard.js): đây là hạn chế và răn đe, không phải khóa tuyệt đối. */
+const RCAT=['Hướng dẫn tại nhà','Video mẫu','Trò chơi, bài tập','Sinh hoạt, dinh dưỡng','Khác'];
+const TCAT={tn:'Bé tốt nghiệp',tb:'Bé tiến bộ',cm:'Lời cảm ơn'},TCOL={tn:'ok',tb:'wa',cm:'gy'},TMAXPH=4;
+const RF={u:{},q:new Set(),gone:new Set(),fail:{},retry:{},mem:{},t:0,up:null,pdf:null,lib:null};
+const canRef=()=>isLead();
+function refList(){if(!Array.isArray(DB.ref)){if(CLOUDMODE)DB.ref=[];else seedRef(DB)}return DB.ref}
+function triList(){if(!Array.isArray(DB.tri)){if(CLOUDMODE)DB.tri=[];else seedRef(DB)}return DB.tri}
+/* ai xem được: phụ huynh chỉ mục đã đăng (tri ân: cần cả sự đồng ý); nhân viên xem hết, trừ mục đã bị máy chủ báo gỡ */
+const refSee=x=>!!U&&!!x&&!x.gone&&!RF.gone.has('r:'+x.id)&&(isPH()?!!x.sh:true);
+const triSee=x=>!!U&&!!x&&!x.gone&&(isPH()?!!x.sh&&!!x.cs:true);
+const rfSort=(a,b)=>a.d<b.d?1:a.d>b.d?-1:(a.at||'')<(b.at||'')?1:-1;
+const triWho=k=>'Phụ huynh bé '+String(given(k.n)||'').trim().split(' ').pop().charAt(0).toUpperCase()+'.';
+
+/* ---- đường xem tạm: khóa 'r:<mã>' (tài liệu) và 't:<mã>:<số ảnh>' (ảnh tri ân) ---- */
+function rfRec(key){const a=String(key||'').split(':');
+ if(a[0]==='r'){const x=refList().find(y=>y.id===a[1]);return x?{rec:x,p:x.p,u:x.u}:null}
+ if(a[0]==='t'){const x=triList().find(y=>y.id===a[1]),f=x&&(x.ph||[])[+a[2]];return f?{rec:x,f,p:f.p,u:f.u}:null}
+ return null}
+function rfUrl(key,quiet){const r=rfRec(key);if(!r)return'';
+ if(!CLOUDMODE||r.rec.demo)return RF.mem[key]||r.u||'';
+ const c=RF.u[key];if(c&&c.exp>Date.now())return c.u;
+ if(!quiet)rfWant(key);return''}
+function rfWant(key){if(RF.q.has(key)||(RF.fail[key]||0)>Date.now()||!CLD.ss)return;RF.q.add(key);if(!RF.t)RF.t=setTimeout(rfFlush,40)}
+async function rfFlush(){RF.t=0;const keys=[...RF.q];RF.q.clear();if(!keys.length)return;
+ let goneNew=false;
+ try{
+  if(isPH()){for(let i=0;i<keys.length;i+=30){const part=keys.slice(i,i+30),
+    j=await phApi({action:'sign',refs:part.filter(k=>k[0]==='r').map(k=>k.slice(2)),tris:part.filter(k=>k[0]==='t').map(k=>k.slice(2))}),ttl=(j.ttl||900)-60;
+    Object.keys(j.urls||{}).forEach(k=>{RF.u[k]={u:j.urls[k],exp:Date.now()+ttl*1000}});
+    (j.gone||[]).forEach(k=>{if(!RF.gone.has(k)){RF.gone.add(k);goneNew=true}})}}
+  else{const it=keys.map(k=>({k,r:rfRec(k)})).filter(x=>x.r&&x.r.p);
+   for(let i=0;i<it.length;i+=50){const part=it.slice(i,i+50),r=await sbReq('/storage/v1/object/sign/'+MEDIA_BUCKET,{method:'POST',body:{expiresIn:3600,paths:part.map(x=>x.r.p)}});
+    if(!r.ok)throw new Error('sign');
+    const out=await r.json(),by=new Map((Array.isArray(out)?out:[]).map(x=>[x.path,x]));
+    part.forEach(x=>{const y=by.get(x.r.p);if(y&&y.signedURL&&!y.error)RF.u[x.k]={u:SB.url+'/storage/v1'+y.signedURL,exp:Date.now()+3540000};else RF.fail[x.k]=Date.now()+300000})}}
+ }catch(e){keys.forEach(k=>{RF.fail[k]=Date.now()+30000})}
+ if(goneNew)softRender();else rfPatch()}
+function rfPatch(){document.querySelectorAll('[data-rk]').forEach(el=>{const u=rfUrl(el.dataset.rk,1);if(!u)return;
+  const w=el.tagName==='VIDEO'&&!el.controls?u+'#t=0.1':u;if(el.getAttribute('src')!==w)el.setAttribute('src',w)});
+ pdfSync()}
+document.addEventListener('error',e=>{const el=e.target,k=el&&el.dataset&&el.dataset.rk;if(!k||!CLOUDMODE||/^data:/.test(el.getAttribute('src')||''))return;
+ RF.retry[k]=(RF.retry[k]||0)+1;if(RF.retry[k]>2){RF.fail[k]=Date.now()+60000;return}delete RF.u[k];RF.fail[k]=0;rfWant(k)},true);
+
+/* ---- thẻ ---- */
+function rfThumb(key,kind,label){const u=rfUrl(key);
+ if(kind==='img')return`<img data-rk="${esc(key)}" class="mi" alt="${esc(label)}" draggable="false" loading="lazy" src="${esc(u||PIX)}">`;
+ if(kind==='vid')return`<video data-rk="${esc(key)}" class="mi" muted playsinline preload="metadata" disablepictureinpicture ${u?`src="${esc(u+'#t=0.1')}"`:''}></video><span class="mplay" aria-hidden="true">▶</span>`;
+ return`<span class="mdoc" aria-hidden="true">PDF</span>`}
+const rfKindLb=x=>x.kind==='vid'?'Video':x.kind==='img'?'Hình ảnh':'Tài liệu PDF';
+function rfCard(x){const key='r:'+x.id,ph=isPH(),lead=canRef();
+ return`<div class="mc"><div class="mth" data-a="rfview" data-v="${esc(key)}" role="button" tabindex="0" aria-label="Xem ${esc(x.t||'tài liệu')}">${rfThumb(key,x.kind,x.t)}</div>
+ <div class="mb"><b class="mt">${esc(x.t||'(không tên)')}</b><div class="sm mu">${rfKindLb(x)} · ${vd(x.d)}${ph?'':' · '+mb(x.sz||0)}${!ph&&x.bn?' · '+esc(x.bn):''}</div>
+ ${x.n?`<p class="sm pre rf-n">${esc(x.n)}</p>`:''}
+ ${ph?'':`<div class="mtags">${tg(x.cat||'Khác','gy')}${x.sh?tg('Phụ huynh đang xem được','ok'):tg('Đang ẩn','wa')}</div>`}
+ <div class="acts mact"><button class="btn s ${ph?'p':''}" data-a="rfview" data-v="${esc(key)}">Xem</button>${lead?`<button class="btn s" data-a="rfsh" data-v="${esc(x.id)}">${x.sh?'Ẩn':'Đăng cho phụ huynh'}</button><button class="btn s" data-a="rfed" data-v="${esc(x.id)}">Sửa</button><button class="btn s no" data-a="rfdel" data-v="${esc(x.id)}">Xóa</button>`:''}</div></div></div>`}
+const rfNote=()=>`<p class="note sm" style="margin-bottom:12px">Tài liệu tham khảo là nội dung chung: <b>mọi phụ huynh</b> đều xem được khi mục được đăng. Phụ huynh chỉ xem trong ứng dụng, không có nút tải về; PDF hiển thị từng trang, video tắt nút tải. Trình duyệt không chặn hẳn được chụp màn hình, nên mỗi màn hình phụ huynh đều có lớp phủ tên và số liên hệ. ${canRef()?'Chỉ Trưởng Trung tâm và Quản lý đăng, sửa, xóa. Word, Excel, PowerPoint hãy lưu thành PDF trước khi tải lên.':'Chỉ Trưởng Trung tâm và Quản lý được đăng, sửa, xóa.'}${CLOUDMODE?'':' Bản dùng thử: tệp tải lên chỉ giữ trong phiên này.'}</p>`;
+function refStaffBody(){const L=refList().filter(refSee).sort(rfSort),p=pg('rf',L,12);
+ return`<div class="card">${rfNote()}${L.length?`<div class="mg big">${p.rows.map(rfCard).join('')}</div>${p.html}`:`<p class="empty">Chưa có tài liệu tham khảo nào.${canRef()?' Bấm “Thêm tài liệu tham khảo” để tải lên hướng dẫn hoặc video mẫu.':''}</p>`}</div>`}
+/* cổng phụ huynh */
+function refParent(){const L=refList().filter(refSee).sort(rfSort);
+ const sec=RCAT.concat([...new Set(L.map(x=>x.cat).filter(c=>c&&!RCAT.includes(c)))]).map(c=>{const a=L.filter(x=>(RCAT.includes(x.cat)?x.cat:'Khác')===c||x.cat===c);return a.length?`<h3 class="mmo">${esc(c)}</h3><div class="mg big">${a.map(rfCard).join('')}</div>`:''}).join('');
+ return`<div class="card"><h2>Tài liệu tham khảo</h2><p class="sm mu" style="margin-bottom:10px">Hướng dẫn và video mẫu do Trung tâm chuẩn bị để cha mẹ hỗ trợ bé luyện tập tại nhà. Nội dung chỉ để xem trong ứng dụng; xin vui lòng không chụp màn hình hay chia sẻ ra ngoài.</p>${sec||'<p class="empty big">Chưa có tài liệu tham khảo nào. Khi Trung tâm đăng hướng dẫn, tài liệu sẽ hiện ở đây.</p>'}</div>`}
+
+/* ---- xem tài liệu, hình, video ---- */
+ACT.rfview=v=>{const r=rfRec(v);if(!r||(v[0]==='r'?!refSee(r.rec):!triSee(r.rec)))return false;
+ const keys=v[0]==='t'?(r.rec.ph||[]).map((f,i)=>'t:'+r.rec.id+':'+i).filter(k=>!RF.gone.has(k)):[v];
+ S.modal={t:'rfv',keys,i:Math.max(0,keys.indexOf(v))}};
+ACT.rfnav=v=>{const m=S.modal,n=m.keys.length;m.i=(m.i+(+v)+n)%n};
+MODALS.rfv=()=>{const m=S.modal,k=m.keys[m.i],r=rfRec(k);
+ if(!r||(k[0]==='r'?!refSee(r.rec):!triSee(r.rec))){S.modal=null;return''}
+ const x=r.rec,isRef=k[0]==='r',kind=isRef?x.kind:'img',u=rfUrl(k),title=isRef?(x.t||'Tài liệu'):(x.t||TCAT[x.cat]||'Ảnh'),P=RF.pdf&&RF.pdf.key===k?RF.pdf:null;
+ let media;
+ if(kind==='vid')media=`<div class="mv"><video data-rk="${esc(k)}" class="mbig" controls playsinline preload="metadata" controlsList="nodownload noremoteplayback" disablepictureinpicture ${u?`src="${esc(u)}"`:''}></video></div>`;
+ else if(kind==='doc')media=`<div class="pdfv"><p class="sm mu" id="pdfst" role="status">${P&&P.err?esc(P.err):'Đang mở tài liệu...'}</p><canvas id="pdfc" aria-label="Trang tài liệu"></canvas></div>
+  <div class="acts" style="justify-content:center;margin-top:10px" ${P&&P.total>1?'':'hidden'}><button class="btn" data-a="pdfn" data-v="-1" ${P&&P.page>1?'':'disabled'}>‹ Trang trước</button><span class="sm mu" id="pdfpg">Trang ${P?P.page:1}/${P&&P.total||1}</span><button class="btn" data-a="pdfn" data-v="1" ${P&&P.page<P.total?'':'disabled'}>Trang sau ›</button></div>`;
+ else media=`<div class="mv"><img data-rk="${esc(k)}" class="mbig" alt="${esc(title)}" draggable="false" src="${esc(u||PIX)}"></div>`;
+ return mdl(title,`${media}<div class="mvi"><span class="sm mu">${isRef?vd(x.d):(x.who?esc(x.who)+' · ':'')+vd(x.d)}</span>${isRef&&x.n?`<p class="pre">${esc(x.n)}</p>`:''}</div>
+  ${m.keys.length>1?`<div class="acts" style="justify-content:center;margin-top:12px"><button class="btn" data-a="rfnav" data-v="-1">‹ Trước</button> <span class="sm mu">${m.i+1}/${m.keys.length}</span> <button class="btn" data-a="rfnav" data-v="1">Sau ›</button></div>`:''}`,1)};
+
+/* PDF: pdf.js tự lưu trong vendor/pdfjs (cùng máy chủ, không dùng CDN); vẽ từng trang lên canvas, không dùng trình xem PDF của trình duyệt nên không có nút tải, in */
+async function pdfLib(){if(RF.lib)return RF.lib;
+ const base=typeof window.GB_PDFJS==='string'?window.GB_PDFJS:'vendor/pdfjs/',lib=await import(new URL(base+'pdf.min.mjs',document.baseURI).href);
+ lib.GlobalWorkerOptions.workerSrc=new URL(base+'pdf.worker.min.mjs',document.baseURI).href;return RF.lib=lib}
+function pdfDrop(){const P=RF.pdf;RF.pdf=null;if(P){P.tok++;try{if(P.doc)P.doc.destroy()}catch(e){}}}
+function pdfSync(){const m=S.modal;
+ if(!m||m.t!=='rfv'){if(RF.pdf)pdfDrop();return}
+ const k=m.keys[m.i],r=rfRec(k);
+ if(!r||k[0]!=='r'||r.rec.kind!=='doc'){if(RF.pdf)pdfDrop();return}
+ if(!RF.pdf||RF.pdf.key!==k){pdfDrop();RF.pdf={key:k,doc:null,page:1,total:0,cv:null,shown:0,tok:0,loading:false,err:''}}
+ const Q=RF.pdf;if(Q.err)return;
+ if(!Q.doc){if(!Q.loading)pdfLoad(Q);return}
+ if(Q.cv&&Q.shown===Q.page){pdfBlit();return}
+ pdfDraw(Q)}
+async function pdfLoad(Q){const u=rfUrl(Q.key);if(!u)return;   /* chưa có đường xem tạm: rfPatch sẽ gọi lại khi có */
+ Q.loading=true;
+ try{const lib=await pdfLib(),res=await fetch(u);if(!res.ok)throw new Error('http '+res.status);
+  const doc=await lib.getDocument({data:new Uint8Array(await res.arrayBuffer()),isEvalSupported:false}).promise;
+  if(RF.pdf!==Q){try{doc.destroy()}catch(e){}return}
+  Q.doc=doc;Q.total=doc.numPages;Q.loading=false;render()}
+ catch(e){if(RF.pdf!==Q)return;Q.loading=false;Q.why=String(e&&e.message||e).slice(0,200);Q.err='Chưa mở được tài liệu này. Hãy đóng rồi mở lại, hoặc báo Trung tâm nếu vẫn lỗi.';render()}}
+async function pdfDraw(Q){const tok=++Q.tok,cv=$q('#pdfc');if(!cv)return;
+ try{const page=await Q.doc.getPage(Q.page);if(tok!==Q.tok||RF.pdf!==Q)return;
+  const w=Math.max(280,Math.min(cv.parentElement.clientWidth||800,1000)),v0=page.getViewport({scale:1}),dpr=Math.min(window.devicePixelRatio||1,2),vp=page.getViewport({scale:w/v0.width*dpr}),
+   off=document.createElement('canvas');off.width=Math.floor(vp.width);off.height=Math.floor(vp.height);
+  await page.render({canvasContext:off.getContext('2d'),viewport:vp}).promise;
+  if(tok!==Q.tok||RF.pdf!==Q)return;Q.cv=off;Q.shown=Q.page;pdfBlit()}
+ catch(e){if(RF.pdf===Q&&!Q.err){Q.err='Chưa hiển thị được trang này.';render()}}}
+function pdfBlit(){const Q=RF.pdf,cv=$q('#pdfc');if(!Q||!Q.cv||!cv)return;
+ cv.width=Q.cv.width;cv.height=Q.cv.height;cv.getContext('2d').drawImage(Q.cv,0,0);
+ const st=$q('#pdfst');if(st)st.textContent='';const pgl=$q('#pdfpg');if(pgl)pgl.textContent='Trang '+Q.page+'/'+Q.total;
+ const nav=pgl&&pgl.parentElement;if(nav)nav.hidden=Q.total<2}
+ACT.pdfn=v=>{const Q=RF.pdf;if(!Q||!Q.doc)return false;const p=Math.max(1,Math.min(Q.total,Q.page+(+v)));if(p===Q.page)return false;Q.page=p;Q.cv=null};
+{const _renderRF=render;render=function(){_renderRF.apply(this,arguments);pdfSync()}}
+document.addEventListener('keydown',e=>{if(!S.modal||S.modal.t!=='rfv'||!RF.pdf||!RF.pdf.doc)return;
+ if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();ACT.pdfn('1')!==false&&render()}
+ if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();ACT.pdfn('-1')!==false&&render()}});
+
+/* ---- Tài liệu tham khảo: đăng, ẩn, sửa, xóa (tt, ql) ---- */
+ACT.rfm=()=>{if(!canRef())return false;RF.up={busy:false,err:'',msg:''};S.modal={t:'rfm'}};
+const rfBtn=l=>`<button class="btn p" type="submit" ${RF.up&&RF.up.busy?'disabled':''}>${RF.up&&RF.up.busy?esc(RF.up.msg||'Đang tải lên...'):l}</button>`;
+MODALS.rfm=()=>mdl('Thêm tài liệu tham khảo',`<form id="rfmf" class="f"><div><label for="rf-f">Tệp (PDF, ảnh, video MP4, WebM, MOV; tối đa 50 MB mỗi tệp)</label><input id="rf-f" name="f" type="file" multiple accept=".pdf,application/pdf,image/*,video/*,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov" required></div>
+ <div class="f2"><div><label for="rf-c">Nhóm</label><select id="rf-c" name="cat">${opts(RCAT.map(x=>[x,x]),'Hướng dẫn tại nhà')}</select></div><div><label for="rf-t">Tên hiển thị (không bắt buộc)</label><input id="rf-t" name="t" maxlength="120" placeholder="Nếu để trống sẽ dùng tên tệp"></div></div>
+ <div><label for="rf-n">Hướng dẫn ngắn cho phụ huynh (không bắt buộc)</label><textarea id="rf-n" name="n" rows="3" maxlength="1500" placeholder="Ví dụ: Chơi 10 phút mỗi ngày, ngồi đối diện bé, chờ bé nhìn rồi mới đưa đồ chơi."></textarea></div>
+ <label class="chk"><input type="checkbox" name="sh" checked> Đăng cho tất cả phụ huynh xem ngay</label>
+ <p class="sm mu" style="margin:0">Nội dung này hiện cho <b>mọi phụ huynh</b>. Không đưa họ tên, hình ảnh, thông tin riêng của bé nào vào tài liệu chung.</p>
+ <div class="err" role="alert">${esc(RF.up&&RF.up.err||'')}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button>${rfBtn('Tải lên')}</div></form>`);
+FORM.rfmf=f=>{if(!canRef()||(RF.up&&RF.up.busy))return false;
+ const e=f.elements,files=[...e.f.files],form={cat:e.cat.value,t:e.t.value.trim(),n:e.n.value.trim(),sh:e.sh.checked?1:0};
+ RF.up=Object.assign(RF.up||{},{err:''});
+ const fail=m=>{RF.up.err=m;const er=f.querySelector('.err');if(er)er.textContent=m;return false};
+ if(!files.length)return fail('Hãy chọn ít nhất một tệp.');
+ if(CLOUDMODE&&!(CLD.ss&&CLD.ss.at))return fail('Phiên đăng nhập đã hết, hãy tải lại trang.');
+ const jobs=[];
+ for(const file of files){const k=medKindOf(file);
+  if(!k)return fail('“'+file.name+'” có định dạng chưa hỗ trợ.');
+  if(k.kind==='doc'&&k.ct!=='application/pdf')return fail('“'+file.name+'” không phải PDF. Hãy lưu Word, Excel, PowerPoint thành PDF rồi tải lại (PDF xem được ngay trong ứng dụng, không cần tải về).');
+  if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn 50 MB. Hãy cắt ngắn hoặc nén rồi tải lại.');
+  jobs.push({file,k})}
+ RF.up.busy=true;BUSY++;RF.up.msg='Đang tải 1/'+jobs.length+'...';
+ (async()=>{let ok=0;
+  try{for(let i=0;i<jobs.length;i++){const {file,k}=jobs[i];RF.up.msg='Đang tải '+(i+1)+'/'+jobs.length+'...';render();
+    const id=uid(),rec={id,kind:k.kind,t:(jobs.length===1&&form.t)||file.name.replace(/\.[^.]+$/,'').slice(0,120),ct:k.ct,sz:file.size,d:TODAY,by:U.id,bn:U.name,at:new Date().toISOString(),sh:form.sh,n:form.n,cat:form.cat};
+    if(CLOUDMODE){let blob=file,ct=k.ct,ext=k.ext;
+     if(k.kind==='img'&&k.ct!=='image/gif'){const sm=await medScale(file,1800,.85);if(sm&&sm.size<file.size){blob=sm;ct='image/jpeg';ext='jpg'}}
+     const path='r/'+id+'.'+ext;await medStore(path,blob,ct);rec.p=path;rec.ct=ct;rec.sz=blob.size}
+    else{RF.mem['r:'+id]=URL.createObjectURL(file);
+     if(k.kind==='img'&&k.ct!=='image/gif'){const th=await medScale(file,900,.7,1);if(th&&th.size<600000){rec.u=await blobUrl(th);delete RF.mem['r:'+id]}}}
+    refList().push(rec);ok++}
+   S.modal=null;toast('Đã tải lên '+ok+' tệp'+(form.sh?' và đăng cho phụ huynh':''))}
+  catch(x){RF.up.err=(ok?'Đã tải lên '+ok+' tệp đầu. ':'')+'Tệp “'+jobs[ok].file.name+'” chưa tải được: '+(x&&x.message||'lỗi không rõ')+(ok?' Hãy chọn lại các tệp còn lại.':'')}
+  finally{RF.up.busy=false;BUSY--;render()}})();
+ return false};
+ACT.rfsh=v=>{const x=refList().find(y=>y.id===v);if(!x||!canRef())return false;
+ if(x.sh){x.sh=0;toast('Phụ huynh không còn xem được tài liệu này');return}
+ ask('Đăng “'+(x.t||'tài liệu')+'” cho TẤT CẢ phụ huynh xem?',()=>{x.sh=1;toast('Đã đăng cho phụ huynh');render()},'Đăng')};
+ACT.rfed=v=>{if(!canRef()||!refList().some(y=>y.id===v))return false;S.modal={t:'rfe',id:v}};
+MODALS.rfe=()=>{const x=refList().find(y=>y.id===S.modal.id);if(!x){S.modal=null;return''}
+ return mdl('Sửa tài liệu tham khảo',`<form id="rfef" class="f"><div class="f2"><div><label for="re-c">Nhóm</label><select id="re-c" name="cat">${opts(RCAT.concat(RCAT.includes(x.cat)?[]:[x.cat].filter(Boolean)).map(c=>[c,c]),x.cat||'Khác')}</select></div><div><label for="re-t">Tên hiển thị</label><input id="re-t" name="t" maxlength="120" value="${esc(x.t)}" required></div></div>
+ <div><label for="re-n">Hướng dẫn ngắn cho phụ huynh</label><textarea id="re-n" name="n" rows="4" maxlength="1500">${esc(x.n)}</textarea></div>
+ <label class="chk"><input type="checkbox" name="sh" ${x.sh?'checked':''}> Đang đăng cho tất cả phụ huynh</label>
+ <div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu</button></div></form>`)};
+FORM.rfef=f=>{const x=refList().find(y=>y.id===S.modal.id);if(!x||!canRef())return false;const e=f.elements;
+ x.cat=e.cat.value;x.t=e.t.value.trim()||x.t;x.n=e.n.value.trim();x.sh=e.sh.checked?1:0;S.modal=null;toast('Đã lưu')};
+ACT.rfdel=v=>{const x=refList().find(y=>y.id===v);if(!x||!canRef())return false;
+ ask('Xóa “'+(x.t||'tài liệu')+'”? Tệp bị xóa khỏi kho và phụ huynh không xem được nữa.',async()=>{
+  try{if(CLOUDMODE&&x.p)await medRemove(x.p);
+   if(RF.mem['r:'+x.id]){try{URL.revokeObjectURL(RF.mem['r:'+x.id])}catch(e){}delete RF.mem['r:'+x.id]}
+   DB.ref=refList().filter(y=>y.id!==x.id);delete RF.u['r:'+x.id];toast('Đã xóa')}
+  catch(e){toast('Chưa xóa được tệp, hãy thử lại')}render()},'Xóa')};
+
+/* ---- Góc tri ân ---- */
+function triCard(x){const keys=(x.ph||[]).map((f,i)=>'t:'+x.id+':'+i).filter(k=>!RF.gone.has(k)),ph=isPH(),lead=canRef(),kid=!ph&&x.k?kidBy(x.k):null;
+ const pics=keys.length?`<div class="tph n${Math.min(keys.length,4)}">${keys.map(k=>`<div class="mth" data-a="rfview" data-v="${esc(k)}" role="button" tabindex="0" aria-label="Xem ảnh lớn">${rfThumb(k,'img',x.t||TCAT[x.cat])}</div>`).join('')}</div>`:'';
+ return`<article class="tri"><div class="tr-h">${tg(TCAT[x.cat]||'Lời cảm ơn',TCOL[x.cat]||'gy')}${ph?'':(x.sh?tg('Phụ huynh đang xem được','ok'):tg('Đang ẩn','wa'))}</div>${pics}
+ <div class="tr-b">${x.t?`<h3>${esc(x.t)}</h3>`:''}${x.n?`<p class="pre tr-n">${esc(x.n)}</p>`:''}<p class="sm mu tr-f">${x.who?'— '+esc(x.who)+' · ':''}${vd(x.d)}</p>
+ ${ph?'':`<p class="sm mu">Gia đình đồng ý: ${esc(x.cn||'(đã tích xác nhận)')}${kid?' · Bé liên quan (chỉ nhân viên thấy): '+esc(kid.n):''}</p>`}
+ ${lead?`<div class="acts mact"><button class="btn s" data-a="trsh" data-v="${esc(x.id)}">${x.sh?'Ẩn':'Đăng cho phụ huynh'}</button><button class="btn s" data-a="trm" data-v="${esc(x.id)}">Sửa</button><button class="btn s no" data-a="trdel" data-v="${esc(x.id)}">Xóa</button></div>`:''}</div></article>`}
+const triNote=()=>`<p class="note sm" style="margin-bottom:12px">Góc tri ân giúp phụ huynh mới thấy những bé đã tiến bộ, tốt nghiệp và lời cảm ơn của các gia đình. Đây là nội dung <b>chung cho mọi phụ huynh</b>, nên <b>chỉ đăng khi gia đình đã đồng ý</b> (tin nhắn Zalo, giấy đồng ý…) và ghi rõ cách đồng ý. Tên hiển thị nên rút gọn (ví dụ: “Phụ huynh bé M.”). Chỉ đăng ảnh, không đăng video; mỗi mục tối đa ${TMAXPH} ảnh. Gia đình rút lại đồng ý thì bấm Ẩn hoặc Xóa ngay. ${canRef()?'Chỉ Trưởng Trung tâm và Quản lý đăng, sửa, xóa.':'Chỉ Trưởng Trung tâm và Quản lý được đăng, sửa, xóa.'}${CLOUDMODE?'':' Bản dùng thử: ảnh tải lên chỉ giữ trong phiên này.'}</p>`;
+function triStaffBody(){const L=triList().filter(triSee).sort(rfSort),p=pg('tri',L,9);
+ return`<div class="card">${triNote()}${L.length?`<div class="trg">${p.rows.map(triCard).join('')}</div>${p.html}`:`<p class="empty">Chưa có mục tri ân nào.${canRef()?' Bấm “Thêm mục tri ân” để đăng ảnh bé tiến bộ, tốt nghiệp hoặc lời cảm ơn.':''}</p>`}</div>`}
+function triParent(){const L=triList().filter(triSee).sort(rfSort),p=pg('trp',L,9);
+ return`<div class="card"><h2>Góc tri ân</h2><p class="sm mu" style="margin-bottom:10px">Hình ảnh và lời nhắn của các gia đình có bé đã tiến bộ, tốt nghiệp tại ${esc(DB.cfg.name||'Trung tâm')}. Những nội dung này chỉ được đăng khi gia đình đồng ý. Xin vui lòng không chụp màn hình hay chia sẻ ra ngoài.</p>
+ ${L.length?`<div class="trg big">${p.rows.map(triCard).join('')}</div>${p.html}`:'<p class="empty big">Chưa có nội dung nào. Khi có bé tiến bộ hoặc tốt nghiệp, Trung tâm sẽ chia sẻ ở đây.</p>'}</div>`}
+
+ACT.trm=v=>{if(!canRef())return false;RF.up={busy:false,err:'',msg:''};S.modal={t:'trm',id:v||''}};
+CHG.trk=(v,t)=>{const f=t.closest('form'),k=v&&kidBy(v);if(k&&f&&f.elements.who&&!f.elements.who.value.trim())f.elements.who.value=triWho(k);return false};
+MODALS.trm=()=>{const m=S.modal,x=m.id?triList().find(y=>y.id===m.id):null;if(m.id&&!x){S.modal=null;return''}
+ const F=Object.assign({cat:'tn',t:'',n:'',who:'',d:TODAY,k:'',cn:'',sh:1},x||{}),old=x?(x.ph||[]):[];
+ return mdl(x?'Sửa mục tri ân':'Thêm mục tri ân',`<form id="trmf" class="f">
+ <div class="f2"><div><label for="tr-c">Loại</label><select id="tr-c" name="cat">${opts(Object.entries(TCAT),F.cat)}</select></div><div><label for="tr-d">Ngày</label><input id="tr-d" name="d" type="date" value="${esc(F.d)}" max="${TODAY}" required></div></div>
+ <div><label for="tr-t">Tiêu đề (không bắt buộc)</label><input id="tr-t" name="t" maxlength="120" value="${esc(F.t)}" placeholder="Ví dụ: Bé M. đã sẵn sàng vào lớp 1"></div>
+ <div><label for="tr-n">Lời nhắn, lời cảm ơn</label><textarea id="tr-n" name="n" rows="5" maxlength="1500">${esc(F.n)}</textarea></div>
+ <div class="f2"><div><label for="tr-k">Bé liên quan (chỉ nhân viên thấy, không hiện cho phụ huynh)</label><select id="tr-k" name="k" data-c="trk"><option value="">Không chọn</option>${opts(DB.kids.slice().sort((a,b)=>a.n<b.n?-1:1).map(k=>[k.id,k.n]),F.k)}</select></div>
+  <div><label for="tr-w">Tên hiển thị cho phụ huynh khác</label><input id="tr-w" name="who" maxlength="60" value="${esc(F.who)}" placeholder="Ví dụ: Phụ huynh bé M." required></div></div>
+ <div><label for="tr-f">Ảnh (JPG, PNG, WebP; tối đa ${TMAXPH} ảnh mỗi mục; không đăng video)</label><input id="tr-f" name="f" type="file" multiple accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"></div>
+ ${old.length?`<div><label>Ảnh hiện có (tích để gỡ)</label><div class="mkl" role="group">${old.map((f,i)=>`<label class="chk"><input type="checkbox" name="rm" value="${i}"> <span class="mtx">${rfThumb('t:'+x.id+':'+i,'img','Ảnh '+(i+1))}</span> Ảnh ${i+1}</label>`).join('')}</div></div>`:''}
+ <fieldset class="trc"><legend>Gia đình đã đồng ý</legend>
+  <label class="chk"><input type="checkbox" name="cs" ${x&&x.cs?'checked':''}> Gia đình đã đồng ý cho đăng hình ảnh và lời nhắn này cho các phụ huynh khác trong ứng dụng xem</label>
+  <div><label for="tr-o">Gia đình đồng ý bằng cách nào? (ví dụ: tin nhắn Zalo 05/11/2026)</label><input id="tr-o" name="cn" maxlength="120" value="${esc(F.cn)}"></div></fieldset>
+ <label class="chk"><input type="checkbox" name="sh" ${F.sh?'checked':''}> Đăng cho tất cả phụ huynh xem ngay</label>
+ <div class="err" role="alert">${esc(RF.up&&RF.up.err||'')}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button>${rfBtn('Lưu')}</div></form>`,1)};
+FORM.trmf=f=>{if(!canRef()||(RF.up&&RF.up.busy))return false;
+ const x=S.modal.id?triList().find(y=>y.id===S.modal.id):null,e=f.elements,files=[...(e.f.files||[])],rm=[...f.querySelectorAll('input[name=rm]:checked')].map(c=>+c.value),
+  form={cat:e.cat.value,d:e.d.value,t:e.t.value.trim(),n:e.n.value.trim(),k:e.k.value,who:e.who.value.trim(),cn:e.cn.value.trim(),cs:e.cs.checked?1:0,sh:e.sh.checked?1:0};
+ RF.up=Object.assign(RF.up||{},{err:''});
+ const fail=m=>{RF.up.err=m;const er=f.querySelector('.err');if(er)er.textContent=m;return false};
+ if(CLOUDMODE&&!(CLD.ss&&CLD.ss.at))return fail('Phiên đăng nhập đã hết, hãy tải lại trang.');
+ if(!TCAT[form.cat])return fail('Hãy chọn loại.');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(form.d)||form.d>TODAY)return fail('Ngày không hợp lệ.');
+ if(!form.who)return fail('Hãy nhập tên hiển thị, nên rút gọn (ví dụ: Phụ huynh bé M.).');
+ if(!form.cs)return fail('Chỉ đăng khi gia đình đã đồng ý. Hãy tích ô xác nhận sau khi đã có sự đồng ý của gia đình.');
+ const keep=(x?x.ph||[]:[]).filter((_,i)=>!rm.includes(i));
+ if(!form.t&&!form.n&&!keep.length&&!files.length)return fail('Hãy nhập lời nhắn hoặc chọn ít nhất một ảnh.');
+ if(keep.length+files.length>TMAXPH)return fail('Mỗi mục tối đa '+TMAXPH+' ảnh.');
+ const jobs=[];
+ for(const file of files){const k=medKindOf(file);
+  if(!k||k.kind!=='img'||k.ct==='image/gif')return fail('“'+file.name+'” không phải ảnh JPG, PNG hoặc WebP.'+(/\.(heic|heif)$/i.test(file.name)?' Ảnh HEIC của iPhone: hãy chọn ảnh JPEG.':''));
+  if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn 50 MB.');
+  jobs.push({file,k})}
+ const oldPaths=x?(x.ph||[]).map(f=>f.p):[],dead=rm.map(i=>oldPaths[i]).filter(Boolean);
+ RF.up.busy=true;BUSY++;RF.up.msg=jobs.length?'Đang tải ảnh 1/'+jobs.length+'...':'Đang lưu...';
+ (async()=>{const id=x?x.id:uid(),made=[];let done=false;
+  try{for(let i=0;i<jobs.length;i++){const {file,k}=jobs[i];RF.up.msg='Đang tải ảnh '+(i+1)+'/'+jobs.length+'...';render();
+    const f={ct:'image/jpeg',sz:file.size};
+    if(CLOUDMODE){const sm=await medScale(file,1600,.82,1)||file,ct=sm===file?k.ct:'image/jpeg',ext=sm===file?k.ext:'jpg',path='t/'+id+'-'+uid()+'.'+ext;
+     await medStore(path,sm,ct);f.p=path;f.ct=ct;f.sz=sm.size}
+    else{const th=await medScale(file,900,.7,1);if(!th)throw new Error('Không đọc được ảnh.');f.u=await blobUrl(th);f.sz=th.size}
+    made.push(f)}
+   const rec=Object.assign(x||{id,at:new Date().toISOString(),by:U.id,bn:U.name},form,{ph:keep.concat(made)});
+   if(!x)triList().push(rec);
+   done=true;Object.keys(RF.u).filter(k=>k.startsWith('t:'+id+':')).forEach(k=>delete RF.u[k]);
+   S.modal=null;toast(x?'Đã lưu':'Đã thêm mục tri ân'+(form.sh?' và đăng cho phụ huynh':''))}
+  catch(er){RF.up.err='Chưa lưu được: '+(er&&er.message||'lỗi không rõ')+(made.length?' Ảnh đã tải lên một phần; hãy chọn lại ảnh và lưu lại.':'')}
+  finally{RF.up.busy=false;BUSY--;render()}
+  /* ảnh bị gỡ: xóa khỏi kho sau khi mục đã được ghi nhận */
+  if(done&&CLOUDMODE)for(const pth of dead){try{await medRemove(pth)}catch(e){}}})();
+ return false};
+ACT.trsh=v=>{const x=triList().find(y=>y.id===v);if(!x||!canRef())return false;
+ if(x.sh){x.sh=0;toast('Phụ huynh không còn xem được mục này');return}
+ if(!x.cs){toast('Cần xác nhận gia đình đã đồng ý trước khi đăng');S.modal={t:'trm',id:x.id};RF.up={busy:false,err:'',msg:''};return}
+ ask('Đăng mục này cho TẤT CẢ phụ huynh xem? Gia đình đã đồng ý: '+(x.cn||'có')+'.',()=>{x.sh=1;toast('Đã đăng cho phụ huynh');render()},'Đăng')};
+ACT.trdel=v=>{const x=triList().find(y=>y.id===v);if(!x||!canRef())return false;
+ ask('Xóa mục tri ân'+(x.t?' “'+x.t+'”':'')+'? Ảnh bị xóa khỏi kho và phụ huynh không xem được nữa.',async()=>{
+  try{if(CLOUDMODE)for(const f of (x.ph||[]))if(f.p)await medRemove(f.p);
+   DB.tri=triList().filter(y=>y.id!==x.id);Object.keys(RF.u).filter(k=>k.startsWith('t:'+x.id+':')).forEach(k=>delete RF.u[k]);toast('Đã xóa')}
+  catch(e){toast('Chưa xóa được ảnh, hãy thử lại')}render()},'Xóa')};
+
+/* ---- mẫu cho chế độ ?demo ---- */
+function miniPdf(title,pages){
+ const pe=s=>s.replace(/[()\\]/g,'\\$&'),objs=['<< /Type /Catalog /Pages 2 0 R >>','','<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'],kids=[];
+ pages.forEach(lines=>{let t='BT /F1 22 Tf 56 780 Td ('+pe(title)+') Tj /F1 15 Tf 0 -44 Td ';
+  lines.forEach(l=>{t+='('+pe(l)+') Tj 0 -26 Td '});t+='ET';
+  const c=objs.length+1;objs.push('<< /Length '+t.length+' >>\nstream\n'+t+'\nendstream');
+  objs.push('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents '+c+' 0 R /Resources << /Font << /F1 3 0 R >> >> >>');kids.push((c+1)+' 0 R')});
+ objs[1]='<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+pages.length+' >>';
+ let out='%PDF-1.4\n';const off=[];
+ objs.forEach((o,i)=>{off.push(out.length);out+=(i+1)+' 0 obj\n'+o+'\nendobj\n'});
+ const xr=out.length;out+='xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n'+off.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('')+'trailer\n<< /Size '+(objs.length+1)+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF';
+ return'data:application/pdf;base64,'+btoa(out)}
+function seedRef(D){
+ const art=(t,a,b)=>'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="640" height="480" fill="url(#g)"/><circle cx="470" cy="140" r="60" fill="#fff" fill-opacity=".55"/><rect x="90" y="250" width="300" height="120" rx="22" fill="#fff" fill-opacity=".5"/><text x="320" y="436" text-anchor="middle" font-family="Arial,sans-serif" font-size="32" font-weight="700" fill="#4a3b00">${t}</text></svg>`);
+ const d0=lastWork(TODAY),d1=lastWork(addD(d0,-3)),d2=lastWork(addD(d0,-9)),by='',bn='Trung tâm';
+ if(!Array.isArray(D.ref))D.ref=[
+  {id:'rf1',kind:'doc',t:'Hướng dẫn chơi xếp khối tại nhà (mẫu)',ct:'application/pdf',sz:2400,d:d1,by,bn,at:d1+'T08:00:00.000Z',sh:1,cat:'Hướng dẫn tại nhà',n:'Chơi 10 phút mỗi ngày, ngồi đối diện bé, chờ bé nhìn rồi mới đưa khối tiếp theo. Đây là tài liệu mẫu cho bản dùng thử.',
+   u:miniPdf('Huong dan choi xep khoi tai nha',[['1. Ngoi doi dien be, de khoi o giua.','2. Cho be nhin vao ban, roi moi dua khoi.','3. Khen ngay khi be xep duoc 1 khoi.'],['4. Tang dan len 2, 3 khoi.','5. Choi 10 phut moi ngay, dung lai khi be con thich.','6. Ghi lai nhung dieu be lam duoc de trao doi voi co.']]),demo:1},
+  {id:'rf2',kind:'img',t:'Gợi ý trò chơi trong tuần',ct:'image/svg+xml',sz:0,d:d2,by,bn,at:d2+'T08:00:00.000Z',sh:1,cat:'Trò chơi, bài tập',n:'Mỗi ngày một trò chơi ngắn, cùng bé tại nhà.',u:art('Trò chơi mỗi ngày','#ffe08a','#ffb36b'),demo:1},
+  {id:'rf3',kind:'doc',t:'Bản nháp chưa đăng (mẫu)',ct:'application/pdf',sz:1800,d:d0,by,bn,at:d0+'T08:00:00.000Z',sh:0,cat:'Khác',n:'Mục đang ẩn: phụ huynh chưa thấy.',u:miniPdf('Ban nhap chua dang',[['Noi dung dang soan.']]),demo:1}];
+ if(!Array.isArray(D.tri))D.tri=[
+  {id:'tr1',cat:'tn',t:'Bé M. đã sẵn sàng vào lớp 1',n:'Hơn hai năm trước, con chưa nhìn vào mắt cô giáo. Hôm nay con tự đọc tên mình và chào cô. Cảm ơn các cô đã kiên nhẫn đi cùng gia đình.',who:'Phụ huynh bé M.',d:d1,ph:[{ct:'image/svg+xml',sz:0,u:art('Bé M. tốt nghiệp','#bfe3ff','#8ec5a6')}],cs:1,cn:'Tin nhắn Zalo (mẫu)',k:'',sh:1,by,bn,at:d1+'T09:00:00.000Z',demo:1},
+  {id:'tr2',cat:'tb',t:'Sau 6 tháng, bé A. đã biết chờ đến lượt',n:'Con biết chơi luân phiên và gọi tên bạn trong lớp.',who:'Phụ huynh bé A.',d:d2,ph:[{ct:'image/svg+xml',sz:0,u:art('Bé A. tiến bộ','#ffd1dc','#d9b8ff')},{ct:'image/svg+xml',sz:0,u:art('Chơi cùng bạn','#d4f1c5','#9fd4e6')}],cs:1,cn:'Đồng ý trực tiếp, có chữ ký (mẫu)',k:'',sh:1,by,bn,at:d2+'T09:00:00.000Z',demo:1},
+  {id:'tr3',cat:'cm',t:'',n:'Cảm ơn Trung tâm đã cho con một nơi để lớn lên từng ngày. Gia đình chúng tôi luôn biết ơn.',who:'Phụ huynh bé K.',d:d0,ph:[],cs:1,cn:'Tin nhắn Zalo (mẫu)',k:'',sh:1,by,bn,at:d0+'T09:00:00.000Z',demo:1},
+  {id:'tr4',cat:'cm',t:'Bản nháp chưa đăng',n:'Mục đang ẩn: phụ huynh chưa thấy.',who:'Phụ huynh bé H.',d:d0,ph:[],cs:1,cn:'(mẫu)',k:'',sh:0,by,bn,at:d0+'T10:00:00.000Z',demo:1}]}
 /* ===== 13. Cổng phụ huynh ===== */
 VIEWS.cp=()=>isPH()?cpParent():cpLead();
 ACT.cpkid=v=>{S.cp.kid=v};ACT.cptab=v=>{S.cp.tab=v};ACT.cpm=v=>{S.cp.m=sm(S.cp.m,+v)};
@@ -2835,7 +3308,7 @@ function cpParent(){const ks=myKids();
  const c=S.cp=Object.assign({tab:'tq',kid:ks[0].id,m:WD.slice(0,7)},S.cp);if(!ks.some(k=>k.id===c.kid))c.kid=ks[0].id;const k=kidBy(c.kid);
  return head('Xin chào, '+esc(given(U.name)),'Thông tin học tập của bé trong '+esc(DB.cfg.name))+(ks.length>1?tabsH(ks.map(x=>[x.id,given(x.n)]),c.kid,'cpkid'):'')
  +`<div class="card" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><span class="av" style="width:52px;height:52px;font-size:22px" aria-hidden="true">${esc(given(k.n).split(' ').pop().charAt(0))}</span><div><h2 style="margin:0">${esc(k.n)}</h2><p class="mu sm">${age(k.dob)} · ${esc(progOf(k))} · Giáo viên ${esc(mainGV(k))}</p></div></div>`
- +tabsH([['tq','Tổng quan'],['tb','Tiến bộ của bé'],['ch','Chuyên cần và học phí'],['bc','Báo cáo'],['vd','Ảnh, video và tài liệu']],c.tab,'cptab')+(c.tab==='tq'?cpHome(k):c.tab==='tb'?progView(k,{parent:true}):c.tab==='ch'?cpMonth(k):c.tab==='bc'?cpReports(k):mediaParent(k.id))}
+ +tabsH([['tq','Tổng quan'],['tb','Tiến bộ của bé'],['ch','Chuyên cần và học phí'],['bc','Báo cáo'],['vd','Ảnh và video của bé'],['ref','Tài liệu tham khảo'],['tri','Góc tri ân']],c.tab,'cptab')+(c.tab==='tq'?cpHome(k):c.tab==='tb'?progView(k,{parent:true}):c.tab==='ch'?cpMonth(k):c.tab==='bc'?cpReports(k):c.tab==='ref'?refParent():c.tab==='tri'?triParent():mediaParent(k.id))}
 function cpHome(k){const up=upcoming(k,6),last=DB.sess.filter(s=>s.k===k.id&&s.note).sort((a,b)=>a.date<b.date?1:-1)[0],b=balance(k.id);
  return`<div class="grid">${kpi('Học phí',b>0?fmt(b):b<0?fmt(-b):'Đủ',b>0?'còn phải đóng':b<0?'dư có, trừ vào tháng sau':'đã đóng đủ',b>0?'er':'ok')}${kpi('Thông báo mới',unread(),'chưa đọc')}${kpi('Báo cáo đã nhận',DB.rp.filter(r=>r.hs===k.id&&r.s==='gui').length,'từ giáo viên')}</div>`
  +`<div class="two"><div class="card"><h2>Lịch học sắp tới</h2>${up.length?up.map(x=>`<div class="rw"><span><b>${DAYS[dow(x.d)]} ${vdm(x.d)}</b> · ${x.kind==='bt'?'Bán trú '+esc((grBy(x.sid)||{}).n||'')+' · '+BTLB:x.kind==='bu'?'Học bù '+slotLb(x.slot):'Can thiệp 1-1 '+slotLb(x.slot)}</span></div>`).join(''):'<p class="empty">Chưa có lịch trong 10 ngày tới.</p>'}<div class="acts" style="margin-top:10px"><button class="btn s" data-a="cplh" data-v="${k.id}">Lịch học và giờ 1-1</button><button class="btn s" data-a="nav" data-v="hb">Đăng ký học bù</button></div></div>

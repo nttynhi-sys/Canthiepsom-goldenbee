@@ -230,3 +230,28 @@ a.off{pointer-events:none;color:var(--mu)}
 /* cổng phụ huynh: không cho kéo ảnh, bôi chọn */
 body.gph .mi,body.gph .mbig{-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
 @media (max-width:600px){.mg,.mg.big{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mg.big .mt{font-size:15px}.mkl{grid-template-columns:minmax(0,1fr)}}
+/* Hình thức học trong hồ sơ bé: Bán trú, Can thiệp 1-1 và các buổi tích cụ thể */
+.hth{display:grid;gap:10px;margin:6px 0 4px}
+.hth-c{border:1px solid var(--bd);border-radius:12px;padding:10px 12px;min-width:0}
+.hth-h{font-size:15px;padding:2px 0}.hth-h input{width:20px;height:20px;flex:none}
+.hth-b{margin-top:10px;display:grid;gap:10px;min-width:0}.hth-b[hidden]{display:none}
+.d11{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:3px 0}.d11 .chk{width:62px;flex:none}.d11 input[type=time]{width:140px;flex:none}
+
+/* Tài liệu tham khảo, Góc tri ân, xem PDF trong trang */
+.pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.rf-n{margin:6px 0 0}
+.pdfv{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:8px;text-align:center;min-height:120px;min-width:0}
+#pdfc{display:block;width:100%;height:auto;background:#fff;margin:0 auto;border-radius:6px;-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
+.trg{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:14px}
+.trg.big{grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr))}
+.tri{display:flex;flex-direction:column;min-width:0;background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+.tri .tr-h{padding:10px 12px 0;display:flex;flex-wrap:wrap;gap:6px}
+.tri .tr-b{padding:10px 12px 12px;display:grid;gap:6px;min-width:0}
+.tri h3{margin:0;font-size:17px}
+.tri .tr-n{margin:0;font-size:15px;line-height:1.55}
+.trg.big .tr-n{font-size:16px}
+.tri .tr-f{margin:0}
+.tph{display:grid;gap:3px;margin-top:10px}.tph.n1{grid-template-columns:minmax(0,1fr)}.tph.n2,.tph.n3,.tph.n4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tph .mth{aspect-ratio:4/3}
+.trc{border:1px solid var(--bd);border-radius:12px;padding:10px 12px;display:grid;gap:10px;min-width:0;margin:0}.trc legend{font-weight:600;padding:0 6px}
+body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
