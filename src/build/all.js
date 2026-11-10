@@ -1382,6 +1382,8 @@ function dashGV(){
  +`<div class="card"><h2>Ghi buổi can thiệp ngày ${vdm(WD)}</h2>${ds.filter(s=>s.kind!=='bt'&&s.gv===U.id).map(s=>{const k=s.kids[0],x=DB.sess.filter(y=>y.k===k.id&&y.date===WD),dn=x.some(y=>y.st==='xong');return`<div class="rw"><span><b>${esc(k.n)}</b> · ${slotLb(s.slot)} ${dn?tg('Đã ghi','ok'):x.length?tg('Kế hoạch','y'):tg('Chưa ghi','wa')}</span><button class="btn s ${dn?'':'p'}" data-a="senew" data-v="${k.id}|${WD}">${dn?'Sửa':x.length?'Ghi kết quả':'Ghi buổi'}</button></div>`}).join('')||'<p class="empty">Không có buổi 1-1 trong ngày này.</p>'}<div class="acts" style="margin-top:10px"><button class="btn s" data-a="hsbi">Mở trang Buổi can thiệp</button><button class="btn s" data-a="nav" data-v="mt">Chọn mục tiêu từ ngân hàng</button></div></div>`}
 ACT.hsbi=()=>{go('hs',{hs:Object.assign(S.hs||{},{tab:'bi'})})};
 ACT.ddgo=d=>{go('dd',{dd:Object.assign(S.dd||{},{tab:'roll',date:d})})};
+/* Mã nhân sự mới nv01, nv02... = số lớn nhất đang có cộng 1 (danh sách rỗng bắt đầu từ nv01), không trùng mã đang có */
+function newStaffId(){const st=DB.staff||[];let n=st.reduce((a,x)=>{const m=/^nv(\d+)$/.exec(String(x.id||''));return Math.max(a,m?+m[1]:0)},0)+1,id;do{id='nv'+pad(n++)}while(st.some(x=>x.id===id));return id}
 /* ===== 2. Nhân sự ===== */
 /* Thứ tự cột: Quản lý, Trưởng Trung tâm, Văn phòng, Giáo viên, Phụ huynh. Tiền (học phí, thu chi, công nợ, lương): chỉ Trưởng Trung tâm và Văn phòng. */
 const PERM={
@@ -1442,7 +1444,7 @@ MODALS.nv=()=>{const id=S.modal.id,s=id?stBy(id):{n:'',pos:'',role:'gv',ph:'',em
  const pay=canCfg()?`<h3>Hình thức trả lương</h3><div class="f2"><div><label for="nv-mode">Cách tính</label><select id="nv-mode" name="mode">${opts([['thang','Lương cố định hằng tháng (giáo viên bán trú)'],['buoi','Theo ca 1-1 (giáo viên 1-1)'],['kethop','Lương cơ bản cộng theo ca']],s.pay.mode)}</select></div>${f('base','Lương cơ bản/tháng (₫)',s.pay.base,'number','min="0"')}${f('rate','Đơn giá mỗi ca 1-1 (₫), ví dụ 60.000 hoặc 80.000',s.pay.rate,'number','min="0"')}${f('rateBt','Phụ cấp thêm mỗi ngày bán trú (₫, nếu có)',s.pay.rateBt,'number','min="0"')}${f('allow','Phụ cấp/tháng (₫)',s.pay.allow,'number','min="0"')}${f('bh','Bảo hiểm khấu trừ (% lương cơ bản)',s.pay.bh,'number','min="0" step="any"')}${f('latePen','Phạt mỗi lần đi muộn (₫)',s.pay.latePen,'number','min="0"')}</div>`:'<p class="note sm">Thông tin lương do Trưởng Trung tâm và Văn phòng quản lý, không hiển thị ở vai trò này.</p>';
  return mdl(id?'Hồ sơ '+s.n:'Thêm nhân viên',st+`<form id="nvf" class="f"><div class="f2">${f('n','Họ và tên',s.n,'text','required')}${f('pos','Chức vụ',s.pos)}<div><label for="nv-role">Vai trò hệ thống</label><select id="nv-role" name="role">${opts(roles,s.role)}</select></div><div><label for="nv-st">Trạng thái</label><select id="nv-st" name="st">${opts([['dang','Đang làm việc'],['nghi','Đã nghỉ việc']],s.st)}</select></div>${f('ph','Điện thoại',s.ph,'tel')}${f('em','Email đăng nhập',s.em,'email')}${f('sd','Ngày vào làm',s.sd,'date')}<div><label for="nv-sup">Quản lý trực tiếp</label><select id="nv-sup" name="sup"><option value="">Không có</option>${opts(DB.staff.filter(x=>x.id!==s.id&&(x.role==='ql'||x.role==='tt')).map(x=>[x.id,x.n]),s.sup)}</select></div></div>${pay}<div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu hồ sơ</button></div></form>`+(id?accSection(s):''),1)};
 FORM.nvf=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.id,isNew=!id;
- const s=isNew?{id:'nv'+pad(Math.max(...DB.staff.map(x=>+x.id.slice(2)))+1),pay:{mode:'thang',base:0,rate:0,rateBt:0,allow:0,bh:0,latePen:0}}:stBy(id),role=g('role'),em=g('em').toLowerCase();
+ const s=isNew?{id:newStaffId(),pay:{mode:'thang',base:0,rate:0,rateBt:0,allow:0,bh:0,latePen:0}}:stBy(id),role=g('role'),em=g('em').toLowerCase();
  if(!isNew&&lockAcc(s)){toast('Hồ sơ này chỉ Trưởng Trung tâm sửa');return false}
  if(!canCfg()&&(role==='ql'||role==='tt'||role==='vp')&&role!==s.role){toast('Chỉ Trưởng Trung tâm được cấp vai trò Quản lý, Trưởng Trung tâm hoặc Văn phòng');return false}
  if(!g('n')){toast('Vui lòng nhập họ tên');return false}
@@ -1453,8 +1455,12 @@ FORM.nvf=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.i
 /* ===== 3. Học sinh ===== */
 const wk11=id=>DB.lich.filter(l=>l.type==='11'&&l.hs===id).length;
 /* số ca 1-1 hằng tuần ngoài các ca nằm trong gói bán trú (mỗi ngày bán trú có tối đa một ca trong gói) */
-/* Mã học sinh hiển thị: STT-BT (có bán trú) hoặc STT-CN (chỉ can thiệp 1-1 cá nhân). STT lấy từ số thứ tự trong mã hồ sơ nội bộ (hs012 -> 012), mã nội bộ k.id không đổi nên dữ liệu cũ vẫn khớp. Bé học cả bán trú và 1-1 thêm tính là BT. */
-const kStt=k=>{const m=/(\d+)$/.exec(String((k&&k.id)||''));return m?String(+m[1]).padStart(3,'0'):String((k&&k.id)||'')};
+/* Mã hồ sơ bé: HS01, HS02, HS03... Số thứ tự nằm trong mã (HS01 -> 1, mã cũ hs012 -> 12); mã không có số (hỏng) -> 0. */
+const kidNo=id=>{const m=/^[Hh][Ss](\d+)$/.exec(String(id||''));return m?+m[1]:0};
+/* Mã cho bé mới = số lớn nhất đang có cộng 1, bắt đầu từ HS01 khi chưa có bé nào (trước đây Math.max của danh sách rỗng ra -Infinity thành mã "hs-Infinity"), và không bao giờ trùng mã đang có. */
+function newKidId(){const ks=DB.kids||[];let n=ks.reduce((a,k)=>Math.max(a,kidNo(k.id)),0)+1,id;do{id='HS'+pad(n++)}while(ks.some(k=>k.id===id));return id}
+/* Mã học sinh hiển thị: HS01-BT (có bán trú, kèm 1-1) hoặc HS01-CN (chỉ can thiệp 1-1 cá nhân). Mã nội bộ k.id làm khóa dữ liệu nên không đổi; bé học cả bán trú và 1-1 thêm tính là BT. */
+const kStt=k=>{const n=kidNo(k&&k.id);return n?'HS'+pad(n):String((k&&k.id)||'')};
 const kcode=k=>kStt(k)+'-'+(k&&k.bt?'BT':'CN');
 const kcodeOf=id=>{const k=kidBy(id);return k?kcode(k):String(id||'')};
 const ex11=k=>{const bd=btOf(k),ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.id);return ls.length-bd.filter(w=>ls.some(l=>l.day===w)).length};
@@ -1550,7 +1556,7 @@ FORM.hsff=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.
  if(h11&&!picks.length&&!old11){toast('Hãy tích ít nhất một buổi 1-1 (hoặc bỏ tích Can thiệp 1-1)');return false}
  if(picks.length){if(!gv){toast('Hãy chọn giáo viên 1-1');return false}
   const bad=picks.find(p=>!slotValid(p.slot));if(bad){toast(DAYS[bad.w]+': '+slotMsg);return false}}
- const k=isNew?{id:'hs'+String(Math.max(...DB.kids.map(x=>+x.id.slice(2)))+1).padStart(3,'0'),m11:0,gv:picks.length?gv:null}:old;
+ const k=isNew?{id:newKidId(),m11:0,gv:picks.length?gv:null}:old;
  Object.assign(k,{n:g('n'),g:g('g'),dob:g('dob'),sd:g('sd')||TODAY,st:g('st'),nd:g('nd'),bt,gr:bt?(g('gr')||grByAge(g('dob'))):'',pr:g('pr'),pn:g('pn'),pp:g('pp'),pe:g('pe').toLowerCase(),
   dx:[...f.querySelectorAll('input[name=dx]:checked')].map(x=>x.value),dxo:g('dxo'),dxn:g('dxn')});
  if(bt)k.btd=bd;else delete k.btd;

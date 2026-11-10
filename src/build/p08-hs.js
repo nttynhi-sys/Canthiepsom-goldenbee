@@ -1,8 +1,12 @@
 /* ===== 3. Học sinh ===== */
 const wk11=id=>DB.lich.filter(l=>l.type==='11'&&l.hs===id).length;
 /* số ca 1-1 hằng tuần ngoài các ca nằm trong gói bán trú (mỗi ngày bán trú có tối đa một ca trong gói) */
-/* Mã học sinh hiển thị: STT-BT (có bán trú) hoặc STT-CN (chỉ can thiệp 1-1 cá nhân). STT lấy từ số thứ tự trong mã hồ sơ nội bộ (hs012 -> 012), mã nội bộ k.id không đổi nên dữ liệu cũ vẫn khớp. Bé học cả bán trú và 1-1 thêm tính là BT. */
-const kStt=k=>{const m=/(\d+)$/.exec(String((k&&k.id)||''));return m?String(+m[1]).padStart(3,'0'):String((k&&k.id)||'')};
+/* Mã hồ sơ bé: HS01, HS02, HS03... Số thứ tự nằm trong mã (HS01 -> 1, mã cũ hs012 -> 12); mã không có số (hỏng) -> 0. */
+const kidNo=id=>{const m=/^[Hh][Ss](\d+)$/.exec(String(id||''));return m?+m[1]:0};
+/* Mã cho bé mới = số lớn nhất đang có cộng 1, bắt đầu từ HS01 khi chưa có bé nào (trước đây Math.max của danh sách rỗng ra -Infinity thành mã "hs-Infinity"), và không bao giờ trùng mã đang có. */
+function newKidId(){const ks=DB.kids||[];let n=ks.reduce((a,k)=>Math.max(a,kidNo(k.id)),0)+1,id;do{id='HS'+pad(n++)}while(ks.some(k=>k.id===id));return id}
+/* Mã học sinh hiển thị: HS01-BT (có bán trú, kèm 1-1) hoặc HS01-CN (chỉ can thiệp 1-1 cá nhân). Mã nội bộ k.id làm khóa dữ liệu nên không đổi; bé học cả bán trú và 1-1 thêm tính là BT. */
+const kStt=k=>{const n=kidNo(k&&k.id);return n?'HS'+pad(n):String((k&&k.id)||'')};
 const kcode=k=>kStt(k)+'-'+(k&&k.bt?'BT':'CN');
 const kcodeOf=id=>{const k=kidBy(id);return k?kcode(k):String(id||'')};
 const ex11=k=>{const bd=btOf(k),ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.id);return ls.length-bd.filter(w=>ls.some(l=>l.day===w)).length};
@@ -98,7 +102,7 @@ FORM.hsff=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.
  if(h11&&!picks.length&&!old11){toast('Hãy tích ít nhất một buổi 1-1 (hoặc bỏ tích Can thiệp 1-1)');return false}
  if(picks.length){if(!gv){toast('Hãy chọn giáo viên 1-1');return false}
   const bad=picks.find(p=>!slotValid(p.slot));if(bad){toast(DAYS[bad.w]+': '+slotMsg);return false}}
- const k=isNew?{id:'hs'+String(Math.max(...DB.kids.map(x=>+x.id.slice(2)))+1).padStart(3,'0'),m11:0,gv:picks.length?gv:null}:old;
+ const k=isNew?{id:newKidId(),m11:0,gv:picks.length?gv:null}:old;
  Object.assign(k,{n:g('n'),g:g('g'),dob:g('dob'),sd:g('sd')||TODAY,st:g('st'),nd:g('nd'),bt,gr:bt?(g('gr')||grByAge(g('dob'))):'',pr:g('pr'),pn:g('pn'),pp:g('pp'),pe:g('pe').toLowerCase(),
   dx:[...f.querySelectorAll('input[name=dx]:checked')].map(x=>x.value),dxo:g('dxo'),dxn:g('dxn')});
  if(bt)k.btd=bd;else delete k.btd;

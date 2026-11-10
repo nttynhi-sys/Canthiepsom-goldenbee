@@ -61,20 +61,20 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  await ev(()=>{S.modal=null;render()});await W(60);
 
  /* ---------- 2. Mã học sinh STT-BT / STT-CN ---------- */
- const c=await ev(()=>{const ks=DB.kids,bad=ks.filter(k=>!/^\d{3}-(BT|CN)$/.test(kcode(k)));
+ const c=await ev(()=>{const ks=DB.kids,bad=ks.filter(k=>!/^HS\d{2,}-(BT|CN)$/.test(kcode(k)));
   const bt=ks.find(k=>k.bt),cn=ks.find(k=>!k.bt);
   return{n:ks.length,bad:bad.map(k=>k.id+':'+kcode(k)),bt:bt&&[bt.id,kcode(bt)],cn:cn&&[cn.id,kcode(cn)],
    uniq:new Set(ks.map(kcode)).size===ks.length,
-   ex:{a:kcode({id:'hs012',bt:true}),b:kcode({id:'hs007',bt:false}),c:kcode({id:'hs100',bt:true}),d:kcode({id:'hs001'})}}});
- ok('mọi bé đều có mã dạng 3 chữ số-BT hoặc 3 chữ số-CN, không trùng nhau',c.bad.length===0&&c.uniq,c);
- ok('mẫu: hs012 bán trú = 012-BT; hs007 1-1 = 007-CN; hs100 = 100-BT; không rõ thì CN',c.ex.a==='012-BT'&&c.ex.b==='007-CN'&&c.ex.c==='100-BT'&&c.ex.d==='001-CN',c.ex);
- ok('bé bán trú có hậu tố BT, bé chỉ 1-1 có hậu tố CN, số khớp mã hồ sơ',c.bt&&c.cn&&c.bt[1]===c.bt[0].replace(/^hs/,'')+'-BT'&&c.cn[1]===c.cn[0].replace(/^hs/,'')+'-CN',c);
- ok('mã nội bộ k.id vẫn là hsNNN (dữ liệu cũ không đổi)',await ev(()=>DB.kids.every(k=>/^hs\d{3}$/.test(k.id))));
+   ex:{a:kcode({id:'hs012',bt:true}),b:kcode({id:'hs007',bt:false}),c:kcode({id:'hs100',bt:true}),d:kcode({id:'hs001'}),e:kcode({id:'HS03',bt:true}),f:kcode({id:'HS25',bt:false})}}});
+ ok('mọi bé đều có mã dạng HS01-BT hoặc HS01-CN, không trùng nhau',c.bad.length===0&&c.uniq,c);
+ ok('mẫu: hs012 bán trú = HS12-BT; hs007 1-1 = HS07-CN; hs100 = HS100-BT; HS03 = HS03-BT; HS25 = HS25-CN; không rõ thì CN',c.ex.a==='HS12-BT'&&c.ex.b==='HS07-CN'&&c.ex.c==='HS100-BT'&&c.ex.d==='HS01-CN'&&c.ex.e==='HS03-BT'&&c.ex.f==='HS25-CN',c.ex);
+ ok('bé bán trú có hậu tố BT, bé chỉ 1-1 có hậu tố CN, số khớp mã hồ sơ',c.bt&&c.cn&&c.bt[1]==='HS'+String(+c.bt[0].replace(/^hs/,'')).padStart(2,'0')+'-BT'&&c.cn[1]==='HS'+String(+c.cn[0].replace(/^hs/,'')).padStart(2,'0')+'-CN',c);
+ ok('mã nội bộ k.id của dữ liệu mẫu vẫn là hsNNN (dữ liệu cũ không đổi)',await ev(()=>DB.kids.every(k=>/^hs\d{3}$/.test(k.id))));
 
  await page.click('.nav button:has-text("Học sinh")');await W(150);
  const lst=await ev(()=>({head:[...document.querySelectorAll('table th')].map(t=>t.textContent).slice(0,2),codes:[...document.querySelectorAll('table tr.k td:first-child')].map(t=>t.textContent),
   raw:[...document.querySelectorAll('table tr.k td:first-child')].filter(t=>/^hs\d/.test(t.textContent)).length}));
- ok('danh sách học sinh: cột Mã hiện STT-BT/STT-CN',lst.codes.length>0&&lst.codes.every(t=>/^\d{3}-(BT|CN)$/.test(t))&&lst.raw===0,lst);
+ ok('danh sách học sinh: cột Mã hiện HS01-BT / HS01-CN',lst.codes.length>0&&lst.codes.every(t=>/^HS\d{2,}-(BT|CN)$/.test(t))&&lst.raw===0,lst);
  /* tìm theo mã */
  const find=await ev(()=>{const k=DB.kids.find(x=>x.bt&&x.st==='dang');S.hs.q=kcode(k).toLowerCase();S.pg.hs=1;render();
   const rows=[...document.querySelectorAll('table tr.k td:first-child')].map(t=>t.textContent);
@@ -84,15 +84,37 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  ok('gõ mã (ví dụ 012-bt) vào ô tìm kiếm ra đúng bé; gõ "-cn" ra các bé 1-1',find.rows.includes(find.want)&&find.rows.length>=1&&find.rows2.length>0&&find.rows2.every(t=>/-CN$/.test(t)),find);
  /* hồ sơ bé: tiêu đề cửa sổ */
  const ttl=await ev(()=>{const k=DB.kids.find(x=>x.bt);S.modal={t:'hs',id:k.id,tab:'tt'};render();return{want:kcode(k),txt:document.querySelector('.mdc h2').textContent}});
- ok('cửa sổ hồ sơ bé ghi mã STT-BT trong tiêu đề',ttl.txt.includes(ttl.want)&&!/hs\d{3}/.test(ttl.txt),ttl);
+ ok('cửa sổ hồ sơ bé ghi mã HS01-BT trong tiêu đề',ttl.txt.includes(ttl.want)&&!/hs\d{3}/.test(ttl.txt),ttl);
  await ev(()=>{S.modal=null;render()});await W(60);
 
  /* bé mới thêm: mã theo hình thức */
  const mk=await ev(()=>{const base=Math.max(...DB.kids.map(x=>+x.id.slice(2)));
-  const add=(bt)=>{const k={id:'hs'+String(Math.max(...DB.kids.map(x=>+x.id.slice(2)))+1).padStart(3,'0'),n:'Thử '+(bt?'BT':'CN'),bt,st:'dang',pn:'P',pp:'0905000000',dob:'2021-01-01',sd:TODAY,gr:bt?'Ong non':''};DB.kids.push(k);return kcode(k)};
+  const add=(bt)=>{const k={id:newKidId(),n:'Thử '+(bt?'BT':'CN'),bt,st:'dang',pn:'P',pp:'0905000000',dob:'2021-01-01',sd:TODAY,gr:bt?'Ong non':''};DB.kids.push(k);return kcode(k)};
   const a=add(true),c2=add(false);return{base,a,c2}});
- ok('bé mới: STT nối tiếp, hậu tố theo hình thức',mk.a===String(mk.base+1).padStart(3,'0')+'-BT'&&mk.c2===String(mk.base+2).padStart(3,'0')+'-CN',mk);
+ ok('bé mới: STT nối tiếp (HS98, HS99...), hậu tố theo hình thức',mk.a==='HS'+String(mk.base+1).padStart(2,'0')+'-BT'&&mk.c2==='HS'+String(mk.base+2).padStart(2,'0')+'-CN',mk);
  await ev(()=>{DB.kids=DB.kids.filter(k=>!/^Thử (BT|CN)$/.test(k.n))});
+
+ /* ---------- 2b. Lỗi "hs-Infinity": sinh mã khi danh sách rỗng hoặc có mã hỏng ---------- */
+ const gen=await ev(()=>{const keepK=DB.kids,keepS=DB.staff;const r={};
+  DB.kids=[];r.first=newKidId();
+  DB.kids=[{id:'HS01'}];r.second=newKidId();
+  DB.kids=[{id:'HS01'},{id:'HS02'},{id:'HS09'}];r.afterGap=newKidId();
+  DB.kids=[{id:'hs-Infinity'}];r.corrupt=newKidId();            /* mã hỏng cũ không được làm hỏng mã mới */
+  DB.kids=[{id:'hs-Infinity'},{id:'hs-Infinity'}];r.corruptTwo=newKidId();
+  DB.kids=[{id:'hs012'},{id:'hs097'}];r.legacy=newKidId();       /* dữ liệu mẫu cũ hsNNN */
+  DB.kids=[{id:'HS99'}];r.hundred=newKidId();
+  DB.kids=[{id:'HS03'},{id:'hs-NaN'}];r.nan=newKidId();
+  r.codeCorrupt=kcode({id:'hs-Infinity',bt:true});
+  DB.staff=[];r.sFirst=newStaffId();
+  DB.staff=[{id:'nv01'},{id:'nv02'},{id:'nv04'}];r.sNext=newStaffId();
+  DB.staff=[{id:'x'}];r.sOdd=newStaffId();
+  DB.kids=keepK;DB.staff=keepS;
+  return r});
+ ok('danh sách bé rỗng: bé đầu tiên là HS01 (không còn "hs-Infinity")',gen.first==='HS01'&&![gen.first,gen.second,gen.afterGap,gen.corrupt,gen.corruptTwo,gen.legacy,gen.hundred,gen.nan,gen.sFirst,gen.sNext,gen.sOdd].some(v=>/Infinity|NaN/.test(v)),gen);
+ ok('mã nối tiếp: HS01 -> HS02; có khoảng trống HS09 -> HS10; HS99 -> HS100',gen.second==='HS02'&&gen.afterGap==='HS10'&&gen.hundred==='HS100',gen);
+ ok('mã cũ hỏng (hs-Infinity, hs-NaN) bị bỏ qua khi tính số tiếp theo, không sinh Infinity/NaN',gen.corrupt==='HS01'&&gen.corruptTwo==='HS01'&&gen.nan==='HS04',gen);
+ ok('dữ liệu mẫu cũ hsNNN: bé mới nối tiếp số lớn nhất (hs097 -> HS98)',gen.legacy==='HS98',gen);
+ ok('mã nhân sự: danh sách rỗng -> nv01; nv04 -> nv05; mã lạ không gây Infinity',gen.sFirst==='nv01'&&gen.sNext==='nv05'&&gen.sOdd==='nv01',gen);
 
  /* ---------- 3. Xuất Excel dùng mã mới (cần vai trò xem tiền: Trưởng Trung tâm) ---------- */
  await b.close();
@@ -107,10 +129,10 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
   out.names=__x.map(x=>x.name);
   const colA=__x.flatMap(x=>x.sheets.filter(s=>s.rows[0]&&/^Mã( bé)?$/.test(s.rows[0][0]||s.rows[0][1]||'')).flatMap(s=>s.rows.slice(1).map(r=>r[0])));
   const led=__x.flatMap(x=>x.sheets.filter(s=>s.rows[0]&&s.rows[0][1]==='Mã bé').flatMap(s=>s.rows.slice(1).map(r=>r[1])));
-  out.n=colA.length;out.raw=colA.filter(v=>/^hs\d/.test(String(v))).length;out.okCodes=colA.filter(v=>/^\d{3}-(BT|CN)$/.test(String(v))).length;
+  out.n=colA.length;out.raw=colA.filter(v=>/^hs\d/.test(String(v))).length;out.okCodes=colA.filter(v=>/^HS\d{2,}-(BT|CN)$/.test(String(v))).length;
   out.ledN=led.length;out.ledRaw=led.filter(v=>/^hs\d/.test(String(v))).length;
   return out});
- ok('xuất Excel Bảng chấm công và Công nợ: cột Mã là STT-BT/CN, không còn hsNNN',ex.names.length===2&&!ex.ddErr&&!ex.hpErr&&ex.n>0&&ex.raw===0&&ex.okCodes>0&&ex.ledRaw===0,ex);
+ ok('xuất Excel Bảng chấm công và Công nợ: cột Mã là HS01-BT/CN, không còn hsNNN',ex.names.length===2&&!ex.ddErr&&!ex.hpErr&&ex.n>0&&ex.raw===0&&ex.okCodes>0&&ex.ledRaw===0,ex);
  const tbx=await ev2(async()=>{__x.length=0;S.tb=S.tb||{};const f=ACT.tbxl||ACT.tbxlsx;return{has:!!f}});
  /* thống kê tổng hợp: gọi hàm xuất nếu có */
  const tb=await ev2(async()=>{const k=Object.keys(ACT).find(n=>/^tb.*x/i.test(n));if(!k)return{skip:true};__x.length=0;try{ACT[k]()}catch(e){return{err:String(e)}}await new Promise(r=>setTimeout(r,80));
