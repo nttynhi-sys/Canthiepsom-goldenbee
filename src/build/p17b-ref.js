@@ -127,7 +127,7 @@ document.addEventListener('keydown',e=>{if(!S.modal||S.modal.t!=='rfv'||!RF.pdf|
 /* ---- Tài liệu tham khảo: đăng, ẩn, sửa, xóa (tt, ql) ---- */
 ACT.rfm=()=>{if(!canRef())return false;RF.up={busy:false,err:'',msg:''};S.modal={t:'rfm'}};
 const rfBtn=l=>`<button class="btn p" type="submit" ${RF.up&&RF.up.busy?'disabled':''}>${RF.up&&RF.up.busy?esc(RF.up.msg||'Đang tải lên...'):l}</button>`;
-MODALS.rfm=()=>mdl('Thêm tài liệu tham khảo',`<form id="rfmf" class="f"><div><label for="rf-f">Tệp (PDF, ảnh, video MP4, WebM, MOV; tối đa 50 MB mỗi tệp)</label><input id="rf-f" name="f" type="file" multiple accept=".pdf,application/pdf,image/*,video/*,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov" required></div>
+MODALS.rfm=()=>mdl('Thêm tài liệu tham khảo',`<form id="rfmf" class="f"><div><label for="rf-f">Tệp (PDF, ảnh, video MP4, WebM, MOV; tối đa ${MEDIA_MB} MB mỗi tệp)</label><input id="rf-f" name="f" type="file" multiple accept=".pdf,application/pdf,image/*,video/*,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov" required></div>
  <div class="f2"><div><label for="rf-c">Nhóm</label><select id="rf-c" name="cat">${opts(RCAT.map(x=>[x,x]),'Hướng dẫn tại nhà')}</select></div><div><label for="rf-t">Tên hiển thị (không bắt buộc)</label><input id="rf-t" name="t" maxlength="120" placeholder="Nếu để trống sẽ dùng tên tệp"></div></div>
  <div><label for="rf-n">Hướng dẫn ngắn cho phụ huynh (không bắt buộc)</label><textarea id="rf-n" name="n" rows="3" maxlength="1500" placeholder="Ví dụ: Chơi 10 phút mỗi ngày, ngồi đối diện bé, chờ bé nhìn rồi mới đưa đồ chơi."></textarea></div>
  <label class="chk"><input type="checkbox" name="sh" checked> Đăng cho tất cả phụ huynh xem ngay</label>
@@ -143,7 +143,7 @@ FORM.rfmf=f=>{if(!canRef()||(RF.up&&RF.up.busy))return false;
  for(const file of files){const k=medKindOf(file);
   if(!k)return fail('“'+file.name+'” có định dạng chưa hỗ trợ.');
   if(k.kind==='doc'&&k.ct!=='application/pdf')return fail('“'+file.name+'” không phải PDF. Hãy lưu Word, Excel, PowerPoint thành PDF rồi tải lại (PDF xem được ngay trong ứng dụng, không cần tải về).');
-  if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn 50 MB. Hãy cắt ngắn hoặc nén rồi tải lại.');
+  if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn '+MEDIA_MB+' MB. Hãy cắt ngắn hoặc nén rồi tải lại.');
   jobs.push({file,k})}
  RF.up.busy=true;BUSY++;RF.up.msg='Đang tải 1/'+jobs.length+'...';
  (async()=>{let ok=0;
@@ -224,7 +224,7 @@ FORM.trmf=f=>{if(!canRef()||(RF.up&&RF.up.busy))return false;
  const jobs=[];
  for(const file of files){const k=medKindOf(file);
   if(!k||k.kind!=='img'||k.ct==='image/gif')return fail('“'+file.name+'” không phải ảnh JPG, PNG hoặc WebP.'+(/\.(heic|heif)$/i.test(file.name)?' Ảnh HEIC của iPhone: hãy chọn ảnh JPEG.':''));
-  if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn 50 MB.');
+  if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn '+MEDIA_MB+' MB.');
   jobs.push({file,k})}
  const oldPaths=x?(x.ph||[]).map(f=>f.p):[],dead=rm.map(i=>oldPaths[i]).filter(Boolean);
  RF.up.busy=true;BUSY++;RF.up.msg=jobs.length?'Đang tải ảnh 1/'+jobs.length+'...':'Đang lưu...';

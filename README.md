@@ -45,7 +45,7 @@
 - Phụ huynh thấy cây mục tiêu bằng chữ lớn, màu và biểu tượng (không chỉ màu) để biết con đã đạt hay chưa; báo cáo PDF cho phụ huynh có cây mục tiêu, báo cáo tháng thì không.
 
 ## Ảnh, video và tài liệu
-- Tệp nằm trong **Supabase Storage, bucket riêng tư `gb-media`** (không công khai; tạo bằng migration `20261109150000_media_bucket.sql`, tối đa 50 MB mỗi tệp, chỉ nhận ảnh JPG/PNG/WebP/GIF, video MP4/WebM/MOV, PDF, Word, Excel, PowerPoint, CSV, văn bản). Danh mục nằm ở bảng `records`, collection `media`: `{id,kind:'img'|'vid'|'doc',t,p (đường dẫn kho),ct,sz,d,by,bn,at,ks:[mã bé],gr (lớp bán trú),sh (chia sẻ),n,cat}`. Không cần bảng mới.
+- Tệp nằm trong **Supabase Storage, bucket riêng tư `gb-media`** (không công khai; tạo bằng migration `20261109150000_media_bucket.sql`; giới hạn mỗi tệp nâng từ 50 MB lên 500 MB bằng migration `20261110120000_media_limit_pro.sql` sau khi nâng gói Pro, hằng số `MEDIA_MB` ở `src/build/p17-td.js` phải khớp; chỉ nhận ảnh JPG/PNG/WebP/GIF, video MP4/WebM/MOV, PDF, Word, Excel, PowerPoint, CSV, văn bản). Danh mục nằm ở bảng `records`, collection `media`: `{id,kind:'img'|'vid'|'doc',t,p (đường dẫn kho),ct,sz,d,by,bn,at,ks:[mã bé],gr (lớp bán trú),sh (chia sẻ),n,cat}`. Không cần bảng mới.
 - Trưởng Trung tâm, Quản lý, Văn phòng và Giáo viên tải lên thẳng từ trình duyệt (không qua hàm Vercel, vì hàm giới hạn nội dung yêu cầu 4,5 MB). Ảnh tự thu nhỏ về tối đa 1600 điểm cạnh dài trước khi tải. Xem bằng đường xem tạm 1 giờ do Storage ký; phụ huynh không có quyền đọc kho, chỉ nhận đường xem tạm 15 phút qua `api/parent.js` (hành động `sign`), sau khi kiểm tra tệp đã chia sẻ, có bé của mình và cổng không bị khóa.
 - **Hoạt động chung của lớp bán trú:** cô bán trú (giáo viên chính hoặc phụ của lớp) tải ảnh, video lên kèm lớp, chưa gắn bé. Mục Ảnh, video và tài liệu → tab Hoạt động chung: giáo viên chọn nhiều ảnh, bấm "Gắn bé", tích những bé có trong ảnh, rồi mới chia sẻ. Phụ huynh chỉ thấy tệp đã chia sẻ có gắn bé của mình, và dữ liệu họ nhận chỉ chứa mã bé của họ (không lộ bé khác trong cùng ảnh). Chỉ gắn những bé gia đình đã đồng ý cho chia sẻ hình ảnh.
 - Xóa: Trưởng Trung tâm, Quản lý, Văn phòng xóa được mọi tệp; giáo viên chỉ xóa tệp mình tải (chính sách Storage kiểm tra cả ở máy chủ). Tài liệu "Hồ sơ trẻ" bắt buộc gắn bé; tài liệu không gắn bé chỉ nhân viên xem.
@@ -101,13 +101,25 @@
 - Giáo viên: chỉ đọc lương và thưởng của mình (theo mã nhân viên).
 - Phụ huynh: chỉ qua `api/parent.js`, chỉ dữ liệu của bé mình.
 
+## Gói Supabase, sao lưu và phục hồi
+- Dự án Supabase `bqvwibipmzyrkrwlfoqf` ở gói **Pro** (xác nhận ngày 10/11/2026): không tự tạm dừng khi ít dùng, 100 GB lưu trữ tệp, sao lưu cơ sở dữ liệu hằng ngày và giữ 7 ngày.
+- Sao lưu hằng ngày chỉ chứa **cơ sở dữ liệu** (bảng `records`, `money_records`, `profiles`...). **Không chứa tệp** trong Storage (bucket `gb-media`): ảnh, video, tài liệu lỡ xóa thì không khôi phục được từ bản sao lưu, nên bản gốc quan trọng phải giữ ở nơi khác.
+- Phục hồi: Supabase → Database → Backups → chọn bản → Restore. Thao tác này ghi đè dữ liệu hiện tại, chỉ làm khi chủ dự án xác nhận. Khôi phục theo từng thời điểm (PITR) là dịch vụ trả phí thêm, chưa bật.
+- Việc chỉ chủ dự án làm được ở bảng điều khiển (không làm được qua kết nối của Claude):
+  1. Authentication → bật "Leaked password protection" (chặn mật khẩu đã lộ).
+  2. Storage → Settings → nâng "Global file size limit" lên ít nhất 500 MB.
+  3. Database → Backups: ngày hôm sau khi nâng gói, kiểm tra đã có bản sao lưu đầu tiên.
+  4. Giữ "Spend Cap" bật để không phát sinh chi phí ngoài gói.
+  5. Bật xác thực hai lớp (MFA) cho tài khoản Supabase, GitHub và Vercel của chủ dự án.
+  6. Thanh toán bằng thẻ tín dụng, hóa đơn tính bằng USD; hóa đơn quá hạn có thể khiến dự án bị tạm dừng và hạ về gói Free.
+
 ## Giới hạn đã biết
-- Chưa bật "Leaked password protection" của Supabase Auth (chỉ bật được ở bảng điều khiển Supabase → Authentication và chỉ có từ gói Pro; dự án đang ở gói Free).
+- Chưa bật "Leaked password protection" của Supabase Auth. Dự án đã ở gói Pro nên bật được, nhưng chỉ bật ở bảng điều khiển Supabase → Authentication (chủ dự án làm; xem mục "Gói Supabase, sao lưu và phục hồi"). Sau khi bật, chạy lại `get_advisors` loại security để xác nhận cảnh báo đã hết.
 - Tài khoản Trưởng Trung tâm đầu tiên tạo trong Supabase (Authentication) kèm một dòng `tt` trong bảng `profiles`. Các tài khoản khác cấp trong app: Nhân sự → mở hồ sơ → Tài khoản đăng nhập.
 - Chưa có "quên mật khẩu": Trưởng Trung tâm đặt lại mật khẩu cho nhân viên và phụ huynh (phụ huynh chỉ có số điện thoại cũng không nhận được thư đặt lại).
 - Chưa có giới hạn số lần đăng nhập sai ngoài giới hạn mặc định của Supabase.
 - Xóa dữ liệu do người khác thực hiện chỉ hiện sau khi tải lại trang.
 - Dữ liệu điểm danh được tải toàn bộ khi đăng nhập; với hàng trăm trẻ dùng nhiều năm cần tải theo tháng.
-- Ảnh, video: gói Supabase Free giới hạn 1 GB lưu trữ và 50 MB mỗi tệp; Trung tâm dùng nhiều video dài cần nâng gói hoặc nén video trước khi tải. Chưa có xem trước cho tài liệu Word, Excel (mở bằng ứng dụng của máy). Xóa bé không xóa ảnh, video của bé trong kho.
+- Ảnh, video: gói Pro có 100 GB lưu trữ tệp; mỗi tệp tối đa 500 MB và chỉ có hiệu lực khi "Global file size limit" của cả dự án (Supabase → Storage → Settings) cũng từ 500 MB trở lên, nếu không tệp lớn hơn mức chung bị từ chối (HTTP 413). Tải lên dùng một yêu cầu duy nhất, chưa có tải tiếp khi mất mạng giữa chừng: video rất lớn nên nén trước. Chưa có xem trước cho tài liệu Word, Excel (mở bằng ứng dụng của máy). Xóa bé không xóa ảnh, video của bé trong kho.
 - Hạn chế chụp màn hình chỉ răn đe, không chặn tuyệt đối (xem phần Cổng phụ huynh: hạn chế chụp màn hình).
 - Tài liệu tham khảo và Góc tri ân: tệp đã mở xem trong trình duyệt phụ huynh thì kỹ thuật viên vẫn lấy được đường xem tạm 15 phút từ công cụ nhà phát triển; không có cách chặn hẳn trên web. Tài liệu tham khảo chỉ nhận PDF, ảnh, video. Thêm pdf.js tự lưu (`vendor/pdfjs/`) làm bản triển khai nặng thêm khoảng 1,8 MB.

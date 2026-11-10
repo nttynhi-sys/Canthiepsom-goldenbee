@@ -55,7 +55,7 @@ const SP = process.env.SP || '/tmp';
   let t = await main(gv1);
   ok('giáo viên thấy mục "Ảnh, video và tài liệu" và nút tải lên', /Ảnh, video và tài liệu/.test(t) && !!(await gv1.$('[data-a="upm"]')), t.slice(0, 200));
   await gv1.click('[data-a="upm"]'); await gv1.waitForSelector('#upmf');
-  ok('cửa sổ tải lên có ô chọn lớp bán trú và danh sách bé', !!(await gv1.$('#um-g')) && (await gv1.$$('#upmf input[name=kid]')).length >= 3 && /50 MB/.test(await gv1.textContent('#upmf')));
+  ok('cửa sổ tải lên có ô chọn lớp bán trú và danh sách bé', !!(await gv1.$('#um-g')) && (await gv1.$$('#upmf input[name=kid]')).length >= 3 && /500 MB/.test(await gv1.textContent('#upmf')));
   ok('ô chọn tệp cho nhiều tệp, chỉ ảnh và video', (await gv1.getAttribute('#um-f', 'multiple')) !== null && /image/.test(await gv1.getAttribute('#um-f', 'accept')));
   /* kiểm tra lỗi trước khi tải */
   await gv1.click('#upmf button[type=submit]', { force: true }).catch(() => { });
@@ -65,8 +65,9 @@ const SP = process.env.SP || '/tmp';
   ok('tệp .exe bị từ chối trước khi tải', /định dạng chưa hỗ trợ/.test(await gv1.textContent('#upmf .err')) && E.objs.size === 0, await gv1.textContent('#upmf .err'));
   await gv1.setInputFiles('#um-f', [{ name: 'doc.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4') }]); await gv1.click('#upmf button[type=submit]'); await sleep(200);
   ok('tài liệu ở nút tải ảnh: hướng sang mục Hồ sơ, giáo án', /mục Hồ sơ, giáo án/.test(await gv1.textContent('#upmf .err')) && E.objs.size === 0);
-  require('fs').writeFileSync(SP + '/big51.mp4', Buffer.alloc(51 * 1024 * 1024, 1)); await gv1.setInputFiles('#um-f', SP + '/big51.mp4'); await gv1.click('#upmf button[type=submit]'); await sleep(400);
-  ok('video lớn hơn 50 MB bị chặn ở trình duyệt, không gửi lên máy chủ', /lớn hơn 50 MB/.test(await gv1.textContent('#upmf .err')) && E.objs.size === 0 && !gv1.sb.some(r => /POST \/storage\/v1\/object\/gb-media\/m\//.test(r)), gv1.sb.slice(-4));
+  { const fs = require('fs'); fs.writeFileSync(SP + '/big501.mp4', ''); fs.truncateSync(SP + '/big501.mp4', 501 * 1024 * 1024); }   /* tệp thưa: không tốn đĩa */
+  await gv1.setInputFiles('#um-f', SP + '/big501.mp4'); await gv1.click('#upmf button[type=submit]'); await sleep(400);
+  ok('video lớn hơn 500 MB bị chặn ở trình duyệt, không gửi lên máy chủ', /lớn hơn 500 MB/.test(await gv1.textContent('#upmf .err')) && E.objs.size === 0 && !gv1.sb.some(r => /POST \/storage\/v1\/object\/gb-media\/m\//.test(r)), gv1.sb.slice(-4));
   /* tải hợp lệ: một ảnh và một video, hoạt động chung của lớp, chưa gắn bé */
   await gv1.setInputFiles('#um-f', [{ name: 'to-mau.png', mimeType: 'image/png', buffer: PNG }, { name: 'hat-mua.mp4', mimeType: 'video/mp4', buffer: Buffer.from('fakevideobytes0123456789') }]);
   await gv1.fill('#um-n', 'Buổi sáng vui vẻ'); await gv1.click('#upmf button[type=submit]');

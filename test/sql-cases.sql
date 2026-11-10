@@ -100,7 +100,7 @@ end $$;
 -- Kho tệp riêng tư gb-media (ảnh, video, tài liệu)
 reset role;
 insert into storage.objects(bucket_id,name,owner_id) values ('gb-media','m/seed-tt.jpg','00000000-0000-0000-0000-000000000001'),('other','x/o.jpg','00000000-0000-0000-0000-000000000001');
-select t.chk('bucket gb-media riêng tư, giới hạn 50 MB, có danh sách loại tệp', (select count(*) from storage.buckets where id='gb-media' and public=false and file_size_limit=52428800 and 'video/mp4'=any(allowed_mime_types) and not ('text/html'=any(allowed_mime_types)) and not ('image/svg+xml'=any(allowed_mime_types))), 1);
+select t.chk('bucket gb-media riêng tư, giới hạn 500 MB, có danh sách loại tệp', (select count(*) from storage.buckets where id='gb-media' and public=false and file_size_limit=524288000 and 'video/mp4'=any(allowed_mime_types) and not ('text/html'=any(allowed_mime_types)) and not ('image/svg+xml'=any(allowed_mime_types))), 1);
 set role authenticated;
 select t.as_user('00000000-0000-0000-0000-000000000001','tt@gb.vn');
 select t.chk('tt đọc tệp gb-media, không đọc bucket khác', (select count(*) from storage.objects), 1);

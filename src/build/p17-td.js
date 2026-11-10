@@ -5,7 +5,7 @@
    - Ảnh, video hoạt động chung của lớp bán trú: tải lên với lớp, chưa gắn bé (ks rỗng). Giáo viên chọn bé nào có trong ảnh, rồi mới chia sẻ.
    - Phụ huynh KHÔNG đọc kho trực tiếp: chỉ nhận danh sách tệp đã chia sẻ có gắn bé của mình và đường xem tạm 15 phút qua /api/parent (hành động sign).
    - Chế độ ?demo: ảnh thu nhỏ lưu trong trình duyệt; video và tài liệu chỉ giữ trong phiên (không có kho thật). */
-const MEDIA_MAX=50*1024*1024,MEDIA_BUCKET='gb-media',DCAT=['Giáo án','Biểu mẫu','Hồ sơ trẻ','Hướng dẫn phụ huynh','Khác'];
+const MEDIA_MB=500,MEDIA_MAX=MEDIA_MB*1024*1024,MEDIA_BUCKET='gb-media',DCAT=['Giáo án','Biểu mẫu','Hồ sơ trẻ','Hướng dẫn phụ huynh','Khác'];
 const MEDIA_CT={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',ppt:'application/vnd.ms-powerpoint',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',csv:'text/csv',txt:'text/plain',md:'text/markdown'};
 const MEDIA_ACC={av:'image/*,video/*,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov',doc:'.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,image/*'};
 const MEDM=['upm','mview','mtag'],PIX='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
@@ -86,7 +86,7 @@ const medDocTable=(ms,empty)=>tbl(isPH()?['Tài liệu','Loại','Bé','Người
 const medAV=()=>medList().filter(m=>m.kind!=='doc'&&medSee(m)).sort(medSort);
 const medDocs=()=>medList().filter(m=>m.kind==='doc'&&medSee(m)).sort(medSort);
 const medWait=()=>medAV().filter(m=>!medKs(m).length);
-const upNote=()=>`<p class="note sm" style="margin-bottom:12px">Ảnh và video lưu trong kho riêng tư của Trung tâm, không công khai. Mỗi tệp tối đa 50 MB; ảnh tự thu nhỏ để tải nhanh. Chỉ chia sẻ cho phụ huynh khi đã gắn đúng bé; phụ huynh chỉ xem được ảnh và video của bé nhà mình.${CLOUDMODE?'':' Bản dùng thử: video và tài liệu chỉ giữ trong phiên này.'}</p>`;
+const upNote=()=>`<p class="note sm" style="margin-bottom:12px">Ảnh và video lưu trong kho riêng tư của Trung tâm, không công khai. Mỗi tệp tối đa ${MEDIA_MB} MB; ảnh tự thu nhỏ để tải nhanh. Chỉ chia sẻ cho phụ huynh khi đã gắn đúng bé; phụ huynh chỉ xem được ảnh và video của bé nhà mình.${CLOUDMODE?'':' Bản dùng thử: video và tài liệu chỉ giữ trong phiên này.'}</p>`;
 VIEWS.td=()=>{const t=S.td=Object.assign({tab:'gal',k:'',q:'',kind:'',m:'',gr:'',st:'wait',sel:[]},S.td);const nw=medWait().length;
  const q=t.q.trim().toLowerCase(),has=m=>!q||medLabel(m).toLowerCase().includes(q)||medKs(m).some(i=>kn(i).toLowerCase().includes(q));
  const kidSel=`<div><label for="tdk">Lọc theo bé</label><select id="tdk" data-c="tdk"><option value="">Tất cả</option>${opts(myKids().filter(k=>k.st==='dang').map(k=>[k.id,k.n]),t.k)}</select></div>`;
@@ -188,7 +188,7 @@ ACT.upm=v=>{if(!canUpload())return false;const [kind,k]=String(v||'av').split('|
 const upBtn=l=>`<button class="btn p" type="submit" ${S.up&&S.up.busy?'disabled':''}>${S.up&&S.up.busy?esc(S.up.msg||'Đang tải lên...'):l}</button>`;
 MODALS.upm=()=>{const m=S.modal,doc=m.kind==='doc',F=Object.assign({d:WD,t:'',n:'',cat:'Giáo án',gr:'',sh:1,ks:m.k?[m.k]:[]},S.up&&S.up.form||{});
  const ks=myKids().filter(k=>k.st==='dang').sort((a,b)=>a.n<b.n?-1:1),gs=(isLead()||isVP()?DB.groups:myGroups());
- return mdl(doc?'Tải tài liệu lên':'Tải ảnh, video lên',`<form id="upmf" class="f"><div><label for="um-f">${doc?'Tệp tài liệu (PDF, Word, Excel, PowerPoint, CSV, văn bản; tối đa 50 MB mỗi tệp)':'Ảnh hoặc video (JPG, PNG, WebP, GIF, MP4, WebM, MOV; tối đa 50 MB mỗi tệp)'}</label><input id="um-f" name="f" type="file" multiple accept="${MEDIA_ACC[doc?'doc':'av']}" required></div>
+ return mdl(doc?'Tải tài liệu lên':'Tải ảnh, video lên',`<form id="upmf" class="f"><div><label for="um-f">${doc?'Tệp tài liệu (PDF, Word, Excel, PowerPoint, CSV, văn bản; tối đa '+MEDIA_MB+' MB mỗi tệp)':'Ảnh hoặc video (JPG, PNG, WebP, GIF, MP4, WebM, MOV; tối đa '+MEDIA_MB+' MB mỗi tệp)'}</label><input id="um-f" name="f" type="file" multiple accept="${MEDIA_ACC[doc?'doc':'av']}" required></div>
  <div class="f2"><div><label for="um-d">${doc?'Ngày':'Ngày chụp, quay'}</label><input id="um-d" name="d" type="date" value="${esc(F.d)}" max="${TODAY}" required></div>
  ${doc?`<div><label for="um-c">Loại tài liệu</label><select id="um-c" name="cat">${opts(DCAT.map(x=>[x,x]),F.cat)}</select></div>`:`<div><label for="um-g">Hoạt động chung của lớp bán trú</label><select id="um-g" name="gr"><option value="">Không (ảnh riêng của bé)</option>${opts(gs.map(g=>[g.id,g.n]),F.gr)}</select></div>`}</div>
  <div class="f2"><div><label for="um-t">Tên hiển thị (không bắt buộc)</label><input id="um-t" name="t" maxlength="120" value="${esc(F.t)}" placeholder="Nếu để trống sẽ dùng tên tệp"></div><div><label for="um-n">Ghi chú cho phụ huynh</label><input id="um-n" name="n" maxlength="300" value="${esc(F.n)}"></div></div>
@@ -213,7 +213,7 @@ async function medStore(path,blob,ct){
  if(r.ok)return;
  let j={};try{j=await r.json()}catch(e){}
  const t=String(j.message||'')+' '+String(j.error||'');
- throw new Error(/bucket not found/i.test(t)?'Kho lưu tệp chưa được bật trên máy chủ. Hãy báo người quản trị hệ thống.':r.status===413||/exceeded|too large|payload/i.test(t)?'Tệp lớn hơn 50 MB.':r.status===415||/mime/i.test(t)?'Định dạng tệp chưa được hỗ trợ.':r.status===401||r.status===403||/row-level|unauthorized/i.test(t)?'Tài khoản này chưa có quyền tải lên.':'Máy chủ báo lỗi '+r.status+'.')}
+ throw new Error(/bucket not found/i.test(t)?'Kho lưu tệp chưa được bật trên máy chủ. Hãy báo người quản trị hệ thống.':r.status===413||/exceeded|too large|payload/i.test(t)?'Tệp vượt giới hạn dung lượng của kho lưu trữ. Hãy cắt ngắn hoặc nén tệp, hoặc báo người quản trị hệ thống.':r.status===415||/mime/i.test(t)?'Định dạng tệp chưa được hỗ trợ.':r.status===401||r.status===403||/row-level|unauthorized/i.test(t)?'Tài khoản này chưa có quyền tải lên.':'Máy chủ báo lỗi '+r.status+'.')}
 async function medRemove(path){const r=await sbReq('/storage/v1/object/'+MEDIA_BUCKET+'/'+path,{method:'DELETE'});
  if(!r.ok&&r.status!==404)throw new Error('del')}
 FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
@@ -230,7 +230,7 @@ FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
  const jobs=[];
  for(const file of files){const k=medKindOf(file);
   if(!k)return fail('“'+file.name+'” có định dạng chưa hỗ trợ. '+(/\.(heic|heif)$/i.test(file.name)?'Ảnh HEIC của iPhone: hãy chọn ảnh JPEG (Cài đặt máy ảnh → Định dạng → Tương thích nhất).':''))
-  if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn 50 MB. Hãy cắt ngắn hoặc nén rồi tải lại.')
+  if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn '+MEDIA_MB+' MB. Hãy cắt ngắn hoặc nén rồi tải lại.')
   if(doc&&k.kind==='vid')return fail('“'+file.name+'” là video; hãy dùng nút “Tải ảnh, video lên”.')
   if(!doc&&k.kind==='doc')return fail('“'+file.name+'” là tài liệu; hãy dùng mục Hồ sơ, giáo án.')
   jobs.push({file,k})}

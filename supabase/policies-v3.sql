@@ -91,10 +91,10 @@ create policy "money_gv_read_own" on public.money_records for select
 --  - Không công khai: public = false. Không ai đọc được nếu không có đường dẫn ký tạm thời.
 --  - Nhân viên (tt, vp, ql, gv) đọc và tải lên; xóa: tt, vp, ql xóa được mọi tệp, giáo viên chỉ xóa tệp do mình tải lên.
 --  - Phụ huynh (ph) KHÔNG có chính sách nào: chỉ xem qua api/parent.js (khóa secret ký đường dẫn tạm thời, chỉ ảnh/video/tài liệu của bé mình).
---  - Giới hạn 50 MB mỗi tệp (gói Free của Supabase), chỉ nhận ảnh, video, PDF, Office, CSV, văn bản. Không nhận HTML hoặc SVG.
+--  - Giới hạn 500 MB mỗi tệp (gói Pro; cũng phải nâng "Global file size limit" ở Supabase → Storage → Settings; migration 20261110120000), chỉ nhận ảnh, video, PDF, Office, CSV, văn bản. Không nhận HTML hoặc SVG.
 --  - Tệp nằm dưới tiền tố m/ . Thông tin ai được xem (bé nào, lớp nào, chia sẻ phụ huynh) lưu ở bảng records, collection 'media'.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('gb-media', 'gb-media', false, 52428800, array[
+values ('gb-media', 'gb-media', false, 524288000, array[
   'image/jpeg','image/png','image/webp','image/gif',
   'video/mp4','video/webm','video/quicktime',
   'application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document',

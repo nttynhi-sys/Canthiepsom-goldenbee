@@ -70,7 +70,7 @@ function makeEmu() {
 
   /* ---- Supabase Storage (bucket riêng tư gb-media, theo supabase/migrations/20261109150000_media_bucket.sql) ---- */
   const MED_CT = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'text/csv', 'text/plain', 'text/markdown'];
-  S.mediaMax = 50 * 1024 * 1024;
+  S.mediaMax = 500 * 1024 * 1024;   /* khớp file_size_limit của bucket gb-media (migration 20261110120000) */
   function storage(method, path, params, h, buf) {
     const ok = (status, body, extra) => Object.assign({ status, body }, extra || {});
     S.log.push(method + ' ' + path);
