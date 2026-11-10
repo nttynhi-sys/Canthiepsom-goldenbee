@@ -64,7 +64,8 @@ input[type=checkbox],input[type=radio]{width:auto}
 .note{background:var(--sus);border-radius:10px;padding:10px 12px;font-size:13.5px}
 .lg{min-height:100vh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
 .lgl{background:var(--side);color:var(--sidetx);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:40px 24px;text-align:center}
-.lgl img{width:min(250px,60vw);border-radius:50%;background:#fff}
+.lgl img{width:min(250px,60vw);border-radius:50%;background:#fff;aspect-ratio:1/1;height:auto;object-fit:contain}
+.lgi{max-width:38ch;color:var(--sidemu);display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.5}.lgi p{margin:0;text-wrap:balance}
 .lgl h1{color:var(--sun);font-size:24px;letter-spacing:.02em;max-width:18ch}
 .lgr{display:flex;align-items:center;justify-content:center;padding:32px 16px}
 .lgc{width:100%;max-width:430px}

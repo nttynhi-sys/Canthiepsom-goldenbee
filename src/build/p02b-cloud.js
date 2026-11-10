@@ -331,7 +331,8 @@ FORM.pwf=f=>{const a=f.elements.a.value,b=f.elements.b.value;
 
 /* ---- màn hình trước khi vào ứng dụng ---- */
 const CL_NAME='TRUNG TÂM CAN THIỆP SỚM GOLDEN BEE';
-function lgLeft(){return`<div class="lgl"><img src="${LOGO}" alt="Logo Trung tâm Can thiệp sớm Golden Bee"><h1>${CL_NAME}</h1><p style="max-width:34ch;color:var(--sidemu)">Hệ thống quản lý can thiệp sớm: hồ sơ trẻ, lịch học 1-1 và bán trú, điểm danh, học phí, báo cáo chuyên môn.</p></div>`}
+function lgInfo(){return`<div class="lgi"><p>Hệ thống quản lý Trung tâm can thiệp sớm Golden&nbsp;Bee.</p><p>Địa chỉ: 28 Trường Thi 1&nbsp;- Phường&nbsp;Hoà&nbsp;Cường&nbsp;- Thành&nbsp;phố&nbsp;Đà&nbsp;Nẵng.</p><p>Số điện thoại: 0793502567.</p><p>Hotline: 0979796361.</p></div>`}
+function lgLeft(){return`<div class="lgl"><img src="${LOGO}" alt="Logo Trung tâm Can thiệp sớm Golden Bee"><h1>${CL_NAME}</h1>${lgInfo()}</div>`}
 function cloudScreen(){const st=CLD.stage;
  if(st==='loading')return`<div class="lg">${lgLeft()}<div class="lgr"><div class="lgc"><h2>Đang tải dữ liệu...</h2><p class="mu">Vui lòng chờ trong giây lát.</p></div></div></div>`;
  if(st==='setup')return`<div class="lg">${lgLeft()}<div class="lgr"><div class="lgc"><h2>Khởi tạo dữ liệu trung tâm</h2><p class="mu">Máy chủ chưa có dữ liệu. Bạn là Trưởng Trung tâm đầu tiên, hãy chọn cách bắt đầu:</p>

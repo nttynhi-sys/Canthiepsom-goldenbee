@@ -75,7 +75,7 @@ FORM.login=f=>{if(CLOUDMODE){cloudLogin(f.elements.e.value.trim(),f.elements.p.v
 ACT.theme=()=>{const h=document.documentElement,dark=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches,cur=h.dataset.theme||(dark?'dark':'light'),nx=cur==='dark'?'light':'dark';h.dataset.theme=nx;try{localStorage.setItem('gb_th',nx)}catch(e){}};
 
 function vLogin(){
- return`<div class="lg"><div class="lgl"><img src="${LOGO}" alt="Logo Trung tâm Can thiệp sớm Golden Bee"><h1>${esc(DB.cfg.name)}</h1><p style="max-width:34ch;color:var(--sidemu)">Hệ thống quản lý can thiệp sớm: hồ sơ trẻ, lịch học 1-1 và bán trú, điểm danh, học phí, báo cáo chuyên môn và cổng phụ huynh.</p></div>
+ return`<div class="lg"><div class="lgl"><img src="${LOGO}" alt="Logo Trung tâm Can thiệp sớm Golden Bee"><h1>${esc(DB.cfg.name)}</h1>${lgInfo()}</div>
  <div class="lgr"><div class="lgc"><h2>Đăng nhập</h2>
  <form id="login" class="f" autocomplete="off"><div><label for="lg-e">Email</label><input id="lg-e" name="e" type="email" required placeholder="ten@goldenbee.vn"></div><div><label for="lg-p">Mật khẩu</label><input id="lg-p" name="p" type="password" required placeholder="123456"></div><div class="err" role="alert">${esc(S.err||'')}</div><button class="btn p" type="submit">Đăng nhập</button></form>
  <p class="sm mu" style="margin:16px 0 8px">Hoặc vào nhanh để xem thử theo từng vai trò:</p>
