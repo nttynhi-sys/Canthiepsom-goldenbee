@@ -52,12 +52,16 @@
 - Giáo viên đọc được mọi tệp trong kho nếu biết đường dẫn (cùng mức tin cậy với bảng `records`); giao diện chỉ hiện tệp của bé mình dạy, lớp mình phụ trách và tệp mình tải.
 - `?demo`: ảnh mẫu SVG; ảnh tải lên được thu nhỏ lưu trong trình duyệt, video và tài liệu chỉ giữ trong phiên.
 
+## Mã học sinh hiển thị
+- Mã hiển thị dạng **STT-BT** (bé có bán trú, kèm 1-1) hoặc **STT-CN** (bé chỉ học 1-1), ví dụ `012-BT`, `007-CN`. STT lấy từ số trong mã hồ sơ nội bộ (hs012 thành 012, đệm đủ 3 chữ số). Mã nội bộ `k.id` (hsNNN) giữ nguyên làm khóa dữ liệu nên dữ liệu cũ, tài khoản phụ huynh, ảnh/video đã gắn bé không bị ảnh hưởng. Mã hiển thị tính từ hình thức học hiện tại: bé đổi từ 1-1 sang có bán trú thì hậu tố tự đổi từ CN sang BT, STT giữ nguyên. Hiển thị ở danh sách học sinh (tìm được theo mã), tiêu đề hồ sơ bé, bảng chấm công, và các file Excel (chấm công, công nợ, thống kê). Mã: `kcode`, `kStt`, `kcodeOf` ở `src/build/p08-hs.js`.
+
 ## Hình thức học khi thêm hồ sơ bé
 - Form thêm/sửa bé có khối **Hình thức học**: tích Bán trú và/hoặc Can thiệp 1-1; mỗi hình thức tích các buổi (thứ) cụ thể. Bán trú chọn lớp (Ong non, Ong mật) và ngày học (T2–T6, T2–T7 hoặc tùy chọn); 1-1 chọn từng ngày và giờ riêng (ca 50 phút, trong khung 07:15 đến 20:00, kiểm tra trùng giờ). Bé học cả hai thì ca 1-1 sớm nhất mỗi ngày bán trú là ca nằm trong gói, ca khác tính riêng. Lưu vào `k.bt`, `k.gr`, `k.btd` và lịch 1-1 `DB.lich`, nên dữ liệu cũ vẫn chạy. Mã: `hthField` ở `src/build/p08-hs.js`.
 
 ## Ngân hàng mục tiêu: Thang chơi biểu tượng Westby
 - Lĩnh vực Chơi và tương tác xã hội (`xh`) có thêm hai bộ công cụ: **Westby** (`we`, 10 giai đoạn I–X, 35 mục tiêu cụ thể, kèm "ngôn ngữ thường đi cùng" từng giai đoạn) và **Chuỗi chơi 0–4 tuổi** (`cp`, 6 tiêu đề, 34 mục). Dữ liệu ở `src/build/p03e-westby.js`; lọc theo bộ công cụ, tiêu đề, mốc tuổi hoặc tìm bằng từ khóa. Mức "giả vờ theo thứ bậc" mức 5 không có mốc tuổi trong tài liệu gốc nên để trống mốc tuổi (`m:-1`), không tự đoán.
 - Mục tiêu Westby thêm vào kế hoạch của bé như mọi mục khác trong ngân hàng; mục tiếp theo của chuỗi đi sang giai đoạn sau.
+- **Nút lọc "Chơi"** trong thanh Lĩnh vực (Ngân hàng mục tiêu và hộp chọn mục tiêu cho bé): gom toàn bộ mục chơi (Westby, Chuỗi chơi 0–4 tuổi, và mọi tiêu đề bắt đầu bằng "Chơi" hoặc "Vui chơi" của ABLLS-R, ESDM, VB-MAPP, Mầm non). Nút "Xã hội" nay chỉ còn phần xã hội. Về dữ liệu, mọi mục vẫn thuộc lĩnh vực `xh` như cũ (kế hoạch, tiến bộ, biểu đồ của bé không đổi); chỉ bộ lọc tách đôi (`isPlay`, `domHit`, `LCHIPS` ở `src/build/p04b-prog.js`). Mục trong danh sách mang nhãn "Chơi".
 
 ## Tài liệu tham khảo (chung cho mọi phụ huynh)
 - Collection `ref` trong `records`: hướng dẫn, video mẫu để phụ huynh dạy con tại nhà. **Chỉ Trưởng Trung tâm và Quản lý tải lên, sửa, ẩn, xóa**; Văn phòng và Giáo viên chỉ đọc; phụ huynh không đọc bảng trực tiếp. Phụ huynh thấy tab **Tài liệu tham khảo** (mọi phụ huynh thấy như nhau, không phụ thuộc bé). Mỗi tài liệu nhận PDF, ảnh hoặc video (tệp Word cần lưu thành PDF trước).

@@ -31,9 +31,14 @@ const gSrc=g=>LSRC[g.s].n+' · '+g.c;
 const AGEB=[['0','Dưới 12 tháng'],['1','12–24 tháng'],['2','24–36 tháng'],['3','36–48 tháng'],['4','48–72 tháng']];
 const ageBin=m=>m<12?0:m<24?1:m<36?2:m<48?3:4;
 const libAll=()=>LIBI.concat(cgItems());
+/* Lĩnh vực "Chơi": tách từ lĩnh vực xh (Chơi và tương tác xã hội) để lọc nhanh. Gồm Westby, Chuỗi chơi 0–4 tuổi và mọi mục có tiêu đề bắt đầu bằng "Chơi" hoặc "Vui chơi".
+   Dữ liệu của bé vẫn ghi lĩnh vực xh như cũ; chỉ bộ lọc ngân hàng mục tiêu phân đôi: "Chơi" (choi) và "Xã hội" (xh, phần còn lại). */
+const isPlay=i=>i.d==='xh'&&(i.s==='we'||i.s==='cp'||/^(Vui chơi|Chơi)/.test(i.t||''));
+const domHit=(dom,i)=>!dom||(dom==='choi'?isPlay(i):dom==='xh'?(i.d==='xh'&&!isPlay(i)):i.d===dom);
+const LCHIPS=LDOM.reduce((a,d)=>d.id==='xh'?a.concat([{id:'choi',s:'Chơi',d:'Chơi thực hành, chơi chức năng, chơi biểu tượng (thang Westby, chuỗi chơi 0–4 tuổi), chơi độc lập'},Object.assign({},d,{d:'Giao tiếp xã hội, kết bạn, chơi chung với bạn'})]):a.concat([d]),[]);
 function libFind(f){const qs=(f.q||'').trim().split(/\s+/).map(ascii).filter(Boolean);
- return libAll().filter(i=>(!f.dom||i.d===f.dom)&&(!f.src||i.s===f.src)&&(f.head===''||f.head==null||String(i.hi)===String(f.head))&&(f.age===''||f.age==null||[].concat(i.m).some(b=>String(b)===String(f.age)))&&qs.every(q=>i.k.includes(q)))}
-function libHeads(f){const m=new Map();libAll().forEach(i=>{if(f.dom&&i.d!==f.dom)return;if(f.src&&i.s!==f.src)return;m.set(i.hi,(m.get(i.hi)||0)+1)});
+ return libAll().filter(i=>domHit(f.dom,i)&&(!f.src||i.s===f.src)&&(f.head===''||f.head==null||String(i.hi)===String(f.head))&&(f.age===''||f.age==null||[].concat(i.m).some(b=>String(b)===String(f.age)))&&qs.every(q=>i.k.includes(q)))}
+function libHeads(f){const m=new Map();libAll().forEach(i=>{if(!domHit(f.dom,i))return;if(f.src&&i.s!==f.src)return;m.set(i.hi,(m.get(i.hi)||0)+1)});
  return[...m.entries()].sort((a,b)=>a[0]-b[0]).map(([h,n])=>[String(h),(h<0?'Mục tiêu Trung tâm tự thêm':LHEAD[h][1]+' · '+LSRC[LHEAD[h][0]].n)+' ('+n+')'])}
 /* mục tiếp theo: với VB-MAPP đi theo thứ tự dạy (các bước nhỏ a, b, c... rồi đến mốc), còn lại theo thứ tự trong ngân hàng */
 function nextOf(id){const g=GL[id];if(!g)return null;

@@ -18,7 +18,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  ok('Westby có 10 giai đoạn (10 tiêu đề)',d.weHeads===10,d);
  ok('Westby có 35 mục tiêu cụ thể theo tài liệu',d.we===35,d.we);
  ok('chuỗi chơi 0–4 tuổi có 6 tiêu đề và 34 mục',d.cpHeads===6&&d.cp===34,{h:d.cpHeads,n:d.cp});
- ok('tất cả nằm trong lĩnh vực Chơi và tương tác xã hội (xh)',d.dom.length===1&&d.dom[0]==='xh',d.dom);
+ ok('tất cả nằm trong lĩnh vực gốc xh (Chơi và tương tác xã hội) và lọc được bằng nút "Chơi"',d.dom.length===1&&d.dom[0]==='xh',d.dom);
  ok('mã mục không trùng, mục nào cũng có tên, tiêu đề, khóa tìm',d.ids&&d.noName===0,d);
  ok('mọi mục Westby có ghi ngôn ngữ đi cùng giai đoạn',d.lg===0,d.lg);
  ok('danh sách bộ công cụ: Westby và Chuỗi chơi nằm trước mục Trung tâm tự thêm',JSON.stringify(d.keys)===JSON.stringify(['ab','ed','vb','mn','ot','we','cp','cu']),d.keys);
@@ -36,11 +36,11 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
 
  /* giao diện: mở ngân hàng mục tiêu, lọc theo lĩnh vực Chơi + bộ Westby */
  await page.click('.nav button:has-text("Ngân hàng mục tiêu")');await W(120);
- await ev(()=>{S.hs.lib.dom='xh';S.hs.lib.src='we';S.hs.lib.head='';S.hs.lib.age='';S.hs.lib.q='';S.pg.lib=1;render()});await W(120);
+ await ev(()=>{S.hs.lib.dom='choi';S.hs.lib.src='we';S.hs.lib.head='';S.hs.lib.age='';S.hs.lib.q='';S.pg.lib=1;render()});await W(120);
  const ui=await ev(()=>({cnt:document.querySelector('.acts .sm b')&&document.querySelector('.acts .sm b').textContent,
   opts:[...document.querySelectorAll('#bk-s option')].map(o=>o.textContent),heads:[...document.querySelectorAll('#bk-h option')].map(o=>o.textContent).slice(0,4),
   sample:(document.querySelector('.gi .gi-n')||{}).textContent,src:(document.querySelector('.gi .sm.mu')||{}).textContent}));
- ok('lọc Chơi + Westby: hiện đúng 35 mục',ui.cnt==='35',ui);
+ ok('lọc nút Chơi + Westby: hiện đúng 35 mục',ui.cnt==='35',ui);
  ok('hộp Bộ công cụ có "Westby" và "Chuỗi chơi 0–4 tuổi"',ui.opts.includes('Westby')&&ui.opts.includes('Chuỗi chơi 0–4 tuổi'),ui.opts);
  ok('hộp Tiêu đề liệt kê giai đoạn Westby theo thứ tự',/^Giai đoạn I · 9–12 tháng/.test(ui.heads[1]||''),ui.heads);
  ok('dòng mục ghi nguồn "Westby · GĐ I.1" và mốc tuổi',/Westby · GĐ I\.1/.test(ui.src)&&/9–12 tháng/.test(ui.src),ui.src);

@@ -1,6 +1,10 @@
 /* ===== 3. Học sinh ===== */
 const wk11=id=>DB.lich.filter(l=>l.type==='11'&&l.hs===id).length;
 /* số ca 1-1 hằng tuần ngoài các ca nằm trong gói bán trú (mỗi ngày bán trú có tối đa một ca trong gói) */
+/* Mã học sinh hiển thị: STT-BT (có bán trú) hoặc STT-CN (chỉ can thiệp 1-1 cá nhân). STT lấy từ số thứ tự trong mã hồ sơ nội bộ (hs012 -> 012), mã nội bộ k.id không đổi nên dữ liệu cũ vẫn khớp. Bé học cả bán trú và 1-1 thêm tính là BT. */
+const kStt=k=>{const m=/(\d+)$/.exec(String((k&&k.id)||''));return m?String(+m[1]).padStart(3,'0'):String((k&&k.id)||'')};
+const kcode=k=>kStt(k)+'-'+(k&&k.bt?'BT':'CN');
+const kcodeOf=id=>{const k=kidBy(id);return k?kcode(k):String(id||'')};
 const ex11=k=>{const bd=btOf(k),ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.id);return ls.length-bd.filter(w=>ls.some(l=>l.day===w)).length};
 const progOf=k=>{const bd=btOf(k),g=bd.length&&grBy(k.gr),e=ex11(k),a=[];
  if(g)a.push('Bán trú '+g.n+' ('+dayTx(bd)+')');
@@ -18,16 +22,16 @@ INP.hsq=v=>{S.hs.q=v;S.pg.hs=1};
 CHG.hsf1=v=>{S.hs.st=v;S.pg.hs=1};CHG.hsf2=v=>{S.hs.pr=v;S.pg.hs=1};CHG.hsf3=v=>{S.hs.gv=v;S.pg.hs=1};CHG.hsf4=v=>{S.hs.dx=v;S.pg.hs=1};
 const dxCell=k=>{const a=dxNames(k);return a.length?esc(a.slice(0,2).join('; '))+(a.length>2?' <b>+'+(a.length-2)+'</b>':''):'<span class="mu">Chưa ghi</span>'};
 function hsList(){const h=S.hs,q=h.q.toLowerCase();
- const all=myKids().filter(k=>(!h.st||k.st===h.st)&&(!h.pr||(h.pr==='11'?wk11(k.id)>0:k.bt))&&(!h.gv||k.gv===h.gv||(grBy(k.gr)||{}).gv===h.gv)&&(!h.dx||dxOf(k).includes(h.dx))&&(!q||(k.n+' '+k.id+' '+k.pn+' '+k.pp+' '+dxNames(k).join(' ')).toLowerCase().includes(q))),p=pg('hs',all,15);
+ const all=myKids().filter(k=>(!h.st||k.st===h.st)&&(!h.pr||(h.pr==='11'?wk11(k.id)>0:k.bt))&&(!h.gv||k.gv===h.gv||(grBy(k.gr)||{}).gv===h.gv)&&(!h.dx||dxOf(k).includes(h.dx))&&(!q||(k.n+' '+kcode(k)+' '+k.id+' '+k.pn+' '+k.pp+' '+dxNames(k).join(' ')).toLowerCase().includes(q))),p=pg('hs',all,15);
  const dxUsed=DXG.map(g=>[g.t,g.a.filter(x=>DB.kids.some(k=>dxOf(k).includes(x[0])))]).filter(g=>g[1].length);
  return`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="hsq">Tìm theo tên bé, mã, phụ huynh hoặc chẩn đoán</label><input id="hsq" data-i="hsq" value="${esc(h.q)}"></div><div><label for="hs1">Trạng thái</label><select id="hs1" data-c="hsf1"><option value="">Tất cả</option>${opts(Object.entries(KST),h.st)}</select></div><div><label for="hs2">Chương trình</label><select id="hs2" data-c="hsf2"><option value="">Tất cả</option>${opts([['11','Có can thiệp 1-1'],['bt','Có bán trú']],h.pr)}</select></div><div><label for="hs4">Chẩn đoán</label><select id="hs4" data-c="hsf4"><option value="">Tất cả</option>${dxUsed.map(g=>`<optgroup label="${esc(g[0])}">${opts(g[1].map(x=>[x[0],dxShort(x[0])]),h.dx)}</optgroup>`).join('')}</select></div>${isLead()?`<div><label for="hs3">Giáo viên</label><select id="hs3" data-c="hsf3"><option value="">Tất cả</option>${opts(DB.staff.filter(s=>s.role==='gv').map(s=>[s.id,s.n]),h.gv)}</select></div>`:''}</div>`
- +tbl(['Mã','Họ tên','Tuổi','Nhu cầu, chẩn đoán','Chương trình','Giáo viên','Phụ huynh','Trạng thái'],p.rows.map(k=>`<tr class="k" data-a="hsopen" data-v="${k.id}"><td>${k.id}</td><td><b>${esc(k.n)}</b></td><td class="nw">${age(k.dob)}</td><td>${esc(k.nd)}<br><span class="sm">${dxCell(k)}</span></td><td>${esc(progOf(k))}</td><td>${esc(mainGV(k))}</td><td>${esc(k.pr)} ${esc(given(k.pn))}<br><span class="sm mu">${esc(k.pp)}</span></td><td>${tg(KST[k.st],k.st==='dang'?'ok':k.st==='bl'?'wa':'gy')}</td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+`</div>`}
+ +tbl(['Mã','Họ tên','Tuổi','Nhu cầu, chẩn đoán','Chương trình','Giáo viên','Phụ huynh','Trạng thái'],p.rows.map(k=>`<tr class="k" data-a="hsopen" data-v="${k.id}"><td class="nw"><b>${esc(kcode(k))}</b></td><td><b>${esc(k.n)}</b></td><td class="nw">${age(k.dob)}</td><td>${esc(k.nd)}<br><span class="sm">${dxCell(k)}</span></td><td>${esc(progOf(k))}</td><td>${esc(mainGV(k))}</td><td>${esc(k.pr)} ${esc(given(k.pn))}<br><span class="sm mu">${esc(k.pp)}</span></td><td>${tg(KST[k.st],k.st==='dang'?'ok':k.st==='bl'?'wa':'gy')}</td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+`</div>`}
 ACT.hsopen=v=>{S.modal={t:'hs',id:v,tab:'tt'}};
 ACT.hstab2=v=>{S.modal.tab=v};
 MODALS.hs=()=>{const m=S.modal,k=kidBy(m.id);if(!k||!canKid(k.id)){S.modal=null;return''}
  const T=[['tt','Thông tin'],['lh','Lịch học'],['kh','Kế hoạch mục tiêu'],['bt','Buổi can thiệp'],['tb','Tiến bộ'],['vd','Ảnh và video'],['td','Hồ sơ, giáo án']];
  let b;switch(m.tab){case'lh':b=hsSchedule(k);break;case'kh':b=hsPlan(k);break;case'bt':b=hsSess(k);break;case'tb':b=progView(k,{staff:true});break;case'vd':b=vidList(k.id);break;case'td':b=docList(k.id);break;default:b=hsInfo(k)}
- return mdl(k.n+' · '+k.id,tabsH(T,m.tab,'hstab2')+b,1)};
+ return mdl(k.n+' · '+kcode(k),tabsH(T,m.tab,'hstab2')+b,1)};
 function hsInfo(k){const g=grBy(k.gr),r=(a,b)=>`<div class="rw"><span class="mu">${a}</span><b>${b}</b></div>`;
  return`<div class="two"><div>${r('Giới tính',k.g==='M'?'Nam':'Nữ')}${r('Ngày sinh',vd(k.dob)+' ('+age(k.dob)+')')}${r('Ngày nhập học',vd(k.sd))}${r('Nhu cầu chính',esc(k.nd))}${r('Chẩn đoán',dxOf(k).length||k.dxo?dxNames(k,dxFull).map(x=>`<span style="display:block;text-align:right">${esc(x)}</span>`).join(''):'<span class="mu">Chưa ghi</span>')}${k.dxn?r('Nơi, bác sĩ, ngày chẩn đoán',esc(k.dxn)):''}${r('Trạng thái',tg(KST[k.st],k.st==='dang'?'ok':'gy'))}${r('Chương trình',esc(progOf(k)))}${r('Giáo viên 1-1',k.gv?esc(sn(k.gv)):'Không có')}${r('Nhóm bán trú',g&&k.bt?esc(g.n)+' · '+dayTx(btOf(k)):'Không có')}</div>
  <div>${r('Phụ huynh',esc(k.pr)+' '+esc(k.pn))}${r('Điện thoại',esc(k.pp))}${r('Email cổng phụ huynh',esc(k.pe||'—'))}${canMoney()?r('Công nợ',fmt(balance(k.id))):''}<div class="acts" style="margin-top:12px">${isLead()?`<button class="btn p" data-a="hsedit" data-v="${k.id}">Sửa hồ sơ</button>`:''}<button class="btn" data-a="ddkid" data-v="${k.id}">Bảng chấm công của bé</button></div></div></div>`}
