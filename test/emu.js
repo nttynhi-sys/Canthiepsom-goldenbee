@@ -115,12 +115,20 @@ function makeEmu() {
       S.objs.set(obj, { buf: buf || Buffer.alloc(0), ct, owner: a.svc ? 'svc' : a.uid });
       return ok(200, { Key: 'gb-media/' + obj, Id: 'o' + S.objs.size });
     }
-    if (!isSign && method === 'DELETE' && obj) {
-      const o = S.objs.get(obj);
-      const can = o && (a.svc || (/^[rt]\//.test(obj) ? ['tt', 'ql'].includes(a.role) : (['tt', 'vp', 'ql'].includes(a.role) || (a.role === 'gv' && o.owner === a.uid))));
-      if (!can) return ok(404, { statusCode: '404', error: 'not_found', message: 'Object not found' });   /* như Supabase thật: tệp ẩn do RLS cũng báo không thấy */
-      S.objs.delete(obj); return ok(200, { message: 'Successfully deleted' });
+    /* xóa theo lô, đúng như Supabase thật: DELETE /object/{bucket} với {prefixes:[...]} */
+    if (!isSign && method === 'DELETE' && !obj) {
+      let b = null; try { b = JSON.parse(buf ? buf.toString() : 'null'); } catch (e) { }
+      if (!b || !Array.isArray(b.prefixes)) return ok(400, { statusCode: '400', error: 'InvalidRequest', message: 'prefixes required' });
+      const done = [];
+      for (const k of b.prefixes) {
+        const o = S.objs.get(k);
+        const can = o && (a.svc || (/^[rt]\//.test(k) ? ['tt', 'ql'].includes(a.role) : (['tt', 'vp', 'ql'].includes(a.role) || (a.role === 'gv' && o.owner === a.uid))));
+        if (can) { S.objs.delete(k); done.push({ name: k }); }
+      }
+      return ok(200, done);
     }
+    /* đường dẫn một tệp không được Supabase nhận cho lệnh xóa (lỗi 400 đã gặp ở bản cũ của ứng dụng) */
+    if (!isSign && method === 'DELETE' && obj) return ok(400, { statusCode: '400', error: 'InvalidRequest', message: 'use bulk delete with prefixes' });
     return ok(405, {});
   }
 

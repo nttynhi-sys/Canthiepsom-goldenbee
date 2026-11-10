@@ -543,7 +543,7 @@ async function exportPDF(name,html){
  toast('Đang tạo PDF...');
  try{await loadLib('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');await loadLib('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
   const box=document.createElement('div');box.className='pdfbox';box.style.cssText='position:fixed;left:-12000px;top:0;width:794px;padding:34px 38px;background:#fff;color:#1d1a16;font:13.5px/1.55 "Be Vietnam Pro",system-ui,sans-serif';
-  box.innerHTML=`<div style="display:flex;gap:12px;align-items:center;border-bottom:3px solid #f4d133;padding-bottom:10px;margin-bottom:14px"><img src="${LOGO}" style="width:58px;height:58px"><div><div style="font:700 15px 'Baloo 2','Be Vietnam Pro',sans-serif;color:#c8372b;text-transform:uppercase">${esc(DB.cfg.name)}</div><div style="font-size:12px;color:#6b5f50">${esc(DB.cfg.addr||'')}${DB.cfg.tel?' · ĐT '+esc(DB.cfg.tel):''}</div><div style="font-size:12px;color:#6b5f50">Hồ sơ in từ hệ thống quản lý · ngày ${vd(TODAY)}</div></div></div>`+html;
+  box.innerHTML=`<div style="display:flex;gap:12px;align-items:center;border-bottom:3px solid #f4d133;padding-bottom:10px;margin-bottom:14px"><img src="${LOGO}" style="width:58px;height:58px"><div><div style="font:700 15px 'Baloo 2','Be Vietnam Pro',sans-serif;color:#c8372b;text-transform:uppercase">${esc(DB.cfg.name)}</div><div style="font-size:12px;color:#6b5f50">${esc(DB.cfg.addr||'')}${DB.cfg.tel?' · ĐT '+esc(DB.cfg.tel):''} · Hotline: 0979796361</div><div style="font-size:12px;color:#6b5f50">Hồ sơ in từ hệ thống quản lý · ngày ${vd(TODAY)}</div></div></div>`+html;
   document.body.appendChild(box);
   let cv,pc;try{pc=pdfCuts(box);cv=await html2canvas(box,{scale:2,backgroundColor:'#ffffff',logging:false})}finally{box.remove()}
   const {jsPDF}=window.jspdf,pdf=new jsPDF({unit:'pt',format:'a4'}),W=pdf.internal.pageSize.getWidth(),sc=cv.width/pc.bw,n=pc.cuts.length-1;
@@ -2665,7 +2665,7 @@ ACT.ddxl=()=>{const m=S.dd.m,rows=sheetRows(),L=canMoney(),ds=mDates(m);
  exportXLSX('bang-cham-cong-hoc-sinh-'+m+'.xlsx',[{n:'Tổng hợp',rows:s1},{n:'Chi tiết nghỉ',rows:s2},{n:'Ma trận ngày',rows:s3}])};
 ACT.ddpdf=()=>{const m=S.dd.m,rows=sheetRows(),L=canMoney();let T=[0,0,0];
  const tr=rows.map(({k,r,inv})=>{T[0]+=inv;T[1]+=r.lost;T[2]+=r.refund;return`<tr><td>${esc(kcode(k))}</td><td>${esc(k.n)}</td><td>${progShort(k)}</td><td>${r.plan}/${r.planBt}</td><td>${r.cm}</td><td>${r.p}</td><td>${r.kp}</td><td>${r.tt}</td><td>${r.bv}</td><td>${r.bu}</td><td>${r.none}</td>${L?`<td align="right">${fnum(inv)}</td><td align="right">${fnum(r.lost)}</td><td align="right">${fnum(r.refund)}</td>`:''}</tr>`}).join('');
- const html=`<h2 style="margin:0 0 4px;font:700 17px 'Baloo 2','Be Vietnam Pro',sans-serif">BẢNG CHẤM CÔNG HỌC SINH ${mLabel(m).toUpperCase()}</h2><p style="font-size:12px;margin:0 0 6px;color:#1d1a16"><b>Hotline: 0979796361</b></p><p style="font-size:11px;margin-bottom:8px;color:#6b5f50">KH: số buổi 1-1 / số ngày bán trú theo lịch. P: nghỉ có phép · KP: nghỉ không phép · TT: Trung tâm hoặc giáo viên nghỉ · Viện: nhập viện · Bù: học bù có mặt.${L?' Khoản hoàn trừ vào học phí tháng sau.':''}</p>
+ const html=`<h2 style="margin:0 0 4px;font:700 17px 'Baloo 2','Be Vietnam Pro',sans-serif">BẢNG CHẤM CÔNG HỌC SINH ${mLabel(m).toUpperCase()}</h2><p style="font-size:11px;margin-bottom:8px;color:#6b5f50">KH: số buổi 1-1 / số ngày bán trú theo lịch. P: nghỉ có phép · KP: nghỉ không phép · TT: Trung tâm hoặc giáo viên nghỉ · Viện: nhập viện · Bù: học bù có mặt.${L?' Khoản hoàn trừ vào học phí tháng sau.':''}</p>
  <table><thead><tr><th>Mã</th><th>Họ tên</th><th>Chương trình</th><th>KH</th><th>Có mặt</th><th>P</th><th>KP</th><th>TT</th><th>Viện</th><th>Bù</th><th>Chưa ghi</th>${L?'<th>Học phí</th><th>Phí mất</th><th>Hoàn</th>':''}</tr></thead><tbody>${tr}${L?`<tr><td colspan="11" align="right"><b>Tổng cộng</b></td><td align="right"><b>${fnum(T[0])}</b></td><td align="right"><b>${fnum(T[1])}</b></td><td align="right"><b>${fnum(T[2])}</b></td></tr>`:''}</tbody></table>`;
  exportPDF('bang-cham-cong-hoc-sinh-'+m+'.pdf',html)};
 /* --- tab quy định --- */
@@ -3088,8 +3088,9 @@ async function medStore(path,blob,ct){
  let j={};try{j=await r.json()}catch(e){}
  const t=String(j.message||'')+' '+String(j.error||'');
  throw new Error(/bucket not found/i.test(t)?'Kho lưu tệp chưa được bật trên máy chủ. Hãy báo người quản trị hệ thống.':r.status===413||/exceeded|too large|payload/i.test(t)?'Tệp vượt giới hạn dung lượng của kho lưu trữ. Hãy cắt ngắn hoặc nén tệp, hoặc báo người quản trị hệ thống.':r.status===415||/mime/i.test(t)?'Định dạng tệp chưa được hỗ trợ.':r.status===401||r.status===403||/row-level|unauthorized/i.test(t)?'Tài khoản này chưa có quyền tải lên.':'Máy chủ báo lỗi '+r.status+'.')}
-async function medRemove(path){const r=await sbReq('/storage/v1/object/'+MEDIA_BUCKET+'/'+path,{method:'DELETE'});
- if(!r.ok&&r.status!==404)throw new Error('del')}
+/* xóa tệp trong kho: Supabase chỉ nhận lệnh xóa theo lô (DELETE /object/{bucket} với prefixes); đường dẫn một tệp trả 400 */
+async function medRemove(path){const r=await sbReq('/storage/v1/object/'+MEDIA_BUCKET,{method:'DELETE',body:{prefixes:[path]}});
+ if(!r.ok&&r.status!==404)throw new Error('del '+r.status)}
 FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
  const doc=S.modal.kind==='doc',e=f.elements,files=[...e.f.files],kids=[...f.querySelectorAll('input[name=kid]:checked')].map(c=>c.value).filter(canKid),
   form={d:e.d.value,t:e.t.value.trim(),n:e.n.value.trim(),cat:doc?e.cat.value:'Giáo án',gr:doc?'':e.gr.value,sh:e.sh.checked?1:0,ks:kids};

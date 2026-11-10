@@ -192,8 +192,8 @@ const SP = process.env.SP || '/tmp';
   await login(gv2, 'gv2@gb.vn', 'gv2pass123'); await gv2.waitForSelector('.nav'); await sleep(1200); await goTd(gv2, 'grp');
   const g2see = await gv2.evaluate(() => medList().filter(m => m.kind !== 'doc' && medSee(m)).length);
   ok('giáo viên không liên quan lớp: không thấy ảnh, video của lớp và của bé khác', g2see === 0 && (await gv2.$$('.mc')).length === 0, g2see);
-  const delOther = await gv2.evaluate(async p => { const r = await sbReq('/storage/v1/object/gb-media/' + p, { method: 'DELETE' }); return r.status }, [...E.objs.keys()][0]);
-  ok('giáo viên không phải chủ tệp: xóa khỏi kho bị từ chối (RLS)', delOther === 404 && E.objs.size >= 4, delOther);
+  const delOther = await gv2.evaluate(async p => { const r = await sbReq('/storage/v1/object/gb-media', { method: 'DELETE', body: { prefixes: [p] } }); return { status: r.status, body: await r.json() } }, [...E.objs.keys()][0]);
+  ok('giáo viên không phải chủ tệp: lệnh xóa theo lô không xóa được tệp (RLS)', delOther.status === 200 && Array.isArray(delOther.body) && delOther.body.length === 0 && E.objs.size >= 4, delOther);
   /* gv1 xóa tệp của mình: kho và bản ghi đều mất */
   const before = E.objs.size; await goTd(gv1, 'gal'); await gv1.fill('#tdq', 'viết'); await sleep(200);
   await gv1.click('.mc [data-a="mdel"]'); await gv1.waitForSelector('[data-a="askyes"]'); await gv1.click('[data-a="askyes"]'); await sleep(700); await flush(gv1);

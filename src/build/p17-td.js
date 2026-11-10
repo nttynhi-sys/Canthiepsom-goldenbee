@@ -214,8 +214,9 @@ async function medStore(path,blob,ct){
  let j={};try{j=await r.json()}catch(e){}
  const t=String(j.message||'')+' '+String(j.error||'');
  throw new Error(/bucket not found/i.test(t)?'Kho lưu tệp chưa được bật trên máy chủ. Hãy báo người quản trị hệ thống.':r.status===413||/exceeded|too large|payload/i.test(t)?'Tệp vượt giới hạn dung lượng của kho lưu trữ. Hãy cắt ngắn hoặc nén tệp, hoặc báo người quản trị hệ thống.':r.status===415||/mime/i.test(t)?'Định dạng tệp chưa được hỗ trợ.':r.status===401||r.status===403||/row-level|unauthorized/i.test(t)?'Tài khoản này chưa có quyền tải lên.':'Máy chủ báo lỗi '+r.status+'.')}
-async function medRemove(path){const r=await sbReq('/storage/v1/object/'+MEDIA_BUCKET+'/'+path,{method:'DELETE'});
- if(!r.ok&&r.status!==404)throw new Error('del')}
+/* xóa tệp trong kho: Supabase chỉ nhận lệnh xóa theo lô (DELETE /object/{bucket} với prefixes); đường dẫn một tệp trả 400 */
+async function medRemove(path){const r=await sbReq('/storage/v1/object/'+MEDIA_BUCKET,{method:'DELETE',body:{prefixes:[path]}});
+ if(!r.ok&&r.status!==404)throw new Error('del '+r.status)}
 FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
  const doc=S.modal.kind==='doc',e=f.elements,files=[...e.f.files],kids=[...f.querySelectorAll('input[name=kid]:checked')].map(c=>c.value).filter(canKid),
   form={d:e.d.value,t:e.t.value.trim(),n:e.n.value.trim(),cat:doc?e.cat.value:'Giáo án',gr:doc?'':e.gr.value,sh:e.sh.checked?1:0,ks:kids};

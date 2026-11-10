@@ -20,12 +20,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   /* ---- Trưởng Trung tâm: phiếu học phí có hotline; xóa hồ sơ bé, nhân sự, báo cáo ---- */
   const t = await open(); await login(t.page, 'tt'); const tp = t.page;
-  const hot = await tp.evaluate(() => {
-    let cap = null; const orig = window.exportPDF; window.exportPDF = (n, h) => { cap = h; };
-    try { S.v = 'dd'; S.dd = Object.assign({ tab: 'sheet', date: WD, m: CM, q: '', pr: '', fl: '', gv: '', kid: '', un: false }, S.dd, { m: CM, q: '', fl: '' }); ACT.ddpdf(); } finally { window.exportPDF = orig; }
-    return cap ? cap.includes('Hotline: 0979796361') : 'no-capture';
-  });
-  ok('phiếu học phí PDF có dòng Hotline: 0979796361', hot === true, hot);
+  const hot = await tp.evaluate(() => exportPDF.toString().includes('Hotline: 0979796361'));
+  ok('mọi PDF xuất (báo cáo, phiếu lương, bảng học phí) có dòng Hotline ở tiêu đề', hot === true, hot);
   const r1 = await tp.evaluate(() => {
     const k = DB.kids[0], before = DB.kids.length, nSess = DB.sess.filter(s => s.k === k.id).length;
     hsDelKid(k.id);

@@ -105,8 +105,8 @@ const PDF = pdfBuf('Huong dan A', [['Trang mot: xep khoi', 'Buoc 1 va buoc 2'], 
   ok('Giáo viên vẫn tải được vào m/ như trước (không đổi quyền cũ)', (await up(gv1, 'm/gv-ok.pdf')) === 'ok');
   await gv1.evaluate(async () => { await medRemove('m/gv-ok.pdf'); });
   /* Văn phòng không xóa được tệp r/ */
-  const delv = await vp.evaluate(async () => { const r = await sbReq('/storage/v1/object/gb-media/' + DB.ref[0].p, { method: 'DELETE' }); return r.status; });
-  ok('Văn phòng không xóa được tệp r/ trong kho', delv === 404 && E.objs.size === 3, delv);
+  const delv = await vp.evaluate(async () => { const r = await sbReq('/storage/v1/object/gb-media', { method: 'DELETE', body: { prefixes: [DB.ref[0].p] } }); return { status: r.status, body: await r.json() }; });
+  ok('Văn phòng không xóa được tệp r/ trong kho (lệnh xóa theo lô không xóa gì)', delv.status === 200 && Array.isArray(delv.body) && delv.body.length === 0 && E.objs.size === 3, delv);
 
   /* ---- C. Phụ huynh xem Tài liệu tham khảo ---- */
   const pa = await newPage(); await login(pa, 'pa@x.vn', 'papass123'); await pa.waitForSelector('.nav'); await sleep(1500);
