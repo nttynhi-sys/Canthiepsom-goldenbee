@@ -20,7 +20,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
    plHeads:[...new Set(pl.map(i=>i.t))].filter(t=>!/^(Vui chơi|Chơi)/.test(t)),
    soHeadsPlay:[...new Set(so.map(i=>i.t))].filter(t=>/^(Vui chơi|Chơi)/.test(t)),
    headsChoi:heads({dom:'choi'}).length,headsXh:heads({dom:'xh'}).length,
-   noChoiInXh:heads({dom:'xh'}).filter(h=>/Westby|Chuỗi chơi/.test(h)).length,
+   noChoiInXh:heads({dom:'xh'}).filter(h=>/· (Westby|Chuỗi chơi 0–4 tuổi) \(/.test(h)).length,
    westbyQ:f({dom:'choi',q:'westby'}).length,
    qChoi:f({dom:'choi',q:'giai doan vii'}).length,
    other:f({dom:'nh'}).length,all:f({}).length}});

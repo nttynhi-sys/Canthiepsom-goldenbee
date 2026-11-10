@@ -63,6 +63,13 @@
 ## Hình thức học khi thêm hồ sơ bé
 - Form thêm/sửa bé có khối **Hình thức học**: tích Bán trú và/hoặc Can thiệp 1-1; mỗi hình thức tích các buổi (thứ) cụ thể. Bán trú chọn lớp (Ong non, Ong mật) và ngày học (T2–T6, T2–T7 hoặc tùy chọn); 1-1 chọn từng ngày và giờ riêng (ca 50 phút, trong khung 07:15 đến 20:00, kiểm tra trùng giờ). Bé học cả hai thì ca 1-1 sớm nhất mỗi ngày bán trú là ca nằm trong gói, ca khác tính riêng. Lưu vào `k.bt`, `k.gr`, `k.btd` và lịch 1-1 `DB.lich`, nên dữ liệu cũ vẫn chạy. Mã: `hthField` ở `src/build/p08-hs.js`.
 
+## Ngân hàng mục tiêu: Ngôn ngữ trị liệu (0–6 tuổi)
+- Bộ công cụ **Ngôn ngữ trị liệu** (`nl`, 313 mục) lấy từ file GOLDEN BEE MASTER GOAL BANK 0–6, chia theo độ tuổi như các bộ khác (mốc lọc `m` 0–4). Mã mục giữ nguyên từ file (`GT-01`…), khóa `nl:GT-01`.
+- Mỗi mục có: hành vi quan sát được (mô tả), tiêu chí đạt, phương thức giao tiếp, ghi chú lâm sàng (nếu có), nguồn tham chiếu và trạng thái duyệt; các dòng này hiện ở phần "Chi tiết" của mục.
+- Lĩnh vực của file được nối vào lĩnh vực có sẵn khi trùng nghĩa (Ngôn ngữ hiểu → Hiểu; Ngôn ngữ diễn đạt, Diễn ngôn → Diễn đạt; Ngữ dụng → Xã hội; Chơi và nhận thức biểu tượng → Xã hội/Chơi; Tiền đọc viết → Nhận thức). Năm lĩnh vực chưa có được thêm vào bộ lọc: **Tiền ngôn ngữ**, **Phát âm** (Lời nói và phát âm), **AAC**, **Ăn uống**, **Thính giác**.
+- Dữ liệu từ file đang ghi **"Chưa duyệt"** (bản dự thảo chờ chuyên gia duyệt); trạng thái hiện trên từng mục để không nhầm là đã duyệt.
+- Mã nguồn: `src/build/p03f-nl.js` (sinh từ file Excel bằng script; sửa dữ liệu thì sửa file này hoặc chạy lại script). Bài thử: `test/z9-nl-bank.js`.
+
 ## Ngân hàng mục tiêu: Thang chơi biểu tượng Westby
 - Lĩnh vực Chơi và tương tác xã hội (`xh`) có thêm hai bộ công cụ: **Westby** (`we`, 10 giai đoạn I–X, 35 mục tiêu cụ thể, kèm "ngôn ngữ thường đi cùng" từng giai đoạn) và **Chuỗi chơi 0–4 tuổi** (`cp`, 6 tiêu đề, 34 mục). Dữ liệu ở `src/build/p03e-westby.js`; lọc theo bộ công cụ, tiêu đề, mốc tuổi hoặc tìm bằng từ khóa. Mức "giả vờ theo thứ bậc" mức 5 không có mốc tuổi trong tài liệu gốc nên để trống mốc tuổi (`m:-1`), không tự đoán.
 - Mục tiêu Westby thêm vào kế hoạch của bé như mọi mục khác trong ngân hàng; mục tiếp theo của chuỗi đi sang giai đoạn sau.
