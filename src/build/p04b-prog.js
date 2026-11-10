@@ -28,7 +28,7 @@ function goalOf(id){return GL[id]||cgItems().find(g=>g.id===id)||null}
 const gName=id=>{const g=goalOf(id);return g?g.n:'(mục tiêu đã xóa)'};
 const gDom=id=>{const g=goalOf(id);return g?g.d:'nh'};
 const gSrc=g=>LSRC[g.s].n+' · '+g.c;
-const AGEB=[['0','Dưới 12 tháng'],['1','12–24 tháng'],['2','24–36 tháng'],['3','36–48 tháng'],['4','48–72 tháng']];
+const AGEB=[['0','Dưới 12 tháng'],['1','12–24 tháng'],['2','24–36 tháng'],['3','36–48 tháng'],['4','48–72 tháng'],['5','6–12 tuổi'],['6','12–18 tuổi'],['7','Từ 18 tuổi']];
 const ageBin=m=>m<12?0:m<24?1:m<36?2:m<48?3:4;
 const libAll=()=>LIBI.concat(cgItems());
 /* Lĩnh vực "Chơi": tách từ lĩnh vực xh (Chơi và tương tác xã hội) để lọc nhanh. Gồm Westby, Chuỗi chơi 0–4 tuổi và mọi mục có tiêu đề bắt đầu bằng "Chơi" hoặc "Vui chơi".
