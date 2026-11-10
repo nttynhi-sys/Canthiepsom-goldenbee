@@ -65,9 +65,8 @@
 
 ## Ngân hàng mục tiêu: Ngôn ngữ trị liệu (0–6 tuổi)
 - Bộ công cụ **Ngôn ngữ trị liệu** (`nl`, 313 mục) lấy từ file GOLDEN BEE MASTER GOAL BANK 0–6, chia theo độ tuổi như các bộ khác (mốc lọc `m` 0–4). Mã mục giữ nguyên từ file (`GT-01`…), khóa `nl:GT-01`.
-- Mỗi mục có: hành vi quan sát được (mô tả), tiêu chí đạt, phương thức giao tiếp, ghi chú lâm sàng (nếu có), nguồn tham chiếu và trạng thái duyệt; các dòng này hiện ở phần "Chi tiết" của mục.
+- Mỗi mục có: hành vi quan sát được (mô tả), tiêu chí đạt, phương thức giao tiếp, ghi chú lâm sàng (nếu có), nguồn tham chiếu; các dòng này hiện ở phần "Chi tiết" của mục.
 - Lĩnh vực của file được nối vào lĩnh vực có sẵn khi trùng nghĩa (Ngôn ngữ hiểu → Hiểu; Ngôn ngữ diễn đạt, Diễn ngôn → Diễn đạt; Ngữ dụng → Xã hội; Chơi và nhận thức biểu tượng → Xã hội/Chơi; Tiền đọc viết → Nhận thức). Năm lĩnh vực chưa có được thêm vào bộ lọc: **Tiền ngôn ngữ**, **Phát âm** (Lời nói và phát âm), **AAC**, **Ăn uống**, **Thính giác**.
-- Dữ liệu từ file đang ghi **"Chưa duyệt"** (bản dự thảo chờ chuyên gia duyệt); trạng thái hiện trên từng mục để không nhầm là đã duyệt.
 - Mã nguồn: `src/build/p03f-nl.js` (sinh từ file Excel bằng script; sửa dữ liệu thì sửa file này hoặc chạy lại script). Bài thử: `test/z9-nl-bank.js`.
 
 ## Ngân hàng mục tiêu: Thang chơi biểu tượng Westby
