@@ -6,8 +6,8 @@
    - Phụ huynh KHÔNG đọc kho trực tiếp: chỉ nhận danh sách tệp đã chia sẻ có gắn bé của mình và đường xem tạm 15 phút qua /api/parent (hành động sign).
    - Chế độ ?demo: ảnh thu nhỏ lưu trong trình duyệt; video và tài liệu chỉ giữ trong phiên (không có kho thật). */
 const MEDIA_MB=500,MEDIA_MAX=MEDIA_MB*1024*1024,MEDIA_BUCKET='gb-media',DCAT=['Giáo án','Biểu mẫu','Hồ sơ trẻ','Hướng dẫn phụ huynh','Khác'];
-const MEDIA_CT={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',ppt:'application/vnd.ms-powerpoint',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',csv:'text/csv',txt:'text/plain',md:'text/markdown'};
-const MEDIA_ACC={av:'image/*,video/*,.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.mov',doc:'.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,image/*'};
+const MEDIA_CT={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',m4v:'video/x-m4v','3gp':'video/3gpp','3g2':'video/3gpp2',mkv:'video/x-matroska',avi:'video/x-msvideo',mpg:'video/mpeg',mpeg:'video/mpeg',wmv:'video/x-ms-wmv',pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',ppt:'application/vnd.ms-powerpoint',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',csv:'text/csv',txt:'text/plain',md:'text/markdown'};
+const MEDIA_ACC={av:'image/*,video/*,.jpg,.jpeg,.png,.webp,.gif,.mp4,.m4v,.webm,.mov,.3gp,.3g2,.mkv,.avi,.mpg,.mpeg,.wmv',vid:'video/*,.mp4,.m4v,.mov,.3gp,.3g2,.webm,.mkv,.avi,.mpg,.mpeg,.wmv',doc:'.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,image/*'};
 const MEDM=['upm','mview','mtag'],PIX='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 const mb=n=>(n/1048576).toFixed(1)+' MB';
 const MED={u:{},q:new Set(),gone:new Set(),fail:{},retry:{},mem:{},t:0};
@@ -107,7 +107,7 @@ VIEWS.td=()=>{const t=S.td=Object.assign({tab:'gal',k:'',q:'',kind:'',m:'',gr:''
  else{let ls=medAV().filter(m=>medKs(m).length&&has(m)&&(!t.k||medKs(m).includes(t.k))&&(!t.kind||m.kind===t.kind)&&(!t.m||String(m.d).slice(0,7)===t.m));
   const p=pg('mg',ls,12);
   body=`<div class="card"><div class="f2" style="margin-bottom:12px">${kidSel}${qBox}<div><label for="tdkind">Loại</label><select id="tdkind" data-c="tdkind">${opts([['','Ảnh và video'],['img','Chỉ ảnh'],['vid','Chỉ video']],t.kind)}</select></div><div><label for="tdm">Tháng</label><input id="tdm" type="month" data-c="tdm" value="${esc(t.m)}"></div></div>${medGrid(p.rows,{list:'gal'})}${p.html}</div>`}
- const btn=t.tab==='ref'?(canRef()?`<button class="btn p" data-a="rfm">Thêm tài liệu tham khảo</button>`:''):t.tab==='tri'?(canRef()?`<button class="btn p" data-a="trm">Thêm mục tri ân</button>`:''):canUpload()?`<button class="btn p" data-a="upm" data-v="${t.tab==='doc'?'doc':'av'}">${t.tab==='doc'?'Tải hồ sơ, giáo án lên':'Tải ảnh, video lên'}</button>`:'';
+ const btn=t.tab==='ref'?(canRef()?`<button class="btn p" data-a="rfm">Thêm tài liệu tham khảo</button>`:''):t.tab==='tri'?(canRef()?`<button class="btn p" data-a="trm">Thêm mục tri ân</button>`:''):canUpload()?(t.tab==='doc'?`<button class="btn p" data-a="upm" data-v="doc">Tải hồ sơ, giáo án lên</button>`:`<button class="btn p" data-a="upm" data-v="av">Tải ảnh, video lên</button> <button class="btn" data-a="upm" data-v="vid">Tải video lên</button>`):'';
  return head('Ảnh, video và tài liệu','Ảnh hoạt động, tài liệu tham khảo cho phụ huynh, góc tri ân, giáo án và hồ sơ',btn)
   +tabsH([['gal','Ảnh và video'],['grp','Hoạt động chung'+(nw?' · '+nw+' chờ gắn bé':'')],['ref','Tài liệu tham khảo'],['tri','Góc tri ân'],['doc','Hồ sơ, giáo án']],t.tab,'tdtab')+(t.tab==='ref'||t.tab==='tri'?'':upNote())+body};
 ACT.tdtab=v=>{S.td.tab=v;S.td.sel=[];S.pg.mg=1;S.pg.rf=1;S.pg.tri=1};CHG.tdk=v=>{S.td.k=v;S.pg.mg=1};CHG.tdg=v=>{S.td.gr=v;S.pg.mg=1;S.td.sel=[]};CHG.tds=v=>{S.td.st=v;S.pg.mg=1;S.td.sel=[]};CHG.tdkind=v=>{S.td.kind=v;S.pg.mg=1};CHG.tdm=v=>{S.td.m=v;S.pg.mg=1};
@@ -118,7 +118,7 @@ ACT.mselno=()=>{S.td.sel=[]};
 
 /* ---- ảnh, video và tài liệu của từng bé (hồ sơ bé, cổng phụ huynh) ---- */
 function mediaKid(k,mode){const kind=mode==='doc'?'doc':'av',all=medList().filter(m=>medSee(m)&&medKs(m).includes(k)&&(kind==='doc'?m.kind==='doc':m.kind!=='doc')).sort(medSort);
- const up=canUpload()&&!isPH()?`<div class="acts" style="margin-bottom:10px"><button class="btn p" data-a="upm" data-v="${kind}|${esc(k)}">${kind==='doc'?'Tải tài liệu lên':'Tải ảnh, video lên'}</button></div>`:'';
+ const up=canUpload()&&!isPH()?`<div class="acts" style="margin-bottom:10px"><button class="btn p" data-a="upm" data-v="${kind}|${esc(k)}">${kind==='doc'?'Tải tài liệu lên':'Tải ảnh, video lên'}</button>${kind==='doc'?'':` <button class="btn" data-a="upm" data-v="vid|${esc(k)}">Tải video lên</button>`}</div>`:'';
  if(kind==='doc')return up+medDocTable(all,'Chưa có tài liệu nào của bé.');
  const p=pg('mk'+k,all,12);return up+medGrid(p.rows,{list:'kid:'+k,empty:'Chưa có ảnh hoặc video nào của bé.'})+p.html}
 /* cổng phụ huynh: chữ lớn, ảnh lớn, gom theo tháng */
@@ -184,11 +184,11 @@ ACT.mshare=v=>{const m=medList().find(x=>x.id===v);if(!m||!medEdit(m))return fal
 
 /* ---- tải lên ---- */
 ACT.upm=v=>{if(!canUpload())return false;const [kind,k]=String(v||'av').split('|');
- S.up={busy:false,err:'',msg:'',form:null};S.modal={t:'upm',kind:kind==='doc'?'doc':'av',k:k||'',back:modalBack()}};
+ S.up={busy:false,err:'',msg:'',form:null};S.modal={t:'upm',kind:kind==='doc'?'doc':'av',only:kind==='vid'?'vid':'',k:k||'',back:modalBack()}};
 const upBtn=l=>`<button class="btn p" type="submit" ${S.up&&S.up.busy?'disabled':''}>${S.up&&S.up.busy?esc(S.up.msg||'Đang tải lên...'):l}</button>`;
-MODALS.upm=()=>{const m=S.modal,doc=m.kind==='doc',F=Object.assign({d:WD,t:'',n:'',cat:'Giáo án',gr:'',sh:1,ks:m.k?[m.k]:[]},S.up&&S.up.form||{});
+MODALS.upm=()=>{const m=S.modal,doc=m.kind==='doc',vid=m.only==='vid',F=Object.assign({d:WD,t:'',n:'',cat:'Giáo án',gr:'',sh:1,ks:m.k?[m.k]:[]},S.up&&S.up.form||{});
  const ks=myKids().filter(k=>k.st==='dang').sort((a,b)=>a.n<b.n?-1:1),gs=(isLead()||isVP()?DB.groups:myGroups());
- return mdl(doc?'Tải tài liệu lên':'Tải ảnh, video lên',`<form id="upmf" class="f"><div><label for="um-f">${doc?'Tệp tài liệu (PDF, Word, Excel, PowerPoint, CSV, văn bản; tối đa '+MEDIA_MB+' MB mỗi tệp)':'Ảnh hoặc video (JPG, PNG, WebP, GIF, MP4, WebM, MOV; tối đa '+MEDIA_MB+' MB mỗi tệp)'}</label><input id="um-f" name="f" type="file" multiple accept="${MEDIA_ACC[doc?'doc':'av']}" required></div>
+ return mdl(doc?'Tải tài liệu lên':vid?'Tải video lên':'Tải ảnh, video lên',`<form id="upmf" class="f"><div><label for="um-f">${doc?'Tệp tài liệu (PDF, Word, Excel, PowerPoint, CSV, văn bản; tối đa '+MEDIA_MB+' MB mỗi tệp)':vid?'Video (MP4, MOV, M4V, 3GP, WebM, MKV, AVI, MPEG, WMV; tối đa '+MEDIA_MB+' MB mỗi tệp)':'Ảnh hoặc video (JPG, PNG, WebP, GIF, MP4, MOV, 3GP, WebM, MKV, AVI…; tối đa '+MEDIA_MB+' MB mỗi tệp)'}</label><input id="um-f" name="f" type="file" multiple accept="${MEDIA_ACC[doc?'doc':vid?'vid':'av']}" required></div>
  <div class="f2"><div><label for="um-d">${doc?'Ngày':'Ngày chụp, quay'}</label><input id="um-d" name="d" type="date" value="${esc(F.d)}" max="${TODAY}" required></div>
  ${doc?`<div><label for="um-c">Loại tài liệu</label><select id="um-c" name="cat">${opts(DCAT.map(x=>[x,x]),F.cat)}</select></div>`:`<div><label for="um-g">Hoạt động chung của lớp bán trú</label><select id="um-g" name="gr"><option value="">Không (ảnh riêng của bé)</option>${opts(gs.map(g=>[g.id,g.n]),F.gr)}</select></div>`}</div>
  <div class="f2"><div><label for="um-t">Tên hiển thị (không bắt buộc)</label><input id="um-t" name="t" maxlength="120" value="${esc(F.t)}" placeholder="Nếu để trống sẽ dùng tên tệp"></div><div><label for="um-n">Ghi chú cho phụ huynh</label><input id="um-n" name="n" maxlength="300" value="${esc(F.n)}"></div></div>
@@ -231,6 +231,7 @@ FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
  for(const file of files){const k=medKindOf(file);
   if(!k)return fail('“'+file.name+'” có định dạng chưa hỗ trợ. '+(/\.(heic|heif)$/i.test(file.name)?'Ảnh HEIC của iPhone: hãy chọn ảnh JPEG (Cài đặt máy ảnh → Định dạng → Tương thích nhất).':''))
   if(file.size>MEDIA_MAX)return fail('“'+file.name+'” lớn hơn '+MEDIA_MB+' MB. Hãy cắt ngắn hoặc nén rồi tải lại.')
+  if(!doc&&S.modal.only==='vid'&&k.kind!=='vid')return fail('“'+file.name+'” không phải video. Hãy dùng nút “Tải ảnh, video lên” cho ảnh.');
   if(doc&&k.kind==='vid')return fail('“'+file.name+'” là video; hãy dùng nút “Tải ảnh, video lên”.')
   if(!doc&&k.kind==='doc')return fail('“'+file.name+'” là tài liệu; hãy dùng mục Hồ sơ, giáo án.')
   jobs.push({file,k})}

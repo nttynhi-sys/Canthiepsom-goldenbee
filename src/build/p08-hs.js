@@ -38,7 +38,7 @@ MODALS.hs=()=>{const m=S.modal,k=kidBy(m.id);if(!k||!canKid(k.id)){S.modal=null;
  return mdl(k.n+' · '+kcode(k),tabsH(T,m.tab,'hstab2')+b,1)};
 function hsInfo(k){const g=grBy(k.gr),r=(a,b)=>`<div class="rw"><span class="mu">${a}</span><b>${b}</b></div>`;
  return`<div class="two"><div>${r('Giới tính',k.g==='M'?'Nam':'Nữ')}${r('Ngày sinh',vd(k.dob)+' ('+age(k.dob)+')')}${r('Ngày nhập học',vd(k.sd))}${r('Nhu cầu chính',esc(k.nd))}${r('Chẩn đoán',dxOf(k).length||k.dxo?dxNames(k,dxFull).map(x=>`<span style="display:block;text-align:right">${esc(x)}</span>`).join(''):'<span class="mu">Chưa ghi</span>')}${k.dxn?r('Nơi, bác sĩ, ngày chẩn đoán',esc(k.dxn)):''}${r('Trạng thái',tg(KST[k.st],k.st==='dang'?'ok':'gy'))}${r('Chương trình',esc(progOf(k)))}${r('Giáo viên 1-1',k.gv?esc(sn(k.gv)):'Không có')}${r('Nhóm bán trú',g&&k.bt?esc(g.n)+' · '+dayTx(btOf(k)):'Không có')}</div>
- <div>${r('Phụ huynh',esc(k.pr)+' '+esc(k.pn))}${r('Điện thoại',esc(k.pp))}${r('Email cổng phụ huynh',esc(k.pe||'—'))}${canMoney()?r('Công nợ',fmt(balance(k.id))):''}<div class="acts" style="margin-top:12px">${isLead()?`<button class="btn p" data-a="hsedit" data-v="${k.id}">Sửa hồ sơ</button>`:''}<button class="btn" data-a="ddkid" data-v="${k.id}">Bảng chấm công của bé</button></div></div></div>`}
+ <div>${r('Phụ huynh',esc(k.pr)+' '+esc(k.pn))}${r('Điện thoại',esc(k.pp))}${r('Email cổng phụ huynh',esc(k.pe||'—'))}${canMoney()?r('Công nợ',fmt(balance(k.id))):''}<div class="acts" style="margin-top:12px">${isLead()?`<button class="btn p" data-a="hsedit" data-v="${k.id}">Sửa hồ sơ</button> <button class="btn no" data-a="hsdelk" data-v="${k.id}">Xóa hồ sơ bé</button>`:''}<button class="btn" data-a="ddkid" data-v="${k.id}">Bảng chấm công của bé</button></div></div></div>`}
 /* --- thêm, sửa hồ sơ --- */
 ACT.hsnew=()=>{S.modal={t:'hsf',id:''}};
 ACT.hsedit=v=>{S.modal={t:'hsf',id:v}};
@@ -144,3 +144,20 @@ FORM.lsmf=f=>{if(!isLead())return false;const k=kidBy(S.modal.id),e=f.elements,g
  if(res.ok&&!res.bad.length)toast('Đã thêm '+res.ok+' buổi 1-1')};
 ACT.hslsdel=v=>{const l=DB.lich.find(x=>x.id===v),k=l&&kidBy(l.hs),back=S.modal;if(!l||!k||!isLead())return false;
  ask('Xóa buổi 1-1 '+DAYN[l.day]+' '+slotLb(l.slot)+' của bé '+k.n+'? Các lần điểm danh trước đây vẫn được giữ.',()=>{DB.lich=DB.lich.filter(x=>x.id!==v);k.m11=wk11(k.id);S.modal=Object.assign({},back,{res:null});toast('Đã xóa buổi học')},'Xóa buổi')};
+
+/* --- xóa hồ sơ bé (Trưởng Trung tâm, Quản lý): nhập sai hoặc bé không còn học; bé chỉ nghỉ thì dùng "Ngưng can thiệp" --- */
+function hsDelKid(id){
+ DB.kids=DB.kids.filter(x=>x.id!==id);
+ DB.sess=DB.sess.filter(x=>x.k!==id);
+ DB.plans=DB.plans.filter(x=>x.k!==id);
+ DB.lich=DB.lich.filter(x=>x.hs!==id);
+ DB.mk=DB.mk.filter(x=>x.hs!==id);
+ DB.rp=DB.rp.filter(x=>x.hs!==id);
+ DB.lg=DB.lg.filter(x=>x.hs!==id);
+ DB.media.forEach(m=>{if(Array.isArray(m.ks)&&m.ks.includes(id))m.ks=m.ks.filter(x=>x!==id)});
+ Object.keys(DB.att).forEach(x=>{if(x.split('|').includes(id))delete DB.att[x]});
+ Object.keys(DB.set).forEach(x=>{if(x.split('|').includes(id))delete DB.set[x]});
+}
+ACT.hsdelk=v=>{const k=kidBy(v);if(!k||!isLead()||!canKid(k.id))return false;
+ const n=DB.sess.filter(s=>s.k===k.id).length;
+ ask('Xóa hồ sơ của bé '+k.n+' ('+kcode(k)+')? Sẽ xóa cả '+n+' buổi can thiệp, kế hoạch, lịch 1-1, điểm danh, báo cáo và học phí của bé. Không hoàn tác được. Nếu bé chỉ nghỉ, hãy dùng “Ngưng can thiệp” thay vì xóa.',()=>{hsDelKid(k.id);S.modal=null;toast('Đã xóa hồ sơ bé '+k.n);render()},'Xóa hồ sơ');return false};

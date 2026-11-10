@@ -74,7 +74,7 @@ function makeEmu() {
     if (t === 'records') return a.role === 'gv' ? !['staff', 'cfg', 'hol'].includes(c) : ['tt', 'vp', 'ql'].includes(a.role); return ['tt', 'vp'].includes(a.role); };
 
   /* ---- Supabase Storage (bucket riêng tư gb-media, theo supabase/migrations/20261109150000_media_bucket.sql) ---- */
-  const MED_CT = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'text/csv', 'text/plain', 'text/markdown'];
+  const MED_CT = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v', 'video/3gpp', 'video/3gpp2', 'video/x-matroska', 'video/x-msvideo', 'video/mpeg', 'video/x-ms-wmv', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'text/csv', 'text/plain', 'text/markdown'];
   S.mediaMax = 500 * 1024 * 1024;   /* khớp file_size_limit của bucket gb-media (migration 20261110120000) */
   function storage(method, path, params, h, buf) {
     const ok = (status, body, extra) => Object.assign({ status, body }, extra || {});

@@ -113,7 +113,8 @@ create policy "money_gv_read_own" on public.money_records for select
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('gb-media', 'gb-media', false, 524288000, array[
   'image/jpeg','image/png','image/webp','image/gif',
-  'video/mp4','video/webm','video/quicktime',
+  'video/mp4','video/webm','video/quicktime','video/x-m4v','video/3gpp','video/3gpp2',
+  'video/x-matroska','video/x-msvideo','video/mpeg','video/x-ms-wmv',
   'application/pdf','application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   'application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation',
