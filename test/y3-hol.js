@@ -61,9 +61,12 @@ const main=page=>page.evaluate(()=>document.querySelector('#main').innerText);
  ok('ngày nghỉ: nhân viên được ghi là nghỉ lễ (không phải vắng)',t2.st==='hol',t2);
  /* lương: ngày nghỉ lễ tính đủ công cho giáo viên theo tháng; giáo viên theo ca không có ca */
  const pr=await ev(()=>{
-  const pm=sm(CM,-1),hd=mDates(pm).filter(d=>dow(d)===2)[0];
+  const pm=sm(CM,-1);
   const sm_=DB.staff.find(s=>s.pay&&s.pay.mode==='thang'&&s.role==='gv'&&s.st==='dang'),sb=DB.staff.find(s=>s.pay&&s.pay.mode==='buoi'&&s.st==='dang');
-  DB.hol=[];const a1=payroll(sm_,pm),b1=payroll(sb,pm);
+  DB.hol=[];
+  /* chọn ngày làm việc mà giáo viên này không có chấm công và không có đơn nghỉ được duyệt (dữ liệu mẫu ngẫu nhiên theo ngày chạy), ưu tiên thứ Ba */
+  const free=mDates(pm).filter(d=>isW(d)&&d<WD&&tsSt(sm_.id,d)==='abs'),hd=free.find(d=>dow(d)===2)||free[0];
+  const a1=payroll(sm_,pm),b1=payroll(sb,pm);
   DB.hol=[{id:'p1',d:hd,n:'Nghỉ thử',k:'le'}];const a2=payroll(sm_,pm),b2=payroll(sb,pm);
   DB.hol=[];
   return{hd,cong1:a1.cong,cong2:a2.cong,hol2:a2.hol,abs1:a1.abs,abs2:a2.abs,sess1:b1.teach+b1.kp+b1.p,sess2:b2.teach+b2.kp+b2.p,net1:a1.net,net2:a2.net}});
