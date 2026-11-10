@@ -63,8 +63,13 @@ function makeEmu() {
     const p = profOf(uid);
     return { uid, u, role: p ? p.role : null, sid: p ? p.staff_id : null };
   }
-  const canRead = (a, t, r) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records') return ['tt', 'vp', 'ql', 'gv'].includes(a.role); if (['tt', 'vp'].includes(a.role)) return true; if (a.role === 'gv') return r.collection === 'cfgm' || (r.collection === 'pay' && r.id === a.sid) || (r.collection === 'bon' && r.id.split('|')[0] === a.sid); return false; };
-  const canWrite = (a, t, c) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records' && (c === 'ref' || c === 'tri')) return ['tt', 'ql'].includes(a.role);   /* tài liệu tham khảo, góc tri ân: chỉ tt, ql */
+  const canRead = (a, t, r) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records') { if (['tt', 'vp', 'ql'].includes(a.role)) return true; if (a.role !== 'gv') return false; return r.collection !== 'vio' || (!!r.data && r.data.st === a.sid && r.data.s === 'duyet'); }   /* gv: vi phạm nội quy chỉ phần ĐÃ DUYỆT của chính mình */
+    if (['tt', 'vp'].includes(a.role)) return true; if (a.role === 'gv') return r.collection === 'cfgm' || (r.collection === 'pay' && r.id === a.sid) || (r.collection === 'bon' && r.id.split('|')[0] === a.sid) || (r.collection === 'vam' && r.id.split('|')[0] === a.sid); return false; };
+  /* vio: tt mọi thao tác; ql chỉ bản ghi chờ duyệt và không về chính mình (private.vio_ok) */
+  const vioOk = (a, c, d) => c !== 'vio' || a.role === 'tt' || (a.role === 'ql' && !!d && d.s === 'cho' && (d.st || '') !== (a.sid || ''));
+  const canWrite = (a, t, c, d) => { if (a.svc) return true; if (!a.role) return false; if (t === 'records' && (c === 'ref' || c === 'tri')) return ['tt', 'ql'].includes(a.role);
+    if (t === 'records' && c === 'vio') return ['tt', 'ql'].includes(a.role) && vioOk(a, c, d);
+    if (t === 'records' && c === 'ts') return ['tt', 'vp', 'ql'].includes(a.role);   /* chấm công: giáo viên không tự chấm */   /* tài liệu tham khảo, góc tri ân: chỉ tt, ql */
     if (t === 'records' && c === 'pul') return false;   /* chỉ khóa secret (máy chủ) ghi bản ghi mở khóa */
     if (t === 'records') return a.role === 'gv' ? !['staff', 'cfg', 'hol'].includes(c) : ['tt', 'vp', 'ql'].includes(a.role); return ['tt', 'vp'].includes(a.role); };
 
@@ -196,12 +201,12 @@ function makeEmu() {
       }
       if (method === 'POST') {
         const arr = Array.isArray(b) ? b : [b];
-        if (!arr.every(r => canWrite(a, tn, r.collection))) return ok(403, { code: '42501', message: 'new row violates row-level security policy for table "' + tn + '"' });
+        if (!arr.every(r => { const old = T.get(r.collection + '|' + r.id); return canWrite(a, tn, r.collection, jnorm(r.data)) && (!old || canWrite(a, tn, r.collection, old.data)); })) return ok(403, { code: '42501', message: 'new row violates row-level security policy for table "' + tn + '"' });
         arr.forEach(r => { T.set(r.collection + '|' + r.id, { collection: r.collection, id: r.id, data: jnorm(r.data), updated_at: now() }); });
         S.log.push('  rows=' + arr.length); return ok(201, null);
       }
       if (method === 'DELETE') {
-        const rows = [...T.values()].filter(r => matches(r, params) && canWrite(a, tn, r.collection));
+        const rows = [...T.values()].filter(r => matches(r, params) && canWrite(a, tn, r.collection, r.data));
         rows.forEach(r => T.delete(r.collection + '|' + r.id)); return ok(204, null);
       }
     } catch (e) { if (e.pg) return ok(400, { code: e.pg, message: 'column does not exist' }); return ok(500, { message: String(e.message) }); }

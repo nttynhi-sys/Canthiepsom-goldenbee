@@ -10,10 +10,10 @@ const tab=async(page,t)=>{await page.click(`#main .tabs .tab[data-v="${t}"]`);aw
 const hasModal=page=>page.evaluate(()=>!!document.querySelector('.mdc'));
 const closeModal=async page=>{await page.evaluate(()=>{S.modal=null;render()});await page.waitForTimeout(30)};
 const EXP={
- ql:['dash','ns','hs','pc','lh','tn','cc','dd','hb','mt','bc','td','cp','tb','tk'],
- tt:['dash','ns','hs','pc','lh','tn','cc','dd','hb','hp','tl','mt','bc','td','cp','tb','tk'],
- vp:['dash','tn','cc','dd','hp','tl','td','tb','tk'],
- gv:['dash','hs','lh','tn','cc','dd','hb','tl','mt','bc','td','tb'],
+ ql:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','mt','bc','td','cp','tb','tk'],
+ tt:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','hp','tl','mt','bc','td','cp','tb','tk'],
+ vp:['dash','tn','cc','vi','dd','hp','tl','td','tb','tk'],
+ gv:['dash','hs','lh','tn','cc','vi','dd','hb','tl','mt','bc','td','tb'],
  ph:['cp','lh','tn','hb','hp','tb']};
 (async()=>{
  /* ---------- 1. đăng nhập nhanh, hộp chuyển vai trò, thanh bên của từng vai trò ---------- */
@@ -144,7 +144,7 @@ const EXP={
   ok('Trưởng TT: có thông số học phí, lương để sửa',!!(await page.$('#cfgf #p11')));
   await tab(page,'pq');
   const pq=await page.$$eval('#main table tbody tr',e=>e.length),pqh=await page.$$eval('#main table thead th',e=>e.map(x=>x.textContent));
-  ok('Ma trận phân quyền: 17 mục, 5 vai trò',pq===17&&JSON.stringify(pqh)==='["Mục","Quản lý","Trưởng Trung tâm","Văn phòng","Giáo viên","Phụ huynh"]',[pq,pqh]);
+  ok('Ma trận phân quyền: 18 mục, 5 vai trò',pq===18&&JSON.stringify(pqh)==='["Mục","Quản lý","Trưởng Trung tâm","Văn phòng","Giáo viên","Phụ huynh"]',[pq,pqh]);
   await tab(page,'ds');
   /* cấp vai trò Văn phòng cho một nhân viên hành chính */
   const hc=await page.evaluate(()=>DB.staff.find(s=>s.role==='hc'&&s.st==='dang'&&s.id!=='nv26').id);
@@ -355,7 +355,7 @@ const EXP={
   ok('dữ liệu mẫu: không trùng giáo viên, bé, phòng cùng lúc',r.dup===0,r.dup);
   ok('dữ liệu mẫu: thực đơn 3 tuần, thứ Hai–thứ Bảy',r.menu===18&&r.menuDays,[r.menu,r.menuDays]);
   ok('dữ liệu mẫu: có thông báo giờ 1-1 và bán trú; thông báo học phí có cờ fin',r.nt&&r.fin.length>=1,r.fin);
-  ok('dữ liệu mẫu: có đúng nhân sự Văn phòng và dữ liệu bản 6',r.vp.length===1&&/văn phòng/i.test(r.vp[0])&&r.v===6,r.vp);
+  ok('dữ liệu mẫu: có đúng nhân sự Văn phòng và dữ liệu bản 7',r.vp.length===1&&/văn phòng/i.test(r.vp[0])&&r.v===7,r.vp);
   /* thêm buổi 1-1 theo khung mới: ca 18:55 được, trùng thì báo */
   const c=await page.evaluate(()=>{const gv=pool11()[0].id,k=DB.kids.find(x=>x.st==='dang'&&!x.gr),x={id:'lt',type:'11',day:6,slot:'18:55',gv,hs:k.id,room:'Phòng 8'};return{ok:conflict(x),again:(DB.lich.push(x),conflict({id:'lt2',type:'11',day:6,slot:'18:55',gv,hs:'zz',room:'Phòng 7'}))}});
   ok('lịch: thêm ca 18:55 không bị báo trùng; ca trùng giáo viên bị báo',!c.ok&&!!c.again,c);

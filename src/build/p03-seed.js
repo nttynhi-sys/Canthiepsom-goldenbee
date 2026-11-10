@@ -69,7 +69,7 @@ function tkbDefault(groups){const out=[];
 /* ===== Dữ liệu mẫu (giả lập, không phải trẻ thật) ===== */
 function seed(){
  let sd=20261108;const R=()=>(sd=(sd*1664525+1013904223)%4294967296)/4294967296,P=a=>a[Math.floor(R()*a.length)],RI=(a,b)=>a+Math.floor(R()*(b-a+1)),SH=a=>a.slice().sort(()=>R()-.5);
- const D={v:6,hol:[],pul:{},tkb:[],cfg:{name:'TRUNG TÂM CAN THIỆP SỚM GOLDEN BEE',addr:'28 Trường Thi 1, Quận Hải Châu, TP. Đà Nẵng',tel:'0793502567',p11:180000,pbtDay:380000,pbtDay11:180000,lateAfter:'08:15',cc:26,giamTru:15500000,thue:10,rule:{pLoss:30,ttRefund:100,bvRefund:50,bvRefund11:100,gvKp:50,gvP:0}},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:TPL0.map(x=>({...x})),nt:[],bon:{},rd:{},menu:{}};
+ const D={v:7,vio:[],vam:{},hol:[],pul:{},tkb:[],cfg:{name:'TRUNG TÂM CAN THIỆP SỚM GOLDEN BEE',addr:'28 Trường Thi 1, Quận Hải Châu, TP. Đà Nẵng',tel:'0793502567',p11:180000,pbtDay:380000,pbtDay11:180000,lateAfter:'08:15',ccIn:'07:15',ccOut:'18:00',v1:20000,v2:30000,cc:26,giamTru:15500000,thue:10,rule:{pLoss:30,ttRefund:100,bvRefund:50,bvRefund11:100,gvKp:50,gvP:0}},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:TPL0.map(x=>({...x})),nt:[],bon:{},rd:{},menu:{}};
  DB=D;
  const HO=['Nguyễn','Trần','Lê','Phạm','Hoàng','Huỳnh','Phan','Vũ','Võ','Đặng','Bùi','Đỗ','Hồ','Ngô','Dương','Lý'];
  const SN=['Minh Anh','Thu Trang','Quang Huy','Lan Phương','Hải Yến','Văn Nam','Thanh Hà','Đức Thịnh','Ngọc Lan','Hồng Nhung','Quốc Bảo','Thùy Linh','Khánh Ly','Tuấn Anh','Bích Phượng','Mai Hương','Thanh Tâm','Kim Ngân','Diệu Linh','Xuân Mai','Phương Thảo','Hoài An','Nhật Lệ','Thu Hiền','Trọng Nghĩa','Yến Nhi','Cẩm Tú','Gia Linh','Bảo Trâm','Anh Thư'];
@@ -83,7 +83,7 @@ function seed(){
   else if(n<=21){pos='Trợ giảng bán trú';base=7e6}
   else if(n===26){role='vp';pos='Nhân viên văn phòng';base=11e6;allow=3e5}
   else{role='hc';pos=['Lễ tân','Lễ tân','Bảo mẫu','Tạp vụ'][n-27];base=[8e6,8e6,7e6,6e6][n-27]}
-  D.staff.push({id,n:nm,role,pos,ph:'09'+String(RI(10000000,99999999)),em:ascii(nm)+'@goldenbee.vn',st:'dang',sd:iso(new Date(RI(2019,2025),RI(0,11),RI(1,28))),sup:role==='ql'?'':role==='vp'?'nv02':role==='tt'||role==='hc'?'nv01':n<=11?'nv02':'nv03',pay:{mode,base,rate,rateBt,allow,bh:mode==='buoi'?0:10.5,latePen:role==='gv'||role==='hc'||role==='vp'?50000:0}})}
+  D.staff.push({id,n:nm,role,pos,ph:'09'+String(RI(10000000,99999999)),em:ascii(nm)+'@goldenbee.vn',st:'dang',sd:iso(new Date(RI(2019,2025),RI(0,11),RI(1,28))),sup:role==='ql'?'':role==='vp'?'nv02':role==='tt'||role==='hc'?'nv01':n<=11?'nv02':'nv03',cc:mode!=='buoi'||rateBt>0,pay:{mode,base,rate,rateBt,allow,bh:mode==='buoi'?0:10.5,latePen:role==='gv'||role==='hc'||role==='vp'?50000:0}})}
  BTN.forEach((n,i)=>D.groups.push({id:'G'+(i+1),n,gv:'nv'+(18+i),tg:'nv'+(20+i)}));
  D.tkb=tkbDefault(D.groups);
  const T11=[];for(let n=4;n<=17;n++)T11.push('nv'+pad(n));for(let n=22;n<=25;n++)T11.push('nv'+pad(n));
@@ -146,7 +146,13 @@ function seed(){
  [['nv06',3],['nv20',4],['nv27',6]].forEach(([s,d],j)=>D.lr.push({id:'lq'+j,st:s,type:'phep',f:addD(TODAY,d),t:addD(TODAY,d+1),why:'Việc riêng',s:'cho'}));
  D.lr.push({id:'lx0',st:'nv09',type:'kl',f:range[3],t:range[3],why:'Việc riêng',s:'tuchoi'});
  D.staff.forEach(s=>range.forEach(d=>{if(D.lr.some(l=>l.st===s.id&&l.s==='duyet'&&l.f<=d&&d<=l.t))return;const r=R();if(r<.025)return;
-  D.ts[s.id+'|'+d]={i:r<.1?'08:'+pad(RI(16,40)):'07:'+pad(RI(35,59)),o:R()<.5?'16:'+pad(RI(40,59)):'17:'+pad(RI(0,40))}}));
+  const rec={i:r<.1?'08:'+pad(RI(16,40)):'07:'+pad(RI(35,59)),o:R()<.5?'16:'+pad(RI(40,59)):'17:'+pad(RI(0,40))};   /* vẫn sinh số ngẫu nhiên cho mọi người để dữ liệu mẫu của những người khác không đổi; nhân sự trả theo ca (cc===false) không có chấm công */
+  if(s.cc!==false)D.ts[s.id+'|'+d]=rec}));
+ /* vi phạm nội quy mẫu: một đã duyệt (trừ lương), một chờ Trưởng Trung tâm duyệt, một không áp dụng */
+ {const n=range.length;D.vio.push({id:'vi0',st:'nv06',d:range[n-3],r:'r1',n:'Đến muộn, báo sau khi đã đến Trung tâm',lv:1,s:'duyet',by:'nv01',at:range[n-3],dby:'nv02',dat:range[n-2]},
+  {id:'vi1',st:'nv09',d:range[n-2],r:'r5',n:'Dùng điện thoại riêng trong ca 1-1',lv:2,s:'cho',by:'nv01',at:range[n-2]},
+  {id:'vi2',st:'nv12',d:range[n-4],r:'r4',n:'',lv:1,s:'tuchoi',by:'nv01',at:range[n-4],dby:'nv02',dat:range[n-3],dn:'Đã bổ sung vào danh sách mượn đồ chơi'});
+  D.vam['nv06|vi0']=20000}
  /* kế hoạch mục tiêu, buổi can thiệp: sinh theo thư viện và lịch học */
  seedProg(D);
  /* học phí: hóa đơn 3 tháng, đã thu, hoàn phí nghỉ tháng trước */

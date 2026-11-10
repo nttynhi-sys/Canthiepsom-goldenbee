@@ -13,7 +13,7 @@ const main=page=>page.evaluate(()=>document.querySelector('#main').innerText);
 
  /* ---------- 1. dữ liệu và nâng cấp ---------- */
  const d0=await ev(()=>({v:DB.v,hol:DB.hol.length,d:DB.hol[0]&&DB.hol[0].d,isArr:Array.isArray(DB.hol)}));
- ok('dữ liệu mẫu bản 6 có danh sách ngày nghỉ (mẫu: Tết Dương lịch sắp tới)',d0.v===6&&d0.isArr&&d0.hol===1&&/-01-01$/.test(d0.d),d0);
+ ok('dữ liệu mẫu bản 7 có danh sách ngày nghỉ (mẫu: Tết Dương lịch sắp tới)',d0.v===7&&d0.isArr&&d0.hol===1&&/-01-01$/.test(d0.d),d0);
  const mg=await ev(()=>{const d=JSON.parse(JSON.stringify(DB));delete d.hol;d.v=5;migrate6(d);const r={v:d.v,hol:Array.isArray(d.hol)&&d.hol.length===0};DB=JSON.parse(JSON.stringify(DB));return r});
  ok('nâng cấp bản 5 lên bản 6: thêm hol rỗng, giữ nguyên dữ liệu',mg.v===6&&mg.hol,mg);
 
@@ -21,7 +21,7 @@ const main=page=>page.evaluate(()=>document.querySelector('#main').innerText);
  const before=await ev(()=>{const d=JSON.parse(JSON.stringify(DB));delete d.hol;d.v=5;localStorage.setItem('gb_v2',JSON.stringify(d));return{kids:d.kids.length,lg:d.lg.length,att:Object.keys(d.att).length,lich:d.lich.length}});
  await page.reload();await page.waitForSelector('.nav,.lg');if(await page.$('.lg'))await login(page,'tt');
  const after=await ev(()=>({v:DB.v,hol:Array.isArray(DB.hol)&&DB.hol.length===0,kids:DB.kids.length,lg:DB.lg.length,att:Object.keys(DB.att).length,lich:DB.lich.length,stored:JSON.parse(localStorage.getItem('gb_v2')).v}));
- ok('mở lại dữ liệu bản 5 đã lưu: nâng lên bản 6, giữ nguyên bé, công nợ, điểm danh, lịch',after.v===6&&after.stored===6&&after.hol&&after.kids===before.kids&&after.lg===before.lg&&after.att===before.att&&after.lich===before.lich,{before,after});
+ ok('mở lại dữ liệu bản 5 đã lưu: nâng lên bản 7, giữ nguyên bé, công nợ, điểm danh, lịch',after.v===7&&after.stored===7&&after.hol&&after.kids===before.kids&&after.lg===before.lg&&after.att===before.att&&after.lich===before.lich,{before,after});
  await ev(()=>{DB.hol=[]});
 
  /* ---------- 2. học phí trả trước trừ ngày nghỉ ---------- */

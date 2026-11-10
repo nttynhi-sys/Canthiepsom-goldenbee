@@ -33,14 +33,23 @@ create or replace function private.can_write_records(coll text) returns boolean
 language sql stable security definer set search_path = '' as $$
   select case
     when coll = 'pul' then false   -- pul: mở khóa cổng phụ huynh quá hạn, chỉ api/plock.js (khóa secret) ghi
-    when coll in ('ref','tri') then private.my_role() in ('tt','ql')   -- tài liệu tham khảo, góc tri ân: chỉ Trưởng Trung tâm, Quản lý
+    when coll in ('ref','tri','vio') then private.my_role() in ('tt','ql')   -- tài liệu tham khảo, góc tri ân, vi phạm nội quy: chỉ Trưởng Trung tâm, Quản lý (vio còn bị vio_ok giới hạn thêm)
+    when coll = 'ts' then private.my_role() in ('tt','vp','ql')   -- chấm công: giáo viên không tự chấm, chỉ xem
     when private.my_role() in ('tt','vp','ql') then true
     when private.my_role() = 'gv' then coll not in ('staff','cfg','hol')   -- hol: ngày nghỉ lễ ảnh hưởng học phí, giáo viên chỉ đọc
     else false end
 $$;
 
-revoke execute on function private.my_role(), private.my_staff_id(), private.can_write_records(text) from public, anon;
-grant  execute on function private.my_role(), private.my_staff_id(), private.can_write_records(text) to authenticated, service_role;
+-- Giới hạn thêm cho collection 'vio' (vi phạm nội quy): tt làm mọi thao tác; ql chỉ với bản ghi chờ duyệt và không phải về chính mình
+create or replace function private.vio_ok(coll text, d jsonb) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select coll <> 'vio'
+    or private.my_role() = 'tt'
+    or (private.my_role() = 'ql' and d->>'s' = 'cho' and coalesce(d->>'st','') <> coalesce(private.my_staff_id(),''))
+$$;
+
+revoke execute on function private.my_role(), private.my_staff_id(), private.can_write_records(text), private.vio_ok(text, jsonb) from public, anon;
+grant  execute on function private.my_role(), private.my_staff_id(), private.can_write_records(text), private.vio_ok(text, jsonb) to authenticated, service_role;
 
 -- Hàm cập nhật thời gian sửa: cố định search_path
 alter function public.touch_meta() set search_path = '';
@@ -63,14 +72,21 @@ create policy "profile_tt_manage" on public.profiles for all
   using (private.my_role() = 'tt') with check (private.my_role() = 'tt');
 
 -- Dữ liệu chung: nhân viên trung tâm đọc được. Phụ huynh (ph) không có quyền.
+-- Giáo viên đọc dữ liệu chung, riêng vio (vi phạm nội quy) chỉ đọc phần ĐÃ DUYỆT của chính mình
 create policy "records_read" on public.records for select
-  using (private.my_role() in ('tt','vp','ql','gv'));
+  using (
+    private.my_role() in ('tt','vp','ql')
+    or (private.my_role() = 'gv' and (
+      collection <> 'vio'
+      or (data->>'st' = private.my_staff_id() and data->>'s' = 'duyet')))
+  );
 create policy "records_ins" on public.records for insert
-  with check (private.can_write_records(collection));
+  with check (private.can_write_records(collection) and private.vio_ok(collection, data));
 create policy "records_upd" on public.records for update
-  using (private.can_write_records(collection)) with check (private.can_write_records(collection));
+  using (private.can_write_records(collection) and private.vio_ok(collection, data))
+  with check (private.can_write_records(collection) and private.vio_ok(collection, data));
 create policy "records_del" on public.records for delete
-  using (private.can_write_records(collection));
+  using (private.can_write_records(collection) and private.vio_ok(collection, data));
 
 -- Dữ liệu tiền: Trưởng Trung tâm và Văn phòng đọc và ghi toàn bộ
 create policy "money_tt_vp" on public.money_records for all
@@ -83,6 +99,7 @@ create policy "money_gv_read_own" on public.money_records for select
       collection = 'cfgm'
       or (collection = 'pay' and money_records.id = private.my_staff_id())
       or (collection = 'bon' and split_part(money_records.id, '|', 1) = private.my_staff_id())
+      or (collection = 'vam' and split_part(money_records.id, '|', 1) = private.my_staff_id())   -- số tiền trừ vi phạm của chính mình
     )
   );
 

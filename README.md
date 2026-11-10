@@ -24,7 +24,7 @@
 - **Thời khóa biểu bán trú** (Lịch học → Thời khóa biểu bán trú): thời khóa biểu lớp kiểu mầm non (đón trẻ, thể dục sáng, ăn, ngủ, hoạt động...) theo từng lớp, sửa được (Trưởng Trung tâm, Quản lý). Giờ 1-1 của từng bé ghép lên thời khóa biểu: tên bé hiện ở ô giờ ra học 1-1; có chế độ xem từng bé. Phụ huynh xem thời khóa biểu của bé mình. Lưu ở bộ sưu tập `tkb` của bảng `records`, không cần chạy thêm SQL.
 - **Chẩn đoán** (hồ sơ bé): chọn nhiều trong thư viện hơn 120 mục chia nhóm (ngôn ngữ, nói, giao tiếp xã hội và phổ tự kỷ, phát triển, thính giác, thần kinh, hành vi và cảm xúc...) kèm mã ICD-10 để tra cứu, có ô lọc nhanh, thêm ô "chẩn đoán khác" và nơi chẩn đoán. Thư viện ở `src/build/p03d-dx.js`.
 - **Lương giáo viên:** giáo viên bán trú lương cố định theo tháng. Giáo viên 1-1 trả theo ca: 60.000 ₫ hoặc 80.000 ₫ tùy người (Nhân sự → hồ sơ → lương). Bé có mặt hoặc dạy bù: trả đủ. Bé nghỉ không phép: 50% (30.000 ₫ hoặc 40.000 ₫). Bé nghỉ có phép, Trung tâm nghỉ, nhập viện: 0% theo mặc định. Các tỉ lệ này chỉnh ở Nhân sự → Cài đặt → Lương giáo viên 1-1 theo ca. Ca của giáo viên tính theo điểm danh của bé trong ca đó.
-- Dữ liệu mẫu bản 6 (`DB.v`): bản cũ tự nâng cấp lên (giá theo ngày, thời khóa biểu, chẩn đoán, danh sách ngày nghỉ `hol`, bản ghi mở khóa `pul`); phí bán trú theo tháng cũ (`pbtCN`, `pbtKhac`) được thay bằng giá theo ngày. Danh mục ảnh, video (`media`) được tạo khi dùng lần đầu.
+- Dữ liệu mẫu bản 7 (`DB.v`): bản cũ tự nâng cấp lên (giá theo ngày, thời khóa biểu, chẩn đoán, danh sách ngày nghỉ `hol`, bản ghi mở khóa `pul`, vi phạm nội quy `vio`/`vam` và cờ chấm công `cc` của nhân sự); phí bán trú theo tháng cũ (`pbtCN`, `pbtKhac`) được thay bằng giá theo ngày. Danh mục ảnh, video (`media`) được tạo khi dùng lần đầu.
 
 ## Thực đơn, giờ 1-1 và ngày nghỉ
 - **Thực đơn bán trú** nhập từ thứ Hai đến thứ Bảy (6 ngày); sao chép tuần có cả thứ Bảy, Chủ nhật chuyển sang thứ Hai.
@@ -79,6 +79,21 @@
 - Bắt buộc tích **gia đình đã đồng ý** và ghi chú cách đồng ý (`cs`, `cn`) mới chia sẻ được; ghi chú đồng ý chỉ nhân viên thấy. Phụ huynh chỉ thấy tên viết tắt (ví dụ "Phụ huynh bé T."), không thấy tên bé, mã bé, tên nhân viên hay đường dẫn kho. Liên kết với hồ sơ bé (`k`) là tùy chọn và chỉ nội bộ. Đồng ý là lời khai của người đăng, ứng dụng không kiểm chứng được.
 - Xóa hoặc ẩn xong, máy phụ huynh tự bỏ mục đó ở lần đồng bộ sau (API trả danh sách `live`).
 
+## Chấm công do Quản lý thực hiện
+- **Giáo viên không tự chấm công.** Chỉ nhân sự làm giờ cố định (lương cố định theo tháng, ví dụ giáo viên bán trú 07:15 đến 18:00) cần chấm công, và **Quản lý (hoặc Trưởng Trung tâm) chấm cho họ** ở mục Chấm công: chọn ngày, bấm "Có mặt" (giờ vào/ra mặc định 07:15 và 18:00, chỉnh ở Nhân sự → Cài đặt: `ccIn`, `ccOut`), "Sửa giờ" khi đến muộn hay về sớm, hoặc "Chấm có mặt cho N người chưa chấm" để chấm một lần cho cả danh sách. Văn phòng chỉ xem.
+- **Giáo viên chỉ trả theo ca (1-1) không cần chấm công**: tiền tính theo ca được nhận dạy và điểm danh của bé. Bảng chấm công, file Excel chấm công và số ngày công chỉ gồm nhân sự cần chấm công; trong bảng lương, người không chấm công không bị tính ngày công hay số lần đi muộn.
+- Phân loại lưu ở hồ sơ nhân sự là cờ `cc` (`false` = chỉ trả theo ca, không chấm công; không có hoặc `true` = cần chấm công), tự suy ra từ cấu hình lương khi Trưởng Trung tâm lưu: lương trả theo ca và không có mức lương bán trú thì `cc=false` (`needCC`, `ccOf` ở `src/build/p04-domain.js`). Cờ nằm ở hồ sơ nhân sự (không phải dữ liệu tiền) để Quản lý và Giáo viên đọc được; cấu hình lương vẫn ở `money_records`. Nhân sự cũ trên cloud chưa có cờ được gán một lần khi Trưởng Trung tâm hoặc Văn phòng đăng nhập (`ccBackfill`); trước đó nhân sự cũ vẫn được coi là cần chấm công.
+- Trưởng Trung tâm, Quản lý, Văn phòng (không phải người dạy) vẫn tự bấm vào ca / ra ca của mình như trước. Giáo viên chỉ xem trạng thái "Quản lý đã / chưa chấm công" ở Chấm công và Dashboard.
+- Chính sách RLS (migration `20261110180100_ts_manager_only.sql`): collection `ts` chỉ `tt`, `vp`, `ql` ghi; `gv` chỉ đọc.
+
+## Vi phạm nội quy và trừ lương
+- Mục **Vi phạm nội quy** (menu cạnh Chấm công): Quản lý ghi nhận vi phạm của nhân sự (ngày, lý do chọn từ danh sách 12 lỗi trong poster "Nhắc nhở chung về giờ làm việc và quy định Trung tâm" hoặc "Lý do khác" kèm ghi chú, mức độ), **Trưởng Trung tâm duyệt và quyết định số tiền trừ**. Trưởng Trung tâm tự ghi thì duyệt luôn.
+- Mức độ: Mức 1 (nhẹ) và Mức 2 (vừa) có số tiền gợi ý mặc định 20.000 ₫ và 30.000 ₫ (chỉnh ở Nhân sự → Cài đặt: `v1`, `v2`; theo poster, mỗi lần bị note 20.000 đến 30.000 ₫); Mức 3 (cao hơn: tùy hậu quả hay tái phạm) bắt buộc Trưởng Trung tâm nhập số tiền. Khi duyệt, màn hình hiển thị số lần cùng lý do trước đó để Trưởng Trung tâm cân nhắc. Trường hợp đặc biệt hay tái phạm nhiều lần do Trưởng Trung tâm quyết định.
+- Trạng thái: chờ duyệt (`cho`), đã duyệt (`duyet`), từ chối (`tuchoi`). **Chỉ vi phạm đã duyệt mới trừ lương**: dòng "Trừ vi phạm nội quy (dd/mm: lý do)" trên phiếu lương, cột "Trừ vi phạm" trong file Excel lương, và trong tính toán lương (`vpen` ở `payroll`). Đã duyệt thì sửa, xóa được (xác nhận trước khi xóa) và lương tháng đó tự tính lại.
+- Lưu trữ: bản ghi vi phạm ở collection `vio` trong `records` (không có số tiền); **số tiền nằm ở `money_records`, collection `vam`** (khóa `mãNhânViên|mãViPhạm`), nên Quản lý không bao giờ thấy số tiền. Giáo viên chỉ thấy vi phạm đã duyệt của chính mình (kèm số tiền của mình); nhân sự khác không đọc được vi phạm của người khác.
+- Quyền (kiểm tra ở máy chủ, migration `20261110180000_vio_policies.sql`, hàm `private.vio_ok`): `tt` mọi thao tác; `ql` chỉ tạo, sửa, xóa bản ghi đang chờ duyệt và **không ghi vi phạm về chính mình**; `vp` chỉ xem danh sách (giao diện không cho sửa; số tiền xem được vì `vp` có quyền tiền), `gv` xem phần đã duyệt của mình, `ph` không đọc. Giao diện ở `src/build/p26-vio.js`.
+- Quy tắc này khác với "thưởng": thưởng nằm ở `money_records` như cũ, hai khoản độc lập.
+
 ## Chế độ
 - Mặc định (trên web): đăng nhập Supabase, dữ liệu lưu trên máy chủ.
 - Thêm `?demo` vào địa chỉ: bản trình diễn dùng dữ liệu mẫu trong trình duyệt, không lưu lên máy chủ.
@@ -98,7 +113,8 @@
 ## Phân quyền dữ liệu (kiểm tra ở máy chủ)
 - Trưởng Trung tâm, Văn phòng: đọc và ghi cả dữ liệu tiền (học phí, lương, thưởng, thuế).
 - Quản lý: không nhận dữ liệu tiền.
-- Giáo viên: chỉ đọc lương và thưởng của mình (theo mã nhân viên).
+- Giáo viên: chỉ đọc lương, thưởng và khoản trừ vi phạm đã duyệt của mình (theo mã nhân viên). Không tự chấm công (collection `ts` chỉ `tt`, `vp`, `ql` ghi).
+- Vi phạm nội quy (`vio`): chỉ `tt` và `ql` ghi; `ql` chỉ ghi bản chờ duyệt và không ghi về chính mình; số tiền trừ (`vam`) ở `money_records` nên chỉ `tt`, `vp` đọc ghi, giáo viên đọc phần của mình.
 - Phụ huynh: chỉ qua `api/parent.js`, chỉ dữ liệu của bé mình.
 
 ## Gói Supabase, sao lưu và phục hồi
@@ -121,5 +137,7 @@
 - Xóa dữ liệu do người khác thực hiện chỉ hiện sau khi tải lại trang.
 - Dữ liệu điểm danh được tải toàn bộ khi đăng nhập; với hàng trăm trẻ dùng nhiều năm cần tải theo tháng.
 - Ảnh, video: gói Pro có 100 GB lưu trữ tệp; mỗi tệp tối đa 500 MB và chỉ có hiệu lực khi "Global file size limit" của cả dự án (Supabase → Storage → Settings) cũng từ 500 MB trở lên, nếu không tệp lớn hơn mức chung bị từ chối (HTTP 413). Tải lên dùng một yêu cầu duy nhất, chưa có tải tiếp khi mất mạng giữa chừng: video rất lớn nên nén trước. Chưa có xem trước cho tài liệu Word, Excel (mở bằng ứng dụng của máy). Xóa bé không xóa ảnh, video của bé trong kho.
+- Chấm công: nhân sự cũ trên cloud chỉ nhận cờ `cc` (không chấm công) khi Trưởng Trung tâm hoặc Văn phòng đăng nhập một lần; trước đó vẫn được coi là cần chấm công. Dữ liệu tự chấm công cũ của giáo viên giữ nguyên, nhưng giáo viên không ghi thêm được. Chính sách chặn giáo viên ghi `ts` (`20261110180100_ts_manager_only.sql`) áp dụng sau khi bản giao diện mới lên Production.
+- Vi phạm nội quy: Văn phòng giữ quyền tiền theo mô hình hiện có nên xem được số tiền trừ; Quản lý không thấy số tiền nên chỉ thấy lý do, mức độ và trạng thái.
 - Hạn chế chụp màn hình chỉ răn đe, không chặn tuyệt đối (xem phần Cổng phụ huynh: hạn chế chụp màn hình).
 - Tài liệu tham khảo và Góc tri ân: tệp đã mở xem trong trình duyệt phụ huynh thì kỹ thuật viên vẫn lấy được đường xem tạm 15 phút từ công cụ nhà phát triển; không có cách chặn hẳn trên web. Tài liệu tham khảo chỉ nhận PDF, ảnh, video. Thêm pdf.js tự lưu (`vendor/pdfjs/`) làm bản triển khai nặng thêm khoảng 1,8 MB.

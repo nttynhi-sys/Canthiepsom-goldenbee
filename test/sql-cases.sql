@@ -201,3 +201,75 @@ reset role;
 delete from public.records where collection in ('ref','tri');
 
 delete from storage.objects;
+
+-- Vi phạm nội quy (vio, không phải tiền), số tiền trừ (vam, money_records) và chấm công (ts):
+--   ql ghi vi phạm chờ duyệt (không về chính mình); tt duyệt và quyết định số tiền; gv chỉ đọc vi phạm đã duyệt của mình;
+--   vp chỉ đọc; ph không thấy; ql không thấy tiền; gv không tự chấm công (ts).
+reset role;
+set role authenticated;
+select t.as_user('00000000-0000-0000-0000-000000000006','ql@gb.vn');
+insert into public.records(collection,id,data) values ('vio','v1','{"st":"nv04","d":"2026-11-03","r":"r1","lv":1,"s":"cho","by":"nv07"}'),('vio','v2','{"st":"nv05","d":"2026-11-04","r":"r5","lv":2,"s":"cho","by":"nv07"}');
+select t.chk('ql ghi được vi phạm chờ duyệt', (select count(*) from public.records where collection='vio'), 2);
+do $$ begin
+  begin insert into public.records(collection,id,data) values ('vio','vx','{"st":"nv04","s":"duyet"}'); raise exception 'FAIL ql ghi được vi phạm đã duyệt'; exception when insufficient_privilege then raise notice 'PASS ql không ghi được vi phạm đã duyệt'; end;
+  begin insert into public.records(collection,id,data) values ('vio','vy','{"st":"nv07","s":"cho"}'); raise exception 'FAIL ql ghi được vi phạm về chính mình'; exception when insufficient_privilege then raise notice 'PASS ql không ghi được vi phạm về chính mình'; end;
+  begin update public.records set data='{"st":"nv04","s":"duyet"}' where collection='vio' and id='v1'; raise exception 'FAIL ql tự duyệt được vi phạm'; exception when insufficient_privilege then raise notice 'PASS ql không tự duyệt được vi phạm'; end;
+end $$;
+update public.records set data='{"st":"nv04","d":"2026-11-03","r":"r1","lv":1,"s":"cho","by":"nv07","n":"sửa"}' where collection='vio' and id='v1';
+select t.chk('ql sửa được vi phạm chờ duyệt', (select count(*) from public.records where collection='vio' and data->>'n'='sửa'), 1);
+insert into public.records(collection,id,data) values ('ts','nv04|2026-11-03','{"i":"07:15","o":"18:00"}');
+select t.chk('ql chấm công được cho nhân sự (ts)', (select count(*) from public.records where collection='ts'), 1);
+select t.chk('ql không thấy tiền (vam)', (select count(*) from public.money_records), 0);
+
+select t.as_user('00000000-0000-0000-0000-000000000001','tt@gb.vn');
+update public.records set data='{"st":"nv04","d":"2026-11-03","r":"r1","lv":1,"s":"duyet","by":"nv07","dby":"nv02"}' where collection='vio' and id='v1';
+insert into public.records(collection,id,data) values ('vio','v3','{"st":"nv05","d":"2026-11-05","r":"r3","lv":2,"s":"duyet","by":"nv07","dby":"nv02"}');
+insert into public.money_records(collection,id,data) values ('vam','nv04|v1','20000'),('vam','nv05|v3','30000');
+select t.chk('tt duyệt được vi phạm và ghi số tiền trừ', (select count(*) from public.records where collection='vio' and data->>'s'='duyet'), 2);
+
+select t.as_user('00000000-0000-0000-0000-000000000006','ql@gb.vn');
+select t.chk('ql đọc được mọi vi phạm', (select count(*) from public.records where collection='vio'), 3);
+select t.chk('ql vẫn không thấy tiền sau khi tt duyệt', (select count(*) from public.money_records where collection='vam'), 0);
+do $$ begin
+  begin update public.records set data='{"st":"nv04","s":"cho"}' where collection='vio' and id='v1'; if found then raise exception 'FAIL ql sửa được vi phạm đã duyệt'; end if; raise notice 'PASS ql không sửa được vi phạm đã duyệt (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS ql không sửa được vi phạm đã duyệt'; end;
+  begin delete from public.records where collection='vio' and id='v1'; if found then raise exception 'FAIL ql xóa được vi phạm đã duyệt'; end if; raise notice 'PASS ql không xóa được vi phạm đã duyệt (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS ql không xóa được vi phạm đã duyệt'; end;
+end $$;
+delete from public.records where collection='vio' and id='v2';
+select t.chk('ql xóa được vi phạm chờ duyệt', (select count(*) from public.records where collection='vio'), 2);
+insert into public.records(collection,id,data) values ('vio','v2','{"st":"nv05","d":"2026-11-04","r":"r5","lv":2,"s":"cho","by":"nv07"}');
+
+select t.as_user('00000000-0000-0000-0000-000000000002','gv@gb.vn');
+select t.chk('gv (nv04) chỉ thấy vi phạm đã duyệt của mình', (select count(*) from public.records where collection='vio'), 1);
+select t.chk('gv (nv04) chỉ thấy số tiền trừ của mình', (select count(*) from public.money_records where collection='vam'), 1);
+select t.chk('gv (nv04) vẫn đọc được dữ liệu chung khác (hồ sơ bé)', (select count(*) from public.records where collection='kids'), 1);
+do $$ begin
+  begin insert into public.records(collection,id,data) values ('vio','vg','{"st":"nv04","s":"cho"}'); raise exception 'FAIL gv ghi được vi phạm'; exception when insufficient_privilege then raise notice 'PASS gv không ghi được vi phạm'; end;
+  begin insert into public.records(collection,id,data) values ('ts','nv04|2026-11-05','{"i":"07:00","o":""}'); raise exception 'FAIL gv tự chấm công được'; exception when insufficient_privilege then raise notice 'PASS gv không tự chấm công được (ts)'; end;
+  begin update public.records set data='{"i":"06:00","o":""}' where collection='ts' and id='nv04|2026-11-03'; if found then raise exception 'FAIL gv sửa được chấm công'; end if; raise notice 'PASS gv không sửa được chấm công (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS gv không sửa được chấm công'; end;
+  begin insert into public.money_records(collection,id,data) values ('vam','nv04|vz','1'); raise exception 'FAIL gv ghi được số tiền trừ'; exception when insufficient_privilege then raise notice 'PASS gv không ghi được số tiền trừ'; end;
+end $$;
+select t.chk('gv đọc được chấm công của mình và của người khác (chỉ đọc)', (select count(*) from public.records where collection='ts'), 1);
+
+select t.as_user('00000000-0000-0000-0000-000000000003','sdt@example.com');
+select t.chk('gv (nv05) thấy vi phạm đã duyệt của mình, không thấy bản chờ duyệt', (select count(*) from public.records where collection='vio'), 1);
+select t.chk('gv (nv05) không thấy vi phạm của nv04', (select count(*) from public.records where collection='vio' and data->>'st'='nv04'), 0);
+select t.chk('gv (nv05) chỉ thấy số tiền trừ của mình', (select count(*) from public.money_records where collection='vam' and id like 'nv05|%'), 1);
+select t.chk('gv (nv05) không thấy số tiền của người khác', (select count(*) from public.money_records where collection='vam' and id like 'nv04|%'), 0);
+
+select t.as_user('00000000-0000-0000-0000-000000000007','vp@gb.vn');
+select t.chk('vp đọc được mọi vi phạm và số tiền', (select count(*) from public.records where collection='vio')*10 + (select count(*) from public.money_records where collection='vam'), 32);
+do $$ begin
+  begin insert into public.records(collection,id,data) values ('vio','vv','{"st":"nv04","s":"cho"}'); raise exception 'FAIL vp ghi được vi phạm'; exception when insufficient_privilege then raise notice 'PASS vp không ghi được vi phạm'; end;
+  begin update public.records set data='{"st":"nv04","s":"cho"}' where collection='vio' and id='v1'; if found then raise exception 'FAIL vp sửa được vi phạm'; end if; raise notice 'PASS vp không sửa được vi phạm (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS vp không sửa được vi phạm'; end;
+end $$;
+insert into public.records(collection,id,data) values ('ts','nv08|2026-11-03','{"i":"07:30","o":"17:00"}');
+select t.chk('vp vẫn tự chấm công được (ts)', (select count(*) from public.records where collection='ts' and id like 'nv08|%'), 1);
+
+select t.as_user('00000000-0000-0000-0000-000000000004','ph@gb.vn');
+select t.chk('ph không đọc được vi phạm, chấm công, số tiền trừ', (select count(*) from public.records where collection in ('vio','ts'))+(select count(*) from public.money_records where collection='vam'), 0);
+
+select t.as_user('00000000-0000-0000-0000-000000000001','tt@gb.vn');
+delete from public.records where collection in ('vio','ts');
+delete from public.money_records where collection='vam';
+select t.chk('tt dọn dữ liệu thử vi phạm', (select count(*) from public.records where collection in ('vio','ts')), 0);
+reset role;

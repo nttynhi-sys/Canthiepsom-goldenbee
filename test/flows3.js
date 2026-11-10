@@ -18,7 +18,7 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  // ===== GV =====
  await login('gv');
  const gv=await ev(()=>U.id);
- ok('gv nav limited',JSON.stringify(await page.$$eval('.nav button',e=>e.map(x=>x.dataset.v)))===JSON.stringify(['dash','hs','lh','tn','cc','dd','hb','tl','mt','bc','td','tb']));
+ ok('gv nav limited',JSON.stringify(await page.$$eval('.nav button',e=>e.map(x=>x.dataset.v)))===JSON.stringify(['dash','hs','lh','tn','cc','vi','dd','hb','tl','mt','bc','td','tb']));
  await ev(()=>{S.v='ns';render()});ok('gv cannot open Nhân sự (falls back)',(await ev(()=>S.v))==='dash');
  const sess=await page.$$('[data-a="ddgo"]');
  if(sess.length){await sess[0].click();await W(80)}else await nav('dd');
@@ -34,10 +34,10 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  const hdr=await page.$eval('.sheet thead',e=>e.innerText);ok('gv sheet hides money columns',!/Học phí|Hoàn|Phí mất/.test(hdr)&&/Có mặt/.test(hdr));
  const kt=await page.$$eval('.kpi',e=>e.map(x=>x.innerText.replace(/\n/g,' ')).join(' | '));ok('gv sheet KPIs have no money',!/₫/.test(kt),kt);
  ok('gv has no fee rule tab',(await page.$('.tab[data-v="rule"]'))===null);
- // check-in
- await nav('dash');const cib=await page.$('[data-a="ci"]');await cib.click();await W(60);
- ok('check-in recorded',!!(await ev(g=>DB.ts[g+'|'+WD]&&DB.ts[g+'|'+WD].i,gv)));
- await page.click('[data-a="ci"]');await W(60);ok('check-out recorded',!!(await ev(g=>DB.ts[g+'|'+WD].o,gv)));
+ // chấm công: giáo viên không tự chấm (Quản lý chấm công cho giáo viên làm giờ cố định)
+ await nav('dash');ok('gv không có nút chấm công vào/ra',(await page.$('[data-a="ci"]'))===null);
+ await ev(()=>{ACT.ci();render()});await W(60);
+ ok('gv bấm chấm công không ghi được công',!(await ev(g=>DB.ts[g+'|'+WD],gv)));
  // Học bù: propose for own kid
  await ev(g=>{const k=DB.kids.find(x=>x.gv===g&&x.st==='dang');const l=DB.lich.find(x=>x.hs===k.id&&x.type==='11');const d=addD(WD,-2);const dd=isW(d)?d:addD(d,-1);DB.att[dd+'|'+l.id+'|'+k.id]='p';mkMake(k.id,dd,l.id,'Test');render()},gv);
  await nav('hb');

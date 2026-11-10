@@ -100,20 +100,28 @@ function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))retur
  return out.sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0)}
 
 /* --- Chấm công nhân viên và lương --- */
+/* Chấm công do Quản lý hoặc Trưởng Trung tâm thực hiện, chỉ cho nhân sự có lương cố định hoặc lương cơ bản (làm giờ cố định). Nhân sự trả lương theo ca 1-1 (s.cc===false) không chấm công: lương tính theo ca đã dạy. s.cc là bản sao không phải số tiền của hình thức trả lương, để Quản lý (không thấy lương) vẫn biết ai cần chấm công; chưa có thì coi là cần chấm công. */
+const needCC=s=>!s||s.cc!==false,ccOf=pay=>!!pay&&(pay.mode!=='buoi'||(+pay.rateBt||0)>0);
 function tsSt(id,d){const l=DB.lr.find(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t);if(l)return l.type==='kl'?'kl':'leave';
+ if(!needCC(stBy(id)))return isW(d)&&isClosed(d)?'hol':'';
  const r=DB.ts[id+'|'+d];if(r&&r.i)return r.i>DB.cfg.lateAfter?'late':'ok';
  if(isW(d)&&isClosed(d))return 'hol';
  if(d>TODAY||!isW(d))return '';return d>=WD?'chua':'abs'}
 /* Tỉ lệ lương một ca 1-1 theo tình trạng của bé: có mặt và dạy bù trả đủ 100%; bé nghỉ không phép được 50%; các trường hợp còn lại do Trung tâm đặt */
 function gvPct(){const R=DB.cfg.rule||{},n=(v,d)=>v==null||v===''||isNaN(+v)?d:Math.max(0,Math.min(100,+v));
  return{cm:100,kp:n(R.gvKp,50),p:n(R.gvP,0),tt:n(R.gvTt,0),bv:n(R.gvBv,0)}}
+/* Vi phạm nội quy (collection vio, mức tiền ở money_records vam theo khóa nhânviên|mãvipham): số tiền trừ lương trong tháng m của một nhân sự, chỉ tính vi phạm đã duyệt */
+const vioAmt=v=>+((DB.vam||{})[v.st+'|'+v.id])||0;
+const vioList=(id,m)=>(DB.vio||[]).filter(v=>v.st===id&&v.s==='duyet'&&(!m||String(v.d).slice(0,7)===m));
+const vioSum=(id,m)=>vioList(id,m).reduce((a,v)=>a+vioAmt(v),0);
 function payroll(s,m){
  const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id),pc=gvPct();
  const myGr=DB.groups.filter(g=>g.gv===s.id||g.tg===s.id),open6=myGr.some(g=>grOpen(g,6));
  let cong=0,late=0,btd=0,leave=0,abs=0,hol=0;
- const ss={cm:0,kp:0,p:0,tt:0,bv:0,bu:0,none:0};
- for(const d of dts){const t=tsSt(s.id,d),w=dow(d),worked=t==='ok'||t==='late';
-  if(worked){cong++;if(t==='late')late++;if(myGr.length&&(w<=5||(w===6&&open6)))btd++}
+ const ss={cm:0,kp:0,p:0,tt:0,bv:0,bu:0,none:0},cc=needCC(s);
+ for(const d of dts){const t=tsSt(s.id,d),w=dow(d),worked=cc?(t==='ok'||t==='late'):t==='';   /* trả theo ca: không chấm công, ngày làm việc thường (không nghỉ phép, không nghỉ lễ) coi là có mặt để đếm ca chưa điểm danh */
+  if(!cc){if(t==='hol')continue}
+  else if(worked){cong++;if(t==='late')late++;if(myGr.length&&(w<=5||(w===6&&open6)))btd++}
   else if(t==='leave'){cong++;leave++}else if(t==='hol'){cong++;hol++;continue}   /* ngày nghỉ lễ hưởng nguyên lương ngày công, không có ca dạy */
   else if(t==='abs'||t==='kl')abs++;
   /* ca 1-1 tính theo điểm danh của bé trong ca đó */
@@ -121,5 +129,6 @@ function payroll(s,m){
    if(c&&ss[c]!=null){ss[c]++;if(l.type==='bu'&&c==='cm')ss.bu++}else if(!c&&worked)ss.none++}})}
  const teach=ss.cm,units=ss.cm*pc.cm+ss.kp*pc.kp+ss.p*pc.p+ss.tt*pc.tt+ss.bv*pc.bv;
  const byDay=f.mode==='buoi'?0:(f.base||0)*Math.min(cong,cfg.cc)/cfg.cc,bySess=f.mode==='thang'?0:units/100*(f.rate||0),byBt=btd*(f.rateBt||0),allow=f.allow||0,bonus=DB.bon[s.id+'|'+m]||0,pen=late*(f.latePen||0),bh=(f.base||0)*(f.bh||0)/100;
- const gross=byDay+bySess+byBt+allow+bonus-pen,tax=Math.max(0,gross-bh-cfg.giamTru)*cfg.thue/100;
- return{cong,late,hol,teach,kp:ss.kp,p:ss.p,tt:ss.tt,bv:ss.bv,bu:ss.bu,none:ss.none,pc,btd,leave,abs,byDay,bySess,byBt,allow,bonus,pen,bh,gross,tax,net:gross-bh-tax}}
+ const vpen=vioSum(s.id,m);   /* trừ lương do vi phạm nội quy: chỉ tính các lần Trưởng Trung tâm đã duyệt */
+ const gross=byDay+bySess+byBt+allow+bonus-pen-vpen,tax=Math.max(0,gross-bh-cfg.giamTru)*cfg.thue/100;
+ return{cong,late,hol,teach,kp:ss.kp,p:ss.p,tt:ss.tt,bv:ss.bv,bu:ss.bu,none:ss.none,pc,btd,leave,abs,byDay,bySess,byBt,allow,bonus,pen,vpen,bh,gross,tax,net:gross-bh-tax}}

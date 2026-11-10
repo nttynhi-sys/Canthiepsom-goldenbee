@@ -53,12 +53,20 @@ function migrate6(d){
  if(!Array.isArray(d.hol))d.hol=[];
  if(!d.pul||typeof d.pul!=='object'||Array.isArray(d.pul))d.pul={};
  d.v=6}
+/* Bản 7: chấm công do Quản lý thực hiện (cờ s.cc: nhân sự chỉ trả theo ca 1-1 không chấm công), vi phạm nội quy và trừ lương (vio, vam), giờ chấm công mặc định và mức trừ lương trong cấu hình. Giữ nguyên mọi dữ liệu cũ. */
+function migrate7(d){
+ DB=d;
+ d.staff.forEach(s=>{if(s.cc==null)s.cc=ccOf(s.pay)});
+ if(!Array.isArray(d.vio))d.vio=[];
+ if(!d.vam||typeof d.vam!=='object'||Array.isArray(d.vam))d.vam={};
+ const c=d.cfg;if(!c.ccIn)c.ccIn='07:15';if(!c.ccOut)c.ccOut='18:00';if(c.v1==null)c.v1=20000;if(c.v2==null)c.v2=30000;
+ d.v=7}
 const okDB=d=>d&&Array.isArray(d.staff)&&Array.isArray(d.kids)&&d.cfg&&d.cfg.rule&&d.set&&d.rd&&d.att&&Array.isArray(d.rp)&&Array.isArray(d.tpl);
 (function boot(){
  if(CLOUDMODE){try{const th=localStorage.getItem('gb_th');if(th)document.documentElement.dataset.theme=th}catch(e){}cloudBoot();initCaps();return}
  let d=null;try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
- if(okDB(d)&&d.v===6&&Array.isArray(d.hol)&&Array.isArray(d.plans)&&Array.isArray(d.sess)&&Array.isArray(d.cg)&&d.menu&&Array.isArray(d.groups)&&Array.isArray(d.tkb))DB=d;
- else if(okDB(d)&&d.v>=2&&d.v<=5){try{if(d.v===2)migrate(d);if(d.v<=3)migrate4(d);if(d.v<=4)migrate5(d);migrate6(d);save()}catch(e){DB=null;seed();save()}}
+ if(okDB(d)&&d.v===7&&Array.isArray(d.vio)&&d.vam&&Array.isArray(d.hol)&&Array.isArray(d.plans)&&Array.isArray(d.sess)&&Array.isArray(d.cg)&&d.menu&&Array.isArray(d.groups)&&Array.isArray(d.tkb))DB=d;
+ else if(okDB(d)&&d.v>=2&&d.v<=6){try{if(d.v===2)migrate(d);if(d.v<=3)migrate4(d);if(d.v<=4)migrate5(d);if(d.v<=5)migrate6(d);migrate7(d);save()}catch(e){DB=null;seed();save()}}
  else{seed();save()}
  try{const th=localStorage.getItem('gb_th');if(th)document.documentElement.dataset.theme=th}catch(e){}
  try{const em=localStorage.getItem('gb_u');if(em){const a=findAccount(em);if(a){U=a;S.v=ACCESS[a.role][0]}}}catch(e){}

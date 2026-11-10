@@ -21,7 +21,7 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  await page.click('#nvf button[type=submit]');await W(80);
  ok('HR add staff',(await ev(()=>DB.staff.length))===31&&(await ev(()=>DB.staff.some(s=>s.em==='kiem.thu@goldenbee.vn'))));
  // permissions tab + settings
- await page.click('.tab[data-v="pq"]');await W(50);ok('permission matrix renders',(await page.$$eval('table tbody tr',r=>r.length))===17);
+ await page.click('.tab[data-v="pq"]');await W(50);ok('permission matrix renders',(await page.$$eval('table tbody tr',r=>r.length))===18);
  await page.click('.tab[data-v="cd"]');await W(50);await page.fill('#p11','350000');await page.click('#cfgf button[type=submit]');await W(60);
  ok('settings saved',(await ev(()=>DB.cfg.p11))===350000);await ev(()=>{DB.cfg.p11=300000});
  // Học phí: ghi thu
@@ -45,7 +45,8 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  const mk1=await ev(()=>DB.mk.length),att1=await ev(()=>Object.keys(DB.att).length);
  ok('approving teacher leave marks sessions + creates makeup requests',mk1>mk0&&att1>att0,'mk '+mk0+'->'+mk1+', att '+att0+'->'+att1+' pending='+JSON.stringify(pend));
  // Bảng công
- await page.click('.tab[data-v="bang"]');await W(60);ok('timesheet grid renders',(await page.$$('.sheet tbody tr')).length>=30);
+ await page.click('.tab[data-v="bang"]');await W(60);{const rows=(await page.$$('.sheet tbody tr')).length,need=await page.evaluate(()=>DB.staff.filter(s=>s.st==='dang'&&needCC(s)).length),all=await page.evaluate(()=>DB.staff.filter(s=>s.st==='dang').length);
+ ok('timesheet grid renders only staff who need timesheet (fixed hours), not per-session teachers',rows===need&&rows>=10&&rows<all,[rows,need,all])}
  await page.click('.sheet button.sc:not([disabled])');await page.waitForSelector('#tsef');await page.fill('#ts-i','09:05');await page.click('#tsef button[type=submit]');await W(60);ok('timesheet edit saved',true);
  // Phân công
  await nav('pc');
