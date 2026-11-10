@@ -47,7 +47,7 @@ ACT.mkpick=v=>{const [id,pid]=v.split('|'),r=DB.mk.find(x=>x.id===id),p=r&&r.pro
 ACT.mkprop=v=>{const r=DB.mk.find(x=>x.id===v);if(!r)return false;S.modal={t:'mkp',id:v,gv:mkGV(r)}};
 CHG.mkpgv=v=>{S.modal.gv=v};
 MODALS.mkp=()=>{const m=S.modal,r=DB.mk.find(x=>x.id===m.id),from=addD(TODAY>r.from.d?TODAY:r.from.d,1),fs=freeSlots(m.gv,r.hs,from,8);
- return mdl('Đề xuất giờ học bù cho '+kn(r.hs),`<form id="mkpf" class="f"><div><label for="mp-g">Giáo viên dạy bù</label><select id="mp-g" data-c="mkpgv">${opts(pool11().map(s=>[s.id,s.n]),m.gv)}</select></div>
+ return mdl('Đề xuất giờ học bù cho '+kn(r.hs),`<form id="mkpf" class="f"><div><label for="mp-g">Giáo viên dạy bù</label><select id="mp-g" data-c="mkpgv">${opts(pool11().map(s=>[s.id,tName(s)]),m.gv)}</select></div>
  <fieldset style="border:1px solid var(--bd);border-radius:10px;padding:10px"><legend class="sm mu">Khung giờ còn trống (chọn tối đa 3)</legend>${fs.length?fs.map((s,i)=>`<label class="chk" style="padding:4px 0"><input type="checkbox" name="s" value="${s.date}|${s.slot}|${s.room}"> ${DAYN[dow(s.date)]} ${vd(s.date)} · ${slotLb(s.slot)} · ${s.room}</label>`).join(''):'<p class="empty">Giáo viên không còn khung giờ trống trong 4 tuần tới.</p>'}</fieldset>
  <div class="err" role="alert">${esc(m.err||'')}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit" ${fs.length?'':'disabled'}>Gửi đề xuất cho phụ huynh</button></div></form>`)};
 FORM.mkpf=f=>{const ch=Array.from(f.querySelectorAll('input[name=s]:checked')).map(x=>x.value);if(!ch.length||ch.length>3){S.modal.err='Hãy chọn từ 1 đến 3 khung giờ';return}

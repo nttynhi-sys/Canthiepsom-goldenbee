@@ -13,6 +13,13 @@ const VLAB={gv:{hs:'Học sinh của tôi',lh:'Lịch dạy của tôi',cc:'Ch�
 const NAVG={vp:{tn:'Vận hành',tb:'Liên lạc'},ph:{cp:'Tổng quan',lh:'Lịch học',tb:'Liên lạc'}};
 const vlab=v=>((VLAB[U&&U.role]||{})[v])||NAV.find(n=>n[0]===v)[1];
 const isQL=()=>!!U&&U.role==='ql',isTT=()=>!!U&&U.role==='tt',isVP=()=>!!U&&U.role==='vp',isLead=()=>!!U&&(U.role==='ql'||U.role==='tt'),isGV=()=>!!U&&U.role==='gv',isPH=()=>!!U&&U.role==='ph';
+/* Người được phân giao dạy trẻ (1-1, bán trú, học bù): Giáo viên (gv) và Quản lý (ql). Trưởng Trung tâm, Văn phòng và hành chính không nằm trong danh sách phân giao. Quản lý vẫn giữ quyền Quản lý của mình, chỉ thêm việc được chọn làm người dạy. */
+const TEACH_ROLES=['gv','ql'],isTeacher=s=>!!s&&TEACH_ROLES.includes(s.role);
+/* Quản lý đang thực sự dạy: có bé 1-1 đang học, có ca 1-1 cố định hoặc phụ trách nhóm bán trú. Dùng để đếm 'giáo viên và trợ giảng' mà không tính quản lý chưa dạy. */
+const teachesNow=id=>DB.kids.some(k=>k.gv===id&&k.st==='dang')||DB.lich.some(l=>l.gv===id)||DB.groups.some(g=>g.gv===id||g.tg===id);
+/* Tên hiển thị trong danh sách chọn người dạy: quản lý có ghi chú để phân biệt với giáo viên. */
+const tName=s=>s.n+(s.role==='ql'?' (Quản lý)':'');
+const activeTeachers=()=>DB.staff.filter(s=>s.st==='dang'&&(s.role==='gv'||(s.role==='ql'&&teachesNow(s.id))));
 /* canMoney: Trưởng Trung tâm và Văn phòng được xem và thao tác học phí, thu chi, công nợ, lương.
    canCfg: chỉ Trưởng Trung tâm đổi thông số tiền, mức lương và vai trò nhân sự.
    seesAll: thấy mọi học sinh và mọi nhân sự (Quản lý, Trưởng Trung tâm, Văn phòng).
