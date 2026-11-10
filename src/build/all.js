@@ -1022,7 +1022,7 @@ function seedDx(R,k){const pick=a=>a[Math.floor(R()*a.length)],m={
   h[1].forEach(sub=>sub[3].forEach(g=>{cn++;add('cp',hi,'CP'+cn,g[0],(sub[0]+'. '+(g[1]||'')).trim(),g[2],sub[1],sub[2])}))});
 })();
 /* ===== Ngân hàng mục tiêu: "Ngôn ngữ trị liệu" (0–6 tuổi) =====
-   Nguồn: file GOLDEN BEE MASTER GOAL BANK 0–6 (bản dự thảo để duyệt, mọi mục đang "Chưa duyệt").
+   Nguồn: file GOLDEN BEE MASTER GOAL BANK 0–6 (bản dự thảo để duyệt).
    - Bộ công cụ mới nl, thêm trước "Trung tâm tự thêm" (cu).
    - Lĩnh vực: 9 lĩnh vực có sẵn nhận các mục trùng nghĩa (nh, nd, nt, xh); 5 lĩnh vực mới (gtl, lnp, aac, an, tn) được thêm vào bộ lọc.
    - Độ tuổi: cùng mốc lọc với các chương trình khác (AGEB: 0 dưới 12 tháng, 1 12–24, 2 24–36, 3 36–48, 4 48–72 tháng).
