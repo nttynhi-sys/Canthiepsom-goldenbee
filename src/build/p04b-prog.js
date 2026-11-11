@@ -24,13 +24,19 @@ const HOMETIP={
 
 /* --- tra cứu mục tiêu: thư viện + mục tiêu Trung tâm tự thêm --- */
 const cgItems=()=>(DB.cg||[]).map(c=>({id:'cu:'+c.id,s:'cu',c:'TC'+c.id.replace(/\D/g,''),d:c.d,hi:-1,t:c.t||'Mục tiêu của Trung tâm',n:c.n,o:c.o||'',x:'',a:'',m:-1,sc:null,k:ascii((c.t||'')+c.n+(c.o||''))}));
-function goalOf(id){return GL[id]||cgItems().find(g=>g.id===id)||null}
+/* Mục tiêu do giáo viên tự thêm (collection 'tg'): {id,by,kid,lv:'buoi'|'n'|'d',d,n,o,at}.
+   Giáo viên chỉ thấy mục của mình; Trưởng Trung tâm và Quản lý thấy tất cả, kèm tên giáo viên và tên bé. */
+LSRC.tg={n:'Giáo viên tự thêm',d:'Mục tiêu do giáo viên tự nhập khi bộ gợi ý chưa có, theo dõi theo từng bé'};
+const tgRaw=()=>(DB.tg||[]).map(t=>({id:'tg:'+t.id,s:'tg',c:'GV'+t.id.replace(/\D/g,''),d:t.d,hi:-2,t:'Giáo viên tự thêm',n:t.n,o:t.o||'',x:'',a:'',m:-1,sc:null,by:t.by,kid:t.kid,lv:t.lv,at:t.at,k:ascii(t.n+' '+(t.o||'')+' giao vien tu them')}));
+const tgCanSee=t=>isLead()||(!!U&&t.by===U.id);
+const tgItems=()=>tgRaw().filter(t=>tgCanSee(t));
+function goalOf(id){return GL[id]||cgItems().find(g=>g.id===id)||tgRaw().find(g=>g.id===id)||null}
 const gName=id=>{const g=goalOf(id);return g?g.n:'(mục tiêu đã xóa)'};
 const gDom=id=>{const g=goalOf(id);return g?g.d:'nh'};
 const gSrc=g=>LSRC[g.s].n+' · '+g.c;
 const AGEB=[['0','Dưới 12 tháng'],['1','12–24 tháng'],['2','24–36 tháng'],['3','36–48 tháng'],['4','48–72 tháng'],['5','6–12 tuổi'],['6','12–18 tuổi'],['7','Từ 18 tuổi']];
 const ageBin=m=>m<12?0:m<24?1:m<36?2:m<48?3:4;
-const libAll=()=>LIBI.concat(cgItems());
+const libAll=()=>LIBI.concat(cgItems(),tgItems());
 /* Lĩnh vực "Chơi": tách từ lĩnh vực xh (Chơi và tương tác xã hội) để lọc nhanh. Gồm Westby, Chuỗi chơi 0–4 tuổi và mọi mục có tiêu đề bắt đầu bằng "Chơi" hoặc "Vui chơi".
    Dữ liệu của bé vẫn ghi lĩnh vực xh như cũ; chỉ bộ lọc ngân hàng mục tiêu phân đôi: "Chơi" (choi) và "Xã hội" (xh, phần còn lại). */
 const isPlay=i=>i.d==='xh'&&(i.s==='we'||i.s==='cp'||/^(Vui chơi|Chơi)/.test(i.t||''));
@@ -38,8 +44,8 @@ const domHit=(dom,i)=>!dom||(dom==='choi'?isPlay(i):dom==='xh'?(i.d==='xh'&&!isP
 const LCHIPS=LDOM.reduce((a,d)=>d.id==='xh'?a.concat([{id:'choi',s:'Chơi',d:'Chơi thực hành, chơi chức năng, chơi biểu tượng (thang Westby, chuỗi chơi 0–4 tuổi), chơi độc lập'},Object.assign({},d,{d:'Giao tiếp xã hội, kết bạn, chơi chung với bạn'})]):a.concat([d]),[]);
 function libFind(f){const qs=(f.q||'').trim().split(/\s+/).map(ascii).filter(Boolean);
  return libAll().filter(i=>domHit(f.dom,i)&&(!f.src||i.s===f.src)&&(f.head===''||f.head==null||String(i.hi)===String(f.head))&&(f.age===''||f.age==null||[].concat(i.m).some(b=>String(b)===String(f.age)))&&qs.every(q=>i.k.includes(q)))}
-function libHeads(f){const m=new Map();libAll().forEach(i=>{if(!domHit(f.dom,i))return;if(f.src&&i.s!==f.src)return;m.set(i.hi,(m.get(i.hi)||0)+1)});
- return[...m.entries()].sort((a,b)=>a[0]-b[0]).map(([h,n])=>[String(h),(h<0?'Mục tiêu Trung tâm tự thêm':LHEAD[h][1]+' · '+LSRC[LHEAD[h][0]].n)+' ('+n+')'])}
+function libHeads(f){const m=new Map(),ord=h=>h===-1?1e6:h===-2?1e6+1:h;libAll().forEach(i=>{if(!domHit(f.dom,i))return;if(f.src&&i.s!==f.src)return;m.set(i.hi,(m.get(i.hi)||0)+1)});
+ return[...m.entries()].sort((a,b)=>ord(a[0])-ord(b[0])).map(([h,n])=>[String(h),(h===-2?'Mục tiêu do giáo viên tự thêm':h<0?'Mục tiêu Trung tâm tự thêm':LHEAD[h][1]+' · '+LSRC[LHEAD[h][0]].n)+' ('+n+')'])}
 /* mục tiếp theo: với VB-MAPP đi theo thứ tự dạy (các bước nhỏ a, b, c... rồi đến mốc), còn lại theo thứ tự trong ngân hàng */
 function nextOf(id){const g=GL[id];if(!g)return null;
  if(g.s==='vb'){const o=x=>x.ms*30+(x.st?x.st.charCodeAt(0)-96:29),a=LIBI.filter(x=>x.s==='vb'&&x.hi===g.hi).sort((p,q)=>o(p)-o(q));return a[a.indexOf(g)+1]||null}

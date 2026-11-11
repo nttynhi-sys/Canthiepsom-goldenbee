@@ -124,7 +124,7 @@ function telNorm(s){let t=String(s==null?'':s).trim();if(!t)return'';
 /* Khóa phụ huynh: email (nếu có), nếu không thì số điện thoại. Mọi bé cùng khóa thuộc cùng một tài khoản phụ huynh. */
 const pkeyOf=k=>{const e=String(k&&k.pe||'').trim().toLowerCase();if(e&&e.includes('@'))return e;const t=telNorm(k&&k.pp);return t?'tel:'+t:''};
 /* Hình dạng từng nhóm dữ liệu: danh sách có mã (id hoặc k), bảng khóa, mục đơn */
-const CSH={arr:['staff','kids','cg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb','hol','media','ref','tri','vio'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon','vam'],one:['cfg']};
+const CSH={arr:['staff','kids','cg','tg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb','hol','media','ref','tri','vio'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon','vam'],one:['cfg']};
 /* Nhóm dữ liệu tiền: chỉ Trưởng Trung tâm và Văn phòng đọc và ghi được (giáo viên chỉ đọc lương của mình) */
 const MONEYC=['lg','set','bon','vam'],CFG_MONEY=['p11','pbtDay','pbtDay11','giamTru','thue','v1','v2'],CFG_DEF={pbtDay:380000,pbtDay11:180000,v1:20000,v2:30000};   /* dữ liệu cũ chưa có giá bán trú theo ngày thì lấy giá mặc định */
 const PAY_STUB=()=>({mode:'thang',base:0,rate:0,rateBt:0,allow:0,bh:0,latePen:0});
@@ -170,7 +170,7 @@ function cflat(db,withMoney){const M=new Map();
  return M}
 
 /* ---- dựng DB từ các dòng đã tải ---- */
-function cEmpty(){return{v:7,vio:[],vam:{},media:[],ref:[],tri:[],hol:[],tkb:[],cfg:{},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
+function cEmpty(){return{v:7,vio:[],vam:{},media:[],ref:[],tri:[],hol:[],tkb:[],cfg:{},staff:[],kids:[],cg:[],tg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
 function cApply(D,t,r,pay,cfgm){const c=r.collection;
  if(t==='money'&&c==='pay'){pay[r.id]=r.data;return}
  if(t==='money'&&c==='cfgm'){Object.assign(cfgm,r.data);cfgm._has=1;return}
@@ -282,7 +282,7 @@ async function cloudSetup(kind){
  if(kind==='demo'){const s=DB.staff.find(x=>x.role==='tt')||DB.staff[1];s.em=email;s.n=name}
  else{
   const me={id:'nv01',n:name,role:'tt',pos:'Trưởng Trung tâm',ph:'',em:email,st:'dang',sd:TODAY,sup:'',pay:PAY_STUB()};
-  DB.staff=[me];['kids','cg','plans','sess','lich','lr','mk','lg','rp','nt','vio'].forEach(k=>{DB[k]=[]});['att','ts','set','rd','menu','bon','vam'].forEach(k=>{DB[k]={}});
+  DB.staff=[me];['kids','cg','tg','plans','sess','lich','lr','mk','lg','rp','nt','vio'].forEach(k=>{DB[k]=[]});['att','ts','set','rd','menu','bon','vam'].forEach(k=>{DB[k]={}});
   DB.groups=[{id:'G1',n:BTN[0],gv:'',tg:''},{id:'G2',n:BTN[1],gv:'',tg:''}];DB.tkb=tkbDefault(DB.groups)}
  CLD.snap=new Map();CLD.ord={};CLD.maxo=0;
  cloudEnter();if(CLD.stage==='app')cloudFlush()}
@@ -1250,13 +1250,19 @@ const HOMETIP={
 
 /* --- tra cứu mục tiêu: thư viện + mục tiêu Trung tâm tự thêm --- */
 const cgItems=()=>(DB.cg||[]).map(c=>({id:'cu:'+c.id,s:'cu',c:'TC'+c.id.replace(/\D/g,''),d:c.d,hi:-1,t:c.t||'Mục tiêu của Trung tâm',n:c.n,o:c.o||'',x:'',a:'',m:-1,sc:null,k:ascii((c.t||'')+c.n+(c.o||''))}));
-function goalOf(id){return GL[id]||cgItems().find(g=>g.id===id)||null}
+/* Mục tiêu do giáo viên tự thêm (collection 'tg'): {id,by,kid,lv:'buoi'|'n'|'d',d,n,o,at}.
+   Giáo viên chỉ thấy mục của mình; Trưởng Trung tâm và Quản lý thấy tất cả, kèm tên giáo viên và tên bé. */
+LSRC.tg={n:'Giáo viên tự thêm',d:'Mục tiêu do giáo viên tự nhập khi bộ gợi ý chưa có, theo dõi theo từng bé'};
+const tgRaw=()=>(DB.tg||[]).map(t=>({id:'tg:'+t.id,s:'tg',c:'GV'+t.id.replace(/\D/g,''),d:t.d,hi:-2,t:'Giáo viên tự thêm',n:t.n,o:t.o||'',x:'',a:'',m:-1,sc:null,by:t.by,kid:t.kid,lv:t.lv,at:t.at,k:ascii(t.n+' '+(t.o||'')+' giao vien tu them')}));
+const tgCanSee=t=>isLead()||(!!U&&t.by===U.id);
+const tgItems=()=>tgRaw().filter(t=>tgCanSee(t));
+function goalOf(id){return GL[id]||cgItems().find(g=>g.id===id)||tgRaw().find(g=>g.id===id)||null}
 const gName=id=>{const g=goalOf(id);return g?g.n:'(mục tiêu đã xóa)'};
 const gDom=id=>{const g=goalOf(id);return g?g.d:'nh'};
 const gSrc=g=>LSRC[g.s].n+' · '+g.c;
 const AGEB=[['0','Dưới 12 tháng'],['1','12–24 tháng'],['2','24–36 tháng'],['3','36–48 tháng'],['4','48–72 tháng'],['5','6–12 tuổi'],['6','12–18 tuổi'],['7','Từ 18 tuổi']];
 const ageBin=m=>m<12?0:m<24?1:m<36?2:m<48?3:4;
-const libAll=()=>LIBI.concat(cgItems());
+const libAll=()=>LIBI.concat(cgItems(),tgItems());
 /* Lĩnh vực "Chơi": tách từ lĩnh vực xh (Chơi và tương tác xã hội) để lọc nhanh. Gồm Westby, Chuỗi chơi 0–4 tuổi và mọi mục có tiêu đề bắt đầu bằng "Chơi" hoặc "Vui chơi".
    Dữ liệu của bé vẫn ghi lĩnh vực xh như cũ; chỉ bộ lọc ngân hàng mục tiêu phân đôi: "Chơi" (choi) và "Xã hội" (xh, phần còn lại). */
 const isPlay=i=>i.d==='xh'&&(i.s==='we'||i.s==='cp'||/^(Vui chơi|Chơi)/.test(i.t||''));
@@ -1264,8 +1270,8 @@ const domHit=(dom,i)=>!dom||(dom==='choi'?isPlay(i):dom==='xh'?(i.d==='xh'&&!isP
 const LCHIPS=LDOM.reduce((a,d)=>d.id==='xh'?a.concat([{id:'choi',s:'Chơi',d:'Chơi thực hành, chơi chức năng, chơi biểu tượng (thang Westby, chuỗi chơi 0–4 tuổi), chơi độc lập'},Object.assign({},d,{d:'Giao tiếp xã hội, kết bạn, chơi chung với bạn'})]):a.concat([d]),[]);
 function libFind(f){const qs=(f.q||'').trim().split(/\s+/).map(ascii).filter(Boolean);
  return libAll().filter(i=>domHit(f.dom,i)&&(!f.src||i.s===f.src)&&(f.head===''||f.head==null||String(i.hi)===String(f.head))&&(f.age===''||f.age==null||[].concat(i.m).some(b=>String(b)===String(f.age)))&&qs.every(q=>i.k.includes(q)))}
-function libHeads(f){const m=new Map();libAll().forEach(i=>{if(!domHit(f.dom,i))return;if(f.src&&i.s!==f.src)return;m.set(i.hi,(m.get(i.hi)||0)+1)});
- return[...m.entries()].sort((a,b)=>a[0]-b[0]).map(([h,n])=>[String(h),(h<0?'Mục tiêu Trung tâm tự thêm':LHEAD[h][1]+' · '+LSRC[LHEAD[h][0]].n)+' ('+n+')'])}
+function libHeads(f){const m=new Map(),ord=h=>h===-1?1e6:h===-2?1e6+1:h;libAll().forEach(i=>{if(!domHit(f.dom,i))return;if(f.src&&i.s!==f.src)return;m.set(i.hi,(m.get(i.hi)||0)+1)});
+ return[...m.entries()].sort((a,b)=>ord(a[0])-ord(b[0])).map(([h,n])=>[String(h),(h===-2?'Mục tiêu do giáo viên tự thêm':h<0?'Mục tiêu Trung tâm tự thêm':LHEAD[h][1]+' · '+LSRC[LHEAD[h][0]].n)+' ('+n+')'])}
 /* mục tiếp theo: với VB-MAPP đi theo thứ tự dạy (các bước nhỏ a, b, c... rồi đến mốc), còn lại theo thứ tự trong ngân hàng */
 function nextOf(id){const g=GL[id];if(!g)return null;
  if(g.s==='vb'){const o=x=>x.ms*30+(x.st?x.st.charCodeAt(0)-96:29),a=LIBI.filter(x=>x.s==='vb'&&x.hi===g.hi).sort((p,q)=>o(p)-o(q));return a[a.indexOf(g)+1]||null}
@@ -1871,21 +1877,21 @@ function libDetail(i){if(i.s==='vb')return`<details class="gd"><summary class="s
  const x=i.s==='ot'?'Cách làm gợi ý':'Ví dụ';
  return`<details class="gd"><summary class="sm">Chi tiết</summary><div class="sm">${i.o?`<p><b>${i.s==='ot'?'Mục đích':'Mô tả'}:</b> ${esc(i.o)}</p>`:''}${i.x?`<p><b>${x}:</b> ${esc(i.x)}</p>`:''}${i.sc&&i.sc.length?`<p><b>Tiêu chí chấm ABLLS-R:</b></p><ul>${i.sc.map(c=>`<li>Điểm ${esc(c[0])}: ${esc(c[1])}</li>`).join('')}</ul>`:''}${i.a?`<p><b>Mốc phát triển:</b> ${esc(i.a)}</p>`:''}${i.lg?`<p><b>Ngôn ngữ thường đi cùng ở giai đoạn này:</b> ${esc(i.lg)}</p>`:''}${(i.ex||[]).map(([l,v])=>v?`<p><b>${esc(l)}:</b> ${esc(v)}</p>`:'').join('')}${i.rf?`<p class="mu">Nguồn: ${esc(i.rf)}</p>`:''}${!i.o&&!i.x&&!i.a&&!(i.sc&&i.sc.length)?'<p class="mu">Không có mô tả thêm trong dữ liệu gốc.</p>':''}</div></details>`}
 function libItem(i,o){const tk=o.taken&&o.taken.includes(i.id),on=o.sel&&o.sel.includes(i.id),cnt=DB.plans.filter(p=>p.g===i.id&&p.s==='dang').length;
- return`<div class="gi ${tk?'tk':''}">${o.pick?`<input type="checkbox" id="${o.idp?o.idp+'c':'gc'}-${esc(i.id)}" data-c="${o.cn||'gpsel'}" value="${esc(i.id)}" ${on?'checked':''} ${tk?'disabled':''}>`:''}<div class="gi-b"><${o.pick?`label for="${o.idp?o.idp+'c':'gc'}-${esc(i.id)}"`:'div'} class="gi-n">${i.s==='vb'?tg(i.st?'Bước '+i.ms+i.st:'Mốc '+i.ms,i.st?'gy':'y')+' ':''}${esc(i.n)}</${o.pick?'label':'div'}><div class="sm mu">${domTag(i.d,i)} ${esc(i.t)} · ${esc(gSrc(i))}${i.a?' · '+esc(i.a):''}${tk?' · <b>Đã có</b>':''}${(!o.pick||o.edit)&&cnt?' · '+cnt+' bé đang luyện':''}</div>${i.bt&&i.bt.length?`<div class="sm"><b>Bài tập:</b> ${i.bt.map(esc).join(' · ')}</div>`:''}${libDetail(i)}</div>${o.edit&&i.s==='cu'&&isLead()?`<button class="btn s" data-a="cgedit" data-v="${esc(i.id.slice(3))}">Sửa</button>`:''}</div>`}
+ return`<div class="gi ${tk?'tk':''}">${o.pick?`<input type="checkbox" id="${o.idp?o.idp+'c':'gc'}-${esc(i.id)}" data-c="${o.cn||'gpsel'}" value="${esc(i.id)}" ${on?'checked':''} ${tk?'disabled':''}>`:''}<div class="gi-b"><${o.pick?`label for="${o.idp?o.idp+'c':'gc'}-${esc(i.id)}"`:'div'} class="gi-n">${i.s==='vb'?tg(i.st?'Bước '+i.ms+i.st:'Mốc '+i.ms,i.st?'gy':'y')+' ':''}${esc(i.n)}</${o.pick?'label':'div'}><div class="sm mu">${domTag(i.d,i)} ${esc(i.t)} · ${esc(gSrc(i))}${i.a?' · '+esc(i.a):''}${tk?' · <b>Đã có</b>':''}${(!o.pick||o.edit)&&cnt?' · '+cnt+' bé đang luyện':''}</div>${i.bt&&i.bt.length?`<div class="sm"><b>Bài tập:</b> ${i.bt.map(esc).join(' · ')}</div>`:''}${i.s==='tg'?`<div class="sm mu">Giáo viên: ${esc(sn(i.by))} · Bé: ${esc((kidBy(i.kid)||{}).n||'(đã xóa)')}</div>`:''}${libDetail(i)}</div>${o.edit&&i.s==='cu'&&isLead()?`<button class="btn s" data-a="cgedit" data-v="${esc(i.id.slice(3))}">Sửa</button>`:''}${o.edit&&i.s==='tg'&&(isLead()||i.by===(U&&U.id))?`<button class="btn s no" data-a="tgdel" data-v="${esc(i.id.slice(3))}">Xóa</button>`:''}</div>`}
 function libPanel(f,o){const P=o.idp||'lf',hs=libHeads(f),all=libFind(f),p=pg(LPG(),all,o.per||20),hasF=f.dom||f.src||f.head||f.age||f.q;
  return`<div class="chips" role="group" aria-label="Lĩnh vực"><button type="button" class="chip ${f.dom?'':'on'}" data-a="lfdom" data-v="" aria-pressed="${!f.dom}">Tất cả lĩnh vực</button>${LCHIPS.map(d=>`<button type="button" class="chip ${f.dom===d.id?'on':''}" data-a="lfdom" data-v="${d.id}" aria-pressed="${f.dom===d.id}" title="${esc(d.d)}">${esc(d.s)}</button>`).join('')}</div>
- <div class="f2" style="margin:10px 0"><div><label for="${P}-s">Bộ công cụ</label><select id="${P}-s" data-c="lfsrc"><option value="">Tất cả</option>${opts(Object.keys(LSRC).filter(s=>s!=='cu'||(DB.cg||[]).length).map(s=>[s,LSRC[s].n]),f.src)}</select></div><div><label for="${P}-h">Tiêu đề</label><select id="${P}-h" data-c="lfhead"><option value="">Tất cả tiêu đề (${hs.length})</option>${opts(hs,f.head)}</select></div><div><label for="${P}-a">Độ tuổi phát triển</label><select id="${P}-a" data-c="lfage"><option value="">Tất cả</option>${opts(AGEB,f.age)}</select></div><div><label for="${P}-q">Tìm mục tiêu</label><input id="${P}-q" data-i="lfq" value="${esc(f.q)}" placeholder="Ví dụ: bắt chước, đếm, gọi tên"></div></div>
+ <div class="f2" style="margin:10px 0"><div><label for="${P}-s">Bộ công cụ</label><select id="${P}-s" data-c="lfsrc"><option value="">Tất cả</option>${opts(Object.keys(LSRC).filter(s=>s==='tg'?tgItems().length:(s!=='cu'||(DB.cg||[]).length)).map(s=>[s,LSRC[s].n]),f.src)}</select></div><div><label for="${P}-h">Tiêu đề</label><select id="${P}-h" data-c="lfhead"><option value="">Tất cả tiêu đề (${hs.length})</option>${opts(hs,f.head)}</select></div><div><label for="${P}-a">Độ tuổi phát triển</label><select id="${P}-a" data-c="lfage"><option value="">Tất cả</option>${opts(AGEB,f.age)}</select></div><div><label for="${P}-q">Tìm mục tiêu</label><input id="${P}-q" data-i="lfq" value="${esc(f.q)}" placeholder="Ví dụ: bắt chước, đếm, gọi tên"></div></div>
  <div class="acts" style="margin-bottom:8px"><span class="sm"><b>${all.length}</b> mục phù hợp</span>${hasF?'<button class="btn s" data-a="lfclr">Xóa bộ lọc</button>':''}${f.age!==''&&f.age!=null?'<span class="sm mu">Đang lọc theo mốc phát triển của mục tiêu, không theo tuổi thật của bé. Bộ ABLLS-R và hoạt động OT không chia theo mốc tuổi nên không hiện khi lọc.</span>':''}</div>${f.src==='vb'?vbPanel(f,P):''}`
  +(p.rows.length?`<div class="gl">${p.rows.map(i=>libItem(i,o)).join('')}</div>`:'<p class="empty">Không có mục tiêu phù hợp. Hãy nới bộ lọc hoặc đổi từ khóa.</p>')+p.html}
 /* ---------- Ngân hàng mục tiêu: chọn mục tiêu trực tiếp cho bé (giáo viên và quản lý) ---------- */
 const bkInit=()=>S.bk=Object.assign({kid:'',hz:'n',up:'',sel:[]},S.bk);
 const bkKids=()=>myKids().filter(k=>k.st==='dang').sort((a,b)=>a.n.localeCompare(b.n,'vi'));
 const dots=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
-function hsLib(){const b=bkInit(),ks=bkKids(),nc=(DB.cg||[]).length;
+function hsLib(){const b=bkInit(),ks=bkKids(),nc=(DB.cg||[]).length,ntg=tgItems().length;
  if(!ks.some(k=>k.id===b.kid))b.kid=ks.length===1?ks[0].id:'';
  const kid=b.kid?kidBy(b.kid):null,own=kid?kidPlans(kid.id).filter(p=>p.s!=='dat'):[],taken=own.map(p=>p.g);
  b.sel=b.sel.filter(g=>!taken.includes(g));
- return`<div class="card"><p class="mu sm" style="margin-bottom:12px">${dots(LIBI.length)} mục tiêu chia theo ${LDOM.length} lĩnh vực (ABLLS-R, ESDM/Denver, VB-MAPP, mốc phát triển Mầm non, hoạt động OT, thang chơi Westby, chuỗi phát triển chơi và Ngôn ngữ trị liệu 0–6 tuổi)${nc?' và '+nc+' mục tiêu do Trung tâm tự thêm':''}. Cách chọn: chọn bé, chọn lĩnh vực rồi tick các mục tiêu cần luyện, sau đó bấm “Thêm vào kế hoạch”. Khi ghi buổi can thiệp, bạn cũng chọn mục tiêu theo lĩnh vực từ ngân hàng này.</p>
+ return`<div class="card"><p class="mu sm" style="margin-bottom:12px">${dots(LIBI.length)} mục tiêu chia theo ${LDOM.length} lĩnh vực (ABLLS-R, ESDM/Denver, VB-MAPP, mốc phát triển Mầm non, hoạt động OT, thang chơi Westby, chuỗi phát triển chơi và Ngôn ngữ trị liệu 0–6 tuổi)${nc?' và '+nc+' mục tiêu do Trung tâm tự thêm':''}${ntg?(nc?', ':' và ')+ntg+' mục do giáo viên tự thêm':''}. Cách chọn: chọn bé, chọn lĩnh vực rồi tick các mục tiêu cần luyện, sau đó bấm “Thêm vào kế hoạch”. Khi ghi buổi can thiệp, bạn cũng chọn mục tiêu theo lĩnh vực từ ngân hàng này.</p>
  <div class="bk-w"><label for="bk-k"><b>Chọn mục tiêu cho bé</b></label><select id="bk-k" data-c="bkkid"><option value="">${ks.length?'Chọn bé…':'Chưa có bé nào để chọn'}</option>${opts(ks.map(k=>[k.id,k.n+' · '+age(k.dob)]),b.kid)}</select>${kid?`<span class="sm mu">${esc(kid.nd)} · đang có ${own.length} mục tiêu trong kế hoạch</span>`:'<span class="sm mu">Chọn bé để thêm mục tiêu vào kế hoạch. Chưa chọn bé vẫn xem và tìm mục tiêu được.</span>'}</div>`
  +libPanel(S.hs.lib,{pick:true,cn:'bksel',idp:'bk',edit:true,sel:b.sel,taken,per:20})
  +`<div class="bk-f"><span class="bk-s sm"><b id="bk-cnt">${b.sel.length}</b> mục đã chọn${kid?' cho '+esc(kid.n):''}</span><button class="btn s" id="bk-clr" data-a="bkclr" ${b.sel.length?'':'disabled'}>Bỏ chọn</button><select id="bk-hz" data-c="bkhz" aria-label="Loại mục tiêu" title="Ngắn hạn: 1–3 tháng. Dài hạn: 6–12 tháng." style="width:auto">${opts([['n','Ngắn hạn'],['d','Dài hạn']],b.hz)}</select><select id="bk-up" data-c="bkup" aria-label="Thuộc mục tiêu dài hạn" title="Chỉ áp dụng cho mục tiêu ngắn hạn" style="width:auto;max-width:100%" ${kid&&b.hz==='n'?'':'disabled'}>${opts([['','Chưa gắn mục tiêu dài hạn']].concat(kid?kidPlans(kid.id).filter(p=>p.h==='d'&&p.s!=='dat').map(p=>[p.id,'Thuộc: '+gName(p.g)]):[]),b.up)}</select><button class="btn p" data-a="bkok">Thêm vào kế hoạch</button></div></div>`}
@@ -1900,7 +1906,7 @@ ACT.bkok=()=>{const b=bkInit(),k=b.kid?kidBy(b.kid):null;
  let n=0;b.sel.forEach(g=>{if(addPlanItem(k.id,g,b.hz,b.hz==='n'?b.up:''))n++});b.sel=[];
  toast('Đã thêm '+n+' mục tiêu vào kế hoạch '+HZ[b.hz][0].toLowerCase()+' của '+k.n);
  S.modal={t:'hs',id:k.id,tab:'kh'}};
-VIEWS.mt=()=>{hsInit();return head('Ngân hàng mục tiêu','Chọn mục tiêu theo lĩnh vực để đưa vào kế hoạch và buổi can thiệp của bé',isLead()?'<button class="btn p" data-a="cgnew">Thêm mục tiêu của Trung tâm</button>':'')+hsLib()};
+VIEWS.mt=()=>{hsInit();return head('Ngân hàng mục tiêu','Chọn mục tiêu theo lĩnh vực để đưa vào kế hoạch và buổi can thiệp của bé',(isLead()?'<button class="btn p" data-a="cgnew">Thêm mục tiêu của Trung tâm</button>':'')+(myKids().length?'<button class="btn" data-a="tgnew">Thêm mục tiêu mới cho bé</button>':''))+hsLib()};
 
 /* ---------- Bộ chọn mục tiêu (thêm vào kế hoạch hoặc vào buổi) ---------- */
 ACT.pkopen=v=>{S.modal={t:'gp',mode:'plan',k:v,back:S.modal&&S.modal.t==='hs'?S.modal:null,f:{dom:'',src:'',head:'',age:'',q:''},sel:[],hz:'n'};S.pg.gp=1};
@@ -1930,6 +1936,26 @@ MODALS.cg=()=>{const id=S.modal.id,c=id?DB.cg.find(x=>x.id===id):{d:'nh',t:'',n:
 FORM.cgf=f=>{const e=f.elements,v={d:e.d.value,t:e.t.value.trim(),n:e.n.value.trim(),o:e.o.value.trim()};if(!v.n){toast('Hãy nhập mục tiêu cụ thể');return false}
  DB.cg=DB.cg||[];if(S.modal.id)Object.assign(DB.cg.find(x=>x.id===S.modal.id),v);else DB.cg.push(Object.assign({id:'c'+uid()},v));S.modal=null;toast('Đã lưu mục tiêu')};
 ACT.cgdel=v=>{const n=DB.plans.filter(p=>p.g==='cu:'+v).length;ask('Xóa mục tiêu này khỏi ngân hàng mục tiêu?'+(n?' Có '+n+' bé đang có mục tiêu này trong kế hoạch, mục tiêu sẽ hiện là “đã xóa”.':''),()=>{DB.cg=DB.cg.filter(x=>x.id!==v);S.modal=null;toast('Đã xóa mục tiêu')},'Xóa')};
+
+/* ---------- Mục tiêu do giáo viên tự thêm (collection tg) ---------- */
+ACT.tgnew=()=>{if(!myKids().length){toast('Chưa có bé nào để gắn mục tiêu');return false}S.modal={t:'tg'}};
+MODALS.tg=()=>{const ks=myKids(),lv=[['n','Ngắn hạn (1–3 tháng)'],['d','Dài hạn (6–12 tháng)'],['buoi','Mục tiêu buổi trị liệu (chọn khi ghi buổi)']];
+ return mdl('Thêm mục tiêu mới cho bé',`<p class="mu sm" style="margin-bottom:10px">Dùng khi bộ gợi ý chưa có mục tiêu phù hợp. Mục tiêu ngắn hạn và dài hạn được đưa vào kế hoạch của bé ngay; mục tiêu buổi trị liệu được chọn khi ghi buổi can thiệp. Giáo viên chỉ thấy mục tiêu do mình thêm; Trưởng Trung tâm và Quản lý thấy được giáo viên và bé.</p>
+ <form id="tgf" class="f"><div class="f2"><div><label for="tg-k">Bé</label><select id="tg-k" name="k" required>${opts(ks.map(k=>[k.id,k.n]),'')}</select></div><div><label for="tg-lv">Loại mục tiêu</label><select id="tg-lv" name="lv">${opts(lv,'n')}</select></div></div>
+ <div><label for="tg-d">Lĩnh vực</label><select id="tg-d" name="d">${opts(LDOM.map(d=>[d.id,d.n]),'')}</select></div>
+ <div><label for="tg-n">Mục tiêu cụ thể</label><input id="tg-n" name="n" required placeholder="Ví dụ: Trẻ gọi tên bạn khi bạn chào"></div>
+ <div><label for="tg-o">Mô tả hoặc tiêu chí đạt</label><textarea id="tg-o" name="o" rows="3"></textarea></div>
+ <div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu mục tiêu</button></div></form>`)};
+FORM.tgf=f=>{const e=f.elements,k=e.k.value,lv=e.lv.value,n=e.n.value.trim();
+ if(!n){toast('Hãy nhập mục tiêu cụ thể');return false}
+ if(!k||!canKid(k)){toast('Chỉ chọn bé mà bạn đang phụ trách');return false}
+ DB.tg=DB.tg||[];const id='t'+uid();
+ DB.tg.push({id,by:U.id,kid:k,lv,d:e.d.value,n,o:e.o.value.trim(),at:TODAY});
+ if(lv!=='buoi')addPlanItem(k,'tg:'+id,lv,'');
+ S.modal=null;toast(lv==='buoi'?'Đã lưu mục tiêu buổi trị liệu. Chọn khi ghi buổi can thiệp':'Đã thêm vào kế hoạch '+HZ[lv][0].toLowerCase()+' của bé');};
+ACT.tgdel=v=>{const t=(DB.tg||[]).find(x=>x.id===v);if(!t)return;if(!(isLead()||t.by===U.id)){toast('Chỉ người thêm hoặc Trưởng Trung tâm, Quản lý được xóa');return false}
+ const n=DB.plans.filter(p=>p.g==='tg:'+v).length;
+ ask('Xóa mục tiêu này khỏi ngân hàng?'+(n?' Có '+n+' bé đang có mục tiêu này trong kế hoạch, mục tiêu sẽ hiện là “đã xóa”.':''),()=>{DB.tg=DB.tg.filter(x=>x.id!==v);S.modal=null;toast('Đã xóa mục tiêu')},'Xóa')};
 /* ===== 4. Phân công ===== */
 const isGrStaff=id=>DB.groups.some(g=>g.gv===id||g.tg===id);
 const pool11=()=>DB.staff.filter(s=>isTeacher(s)&&s.st==='dang'&&!isGrStaff(s.id));
