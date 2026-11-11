@@ -21,7 +21,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  ok('tất cả nằm trong lĩnh vực gốc xh (Chơi và tương tác xã hội) và lọc được bằng nút "Chơi"',d.dom.length===1&&d.dom[0]==='xh',d.dom);
  ok('mã mục không trùng, mục nào cũng có tên, tiêu đề, khóa tìm',d.ids&&d.noName===0,d);
  ok('mọi mục Westby có ghi ngôn ngữ đi cùng giai đoạn',d.lg===0,d.lg);
- ok('danh sách bộ công cụ: Westby và Chuỗi chơi nằm trước mục Trung tâm tự thêm',JSON.stringify(d.keys)===JSON.stringify(['ab','ed','vb','mn','ot','we','cp','nl','sd','ad','cu']),d.keys);
+ ok('danh sách bộ công cụ: Westby và Chuỗi chơi nằm trước mục Trung tâm tự thêm',JSON.stringify(d.keys)===JSON.stringify(['ab','ed','vb','mn','ot','we','cp','nl','sd','ad','cu','tg']),d.keys);
 
  /* mốc tuổi: giai đoạn I (9–12 tháng) nằm ở nhóm dưới 12 tháng; giai đoạn X (5 tuổi) ở 48–72 tháng; mức 5 không tự suy ra tuổi */
  const ag=await ev(()=>{const g=(t)=>LIBI.filter(i=>i.s==='we'&&i.t.startsWith(t));

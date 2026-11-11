@@ -13,7 +13,7 @@ function telNorm(s){let t=String(s==null?'':s).trim();if(!t)return'';
 /* Khóa phụ huynh: email (nếu có), nếu không thì số điện thoại. Mọi bé cùng khóa thuộc cùng một tài khoản phụ huynh. */
 const pkeyOf=k=>{const e=String(k&&k.pe||'').trim().toLowerCase();if(e&&e.includes('@'))return e;const t=telNorm(k&&k.pp);return t?'tel:'+t:''};
 /* Hình dạng từng nhóm dữ liệu: danh sách có mã (id hoặc k), bảng khóa, mục đơn */
-const CSH={arr:['staff','kids','cg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb','hol','media','ref','tri','vio'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon','vam'],one:['cfg']};
+const CSH={arr:['staff','kids','cg','tg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb','hol','media','ref','tri','vio'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon','vam'],one:['cfg']};
 /* Nhóm dữ liệu tiền: chỉ Trưởng Trung tâm và Văn phòng đọc và ghi được (giáo viên chỉ đọc lương của mình) */
 const MONEYC=['lg','set','bon','vam'],CFG_MONEY=['p11','pbtDay','pbtDay11','giamTru','thue','v1','v2'],CFG_DEF={pbtDay:380000,pbtDay11:180000,v1:20000,v2:30000};   /* dữ liệu cũ chưa có giá bán trú theo ngày thì lấy giá mặc định */
 const PAY_STUB=()=>({mode:'thang',base:0,rate:0,rateBt:0,allow:0,bh:0,latePen:0});
@@ -59,7 +59,7 @@ function cflat(db,withMoney){const M=new Map();
  return M}
 
 /* ---- dựng DB từ các dòng đã tải ---- */
-function cEmpty(){return{v:7,vio:[],vam:{},media:[],ref:[],tri:[],hol:[],tkb:[],cfg:{},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
+function cEmpty(){return{v:7,vio:[],vam:{},media:[],ref:[],tri:[],hol:[],tkb:[],cfg:{},staff:[],kids:[],cg:[],tg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
 function cApply(D,t,r,pay,cfgm){const c=r.collection;
  if(t==='money'&&c==='pay'){pay[r.id]=r.data;return}
  if(t==='money'&&c==='cfgm'){Object.assign(cfgm,r.data);cfgm._has=1;return}
@@ -171,7 +171,7 @@ async function cloudSetup(kind){
  if(kind==='demo'){const s=DB.staff.find(x=>x.role==='tt')||DB.staff[1];s.em=email;s.n=name}
  else{
   const me={id:'nv01',n:name,role:'tt',pos:'Trưởng Trung tâm',ph:'',em:email,st:'dang',sd:TODAY,sup:'',pay:PAY_STUB()};
-  DB.staff=[me];['kids','cg','plans','sess','lich','lr','mk','lg','rp','nt','vio'].forEach(k=>{DB[k]=[]});['att','ts','set','rd','menu','bon','vam'].forEach(k=>{DB[k]={}});
+  DB.staff=[me];['kids','cg','tg','plans','sess','lich','lr','mk','lg','rp','nt','vio'].forEach(k=>{DB[k]=[]});['att','ts','set','rd','menu','bon','vam'].forEach(k=>{DB[k]={}});
   DB.groups=[{id:'G1',n:BTN[0],gv:'',tg:''},{id:'G2',n:BTN[1],gv:'',tg:''}];DB.tkb=tkbDefault(DB.groups)}
  CLD.snap=new Map();CLD.ord={};CLD.maxo=0;
  cloudEnter();if(CLD.stage==='app')cloudFlush()}
