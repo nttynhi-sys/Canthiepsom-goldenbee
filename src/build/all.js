@@ -2084,7 +2084,7 @@ function lhParent(){const ks=myKids().filter(k=>k.st==='dang');
   return`<div class="rw"><span>${what}</span>${c?tg(AC[c],c==='cm'?'ok':c==='kp'?'er':c==='p'?'wa':'in'):''}</div>`};
  return head('Lịch học của bé','Giờ học 1-1 và giờ bán trú của bé trong tuần')+(ks.length>1?tabsH(ks.map(x=>[x.id,given(x.n)]),h.kid,'lhk'):'')
  +`<div class="grid"><div class="card kpi"><div class="mu sm">Học 1-1</div><div class="big">${ls.length} buổi</div><div class="sm mu">mỗi tuần${ls.length?', '+esc(given(mainGV(k))):''}</div></div><div class="card kpi"><div class="mu sm">Bán trú</div><div class="big">${g?esc(g.n):'Không'}</div><div class="sm mu">${g?BTLB+', '+esc(dayTx(btOf(k))):'Bé chưa đăng ký bán trú'}</div></div></div>`
- +`<div class="card"><h2>Thời khóa biểu của ${esc(given(k.n))}</h2>${kidWeek(k)}<p class="sm mu" style="margin-top:8px">Can thiệp 1-1 nhận bé từ ${DAY_OPEN} đến ${DAY_CLOSE}, mỗi ca ${SLOT_MIN} phút. Khi cần nghỉ hoặc đổi giờ, phụ huynh báo trong nhóm chung hoặc đăng ký học bù ở mục Học bù.</p></div>`
+ +`<div class="card"><h2>Thời khóa biểu của ${esc(given(k.n))}</h2>${kidWeek(k)}<p class="sm mu" style="margin-top:8px">Khi cần nghỉ hoặc đổi giờ, phụ huynh báo trong nhóm chung hoặc đăng ký học bù ở mục Học bù.</p></div>`
  +`${holCard(60)}<div class="card"><h2>Lịch 14 ngày tới</h2>${days.length?days.map(({d,xs})=>`<div class="mday" style="margin-bottom:8px"><div class="mh"><b>${DAYN[dow(d)]}</b> <span class="mu sm">${vdm(d)}</span>${d===TODAY?' '+tg('Hôm nay','y'):''}</div>${xs.map(x=>line(d,x)).join('')}</div>`).join(''):'<p class="empty">Chưa có lịch trong 14 ngày tới.</p>'}<div class="acts" style="margin-top:10px">${g?'<button class="btn s" data-a="nav" data-v="tn">Thực đơn bán trú</button>':''}<button class="btn s" data-a="nav" data-v="hb">Đăng ký học bù</button></div></div>`}
 /* ===== 6. Chấm công nhân viên ===== */
 const hm=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
@@ -3130,12 +3130,12 @@ function heroFig(P,par){const has=P.now!=null,d=P.dAll;
 function tiles(k,P){return`<div class="grid">${kpi('Buổi can thiệp',P.ss,'đã ghi trong kỳ')}${kpi('Mục tiêu đang luyện',kidPlans(k.id,'dang').length,P.goals.length+' mục có số liệu')}${kpi('Mục tiêu mới đạt',P.dat.length,'trong kỳ',P.dat.length?'ok':'')}${kpi('Lượt luyện',P.recs,'lượt có kết quả')}</div>`}
 
 /* --- biểu đồ 1: đầu kỳ so với hiện tại theo lĩnh vực --- */
-function chDom(P){const act=LDOM.map(dd=>({dd,d:P.doms.find(x=>x.id===dd.id)})).filter(x=>x.d&&x.d.l!=null),idle=LDOM.filter(dd=>!act.some(x=>x.dd.id===dd.id));
+function chDom(P){const act=LDOM.map(dd=>({dd,d:P.doms.find(x=>x.id===dd.id)})).filter(x=>x.d&&x.d.l!=null);
  if(!act.length)return'<p class="mu sm">Chưa có số liệu.</p>';
  const pos=v=>Math.max(0,Math.min(100,v)),
  rows=act.map(({dd,d})=>{const a=d.f,b=d.l,dl=a!=null?b-a:null;
   return`<div class="db-r" role="listitem"><div class="db-l">${esc(dd.s)}<small>${d.n} mục tiêu</small></div><div class="db-t" role="img" aria-label="${esc(dd.n)}: ${a!=null?'đầu kỳ '+r0(a)+', ':''}hiện tại ${r0(b)} trên 100">${a!=null?`<i class="db-ln" style="left:${pos(Math.min(a,b))}%;width:${Math.abs(pos(b)-pos(a))}%"></i><b class="db-p0" tabindex="0" style="left:${pos(a)}%" data-tip="${esc(dd.n+' · Đầu kỳ: '+r0(a)+' điểm')}"></b>`:''}<b class="db-p1" tabindex="0" style="left:${pos(b)}%" data-tip="${esc(dd.n+' · Hiện tại: '+r0(b)+' điểm')}"></b></div><div class="db-v"><b>${r0(b)}</b>${dl==null?' <small class="mu">mới</small>':` <small class="${dl>=2?'up':dl<=-2?'dn':'mu'}">${dl>=0?'+':'−'}${Math.abs(r0(dl))}</small>`}</div></div>`}).join('');
- return`<div class="db" role="list"><div class="db-r db-ax" aria-hidden="true"><span></span><span class="db-tk"><i style="left:0">0</i><i style="left:50%">50</i><i style="left:100%">100</i></span><span></span></div>${rows}</div><div class="lgd"><span><i class="sw sw0"></i>Đầu kỳ</span><span><i class="sw sw1"></i>Hiện tại</span><span class="mu">Chấm càng gần 100, bé càng tự làm được</span></div>${idle.length?`<p class="sm mu" style="margin-top:8px">Chưa luyện trong kỳ: ${idle.map(d=>esc(d.s)).join(', ')}.</p>`:''}`}
+ return`<div class="db" role="list"><div class="db-r db-ax" aria-hidden="true"><span></span><span class="db-tk"><i style="left:0">0</i><i style="left:50%">50</i><i style="left:100%">100</i></span><span></span></div>${rows}</div><div class="lgd"><span><i class="sw sw0"></i>Đầu kỳ</span><span><i class="sw sw1"></i>Hiện tại</span><span class="mu">Chấm càng gần 100, bé càng tự làm được</span></div>`}
 
 /* --- biểu đồ 2: mức hỗ trợ theo thời gian --- */
 function chStack(P,bands){if(!P.stack.length)return'<p class="mu sm">Chưa có số liệu.</p>';
