@@ -8,6 +8,10 @@ const policyH=k=>`<div class="note"><b>${esc(POLICY[k].t)}</b>${POLICY[k].p.map(
 
 /* --- Học phí và bảng tính chấm công học sinh --- */
 const fee11=k=>k.f11||DB.cfg.p11;
+/* Loại can thiệp 1-1 và giá mỗi giờ (đồng). Mỗi ca 1-1 trong lịch mang mã loại (l.lt); ca cũ chưa có loại thì tính theo giá chung fee11. */
+const LT=[{c:'ng',n:'Học cá nhân ngôn ngữ',f:180000},{c:'nh',n:'Học nhóm',f:180000},{c:'gq',n:'Học vận động – giác quan',f:200000},{c:'ms',n:'Massage điều hoà cảm thụ bản thể',f:200000},{c:'vd',n:'Học vận động thô – vận động tinh',f:200000},{c:'tc',n:'Học kỹ năng tự chăm sóc: mặc áo, đánh răng...',f:180000},{c:'nc',n:'Học vận động dưới nước',f:190000}];
+const LTM=Object.fromEntries(LT.map(x=>[x.c,x]));
+const feeSlot=(k,sid)=>{const l=DB.lich.find(x=>x.id===sid);return l&&l.lt&&LTM[l.lt]?LTM[l.lt].f:fee11(k)};
 /* --- Thời khóa biểu bán trú và giờ 1-1 --- */
 const tmin=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m};
 const tkbRows=gid=>(DB.tkb||[]).filter(r=>r.gr===gid||!r.gr).slice().sort((a,b)=>tmin(a.s)-tmin(b.s)||tmin(a.e)-tmin(b.e));
@@ -35,13 +39,13 @@ function sched(k,m){const out=[],ls=DB.lich.filter(l=>l.hs===k.id),bd=btOf(k);
  return out}
 /* Học phí tháng = số ca 1-1 tính riêng × giá ca + số ngày bán trú × giá ngày bán trú (gồm sẵn 1 ca 1-1 mỗi ngày) */
 function invoice(k,m){if(k.st!=='dang'||k.sd.slice(0,7)>m)return 0;const xs=sched(k,m);
- return xs.filter(x=>x.kind==='11'&&!x.inc).length*fee11(k)+xs.filter(x=>x.kind==='bt').length*(DB.cfg.pbtDay||0)}
+ return xs.filter(x=>x.kind==='11'&&!x.inc).reduce((a,x)=>a+feeSlot(k,x.sid),0)+xs.filter(x=>x.kind==='bt').length*(DB.cfg.pbtDay||0)}
 const makeupFor=(h,d,s)=>DB.mk.find(r=>r.hs===h&&r.from.d===d&&r.from.sid===s&&(r.s==='xn'||r.s==='xong'));
 const CL={cm:'x',p:'P',kp:'K',tt:'N',bv:'V'};
 /* Nhập viện có giấy, ngày bán trú: phí bán trú (không gồm ca 1-1) hoàn bvRefund% (mặc định 50%), riêng phí ca 1-1 trong ngày hoàn bvRefund11% (mặc định 100%) */
 const bv11=R=>{const v=R&&R.bvRefund11;return v==null||v===''||isNaN(+v)?100:Math.max(0,Math.min(100,+v))};
 function feeOf(k,kind,d,sid,code,m){
- const R=DB.cfg.rule,f=fee11(k),dAll=DB.cfg.pbtDay||0,dCN=Math.min(DB.cfg.pbtDay11||0,dAll);
+ const R=DB.cfg.rule,f=feeSlot(k,sid),dAll=DB.cfg.pbtDay||0,dCN=Math.min(DB.cfg.pbtDay11||0,dAll);
  let rf=0,ls=0,note='';
  if(kind==='11'){const mk=makeupFor(k.id,d,sid);
   if(code==='p'){if(mk)note='Đã thỏa thuận học bù nên không tính phí nghỉ';else{rf=f*(100-R.pLoss)/100;ls=f*R.pLoss/100;note='Có phép: mất '+R.pLoss+'% phí buổi, hoàn '+(100-R.pLoss)+'% trừ vào học phí tháng sau'}}

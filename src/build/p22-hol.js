@@ -10,7 +10,7 @@ function holImpact(d){const w=dow(d),r={bt:0,s11:0,money:0,att:0,bu:0};if(w===0)
  DB.kids.forEach(k=>{if(k.st!=='dang'||k.sd.slice(0,7)>d.slice(0,7))return;
   if(btHas(k,w)){r.bt++;r.money+=DB.cfg.pbtDay||0}
   const inc=incIdW(k,w);
-  DB.lich.forEach(l=>{if(l.type==='11'&&l.hs===k.id&&l.day===w&&l.id!==inc){r.s11++;r.money+=fee11(k)}})});
+  DB.lich.forEach(l=>{if(l.type==='11'&&l.hs===k.id&&l.day===w&&l.id!==inc){r.s11++;r.money+=feeSlot(k,l.id)}})});
  r.bu=DB.lich.filter(l=>l.type==='bu'&&l.date===d).length;
  r.att=Object.keys(DB.att).filter(key=>key.startsWith(d+'|')).length;
  return r}
