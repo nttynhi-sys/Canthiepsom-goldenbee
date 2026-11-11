@@ -22,11 +22,11 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
    chips:LCHIPS.map(c=>c.id)}});
  ok('383 mục Ngôn ngữ trị liệu (313 + 70 tô vàng), mã mục không trùng',d.n===383&&d.ids,d.n);
  ok('279 nhóm kỹ năng thành 279 tiêu đề',d.heads===279,d.heads);
- ok('đặt tên "Ngôn ngữ trị liệu" và đứng trước mục "Trung tâm tự thêm"',d.name==='Ngôn ngữ trị liệu'&&d.keys.indexOf('sd')===d.keys.indexOf('cu')-1,d.keys);
+ ok('đặt tên "Ngôn ngữ trị liệu" và đứng trước mục "Trung tâm tự thêm"',d.name==='Ngôn ngữ trị liệu'&&d.keys.indexOf('ad')===d.keys.indexOf('cu')-1,d.keys);
  ok('nhãn độ tuổi gồm 8 nhóm của bảng gốc và 3 nhóm lô mới (6–12, 12–18, từ 18 tuổi)',d.ages.length===11&&['0–6 tháng','6–12 tháng','12–18 tháng','18–24 tháng','2–3 tuổi','3–4 tuổi','4–5 tuổi','5–6 tuổi','6–12 tuổi','12–18 tuổi','≥ 18 tuổi'].every(a=>d.ages.includes(a)),d.ages);
  ok('mốc lọc độ tuổi nằm trong 0–7 (0–4 như các chương trình khác, 5–7 thêm cho lô mới); mọi mục có nội dung, hành vi, khóa tìm',d.badM===0&&d.noText===0&&d.domOk,{badM:d.badM,noText:d.noText});
  ok('6 lĩnh vực mới có mục và đã được thêm vào danh sách lĩnh vực',d.newDoms.every(x=>x[1]>0)&&['gtl','lnp','aac','an','tn','nlp'].every(id=>d.doms.includes(id)),d.newDoms);
- ok('lĩnh vực trùng nghĩa được nối vào lĩnh vực có sẵn (không tạo trùng)',d.doms.length===15&&d.doms.includes('cgq')&&d.perDom.nh>0&&d.perDom.nd>0&&d.perDom.nt>0&&d.perDom.xh>0,d.doms);
+ ok('lĩnh vực trùng nghĩa được nối vào lĩnh vực có sẵn (không tạo trùng)',d.doms.length===29&&d.doms.includes('cgq')&&d.doms.includes('ad14')&&d.perDom.nh>0&&d.perDom.nd>0&&d.perDom.nt>0&&d.perDom.xh>0,d.doms);
  ok('chip lọc Chơi/Xã hội vẫn hoạt động, mục mới không làm lệch',d.chips.includes('choi')&&d.chips.includes('xh'),d.chips);
  ok('chi tiết mục có tiêu chí đạt, phương thức giao tiếp, nguồn',d.ex&&d.ex.ex.some(x=>x[0]==='Tiêu chí đạt'&&x[1])&&d.ex.ex.some(x=>x[0]==='Phương thức giao tiếp')&&/ASHA/.test(d.ex.rf),d.ex);
 
