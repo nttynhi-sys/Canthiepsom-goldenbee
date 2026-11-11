@@ -7,20 +7,24 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  const ev=(f,a)=>page.evaluate(f,a);
  const W=ms=>page.waitForTimeout(ms||80);
  const toastTx=()=>ev(()=>{const t=document.querySelector('.toast,#toast');return t?t.textContent:''});
+ /* trợ giúp: ca 1-1 mới (ngày, loại, giờ riêng), loại đăng ký và số giờ/ngày */
+ const addCa=(w,lt,tm)=>ev(([w,lt,tm])=>{const f=document.querySelector('#hsff');const rs=[...f.querySelectorAll('#s11 .s11r')];let r=rs[rs.length-1];if(!r||r.querySelector('[name=s11tm]').value){ACT.s11add(null,f.querySelector('#hth-11 [data-a="s11add"]'));const all=f.querySelectorAll('#s11 .s11r');r=all[all.length-1]}r.querySelector('[name=s11day]').value=w;r.querySelector('[name=s11lt]').value=lt;r.querySelector('[name=s11tm]').value=tm||''},[w,lt,tm]);
+ const clearCa=()=>ev(()=>{document.querySelectorAll('#hsff #s11 .s11r').forEach(r=>r.remove())});
+ const ltOn=(lt,q)=>ev(([lt,q])=>{const f=document.querySelector('#hsff');f.elements['lt_'+lt].checked=true;f.elements['lq_'+lt].value=q},[lt,q]);
  await login(page,'ql');
  await page.click('.nav button:has-text("Học sinh")');await W(120);
  await page.click('[data-a="hsnew"]');await page.waitForSelector('#hsff');
 
  /* 1. giao diện: hai hình thức, ban đầu chưa tích thì phần buổi học ẩn */
  const ui=await ev(()=>{const f=document.querySelector('#hsff');return{hbt:!!f.elements.hbt,h11:!!f.elements.h11,btHidden:document.querySelector('#hth-bt').hidden,oneHidden:document.querySelector('#hth-11').hidden,
-  oldSel:!!document.querySelector('#hf-bt'),days11:[1,2,3,4,5,6].every(w=>f.elements['d'+w]&&f.elements['t'+w]),daysBt:[1,2,3,4,5,6].every(w=>f.elements['bd'+w]),
+  oldSel:!!document.querySelector('#hf-bt'),days11:!!document.querySelector('#s11')&&document.querySelectorAll('#hth-11 .lt-row').length===7,daysBt:[1,2,3,4,5,6].every(w=>f.elements['bd'+w]),
   h3:[...document.querySelectorAll('#hsff h3')].map(e=>e.textContent)}});
  ok('form có hai ô tích Bán trú và Can thiệp 1-1, mỗi hình thức có ô tích 6 buổi (T2–T7)',ui.hbt&&ui.h11&&ui.days11&&ui.daysBt&&!ui.oldSel,ui);
  ok('mới mở: chưa tích hình thức nào nên phần chọn buổi đang ẩn; có mục "Hình thức học"',ui.btHidden&&ui.oneHidden&&ui.h3.includes('Hình thức học'),ui);
  await page.check('#hf-hbt');await W(40);
  ok('tích Bán trú: hiện lớp bán trú và các ngày',await ev(()=>!document.querySelector('#hth-bt').hidden&&document.querySelector('#hth-11').hidden));
  await page.check('#hf-h11');await W(40);
- ok('tích 1-1: hiện giáo viên, giờ chung, phòng và các ngày',await ev(()=>!document.querySelector('#hth-11').hidden));
+ ok('tích 1-1: hiện giáo viên, loại 1-1, phòng và các ca',await ev(()=>!document.querySelector('#hth-11').hidden));
  await page.uncheck('#hf-hbt');await W(40);
  ok('bỏ tích Bán trú: phần bán trú ẩn lại',await ev(()=>document.querySelector('#hth-bt').hidden));
  await page.check('#hf-hbt');await W(40);
@@ -32,8 +36,8 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  ok('tích Bán trú mà không tích ngày nào: báo lỗi, chưa lưu',/ít nhất một buổi bán trú/.test(await toastTx())&&!(await ev(()=>DB.kids.some(k=>k.n==='Bé Thử Hình Thức'))),await toastTx());
  await ev(()=>{const f=document.querySelector('#hsff');[1,3,5].forEach(w=>{f.elements['bd'+w].checked=true})});
  await page.click('#hsff button[type=submit]');await W(60);
- ok('tích 1-1 mà không tích buổi nào: báo lỗi',/ít nhất một buổi 1-1/.test(await toastTx()),await toastTx());
- await ev(()=>{const f=document.querySelector('#hsff');f.elements.d1.checked=true;f.elements.d2.checked=true;f.elements.d4.checked=true});
+ ok('tích 1-1 mà không tích buổi nào: báo lỗi',/ít nhất một (loại|ca) 1-1/.test(await toastTx()),await toastTx());
+ await ltOn('ng',1);await addCa(1,'ng','10:00');await addCa(2,'ng','10:00');await addCa(4,'ng','10:00');
  await page.click('#hsff button[type=submit]');await W(60);
  ok('tích buổi 1-1 mà chưa chọn giáo viên: báo lỗi',/chọn giáo viên/.test(await toastTx()),await toastTx());
  const gvs=await ev(()=>pool11().map(s=>s.id));
@@ -42,13 +46,13 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
   const A=rs.find(s=>fr(1,s)),C=rs.find(s=>s!==A&&Math.abs(tmin(s)-tmin(A))>=SLOT_MIN&&[2,3,4].every(w=>fr(w,s))),B=rs.find(s=>s!==A&&s!==C&&Math.abs(tmin(s)-tmin(C))>=SLOT_MIN&&Math.abs(tmin(s)-tmin(A))>=SLOT_MIN&&fr(5,s));return{A,C,B}},gvs[0]);
  ok('tìm được khung giờ trống cho giáo viên thử',T.A&&T.C&&T.B,T);
  await page.selectOption('#hf-gv',gvs[0]);
- await ev(()=>{const f=document.querySelector('#hsff');f.elements.t2.value='06:00'});
+ await clearCa();await addCa(2,'ng','06:00');
  await page.click('#hsff button[type=submit]');await W(60);
  ok('giờ 1-1 ngoài khung 07:15–20:00: báo lỗi nêu khung giờ',/07:15/.test(await toastTx())&&/T3/.test(await toastTx()),await toastTx());
  ok('các lần báo lỗi không tạo hồ sơ',!(await ev(()=>DB.kids.some(k=>k.n==='Bé Thử Hình Thức'))));
 
  /* 3. lưu thành công: bán trú T2,T4,T6 (1,3,5) + 1-1 vào T2 (giờ chung), T3 (giờ riêng 09:20), T5 (giờ chung) */
- await ev(T=>{const f=document.querySelector('#hsff');f.elements.t2.value='';f.elements.t1.value=T.A;f.elements.slot.value=T.C},T);
+ await clearCa();await addCa(1,'ng',T.A);await addCa(2,'ng',T.C);await addCa(4,'ng',T.C);
  const before=await ev(()=>({kids:DB.kids.length,lich:DB.lich.length}));
  await page.click('#hsff button[type=submit]');await W(120);
  const r=await ev(()=>{const k=DB.kids.find(x=>x.n==='Bé Thử Hình Thức'),ls=k?DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).sort((a,b)=>a.day-b.day):[];
@@ -70,7 +74,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  await page.fill('#hf-n','Bé Trùng Giờ');await page.fill('#hf-pn','Ba Thử');await page.fill('#hf-pp','0905987654');
  await page.check('#hf-h11');
  await page.selectOption('#hf-gv',gvs[0]);
- await ev(T=>{const f=document.querySelector('#hsff');f.elements.d2.checked=true;f.elements.d3.checked=true;f.elements.slot.value=T.C},T);
+ await ltOn('ng',1);await addCa(2,'ng',T.C);await addCa(3,'ng',T.C);
  await page.click('#hsff button[type=submit]');await W(120);
  const c=await ev(()=>{const k=DB.kids.find(x=>x.n==='Bé Trùng Giờ'),ls=k?DB.lich.filter(l=>l.type==='11'&&l.hs===k.id):[];return k?{ls:ls.map(l=>[l.day,l.slot]),tab:S.modal.tab,res:S.modal.res,bt:k.bt}:null});
  ok('trùng giờ giáo viên ở T3: vẫn lưu hồ sơ, thêm được T4 (còn trống), T3 báo không thêm được',c&&c.ls.length===1&&c.ls[0][0]===3&&c.res.bad.length===1&&/T3/.test(c.res.bad[0])&&/Giáo viên đã có buổi/.test(c.res.bad[0]),c);
@@ -85,7 +89,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  await page.uncheck('#hf-h11');await page.click('#hsff button[type=submit]');await W(80);
  ok('bỏ tích 1-1 khi bé còn buổi 1-1: báo phải xóa từng buổi ở thẻ Lịch học, không xóa gì',/xóa từng buổi/.test(await toastTx())&&(await ev(()=>wk11(DB.kids.find(x=>x.n==='Bé Thử Hình Thức').id)))===3,await toastTx());
  await page.check('#hf-h11');
- await ev(T=>{const f=document.querySelector('#hsff');f.elements.d5.checked=true;f.elements.t5.value=T.B},T);
+ await addCa(5,'ng',T.B);
  await page.click('#hsff button[type=submit]');await W(120);
  const ed2=await ev(()=>{const k=DB.kids.find(x=>x.n==='Bé Thử Hình Thức');return{ls:DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).map(l=>[l.day,l.slot]).sort((a,b)=>a[0]-b[0]||(a[1]<b[1]?-1:1)),btd:k.btd}});
  ok('sửa hồ sơ, tích thêm T6 giờ riêng: thêm đúng 1 buổi, các buổi cũ giữ nguyên',ed2.ls.length===4&&ed2.ls.some(x=>x[0]===5&&x[1]===T.B)&&JSON.stringify(ed2.btd)===JSON.stringify([1,3,5]),ed2);
@@ -105,19 +109,18 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  const o2=await ev(()=>{const k=DB.kids.find(x=>x.n==='Bé Chưa Chọn');return{bt:k.bt,gr:k.gr,wk:wk11(k.id),btd:k.btd||null}});
  ok('không tích hình thức nào: vẫn lưu hồ sơ (chưa có lịch), không bán trú',o2&&o2.bt===false&&o2.gr===''&&o2.wk===0&&o2.btd===null,o2);
 
- /* 7. nút chọn nhanh "Trùng ngày bán trú" */
+ /* 7. số giờ đăng ký trong 1 ngày: vượt số giờ của loại thì báo lỗi, không lưu */
  await ev(()=>{S.modal=null;render()});await W(60);
  await page.click('[data-a="hsnew"]');await page.waitForSelector('#hsff');
- await page.check('#hf-hbt');await page.check('#hf-h11');
- await ev(()=>{const f=document.querySelector('#hsff');[1,2,3,4,5,6].forEach(w=>f.elements['bd'+w].checked=[1,3].includes(w))});
- await page.click('[data-a="d11bt"]');
- ok('nút "Trùng ngày bán trú" tích buổi 1-1 đúng các ngày bán trú đã tích',JSON.stringify(await ev(()=>{const f=document.querySelector('#hsff');return[1,2,3,4,5,6].filter(w=>f.elements['d'+w].checked)}))==='[1,3]');
- await page.click('#hth-11 [data-a="dayset"][data-v="d|1,2,3,4,5,6"]');
- ok('nút T2–T7 chỉ đổi các ô 1-1, không đụng ngày bán trú',JSON.stringify(await ev(()=>{const f=document.querySelector('#hsff');return[[1,2,3,4,5,6].filter(w=>f.elements['d'+w].checked),[1,2,3,4,5,6].filter(w=>f.elements['bd'+w].checked)]}))==='[[1,2,3,4,5,6],[1,3]]');
+ await page.fill('#hf-n','Bé Số Giờ');await page.fill('#hf-pn','Mẹ D');await page.fill('#hf-pp','0905000333');
+ await page.check('#hf-h11');await ltOn('ng',1);await page.selectOption('#hf-gv',gvs[0]);
+ await clearCa();await addCa(1,'ng','10:00');await addCa(1,'ng','11:00');
+ await page.click('#hsff button[type=submit]');await W(80);
+ ok('2 ca cùng loại trong 1 ngày nhưng đăng ký 1 giờ/ngày: báo lỗi, không lưu hồ sơ',/vượt số giờ đăng ký/.test(await toastTx())&&!(await ev(()=>DB.kids.some(k=>k.n==='Bé Số Giờ'))),await toastTx());
 
  /* 8. điện thoại 390px: không tràn ngang */
  await page.setViewportSize({width:390,height:800});await W(120);
- const ov=await ev(()=>{const m=document.querySelector('.mdc'),f=document.querySelector('#hsff');return{doc:document.documentElement.scrollWidth-innerWidth,mdl:m.scrollWidth-m.clientWidth,rowOver:[...f.querySelectorAll('.d11')].some(r=>r.getBoundingClientRect().right>innerWidth+1)}});
+ const ov=await ev(()=>{const m=document.querySelector('.mdc'),f=document.querySelector('#hsff');return{doc:document.documentElement.scrollWidth-innerWidth,mdl:m.scrollWidth-m.clientWidth,rowOver:[...f.querySelectorAll('.s11r')].some(r=>r.getBoundingClientRect().right>innerWidth+1)}});
  ok('390px: modal hồ sơ bé không tràn ngang, các dòng buổi 1-1 nằm gọn',ov.doc<=1&&ov.mdl<=1&&!ov.rowOver,ov);
 
  ok('không có lỗi JS',errs.length===0,errs);

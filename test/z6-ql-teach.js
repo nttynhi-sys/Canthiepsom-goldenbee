@@ -51,7 +51,8 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
   if(hbt)await page.check('#hf-hbt');if(h11)await page.check('#hf-h11');await W(40);
   const opts=await ev(()=>[...document.querySelector('#hf-gv').options].filter(o=>o.value==='nv01').map(o=>o.textContent));
   await page.selectOption('#hf-gv','nv01');
-  await ev(([days,slot,bd])=>{const f=document.querySelector('#hsff');days.forEach(w=>{f.elements['d'+w].checked=true});f.elements.slot.value=slot;
+  await ev(([days,slot,bd])=>{const f=document.querySelector('#hsff');if(f.elements.lt_ng){f.elements.lt_ng.checked=true;f.elements.lq_ng.value=1}
+   if(days&&days.length){const rs=[...f.querySelectorAll('#s11 .s11r')];rs.forEach(r=>r.remove());days.forEach(w=>{ACT.s11add(null,f.querySelector('#hth-11 [data-a="s11add"]'));const all=f.querySelectorAll('#s11 .s11r'),r=all[all.length-1];r.querySelector('[name=s11day]').value=w;r.querySelector('[name=s11lt]').value='ng';r.querySelector('[name=s11tm]').value=slot})}
    if(bd)[1,2,3,4,5,6].forEach(w=>{f.elements['bd'+w].checked=bd.includes(w)})},[days,slot,bd]);
   await page.click('#hsff button[type=submit]');await W(150);return opts};
  const o1=await fill('Bé Thử Chỉ 1-1',true,false,[1,3],slots.A,null);
