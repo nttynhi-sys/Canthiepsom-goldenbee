@@ -255,3 +255,9 @@ body.gph .mi,body.gph .mbig{-webkit-user-drag:none;user-select:none;-webkit-touc
 .tph .mth{aspect-ratio:4/3}
 .trc{border:1px solid var(--bd);border-radius:12px;padding:10px 12px;display:grid;gap:10px;min-width:0;margin:0}.trc legend{font-weight:600;padding:0 6px}
 body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit-touch-callout:none}
+/* Nút hiện/ẩn mật khẩu (p98-pw.js) */
+.pw-wrap{position:relative;display:block;min-width:0}
+.pw-wrap input{padding-right:88px}
+.pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);min-height:30px;padding:3px 9px;border:0;border-radius:7px;background:transparent;color:var(--ac);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.pw-eye:hover{background:var(--card)}
+.pw-eye:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
