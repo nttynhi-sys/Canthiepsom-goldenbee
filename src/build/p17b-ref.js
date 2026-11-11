@@ -188,7 +188,7 @@ const triNote=()=>`<p class="note sm" style="margin-bottom:12px">Góc tri ân gi
 function triStaffBody(){const L=triList().filter(triSee).sort(rfSort),p=pg('tri',L,9);
  return`<div class="card">${triNote()}${L.length?`<div class="trg">${p.rows.map(triCard).join('')}</div>${p.html}`:`<p class="empty">Chưa có mục tri ân nào.${canRef()?' Bấm “Thêm mục tri ân” để đăng ảnh bé tiến bộ, tốt nghiệp hoặc lời cảm ơn.':''}</p>`}</div>`}
 function triParent(){const L=triList().filter(triSee).sort(rfSort),p=pg('trp',L,9);
- return`<div class="card"><h2>Góc tri ân</h2><p class="sm mu" style="margin-bottom:10px">Hình ảnh và lời nhắn của các gia đình có bé đã tiến bộ, tốt nghiệp tại ${esc(DB.cfg.name||'Trung tâm')}. Những nội dung này chỉ được đăng khi gia đình đồng ý. Xin vui lòng không chụp màn hình hay chia sẻ ra ngoài.</p>
+ return`<div class="card"><h2>Góc tri ân</h2><p class="sm mu" style="margin-bottom:10px">Hình ảnh và lời nhắn của các gia đình có bé đã tiến bộ, tốt nghiệp tại ${esc(DB.cfg.name||'Trung tâm')}. Xin vui lòng không chụp màn hình hay chia sẻ ra ngoài.</p>
  ${L.length?`<div class="trg big">${p.rows.map(triCard).join('')}</div>${p.html}`:'<p class="empty big">Chưa có nội dung nào. Khi có bé tiến bộ hoặc tốt nghiệp, Trung tâm sẽ chia sẻ ở đây.</p>'}</div>`}
 
 ACT.trm=v=>{if(!canRef())return false;RF.up={busy:false,err:'',msg:''};S.modal={t:'trm',id:v||''}};
