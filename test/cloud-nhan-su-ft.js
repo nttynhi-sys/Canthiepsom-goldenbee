@@ -23,6 +23,12 @@ async function login(page,e,p){await page.waitForSelector('#login');await page.f
  for(let i=0;i<30&&(srv.recs.size<3000);i++)await sleep(500);await sleep(1500);
  ok('máy chủ có hồ sơ nhân sự; tiền lương nằm ở bảng tiền, không lẫn vào hồ sơ',!!st('nv04')&&st('nv04').data.pay===undefined&&!!pay('nv04')&&pay('nv04').data.mode==='buoi',{pay:st('nv04')&&st('nv04').data.pay,mon:pay('nv04')&&pay('nv04').data.mode});
  await ctx.close();
+ /* dữ liệu mẫu mới đã mang sẵn cờ (lần đăng nhập sau không phải ghi bù, nên không có ghi thừa khi tải xong) */
+ const seeded=[...srv.recs.values()].filter(r=>r.collection==='staff');
+ ok('dữ liệu mẫu mới mang sẵn cờ Fulltime/Partime cho cả 30 nhân sự (12 Fulltime, 18 Partime)',seeded.length===30&&seeded.every(r=>typeof r.data.ft==='boolean')&&seeded.filter(r=>r.data.ft).length===12,{n:seeded.length,ft:seeded.filter(r=>r.data.ft).length});
+ /* giả lập dữ liệu cloud cũ chưa có cờ */
+ seeded.forEach(r=>{delete r.data.ft});
+ ok('đã bỏ cờ trên máy chủ để giả lập dữ liệu cũ',[...srv.recs.values()].filter(r=>r.collection==='staff').every(r=>r.data.ft===undefined));
 
  /* 1. Trưởng Trung tâm đăng nhập lại: dữ liệu cũ chưa có cờ thì được ghi một lần */
  ({ctx,page}=await newPage(b,srv,errs));await login(page,'tt@gb.vn','pw1');await page.waitForSelector('.nav');

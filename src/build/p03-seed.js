@@ -83,7 +83,7 @@ function seed(){
   else if(n<=21){pos='Giáo viên bán trú';base=7e6}
   else if(n===26){role='vp';pos='Nhân viên văn phòng';base=11e6;allow=3e5}
   else{role='hc';pos=['Lễ tân','Lễ tân','Bảo mẫu','Tạp vụ'][n-27];base=[8e6,8e6,7e6,6e6][n-27]}
-  D.staff.push({id,n:nm,role,pos,ph:'09'+String(RI(10000000,99999999)),em:ascii(nm)+'@goldenbee.vn',st:'dang',sd:iso(new Date(RI(2019,2025),RI(0,11),RI(1,28))),sup:role==='ql'?'':role==='vp'?'nv02':role==='tt'||role==='hc'?'nv01':n<=11?'nv02':'nv03',cc:mode!=='buoi'||rateBt>0,pay:{mode,base,rate,rateBt,allow,bh:mode==='buoi'?0:10.5,latePen:role==='gv'||role==='hc'||role==='vp'?50000:0}})}
+  D.staff.push({id,n:nm,role,pos,ph:'09'+String(RI(10000000,99999999)),em:ascii(nm)+'@goldenbee.vn',st:'dang',sd:iso(new Date(RI(2019,2025),RI(0,11),RI(1,28))),sup:role==='ql'?'':role==='vp'?'nv02':role==='tt'||role==='hc'?'nv01':n<=11?'nv02':'nv03',cc:mode!=='buoi'||rateBt>0,ft:mode!=='buoi',pay:{mode,base,rate,rateBt,allow,bh:mode==='buoi'?0:10.5,latePen:role==='gv'||role==='hc'||role==='vp'?50000:0}})}
  BTN.forEach((n,i)=>D.groups.push({id:'G'+(i+1),n,ts:['nv'+(18+i),'nv'+(20+i)],gv:'nv'+(18+i),tg:'nv'+(20+i)}));
  D.tkb=tkbDefault(D.groups);
  const T11=[];for(let n=4;n<=17;n++)T11.push('nv'+pad(n));for(let n=22;n<=25;n++)T11.push('nv'+pad(n));
