@@ -50,7 +50,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   R('nt', 'n4', { id: 'n4', aud: 'nb', tg: 'all', t: 'Nội bộ' }); R('nt', 'n5', { id: 'n5', aud: 'ph', tg: 'G1', t: 'Lớp Ong non' }); R('nt', 'n6', { id: 'n6', aud: 'ph', tg: 'G2', t: 'Lớp Ong mật' });
   R('plans', 'p1', { id: 'p1', k: 'hs001' }); R('plans', 'p2', { id: 'p2', k: 'hs004' }); R('ts', 'nv04|2026-11-02', { i: '08:00' });
   R('rd', 'n1|ph|a@x.vn', '2026-11-02'); R('rd', 'n1|ph|b@x.vn', '2026-11-03');
-  M('cfgm', '_', { p11: 300000, pbtCN: 1 }); M('lg', 'e1', { id: 'e1', hs: 'hs001', amt: 5 }); M('lg', 'e2', { id: 'e2', hs: 'hs004', amt: 7 }); M('pay', 'nv04', { base: 9 }); M('set', 'hs001|2026-10', { ref: 'e1' }); M('set', 'hs004|2026-10', { ref: 'e2' });
+  M('cfgm', '_', { p11: 300000, pbtDay: 380000, pbtDay11: 180000, lt_gq: 250000, lt_nc: 190000, pbtCN: 1, giamTru: 15500000, thue: 10, v1: 20000, v2: 30000, khoaLa: 'x' }); M('lg', 'e1', { id: 'e1', hs: 'hs001', amt: 5 }); M('lg', 'e2', { id: 'e2', hs: 'hs004', amt: 7 }); M('pay', 'nv04', { base: 9 }); M('set', 'hs001|2026-10', { ref: 'e1' }); M('set', 'hs004|2026-10', { ref: 'e2' });
 
   /* ---- tra email theo số điện thoại ---- */
   ok('login: số không hợp lệ: 400', (await call('login', { phone: 'abc' })).code === 400);
@@ -142,6 +142,9 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   const stf = (J.records || []).filter(r => r.collection === 'staff');
   ok('parent A: nhân viên chỉ lộ tên và chức vụ (không email, điện thoại, ngày vào làm, lương)', stf.length === 8 && stf.every(s => s.data.em === '' && s.data.ph === '' && !s.data.sd && !s.data.pay) && stf.find(s => s.id === 'nv04').data.n === 'Cô Lan');
   ok('parent A: học phí và công nợ chỉ của bé mình, không có lương', mids('lg') === 'e1' && mids('set') === 'hs001|2026-10' && mids('cfgm') === '_' && !mids('pay') && !(J.records || []).some(r => r.collection === 'ts' || r.collection === 'lr'));
+  const cm = ((J.money || []).find(r => r.collection === 'cfgm') || {}).data || {};
+  ok('parent A: cấu hình tiền chỉ gồm khóa tính học phí (đơn giá 1-1, bán trú, giá từng loại 1-1)', cm.p11 === 300000 && cm.pbtDay === 380000 && cm.pbtDay11 === 180000 && cm.lt_gq === 250000 && cm.lt_nc === 190000, cm);
+  ok('parent A: không nhận giảm trừ gia cảnh, thuế, mức trừ vi phạm, khóa lạ', !('giamTru' in cm) && !('thue' in cm) && !('v1' in cm) && !('v2' in cm) && !('khoaLa' in cm) && !('pbtCN' in cm) && !JSON.stringify(J).includes('15500000'), cm);
   ok('parent A: không có dữ liệu của bé khác ở bất cứ đâu', !JSON.stringify(J).includes('hs004') && !JSON.stringify(J).includes('b@x.vn'));
   const lc = (await call('parent', { action: 'load' }, TC)).json;
   ok('parent C (chỉ SĐT): thấy bé Chi, không thấy ai khác', lc.kids.join() === 'hs003' && !JSON.stringify(lc).includes('hs001'));

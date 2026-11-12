@@ -78,6 +78,11 @@ async function lockNotice(l) {
 }
 const LOCKED_MSG = 'Cổng phụ huynh đang tạm khóa vì học phí quá hạn. Vui lòng liên hệ Trung tâm.';
 
+/* Cấu hình tiền gửi cho phụ huynh: chỉ các khóa trình duyệt cần để tự tính học phí (đơn giá 1-1, bán trú, giá từng loại 1-1).
+   Không gửi giảm trừ gia cảnh, thuế, mức trừ vi phạm của nhân viên; khóa lạ cũng bị bỏ (danh sách trắng). Khớp CFG_MONEY ở src/build/p02b-cloud.js. */
+const PARENT_CFGM = ['p11', 'pbtDay', 'pbtDay11', 'lt_ng', 'lt_nh', 'lt_gq', 'lt_ms', 'lt_vd', 'lt_tc', 'lt_nc'];
+const parentCfgm = d => { const o = {}; PARENT_CFGM.forEach(k => { if (d && d[k] != null) o[k] = d[k]; }); return o; };
+
 async function snapshot(me, since, known) {
   const k = await myKids(me.key);
   const lk = await K.lockForParent(me.key, k.ids);
@@ -108,7 +113,7 @@ async function snapshot(me, since, known) {
     const t = job[i][0];
     rows.forEach(r => {
       const c = r.collection;
-      if (t === 'money') { money.push(r); return; }
+      if (t === 'money') { money.push(r.collection === 'cfgm' ? Object.assign({}, r, { data: parentCfgm(r.data) }) : r); return; }
       if (c === 'staff') { records.push({ collection: c, id: r.id, data: safeStaff(r.data || {}), updated_at: r.updated_at }); return; }
       if (c === 'nt') { const n = r.data || {}; if (!(n.tg === 'all' || ids.includes(n.tg) || k.groups.includes(n.tg))) return; }
       if (c === 'media') {
