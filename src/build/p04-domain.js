@@ -11,7 +11,9 @@ const fee11=k=>k.f11||DB.cfg.p11;
 /* Loại can thiệp 1-1 và giá mỗi giờ (đồng). Mỗi ca 1-1 trong lịch mang mã loại (l.lt); ca cũ chưa có loại thì tính theo giá chung fee11. */
 const LT=[{c:'ng',n:'Học cá nhân ngôn ngữ',f:180000},{c:'nh',n:'Học nhóm',f:180000},{c:'gq',n:'Học vận động – giác quan',f:200000},{c:'ms',n:'Massage điều hoà cảm thụ bản thể',f:200000},{c:'vd',n:'Học vận động thô – vận động tinh',f:200000},{c:'tc',n:'Học kỹ năng tự chăm sóc: mặc áo, đánh răng...',f:180000},{c:'nc',n:'Học vận động dưới nước',f:190000}];
 const LTM=Object.fromEntries(LT.map(x=>[x.c,x]));
-const feeSlot=(k,sid)=>{const l=DB.lich.find(x=>x.id===sid);return l&&l.lt&&LTM[l.lt]?LTM[l.lt].f:fee11(k)};
+/* Giá từng loại do Trưởng Trung tâm chỉnh ở Nhân sự → Cài đặt (DB.cfg['lt_'+mã], tiền nên đi theo CFG_MONEY); chưa chỉnh thì dùng giá gốc x.f. */
+const ltFee=x=>{const v=DB.cfg&&DB.cfg['lt_'+x.c];return v==null?x.f:v};
+const feeSlot=(k,sid)=>{const l=DB.lich.find(x=>x.id===sid);return l&&l.lt&&LTM[l.lt]?ltFee(LTM[l.lt]):fee11(k)};
 /* --- Thời khóa biểu bán trú và giờ 1-1 --- */
 const tmin=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m};
 const tkbRows=gid=>(DB.tkb||[]).filter(r=>r.gr===gid||!r.gr).slice().sort((a,b)=>tmin(a.s)-tmin(b.s)||tmin(a.e)-tmin(b.e));

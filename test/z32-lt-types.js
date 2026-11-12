@@ -11,8 +11,11 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   await page.click('.nav button:has-text("Học sinh")'); await W(120);
   await page.click('[data-a="hsnew"]'); await page.waitForSelector('#hsff');
   const rows = await ev(() => document.querySelectorAll('#hth-11 .lt-row').length);
-  const priceTx = await ev(() => [...document.querySelectorAll('#hth-11 .lt-row .sm')].map(e => e.textContent.trim()));
-  ok('form có 7 ô tích loại, mỗi loại có ô số giờ/ngày và giá', rows === 7 && priceTx.some(t => t.indexOf('180.000') >= 0) && priceTx.some(t => t.indexOf('190.000') >= 0), priceTx);
+  const priceTx = await ev(() => [...document.querySelectorAll('#hth-11 .lt-row > .sm')].map(e => e.textContent.trim()));
+  /* Quản lý không nhận dữ liệu tiền: thấy 7 loại và ô số giờ nhưng không thấy giá; Trưởng Trung tâm thấy giá hiện hành */
+  const priceTT = await ev(() => LT.map(x => fmt(ltFee(x))).join(' '));
+  ok('form có 7 ô tích loại, mỗi loại có ô số giờ/ngày; Quản lý không thấy giá, Trưởng Trung tâm thấy giá',
+    rows === 7 && priceTx.every(t => !/\d\.\d{3}|₫/.test(t)) && priceTT.indexOf('180.000') >= 0 && priceTT.indexOf('190.000') >= 0 && priceTT.indexOf('200.000') >= 0, [priceTx, priceTT.slice(0, 300)]);
   await page.fill('#hf-n', 'Bé Loại Một'); await page.fill('#hf-pn', 'Mẹ Loại'); await page.fill('#hf-pp', '0905000777');
   await page.check('#hf-h11');
   await page.selectOption('#hf-gv', 'nv01');

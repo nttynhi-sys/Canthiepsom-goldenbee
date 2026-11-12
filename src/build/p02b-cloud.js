@@ -15,7 +15,7 @@ const pkeyOf=k=>{const e=String(k&&k.pe||'').trim().toLowerCase();if(e&&e.includ
 /* Hình dạng từng nhóm dữ liệu: danh sách có mã (id hoặc k), bảng khóa, mục đơn */
 const CSH={arr:['staff','kids','cg','tg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb','hol','media','ref','tri','vio'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon','vam'],one:['cfg']};
 /* Nhóm dữ liệu tiền: chỉ Trưởng Trung tâm và Văn phòng đọc và ghi được (giáo viên chỉ đọc lương của mình) */
-const MONEYC=['lg','set','bon','vam'],CFG_MONEY=['p11','pbtDay','pbtDay11','giamTru','thue','v1','v2'],CFG_DEF={pbtDay:380000,pbtDay11:180000,v1:20000,v2:30000};   /* dữ liệu cũ chưa có giá bán trú theo ngày thì lấy giá mặc định */
+const MONEYC=['lg','set','bon','vam'],CFG_MONEY=['p11','pbtDay','pbtDay11','giamTru','thue','v1','v2','lt_ng','lt_nh','lt_gq','lt_ms','lt_vd','lt_tc','lt_nc'],CFG_DEF={pbtDay:380000,pbtDay11:180000,v1:20000,v2:30000,lt_ng:180000,lt_nh:180000,lt_gq:200000,lt_ms:200000,lt_vd:200000,lt_tc:180000,lt_nc:190000};   /* dữ liệu cũ chưa có giá bán trú theo ngày thì lấy giá mặc định */
 const PAY_STUB=()=>({mode:'thang',base:0,rate:0,rateBt:0,allow:0,bh:0,latePen:0});
 const canM=()=>MONEY_ROLES.includes(CLD.role);
 const KEYF=c=>CSH.arrk[c]||'id';
