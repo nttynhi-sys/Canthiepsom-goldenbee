@@ -19,6 +19,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
   const login = async (page, e, p) => { await page.waitForSelector('#login'); await page.fill('#lg-e', e); await page.fill('#lg-p', p); await page.click('#login button[type=submit]'); };
   const main = page => page.evaluate(() => (document.querySelector('#main') || document.querySelector('#app')).innerText);
+  /* Từ ngày 11 mọi phụ huynh mẫu chưa đóng đủ đều bị khóa nên danh sách khóa có nhiều trang (8 dòng mỗi trang);
+     bài thử không được phụ thuộc ngày chạy, nên chuyển tới đúng trang có phụ huynh thử trước khi đọc hay bấm. */
+  const showLT = async page => { await page.evaluate(() => { const i = (plRows() || []).findIndex(r => r.key === 'locktest@x.vn'); S.pg.plk = Math.floor(Math.max(i, 0) / 8) + 1; S.v = 'dash'; render(); }); await sleep(150); };
 
   /* ---- Trưởng Trung tâm khởi tạo dữ liệu mẫu và dựng tình huống ---- */
   const tt = await newPage();
@@ -51,7 +54,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   /* ---- nhân viên thấy trong danh sách và mở khóa ---- */
   await tt.evaluate(() => plLoad()); await sleep(400);
-  await tt.evaluate(() => { S.v = 'dash'; render(); });
+  await showLT(tt);
   t = await main(tt);
   ok('Trưởng Trung tâm: danh sách khóa có phụ huynh thử, "Đang khóa", số tiền', /Cổng phụ huynh quá hạn học phí/.test(t) && t.includes(info.pn) && /380\.000/.test(t), t.slice(0, 300));
   const row = await tt.evaluate(() => CLD.plock.rows.find(r => r.key === 'locktest@x.vn'));
@@ -61,7 +64,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   await tt.click('#plf button[type=submit]'); await sleep(600);
   const pul = E.recs.get('pul|locktest@x.vn');
   ok('mở khóa: bản ghi pul do máy chủ ghi, có người mở và vai trò', pul && pul.data.by === 'Trưởng TT' && pul.data.role === 'tt' && pul.data.note === 'Hẹn đóng sau' && /^\d{4}-\d{2}-10$/.test(pul.data.until), pul);
-  t = await main(tt);
+  await showLT(tt); t = await main(tt);
   ok('danh sách hiện "Đã mở khóa"', /Đã mở khóa/.test(t) && !!(await tt.$('#plock [data-a="plrelock"]')), t.slice(0, 300));
   await ph.click('[data-a="lockchk"]'); await ph.waitForSelector('.nav', { timeout: 5000 });
   ok('phụ huynh bấm "Kiểm tra lại" sau khi được mở khóa: vào được cổng, thấy bé của mình', (await main(ph)).includes(info.kn));
@@ -79,7 +82,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   /* ---- Quản lý: thấy ai bị khóa, không thấy tiền ---- */
   const ql = await newPage(); await login(ql, 'ql@gb.vn', 'qlpass123'); await ql.waitForSelector('.nav'); await sleep(900);
-  t = await main(ql);
+  await showLT(ql); t = await main(ql);
   ok('Quản lý: thấy danh sách khóa nhưng không thấy số tiền', /Cổng phụ huynh quá hạn học phí/.test(t) && t.includes(info.pn) && !/380\.000/.test(t) && !!(await ql.$('#plock [data-a="plopen"]')), t.slice(0, 400));
   ok('Quản lý không nhận dữ liệu tiền từ máy chủ', !(await ql.evaluate(() => JSON.stringify(CLD.plock)).then(s => /"amt"/.test(s))));
   await ql.click('#plock [data-a="plopen"][data-v="locktest@x.vn"]'); await ql.waitForSelector('#plf'); await ql.click('#plf button[type=submit]'); await sleep(600);
@@ -87,7 +90,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   /* ---- Văn phòng ---- */
   const vp = await newPage(); await login(vp, 'vp@gb.vn', 'vppass123'); await vp.waitForSelector('.nav'); await sleep(900);
-  t = await main(vp);
+  await showLT(vp); t = await main(vp);
   ok('Văn phòng: dashboard có danh sách khóa kèm số tiền', /Cổng phụ huynh quá hạn học phí/.test(t) && /Đã mở khóa/.test(t), t.slice(0, 400));
 
   /* ---- trình duyệt không ghi trực tiếp bản ghi mở khóa ---- */
