@@ -1844,6 +1844,9 @@ const canMoney=()=>isTT()||isVP(),canCfg=()=>isTT(),seesAll=()=>isLead()||isVP()
 /* hồ sơ nhân sự Quản lý, Trưởng Trung tâm và Văn phòng chỉ Trưởng Trung tâm sửa (Quản lý chỉ sửa được hồ sơ của chính mình) */
 const lockAcc=s=>!isTT()&&!!s&&(s.role==='tt'||s.role==='vp'||(s.role==='ql'&&(!U||s.id!==U.id)));
 const myGroups=()=>isGV()?DB.groups.filter(g=>g.gv===U.id||g.tg===U.id):[];
+/* Thực đơn và thời khóa biểu bán trú: Trưởng Trung tâm, Quản lý, Văn phòng, phụ huynh và giáo viên đứng lớp bán trú (giáo viên chính hoặc trợ giảng). Giáo viên chỉ dạy 1-1 không thấy. */
+const btView=()=>!isGV()||myGroups().length>0;
+const navList=()=>ACCESS[U.role].filter(v=>v!=='tn'||btView());
 function myKids(){if(!U)return[];if(seesAll())return DB.kids;
  if(isGV()){const gs=myGroups().map(g=>g.id);return DB.kids.filter(k=>k.gv===U.id||(k.gr&&gs.includes(k.gr))||DB.lich.some(l=>l.gv===U.id&&l.hs===k.id))}
  return DB.kids.filter(k=>pkeyOf(k)===U.pkey)}
@@ -1910,7 +1913,7 @@ function vTop(){
  <div class="acts">${CLOUDMODE?`<span id="cl-st" class="sm ${CLD.st==='err'?'er':'mu'}" role="status">${stText()}</span>`:`<label class="sm mu" style="margin:0" for="demo-role">Xem thử vai trò</label><select id="demo-role" data-c="role" style="width:auto" aria-label="Chuyển vai trò xem thử">${opts([['ql','Quản lý'],['tt','Trưởng Trung tâm'],['vp','Văn phòng'],['gv','Giáo viên'],['ph','Phụ huynh']],U.role)}</select>`}<button class="btn s" data-a="theme">Sáng/Tối</button>${CLOUDMODE?'<button class="btn s" data-a="pwopen">Đổi mật khẩu</button>':''}<button class="btn s" data-a="logout">Đăng xuất</button></div></div>`}
 function vSide(){
  let h=`<aside class="side ${S.menu?'open':''}" aria-label="Menu chính"><div class="brand"><img src="${LOGO}" alt="Logo Golden Bee"><b>${esc(DB.cfg.name)}</b></div><nav class="nav">`;
- ACCESS[U.role].forEach(v=>{const[,l,g]=NAV.find(x=>x[0]===v),gl=(NAVG[U.role]||{})[v]||g;if(gl)h+=`<div class="ng">${gl}</div>`;const b=badge(v);
+ navList().forEach(v=>{const[,l,g]=NAV.find(x=>x[0]===v),gl=(NAVG[U.role]||{})[v]||g;if(gl)h+=`<div class="ng">${gl}</div>`;const b=badge(v);
   h+=`<button data-a="nav" data-v="${v}" class="${S.v===v?'on':''}" ${S.v===v?'aria-current="page"':''}><span>${esc(vlab(v))}</span>${b?`<span class="bdg">${b}</span>`:''}</button>`});
  return h+`</nav><p class="sm" style="color:var(--sidemu);padding:18px 10px 0">${isPH()?'Thông tin chỉ dành cho gia đình bé. Vui lòng không chụp màn hình hoặc chia sẻ ra bên ngoài.':CLOUDMODE?'Dữ liệu dùng chung trên máy chủ':'Bản trình diễn · dữ liệu mẫu'}</p></aside>${S.menu?'<div class="scrim" data-a="menu"></div>':''}`}
 
@@ -1922,7 +1925,7 @@ function render(){
  const y=S.top?0:window.scrollY,sd0=$q('.side'),sy=sd0?sd0.scrollTop:0,md0=$q('.mdl'),my=md0?md0.scrollTop:0;S.top=0;
  if(!U){app.innerHTML=vLogin();window.scrollTo(0,y);return}
  if(U.role==='ph'&&!CLOUDMODE){const lk=phLockOf(U.pkey);if(lk.locked){app.innerHTML=lockHtml(lk);window.scrollTo(0,0);return}}
- if(!ACCESS[U.role].includes(S.v))S.v=ACCESS[U.role][0];
+ if(!navList().includes(S.v))S.v=navList()[0];
  let body;try{body=VIEWS[S.v]()}catch(e){console.error(e);body=`<div class="card"><h2>Chưa hiển thị được trang này</h2><p class="mu">${esc(e.message)}</p></div>`}
  let mh='';if(S.modal&&MODALS[S.modal.t]){try{mh=MODALS[S.modal.t]()}catch(e){console.error(e);S.modal=null}}
  app.innerHTML=`<div class="shell">${vSide()}<main id="main">${vTop()}${body}</main></div>${mh}`;
@@ -2483,9 +2486,10 @@ const monOf=d=>{let x=d;while(dow(x)!==1)x=addD(x,-1);return x};
 const onLeave=(id,d)=>DB.lr.some(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t);
 VIEWS.lh=()=>isPH()?lhParent():lhStaff();
 const lhStaff=()=>{const h=S.lh=Object.assign({tab:'wk',mode:'gv',wk:monOf(WD),gv:'',room:ROOMS[0],kid:''},S.lh);
+ const bv=btView();if(!bv&&h.tab==='bt')h.tab='wk';
  if(isGV()){h.mode='gv';h.gv=U.id}else if(!h.gv)h.gv=(pool11().find(s=>U&&s.id===U.id)||pool11()[0]||{}).id||'';
  if(!h.kid)h.kid=(myKids().find(k=>k.st==='dang'&&wk11(k.id))||{}).id||'';
- return head(isGV()?'Lịch dạy của tôi':'Lịch học','Lịch 1-1 cố định theo tuần ('+DAY_OPEN+'–'+DAY_CLOSE+', mỗi ca '+SLOT_MIN+' phút), lịch học bù và thời khóa biểu bán trú')+tabsH([['wk','Lịch 1-1 theo tuần'],['bt','Thời khóa biểu bán trú'],['hol','Ngày nghỉ lễ']],h.tab,'lhtab')+(h.tab==='wk'?lhWeek(h):h.tab==='hol'?holTab():lhBt())};
+ return head(isGV()?'Lịch dạy của tôi':'Lịch học','Lịch 1-1 cố định theo tuần ('+DAY_OPEN+'–'+DAY_CLOSE+', mỗi ca '+SLOT_MIN+' phút), lịch học bù'+(bv?' và thời khóa biểu bán trú':''))+tabsH([['wk','Lịch 1-1 theo tuần']].concat(bv?[['bt','Thời khóa biểu bán trú']]:[],[['hol','Ngày nghỉ lễ']]),h.tab,'lhtab')+(h.tab==='wk'?lhWeek(h):h.tab==='hol'?holTab():lhBt())};
 ACT.lhtab=v=>{S.lh.tab=v};
 ACT.lhwk=v=>{S.lh.wk=v==='0'?monOf(WD):addD(S.lh.wk,+v)};
 CHG.lhmode=v=>{S.lh.mode=v};CHG.lhgv=v=>{S.lh.gv=v};CHG.lhroom=v=>{S.lh.room=v};CHG.lhkid=v=>{S.lh.kid=v};
