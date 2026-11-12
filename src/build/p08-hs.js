@@ -43,7 +43,7 @@ function hsInfo(k){const g=grBy(k.gr),r=(a,b)=>`<div class="rw"><span class="mu"
 ACT.hsnew=()=>{S.modal={t:'hsf',id:''}};
 ACT.hsedit=v=>{S.modal={t:'hsf',id:v}};
 /* ô chọn các ngày trong tuần (T2 đến T7) kèm nút chọn nhanh */
-const dayBoxes=(pre,sel)=>`<div class="dybx">${DAY_ALL.map(w=>`<label class="chk"><input type="checkbox" name="${pre}${w}" ${sel.includes(w)?'checked':''}> ${DAYS[w]}</label>`).join('')}</div><div class="acts" style="margin-top:6px"><button class="btn s" type="button" data-a="dayset" data-v="${pre}|1,2,3,4,5">T2–T6</button><button class="btn s" type="button" data-a="dayset" data-v="${pre}|1,2,3,4,5,6">T2–T7</button><button class="btn s" type="button" data-a="dayset" data-v="${pre}|">Bỏ chọn</button></div>`;
+const dayBoxes=(pre,sel)=>`<div class="dybx bpks" role="group" aria-label="Chọn ngày học">${DAY_ALL.map(w=>`<label class="bpk day"><input type="checkbox" name="${pre}${w}" aria-label="${DAYN[w]}" ${sel.includes(w)?'checked':''}><span>${DAYS[w]}</span></label>`).join('')}</div><div class="acts" style="margin-top:6px"><button class="btn s" type="button" data-a="dayset" data-v="${pre}|1,2,3,4,5">T2–T6</button><button class="btn s" type="button" data-a="dayset" data-v="${pre}|1,2,3,4,5,6">T2–T7</button><button class="btn s" type="button" data-a="dayset" data-v="${pre}|">Bỏ chọn</button></div>`;
 ACT.dayset=v=>{const [pre,list]=v.split('|'),on=list?list.split(',').map(Number):[];
  document.querySelectorAll('input[type=checkbox][name^="'+pre+'"]').forEach(c=>{const w=+c.name.slice(pre.length);if(w>=1&&w<=6)c.checked=on.includes(w)});return false};
 const daysOf=(f,pre)=>DAY_ALL.filter(w=>f.elements[pre+w]&&f.elements[pre+w].checked);
@@ -63,23 +63,38 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.name!=='dx')ret
 function s11Row(w,lt,tm){return`<div class="s11r"><select name="s11day" aria-label="Ngày">${opts(DAY_ALL.map(x=>[x,DAYN[x]]),w)}</select><select name="s11lt" aria-label="Loại 1-1">${opts(LT.map(x=>[x.c,x.n]),lt)}</select><input type="time" name="s11tm" step="60" value="${esc(tm||'')}" aria-label="Giờ bắt đầu ca (ca ${SLOT_MIN} phút)"><button class="btn s no" type="button" data-a="s11del">Xóa ca</button></div>`}
 function ltBlock(k){const on=k.lt||{};return`<div class="lt-grid">${LT.map(x=>`<div class="lt-row"><label class="chk"><input type="checkbox" name="lt_${x.c}" ${on[x.c]?'checked':''}> ${esc(x.n)}</label><span class="sm mu">${canMoney()?fmt(ltFee(x))+' ₫/giờ':''}</span><label class="sm">Số giờ/ngày <input type="number" name="lq_${x.c}" min="1" max="4" step="1" value="${on[x.c]||''}" style="width:64px"></label></div>`).join('')}</div>`}
 function ltSummary(k){const o=k.lt||{},a=LT.filter(x=>o[x.c]).map(x=>esc(x.n)+': '+o[x.c]+' giờ/ngày'+(canMoney()&&kidLt(k,x.c)!=null?' · giá riêng '+fnum(kidLt(k,x.c))+' ₫/giờ':''));return a.length?a.join('<br>'):'<span class="mu">Chưa ghi</span>'}
-ACT.s11add=(v,b)=>{const box=b.closest('.hth-b').querySelector('#s11');if(box)box.insertAdjacentHTML('beforeend',s11Row(DAY_ALL[0],LT[0].c,''));return false};
-ACT.s11del=(v,b)=>{const r=b.closest('.s11r');if(r)r.remove();return false};
+/* nút chọn ngày học 1-1: bấm một ngày thì thêm một ca cho ngày đó (loại là loại đầu đã tích, giờ lấy theo ca đầu đã nhập), bấm lại thì bỏ các ca của ngày đó */
+const s11Days=f=>[...f.querySelectorAll('#s11 .s11r [name=s11day]')].map(s=>+s.value);
+const s11Sync=f=>{if(f)f.querySelectorAll('#s11d input[data-s11w]').forEach(c=>{c.checked=s11Days(f).includes(+c.dataset.s11w)})};
+const s11Defs=f=>{const first=[...f.querySelectorAll('#s11 .s11r [name=s11tm]')].find(i=>i.value),on=LT.find(x=>f.elements['lt_'+x.c]&&f.elements['lt_'+x.c].checked);return{lt:(on||LT[0]).c,tm:first?first.value:''}};
+const s11Set=(f,list)=>{const box=f&&f.querySelector('#s11');if(!box)return;const d=s11Defs(f);
+ [...box.querySelectorAll('.s11r')].forEach(r=>{if(!list.includes(+r.querySelector('[name=s11day]').value))r.remove()});
+ const have=s11Days(f);list.forEach(w=>{if(!have.includes(w))box.insertAdjacentHTML('beforeend',s11Row(w,d.lt,d.tm))});
+ [...box.querySelectorAll('.s11r')].sort((a,b)=>a.querySelector('[name=s11day]').value-b.querySelector('[name=s11day]').value).forEach(r=>box.appendChild(r));s11Sync(f)};
+ACT.s11add=(v,b)=>{const f=b.closest('form'),box=b.closest('.hth-b').querySelector('#s11'),d=s11Defs(f);if(box)box.insertAdjacentHTML('beforeend',s11Row(DAY_ALL.find(w=>!s11Days(f).includes(w))||DAY_ALL[0],d.lt,d.tm));s11Sync(f);return false};
+ACT.s11del=(v,b)=>{const f=b.closest('form'),r=b.closest('.s11r');if(r)r.remove();s11Sync(f);return false};
+ACT.s11days=(v,b)=>{s11Set(b.closest('form'),v?v.split(',').map(Number):[]);return false};
+document.addEventListener('change',e=>{const t=e.target,f=t&&t.closest&&t.closest('form');if(!f)return;
+ if(t.dataset&&t.dataset.s11w){const w=+t.dataset.s11w,cur=s11Days(f);s11Set(f,t.checked?[...new Set(cur.concat(w))]:cur.filter(x=>x!==w))}
+ else if(t.name==='s11day')s11Sync(f)});
 function hthField(k,edit){const bt=!!k.bt,bd=btOf(k),ls=edit?DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).sort((a,b)=>a.day-b.day||(a.slot<b.slot?-1:a.slot>b.slot?1:0)):[],has=ls.length>0,pool=pool11();
  const ex=has?`<div class="note sm"><b>Bé đang có ${ls.length} buổi 1-1:</b> ${ls.map(l=>DAYS[l.day]+' '+slotLb(l.slot)+' ('+esc(given(sn(l.gv)))+')'+(l.lt&&LTM[l.lt]?' · '+esc(LTM[l.lt].n):'')).join('; ')}. Đổi giờ hoặc xóa buổi cũ ở thẻ Lịch học; phần bên dưới để thêm ca mới.</div>`:'';
- return`<h3>Hình thức học</h3><p class="sm mu" style="margin-bottom:6px">Tích hình thức bé học rồi tích các loại và ghi số giờ. Bé có thể học cả hai: bán trú và các ca 1-1.</p><div class="hth">
- <div class="hth-c"><label class="chk hth-h" for="hf-hbt"><input type="checkbox" id="hf-hbt" name="hbt" ${bt?'checked':''}> <b>Bán trú</b></label>
-  <div class="hth-b" id="hth-bt" ${bt?'':'hidden'}><div><label for="hf-gr">Lớp bán trú</label><select id="hf-gr" name="gr"><option value="">Tự chọn theo tuổi</option>${opts(DB.groups.map(g=>[g.id,g.n]),k.gr)}</select></div>
-   <div><span class="lbl">Các buổi bán trú trong tuần (tích ngày bé học, ${BTLB})</span>${dayBoxes('bd',bd.length?bd:DAY_BT)}</div>
-   <p class="sm mu">Mỗi ngày bán trú có một ca 1-1 nằm trong gói bán trú. Thứ Bảy chỉ tích khi bé học thứ Bảy.</p></div></div>
- <div class="hth-c"><label class="chk hth-h" for="hf-h11"><input type="checkbox" id="hf-h11" name="h11" ${has||k.lt?'checked':''}> <b>Can thiệp 1-1</b></label>
-  <div class="hth-b" id="hth-11" ${has||k.lt?'':'hidden'}>${ex}
+ return`<h3>Hình thức học</h3><p class="sm mu" style="margin-bottom:8px">Bấm chọn hình thức bé học. Bé có thể học cả hai: bán trú và các ca 1-1.</p>
+ <div class="bpks hth-pick" role="group" aria-label="Hình thức học"><label class="bpk big" for="hf-hbt"><input type="checkbox" id="hf-hbt" name="hbt" ${bt?'checked':''}><span><b>Bán trú</b><small>${BTLB}</small></span></label><label class="bpk big" for="hf-h11"><input type="checkbox" id="hf-h11" name="h11" ${has||k.lt?'checked':''}><span><b>Can thiệp 1-1</b><small>Ca ${SLOT_MIN} phút</small></span></label></div>
+ <div class="hth">
+  <div class="hth-b" id="hth-bt" ${bt?'':'hidden'}><b class="hth-t">Bán trú</b><div><label for="hf-gr">Lớp bán trú</label><select id="hf-gr" name="gr"><option value="">Tự chọn theo tuổi</option>${opts(DB.groups.map(g=>[g.id,g.n]),k.gr)}</select></div>
+   <div><span class="lbl">Các ngày bán trú trong tuần (bấm chọn ngày bé học, ${BTLB})</span>${dayBoxes('bd',bd.length?bd:DAY_BT)}</div>
+   <p class="sm mu">Mỗi ngày bán trú có một ca 1-1 nằm trong gói bán trú. Thứ Bảy chỉ chọn khi bé học thứ Bảy.</p></div>
+  <div class="hth-b" id="hth-11" ${has||k.lt?'':'hidden'}><b class="hth-t">Can thiệp 1-1</b>${ex}
    <div class="f2"><div><label for="hf-gv">Giáo viên 1-1</label><select id="hf-gv" name="gv"><option value="">Chọn giáo viên</option>${opts(pool.map(s=>[s.id,tName(s)]),k.gv&&pool.some(s=>s.id===k.gv)?k.gv:'')}</select></div><div><label for="hf-rm">Phòng</label><select id="hf-rm" name="room"><option value="">Tự chọn phòng trống</option>${opts(ROOMS.map(r=>[r,r]),'')}</select></div></div>
    <div><span class="lbl">Loại 1-1 và số giờ đăng ký trong 1 ngày (tích loại bé học)</span>${ltBlock(k)}</div>
-   <div><span class="lbl">Các ca 1-1 mới: mỗi ca chọn ngày, loại và giờ bắt đầu riêng (ca ${SLOT_MIN} phút)</span><div id="s11"></div>
-    <div class="acts" style="margin-top:6px"><button class="btn s" type="button" data-a="s11add">+ Thêm ca</button></div></div>
+   <div><span class="lbl">Các ngày học 1-1 (bấm chọn ngày bé học; mỗi ngày một ca)</span>
+    <div class="dybx bpks" id="s11d" role="group" aria-label="Chọn ngày học 1-1">${DAY_ALL.map(w=>`<label class="bpk day"><input type="checkbox" data-s11w="${w}" aria-label="${DAYN[w]}"><span>${DAYS[w]}</span></label>`).join('')}</div>
+    <div class="acts" style="margin-top:6px"><button class="btn s" type="button" data-a="s11days" data-v="1,2,3,4,5">T2–T6</button><button class="btn s" type="button" data-a="s11days" data-v="1,2,3,4,5,6">T2–T7</button><button class="btn s" type="button" data-a="s11days" data-v="">Bỏ chọn</button></div>
+    <span class="lbl" style="margin-top:10px">Loại và giờ bắt đầu của từng ngày (ca ${SLOT_MIN} phút, đổi riêng từng ngày được)</span><div id="s11"></div>
+    <div class="acts" style="margin-top:6px"><button class="btn s" type="button" data-a="s11add">+ Thêm ca</button><span class="sm mu">dùng khi một ngày bé học nhiều ca</span></div></div>
    <p class="sm mu">Số ca của một loại trong cùng một ngày không vượt số giờ đăng ký của loại đó. Ca cũ đã xếp xem và sửa ở thẻ Lịch học.</p>
-  </div></div>
+  </div>
  </div>`}
 document.addEventListener('change',e=>{const t=e.target;if(!t||(t.name!=='hbt'&&t.name!=='h11'))return;const f=t.closest('form'),p=f&&f.querySelector(t.name==='hbt'?'#hth-bt':'#hth-11');if(p)p.hidden=!t.checked});
 ACT.d11bt=()=>{const f=$q('#hsff');if(!f)return false;DAY_ALL.forEach(w=>{const a=f.elements['bd'+w],c=f.elements['d'+w];if(a&&c)c.checked=a.checked});return false};
