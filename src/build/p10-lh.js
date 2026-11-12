@@ -10,18 +10,19 @@ const lhStaff=()=>{const h=S.lh=Object.assign({tab:'wk',mode:'gv',wk:monOf(WD),g
 ACT.lhtab=v=>{S.lh.tab=v};
 ACT.lhwk=v=>{S.lh.wk=v==='0'?monOf(WD):addD(S.lh.wk,+v)};
 CHG.lhmode=v=>{S.lh.mode=v};CHG.lhgv=v=>{S.lh.gv=v};CHG.lhroom=v=>{S.lh.room=v};CHG.lhkid=v=>{S.lh.kid=v};
-/* các dòng giờ của lưới tuần: mốc gợi ý SLOTS cộng thêm các giờ riêng đang được dùng trong tuần (theo bộ lọc đang xem) */
-function slotRows(days,pred){const ds=new Set(days),ex=DB.lich.filter(l=>l.slot&&(l.type==='11'||ds.has(l.date))&&(!pred||pred(l))).map(l=>l.slot);return[...new Set(SLOTS.concat(ex))].sort()}
+/* các dòng giờ của lưới tuần: chỉ những khung giờ đang có giáo viên dạy 1-1 cho trẻ (theo bộ lọc đang xem), không vẽ sẵn các mốc giờ của hệ thống cho khỏi rối mắt; muốn thêm ca ở giờ khác thì dùng nút "+ Thêm buổi 1-1" */
+function slotRows(days,pred){const ds=new Set(days),ex=DB.lich.filter(l=>l.slot&&(l.type==='11'||ds.has(l.date))&&(!pred||pred(l))).map(l=>l.slot);return[...new Set(ex)].sort()}
 function lhWeek(h){const mon=h.wk,days=[0,1,2,3,4,5].map(i=>addD(mon,i));
  const ctl=isGV()?'':`<div class="f2" style="margin-bottom:12px"><div><label for="lhm">Xem theo</label><select id="lhm" data-c="lhmode">${opts([['gv','Giáo viên'],['room','Phòng'],['kid','Từng bé'],['all','Tổng hợp số buổi']],h.mode)}</select></div>
  ${h.mode==='gv'?`<div><label for="lhg">Giáo viên</label><select id="lhg" data-c="lhgv">${opts(pool11().map(s=>[s.id,tName(s)]),h.gv)}</select></div>`:h.mode==='room'?`<div><label for="lhr">Phòng</label><select id="lhr" data-c="lhroom">${opts(ROOMS.map(r=>[r,r]),h.room)}</select></div>`:h.mode==='kid'?`<div><label for="lhk">Bé</label><select id="lhk" data-c="lhkid">${opts(DB.kids.filter(k=>k.st==='dang'&&wk11(k.id)).map(k=>[k.id,k.n]),h.kid)}</select></div>`:''}</div>`;
  const gr=h.mode==='gv'&&grOf(h.gv);
  const mineL=l=>h.mode==='gv'?l.gv===h.gv:h.mode==='room'?l.room===h.room:h.mode==='kid'?l.hs===h.kid:true;
- const rows=slotRows(days,mineL).map(s=>`<tr><th class="nw">${slotLb(s)}${SLOTS.includes(s)?'':'<br><small class="mu">giờ riêng</small>'}</th>${days.map((d,i)=>lhCell(h,d,i+1,s)).join('')}</tr>`).join('');
- return`<div class="card">${ctl}<div class="acts" style="justify-content:space-between;margin-bottom:10px"><div class="acts"><button class="btn s" data-a="lhwk" data-v="-7">Tuần trước</button><button class="btn s" data-a="lhwk" data-v="0">Tuần này</button><button class="btn s" data-a="lhwk" data-v="7">Tuần sau</button></div><b>${vd(days[0])} đến ${vd(days[5])}</b></div>
+ const canAdd=isLead()&&h.mode==='gv'&&!!h.gv&&!isGrStaff(h.gv),sr=slotRows(days,mineL),
+  rows=sr.length?sr.map(s=>`<tr><th class="nw">${slotLb(s)}</th>${days.map((d,i)=>lhCell(h,d,i+1,s)).join('')}</tr>`).join(''):`<tr><td colspan="7" class="empty">${h.mode==='gv'?(gr?'Giáo viên này phụ trách lớp bán trú nên không có ca 1-1.':isGV()?'Bạn chưa có buổi 1-1 cố định nào.':'Giáo viên này chưa có buổi 1-1 nào.'):h.mode==='room'?'Phòng này chưa có buổi 1-1 nào.':h.mode==='kid'?'Bé này chưa có buổi 1-1 nào.':'Chưa có buổi 1-1 nào.'}${canAdd?' Bấm “+ Thêm buổi 1-1” để thêm.':''}</td></tr>`;
+ return`<div class="card">${ctl}<div class="acts" style="justify-content:space-between;margin-bottom:10px"><div class="acts"><button class="btn s" data-a="lhwk" data-v="-7">Tuần trước</button><button class="btn s" data-a="lhwk" data-v="0">Tuần này</button><button class="btn s" data-a="lhwk" data-v="7">Tuần sau</button></div><span class="acts">${canAdd?'<button class="btn s p" type="button" data-a="lsadd" data-v="1|">+ Thêm buổi 1-1</button>':''}<b>${vd(days[0])} đến ${vd(days[5])}</b></span></div>
  ${gr?`<p class="note sm" style="margin-bottom:10px">${esc(sn(h.gv))} phụ trách ${esc(gr.n)} từ thứ Hai đến thứ Sáu nên không có ca 1-1 các ngày này.</p>`:''}
  <div class="tw"><table class="wkt"><thead><tr><th></th>${days.map(d=>`<th>${DAYN[dow(d)]}<br><span class="mu">${vdm(d)}</span>${isClosed(d)?'<br>'+tg('Nghỉ','in'):''}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
- <p class="sm mu" style="margin-top:8px">Ô vàng là buổi học bù, ô đỏ nhạt là buổi nghỉ. ${isLead()&&h.mode==='gv'?'Bấm dấu cộng để thêm buổi cố định cho giáo viên đang chọn.':''}</p></div>`}
+ <p class="sm mu" style="margin-top:8px">Chỉ hiện các khung giờ đang có giáo viên dạy 1-1. Ô vàng là buổi học bù, ô đỏ nhạt là buổi nghỉ. ${canAdd?'Bấm “+ Thêm buổi 1-1” để thêm ca ở giờ mới, hoặc rê chuột vào ô trống rồi bấm dấu cộng để thêm cùng giờ vào ngày khác.':''}</p></div>`}
 function lhCell(h,d,w,s){if(isClosed(d))return`<td class="cell off"><span class="sm mu">${esc(holOf(d).n)}</span></td>`;const ls=lichAt(w,s,d);
  if(h.mode==='all')return`<td class="cell"><span class="tag ${ls.length>=ROOMS.length?'er':ls.length?'in':'gy'}">${ls.length}/${ROOMS.length}</span></td>`;
  const mine=ls.filter(l=>h.mode==='gv'?l.gv===h.gv:h.mode==='room'?l.room===h.room:l.hs===h.kid),off=h.mode==='gv'&&onLeave(h.gv,d);
