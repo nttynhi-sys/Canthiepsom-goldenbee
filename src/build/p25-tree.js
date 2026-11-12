@@ -44,11 +44,11 @@ function gtTree(kid){
 
 /* ---------------- Cổng phụ huynh và báo cáo: chữ lớn, màu và biểu tượng cho từng trạng thái ---------------- */
 const gtLast=x=>x.last?`Buổi gần nhất: đúng <b>${trOk(x.last.tr)}/${trN(x.last.tr)}</b> lượt · ${esc(SUP[x.last.sup].p.toLowerCase())}`:'Chưa luyện';
-function gtGoals(n){const gs=n.gs;if(!gs.length)return'';
- return`<ul class="gtg">${gs.map(x=>`<li class="s-${x.st}"><span class="gt-ic" aria-hidden="true">${GTS[x.st][1]}</span><div><span class="gt-k">Mục tiêu buổi</span><span class="gtg-n">${esc(gName(x.g))}</span><span class="gtg-s">${gtChip(x.st)} ${gtLast(x)}</span>${x.rs.length>1?`<span class="gtg-h">Các buổi gần đây: ${x.rs.slice(-5).map(r=>trOk(r.tr)+'/'+trN(r.tr)).join(' → ')}</span>`:''}</div></li>`).join('')}</ul>`}
-function gtShort(s,par){return`<div class="gts s-${s.st}"><div class="gts-h"><span class="gt-ic" aria-hidden="true">${GTS[s.st][1]}</span><div class="gts-t"><span class="gt-k">Mục tiêu ngắn hạn</span><b>${esc(gName(s.p.g))}</b></div>${gtChip(s.st)}</div>
- <div class="gt-pb">${gtBar(s.pct,s.st)}<b>${s.pct}%</b></div>${s.total?`<p class="gt-sub">${s.dn}/${s.total} mục tiêu buổi đã đạt</p>`:'<p class="gt-sub">Chưa có mục tiêu buổi nào được ghi.</p>'}${gtGoals(s)}</div>`}
-function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=='tam'),O=T.orph.filter(s=>s.p.s!=='tam');
+function gtGoals(n,m){const gs=n.gs;if(!gs.length)return'';
+ return`<ul class="gtg">${gs.map(x=>`<li class="s-${x.st}"><span class="gt-ic" aria-hidden="true">${GTS[x.st][1]}</span><div><span class="gt-k">Mục tiêu buổi</span><span class="gtg-n">${esc(gName(x.g))}</span><span class="gtg-s">${gtChip(x.st)} ${gtLast(x)}</span>${x.rs.length>1?`<span class="gtg-h">Các buổi gần đây: ${x.rs.slice(-5).map(r=>trOk(r.tr)+'/'+trN(r.tr)).join(' → ')}</span>`:''}${m==='pdf'?'':gxHtml(goalOf(x.g),'p')}</div></li>`).join('')}</ul>`}
+function gtShort(s,par,m){return`<div class="gts s-${s.st}"><div class="gts-h"><span class="gt-ic" aria-hidden="true">${GTS[s.st][1]}</span><div class="gts-t"><span class="gt-k">Mục tiêu ngắn hạn</span><b>${esc(gName(s.p.g))}</b></div>${gtChip(s.st)}</div>
+ <div class="gt-pb">${gtBar(s.pct,s.st)}<b>${s.pct}%</b></div>${s.total?`<p class="gt-sub">${s.dn}/${s.total} mục tiêu buổi đã đạt</p>`:'<p class="gt-sub">Chưa có mục tiêu buổi nào được ghi.</p>'}${gxHtml(goalOf(s.p.g),m==='pdf'?'pdf':'p',{open:1})}${gtGoals(s,m)}</div>`}
+function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=='tam'),O=T.orph.filter(s=>s.p.s!=='tam'),m=o.pdf?'pdf':'p';
  if(!L.length&&!O.length)return'<p class="empty">Giáo viên chưa đặt mục tiêu cho bé. Khi có mục tiêu, bé đạt hay chưa đạt sẽ hiện ở đây.</p>';
  const sh=T.shorts.filter(s=>s.p.s!=='tam'),cnt={dat:0,tien:0,luyen:0,moi:0};
  sh.forEach(s=>{cnt[s.st==='gan'?'tien':s.st]++});
@@ -60,8 +60,8 @@ function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=
   +`<div class="acts" style="margin-top:12px"><button class="btn p" data-a="cptab" data-v="tb">Xem từng mục tiêu của bé</button></div>`;
  const card=n=>`<article class="gtp nb s-${n.st}"><div class="gtp-h"><div><span class="gt-k">Mục tiêu dài hạn</span><h3 class="gtp-t">${esc(gName(n.p.g))}</h3></div>${gtChip(n.st,1)}</div>
   <div class="gt-pb">${gtBar(n.pct,n.st)}<b>${n.pct}%</b></div><p class="gt-sub">${n.total?n.dn+'/'+n.total+' mục tiêu con đã đạt':'Chưa có mục tiêu ngắn hạn.'}</p>
-  ${n.ch.filter(s=>s.p.s!=='tam').map(s=>gtShort(s,1)).join('')}${n.gs.length?`<div class="gts"><div class="gts-h"><div class="gts-t"><span class="gt-k">Luyện trực tiếp</span></div></div>${gtGoals(n)}</div>`:''}</article>`;
- return sum+lg+L.map(card).join('')+(O.length?`<article class="gtp nb"><div class="gtp-h"><div><span class="gt-k">Mục tiêu ngắn hạn khác</span></div></div>${O.map(s=>gtShort(s,1)).join('')}</article>`:'')}
+  ${gxHtml(goalOf(n.p.g),m==='pdf'?'pdf':'p',{open:1})}${n.ch.filter(s=>s.p.s!=='tam').map(s=>gtShort(s,1,m)).join('')}${n.gs.length?`<div class="gts"><div class="gts-h"><div class="gts-t"><span class="gt-k">Luyện trực tiếp</span></div></div>${gtGoals(n,m)}</div>`:''}</article>`;
+ return sum+lg+L.map(card).join('')+(O.length?`<article class="gtp nb"><div class="gtp-h"><div><span class="gt-k">Mục tiêu ngắn hạn khác</span></div></div>${O.map(s=>gtShort(s,1,m)).join('')}</article>`:'')}
 
 /* ---------------- Phía nhân viên: cây trong tab Kế hoạch mục tiêu ---------------- */
 function gtKidsStaff(n){if(!n.gs.length)return'';

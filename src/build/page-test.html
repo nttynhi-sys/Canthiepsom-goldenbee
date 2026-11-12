@@ -451,6 +451,13 @@ body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit
 .pw-eye:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
 
 .gi .bl{margin:2px 0 4px;padding-left:22px}.gi .bl li{margin:2px 0}
+/* Vấn đề, mục tiêu và bài tập (ADHD, Tích hợp giác quan, Điều hòa cảm giác) */
+.gx{margin:8px 0 2px;padding:8px 12px;border:1px solid var(--bd);border-left:4px solid var(--ac);border-radius:8px;background:var(--bg);min-width:0;font-size:13.5px}
+.gx>summary,.gx-h{font-weight:600;color:var(--ac)}.gx>summary{cursor:pointer}
+.gx-r{margin:5px 0}
+.gx .bl{margin:2px 0 4px;padding-left:22px}.gx .bl li{margin:5px 0}
+.gtp .gx,.gts .gx,.gtg .gx{font-size:16px}
+.gtg .gx{margin-top:8px}
 </style></head><body>
 <div id="app"></div>
 <script>
@@ -1742,6 +1749,21 @@ function goalOf(id){return GL[id]||cgItems().find(g=>g.id===id)||tgRaw().find(g=
 const gName=id=>{const g=goalOf(id);return g?g.n:'(mục tiêu đã xóa)'};
 const gDom=id=>{const g=goalOf(id);return g?g.d:'nh'};
 const gSrc=g=>LSRC[g.s].n+' · '+g.c;
+/* Vấn đề, mục tiêu, bài tập của ba bộ: ADHD (ad), Tích hợp giác quan (sd), Điều hòa cảm giác (si).
+   - si: mục được chọn chính là vấn đề của trẻ, bài tập nằm trong g.bl (nguyên văn).
+   - ad, sd: mục được chọn là mục tiêu, nhóm kỹ năng (g.t) là vấn đề; bài tập là các mục "Bài tập · <nhóm>" cùng bộ và lĩnh vực.
+   Bộ khác trả null. Không sửa dữ liệu bank, chỉ đọc. */
+const GXS={ad:1,sd:1,si:1},GXP=/^Bài tập · /;
+let GXI=null;
+const gxIdx=()=>{if(GXI)return GXI;GXI={};LIBI.forEach(x=>{if(GXS[x.s]&&GXP.test(x.t||'')){const k=x.s+'|'+x.d+'|'+x.t.replace(GXP,'');(GXI[k]=GXI[k]||[]).push(x)}});return GXI};
+const gxF=(g,re)=>{const f=(g.ex||[]).find(e=>re.test(e[0]));return f?f[1]:''};
+const gxEx=x=>({n:x.n,a:x.a||'',o:x.o||'',tool:gxF(x,/^Dụng cụ/),why:gxF(x,/^Mục đích/),safe:gxF(x,/^Lưu ý an toàn/)});
+function gxData(g){if(!g||!GXS[g.s])return null;
+ if(g.s==='si')return{prob:g.n,head:(LHEAD[g.hi]||[])[1]||'',goal:'',crit:'',how:'',ex:(g.bl||[]).map(t=>({n:t,full:1}))};
+ if(GXP.test(g.t||''))return{prob:g.t.replace(GXP,''),head:'',goal:'',crit:'',how:g.o||'',why:gxF(g,/^Mục đích/),tool:gxF(g,/^Dụng cụ/),safe:gxF(g,/^Lưu ý an toàn/),ex:[]};
+ let ex=(gxIdx()[g.s+'|'+g.d+'|'+g.t]||[]).map(gxEx);
+ if(!ex.length&&g.bt&&g.bt.length)ex=g.bt.map(n=>({n}));
+ return{prob:g.t||'',head:'',goal:g.n,crit:g.o||'',how:'',cr2:gxF(g,/^Tiêu chí đạt/),ex}}
 const AGEB=[['0','Dưới 12 tháng'],['1','12–24 tháng'],['2','24–36 tháng'],['3','36–48 tháng'],['4','48–72 tháng'],['5','6–12 tuổi'],['6','12–18 tuổi'],['7','Từ 18 tuổi']];
 const ageBin=m=>m<12?0:m<24?1:m<36?2:m<48?3:4;
 const libAll=()=>LIBI.concat(cgItems(),tgItems());
@@ -2243,7 +2265,7 @@ function addPlanItem(k,g,h,up){if(DB.plans.some(p=>p.k===k&&p.g===g&&p.s!=='dat'
 function planRow(p){const g=goalOf(p.g),m=masteryOf(p.k,p.g),lr=m.last,ready=m.ready&&p.s==='dang';
  const spark=m.rs.slice(-8).map(r=>{const sc=recSc(r);return`<i style="height:${Math.max(8,sc)}%" title="${sc}/100"></i>`}).join('');
  return`<div class="pl ${p.s==='dat'?'dn':''}"><div class="pl-m"><b>${esc(g?g.n:'(mục tiêu đã xóa)')}</b><div class="sm mu">${g?esc(g.t)+' · '+esc(gSrc(g))+(g.a?' · '+esc(g.a):''):''}</div>
- <div class="pl-t">${g?domTag(g.d,g):''} ${tg(PST[p.s][0],PST[p.s][1])}${ready?' '+tg('Đủ điều kiện đạt','ok'):''} <span class="sm mu">Từ ${vdm(p.from)} · hạn ${vdm(p.due)}${p.dt?' · đạt '+vdm(p.dt):''}</span></div></div>
+ <div class="pl-t">${g?domTag(g.d,g):''} ${tg(PST[p.s][0],PST[p.s][1])}${ready?' '+tg('Đủ điều kiện đạt','ok'):''} <span class="sm mu">Từ ${vdm(p.from)} · hạn ${vdm(p.due)}${p.dt?' · đạt '+vdm(p.dt):''}</span></div>${g?gxHtml(g,'s',{open:1}):''}</div>
  <div class="pl-r">${lr?`${supTag(lr.sup)} <b>${trPct(lr.tr)}%</b><span class="spk" aria-hidden="true">${spark}</span><span class="sm mu">${m.cnt} buổi</span>`:'<span class="sm mu">Chưa có số liệu</span>'}</div>
  <div class="pl-a">${p.s==='dang'?`<button class="btn s" data-a="plok" data-v="${p.id}">Đánh dấu đạt</button><button class="btn s" data-a="pltam" data-v="${p.id}">Tạm dừng</button>`:`<button class="btn s" data-a="plre" data-v="${p.id}">${p.s==='dat'?'Mở lại':'Tiếp tục'}</button>`}<button class="btn s" data-a="plhz" data-v="${p.id}">${p.h==='n'?'Chuyển sang dài hạn':'Chuyển sang ngắn hạn'}</button><button class="btn s no" data-a="pldel" data-v="${p.id}">Bỏ</button></div></div>`}
 function hsPlan(k){const ps=kidPlans(k.id),done=ps.filter(p=>p.s==='dat'),tr=gtStaff(k),T=tr.T,ready=T.shorts.concat(T.longs).filter(n=>n.ready);
@@ -2377,6 +2399,15 @@ function libDetail(i){if(i.s==='vb')return`<details class="gd"><summary class="s
 /* danh sách bài tập của một mục (bl): 3 bài đầu hiện sẵn, còn lại bấm xem thêm */
 function blList(i){const a=i.bl||[];if(!a.length)return'';const li=x=>`<li>${esc(x)}</li>`;
  return`<div class="sm" style="margin-top:6px"><b>Bài tập (${a.length}):</b></div><ol class="sm bl">${a.slice(0,3).map(li).join('')}</ol>${a.length>3?`<details class="gd"><summary class="sm">Xem thêm ${a.length-3} bài tập</summary><ol class="sm bl" start="4">${a.slice(3).map(li).join('')}</ol></details>`:''}`}
+/* Khối "Vấn đề, mục tiêu và bài tập" của ba bộ ADHD, Tích hợp giác quan, Điều hòa cảm giác (bộ khác trả rỗng).
+   mode: 's' nhân viên (kèm lưu ý an toàn), 'p' cổng phụ huynh (không ghi chú lâm sàng, không lưu ý an toàn, bỏ chữ "đề xuất"), 'pdf' bản in (mở hết, không gập). o.open: mở sẵn. */
+function gxHtml(g,mode,o){const d=gxData(g);if(!d)return'';o=o||{};
+ const par=mode!=='s',pdf=mode==='pdf',age=a=>par?String(a).replace(/\s*\(đề xuất\)/,''):a;
+ const row=(l,v)=>v?`<p class="gx-r"><b>${l}:</b> ${esc(v)}</p>`:'';
+ const li=e=>e.full?`<li>${esc(e.n)}</li>`:`<li><b>${esc(e.n)}</b>${e.a?` <span class="mu">(${esc(age(e.a))})</span>`:''}${e.o?`<br>${esc(e.o)}`:''}${e.tool?`<br><span class="mu">Dụng cụ: ${esc(e.tool)}</span>`:''}${!par&&e.safe?`<br><span class="mu">Lưu ý: ${esc(e.safe)}</span>`:''}</li>`;
+ const a=d.ex,list=a.length?`<p class="gx-r"><b>Bài tập (${a.length}):</b></p><ol class="bl">${(pdf?a:a.slice(0,3)).map(li).join('')}</ol>${!pdf&&a.length>3?`<details class="gd"><summary>Xem thêm ${a.length-3} bài tập</summary><ol class="bl" start="4">${a.slice(3).map(li).join('')}</ol></details>`:''}`:'';
+ const body=row('Vấn đề',d.prob+(d.head?' ('+d.head+')':''))+row('Mục tiêu',d.goal)+row('Mô tả',d.crit)+row('Tiêu chí đạt',d.cr2)+(d.how?row('Cách làm',d.how)+row('Mục đích',d.why)+row('Dụng cụ',d.tool)+(par?'':row('Lưu ý an toàn',d.safe)):'')+list,t='Vấn đề, mục tiêu và bài tập';
+ return pdf?`<div class="gx"><div class="gx-h">${t}</div>${body}</div>`:`<details class="gx"${o.open?' open':''}><summary>${t}</summary>${body}</details>`}
 function libItem(i,o){const tk=o.taken&&o.taken.includes(i.id),on=o.sel&&o.sel.includes(i.id),cnt=DB.plans.filter(p=>p.g===i.id&&p.s==='dang').length;
  return`<div class="gi ${tk?'tk':''}">${o.pick?`<input type="checkbox" id="${o.idp?o.idp+'c':'gc'}-${esc(i.id)}" data-c="${o.cn||'gpsel'}" value="${esc(i.id)}" ${on?'checked':''} ${tk?'disabled':''}>`:''}<div class="gi-b"><${o.pick?`label for="${o.idp?o.idp+'c':'gc'}-${esc(i.id)}"`:'div'} class="gi-n">${i.s==='vb'?tg(i.st?'Bước '+i.ms+i.st:'Mốc '+i.ms,i.st?'gy':'y')+' ':''}${esc(i.n)}</${o.pick?'label':'div'}><div class="sm mu">${domTag(i.d,i)} ${esc(i.t)} · ${esc(gSrc(i))}${i.a?' · '+esc(i.a):''}${tk?' · <b>Đã có</b>':''}${(!o.pick||o.edit)&&cnt?' · '+cnt+' bé đang luyện':''}</div>${i.bt&&i.bt.length?`<div class="sm"><b>Bài tập:</b> ${i.bt.map(esc).join(' · ')}</div>`:''}${blList(i)}${i.s==='tg'?`<div class="sm mu">Giáo viên: ${esc(sn(i.by))} · Bé: ${esc((kidBy(i.kid)||{}).n||'(đã xóa)')}</div>`:''}${libDetail(i)}</div>${o.edit&&i.s==='cu'&&isLead()?`<button class="btn s" data-a="cgedit" data-v="${esc(i.id.slice(3))}">Sửa</button>`:''}${o.edit&&i.s==='tg'&&(isLead()||i.by===(U&&U.id))?`<button class="btn s no" data-a="tgdel" data-v="${esc(i.id.slice(3))}">Xóa</button>`:''}</div>`}
 function libPanel(f,o){const P=o.idp||'lf',hs=libHeads(f),all=libFind(f),p=pg(LPG(),all,o.per||20),hasF=f.dom||f.src||f.head||f.age||f.q;
@@ -4024,11 +4055,11 @@ function gtTree(kid){
 
 /* ---------------- Cổng phụ huynh và báo cáo: chữ lớn, màu và biểu tượng cho từng trạng thái ---------------- */
 const gtLast=x=>x.last?`Buổi gần nhất: đúng <b>${trOk(x.last.tr)}/${trN(x.last.tr)}</b> lượt · ${esc(SUP[x.last.sup].p.toLowerCase())}`:'Chưa luyện';
-function gtGoals(n){const gs=n.gs;if(!gs.length)return'';
- return`<ul class="gtg">${gs.map(x=>`<li class="s-${x.st}"><span class="gt-ic" aria-hidden="true">${GTS[x.st][1]}</span><div><span class="gt-k">Mục tiêu buổi</span><span class="gtg-n">${esc(gName(x.g))}</span><span class="gtg-s">${gtChip(x.st)} ${gtLast(x)}</span>${x.rs.length>1?`<span class="gtg-h">Các buổi gần đây: ${x.rs.slice(-5).map(r=>trOk(r.tr)+'/'+trN(r.tr)).join(' → ')}</span>`:''}</div></li>`).join('')}</ul>`}
-function gtShort(s,par){return`<div class="gts s-${s.st}"><div class="gts-h"><span class="gt-ic" aria-hidden="true">${GTS[s.st][1]}</span><div class="gts-t"><span class="gt-k">Mục tiêu ngắn hạn</span><b>${esc(gName(s.p.g))}</b></div>${gtChip(s.st)}</div>
- <div class="gt-pb">${gtBar(s.pct,s.st)}<b>${s.pct}%</b></div>${s.total?`<p class="gt-sub">${s.dn}/${s.total} mục tiêu buổi đã đạt</p>`:'<p class="gt-sub">Chưa có mục tiêu buổi nào được ghi.</p>'}${gtGoals(s)}</div>`}
-function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=='tam'),O=T.orph.filter(s=>s.p.s!=='tam');
+function gtGoals(n,m){const gs=n.gs;if(!gs.length)return'';
+ return`<ul class="gtg">${gs.map(x=>`<li class="s-${x.st}"><span class="gt-ic" aria-hidden="true">${GTS[x.st][1]}</span><div><span class="gt-k">Mục tiêu buổi</span><span class="gtg-n">${esc(gName(x.g))}</span><span class="gtg-s">${gtChip(x.st)} ${gtLast(x)}</span>${x.rs.length>1?`<span class="gtg-h">Các buổi gần đây: ${x.rs.slice(-5).map(r=>trOk(r.tr)+'/'+trN(r.tr)).join(' → ')}</span>`:''}${m==='pdf'?'':gxHtml(goalOf(x.g),'p')}</div></li>`).join('')}</ul>`}
+function gtShort(s,par,m){return`<div class="gts s-${s.st}"><div class="gts-h"><span class="gt-ic" aria-hidden="true">${GTS[s.st][1]}</span><div class="gts-t"><span class="gt-k">Mục tiêu ngắn hạn</span><b>${esc(gName(s.p.g))}</b></div>${gtChip(s.st)}</div>
+ <div class="gt-pb">${gtBar(s.pct,s.st)}<b>${s.pct}%</b></div>${s.total?`<p class="gt-sub">${s.dn}/${s.total} mục tiêu buổi đã đạt</p>`:'<p class="gt-sub">Chưa có mục tiêu buổi nào được ghi.</p>'}${gxHtml(goalOf(s.p.g),m==='pdf'?'pdf':'p',{open:1})}${gtGoals(s,m)}</div>`}
+function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=='tam'),O=T.orph.filter(s=>s.p.s!=='tam'),m=o.pdf?'pdf':'p';
  if(!L.length&&!O.length)return'<p class="empty">Giáo viên chưa đặt mục tiêu cho bé. Khi có mục tiêu, bé đạt hay chưa đạt sẽ hiện ở đây.</p>';
  const sh=T.shorts.filter(s=>s.p.s!=='tam'),cnt={dat:0,tien:0,luyen:0,moi:0};
  sh.forEach(s=>{cnt[s.st==='gan'?'tien':s.st]++});
@@ -4040,8 +4071,8 @@ function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=
   +`<div class="acts" style="margin-top:12px"><button class="btn p" data-a="cptab" data-v="tb">Xem từng mục tiêu của bé</button></div>`;
  const card=n=>`<article class="gtp nb s-${n.st}"><div class="gtp-h"><div><span class="gt-k">Mục tiêu dài hạn</span><h3 class="gtp-t">${esc(gName(n.p.g))}</h3></div>${gtChip(n.st,1)}</div>
   <div class="gt-pb">${gtBar(n.pct,n.st)}<b>${n.pct}%</b></div><p class="gt-sub">${n.total?n.dn+'/'+n.total+' mục tiêu con đã đạt':'Chưa có mục tiêu ngắn hạn.'}</p>
-  ${n.ch.filter(s=>s.p.s!=='tam').map(s=>gtShort(s,1)).join('')}${n.gs.length?`<div class="gts"><div class="gts-h"><div class="gts-t"><span class="gt-k">Luyện trực tiếp</span></div></div>${gtGoals(n)}</div>`:''}</article>`;
- return sum+lg+L.map(card).join('')+(O.length?`<article class="gtp nb"><div class="gtp-h"><div><span class="gt-k">Mục tiêu ngắn hạn khác</span></div></div>${O.map(s=>gtShort(s,1)).join('')}</article>`:'')}
+  ${gxHtml(goalOf(n.p.g),m==='pdf'?'pdf':'p',{open:1})}${n.ch.filter(s=>s.p.s!=='tam').map(s=>gtShort(s,1,m)).join('')}${n.gs.length?`<div class="gts"><div class="gts-h"><div class="gts-t"><span class="gt-k">Luyện trực tiếp</span></div></div>${gtGoals(n,m)}</div>`:''}</article>`;
+ return sum+lg+L.map(card).join('')+(O.length?`<article class="gtp nb"><div class="gtp-h"><div><span class="gt-k">Mục tiêu ngắn hạn khác</span></div></div>${O.map(s=>gtShort(s,1,m)).join('')}</article>`:'')}
 
 /* ---------------- Phía nhân viên: cây trong tab Kế hoạch mục tiêu ---------------- */
 function gtKidsStaff(n){if(!n.gs.length)return'';

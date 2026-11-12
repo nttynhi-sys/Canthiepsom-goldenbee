@@ -34,6 +34,21 @@ function goalOf(id){return GL[id]||cgItems().find(g=>g.id===id)||tgRaw().find(g=
 const gName=id=>{const g=goalOf(id);return g?g.n:'(mục tiêu đã xóa)'};
 const gDom=id=>{const g=goalOf(id);return g?g.d:'nh'};
 const gSrc=g=>LSRC[g.s].n+' · '+g.c;
+/* Vấn đề, mục tiêu, bài tập của ba bộ: ADHD (ad), Tích hợp giác quan (sd), Điều hòa cảm giác (si).
+   - si: mục được chọn chính là vấn đề của trẻ, bài tập nằm trong g.bl (nguyên văn).
+   - ad, sd: mục được chọn là mục tiêu, nhóm kỹ năng (g.t) là vấn đề; bài tập là các mục "Bài tập · <nhóm>" cùng bộ và lĩnh vực.
+   Bộ khác trả null. Không sửa dữ liệu bank, chỉ đọc. */
+const GXS={ad:1,sd:1,si:1},GXP=/^Bài tập · /;
+let GXI=null;
+const gxIdx=()=>{if(GXI)return GXI;GXI={};LIBI.forEach(x=>{if(GXS[x.s]&&GXP.test(x.t||'')){const k=x.s+'|'+x.d+'|'+x.t.replace(GXP,'');(GXI[k]=GXI[k]||[]).push(x)}});return GXI};
+const gxF=(g,re)=>{const f=(g.ex||[]).find(e=>re.test(e[0]));return f?f[1]:''};
+const gxEx=x=>({n:x.n,a:x.a||'',o:x.o||'',tool:gxF(x,/^Dụng cụ/),why:gxF(x,/^Mục đích/),safe:gxF(x,/^Lưu ý an toàn/)});
+function gxData(g){if(!g||!GXS[g.s])return null;
+ if(g.s==='si')return{prob:g.n,head:(LHEAD[g.hi]||[])[1]||'',goal:'',crit:'',how:'',ex:(g.bl||[]).map(t=>({n:t,full:1}))};
+ if(GXP.test(g.t||''))return{prob:g.t.replace(GXP,''),head:'',goal:'',crit:'',how:g.o||'',why:gxF(g,/^Mục đích/),tool:gxF(g,/^Dụng cụ/),safe:gxF(g,/^Lưu ý an toàn/),ex:[]};
+ let ex=(gxIdx()[g.s+'|'+g.d+'|'+g.t]||[]).map(gxEx);
+ if(!ex.length&&g.bt&&g.bt.length)ex=g.bt.map(n=>({n}));
+ return{prob:g.t||'',head:'',goal:g.n,crit:g.o||'',how:'',cr2:gxF(g,/^Tiêu chí đạt/),ex}}
 const AGEB=[['0','Dưới 12 tháng'],['1','12–24 tháng'],['2','24–36 tháng'],['3','36–48 tháng'],['4','48–72 tháng'],['5','6–12 tuổi'],['6','12–18 tuổi'],['7','Từ 18 tuổi']];
 const ageBin=m=>m<12?0:m<24?1:m<36?2:m<48?3:4;
 const libAll=()=>LIBI.concat(cgItems(),tgItems());
