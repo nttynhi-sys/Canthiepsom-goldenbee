@@ -33,7 +33,7 @@ const SP = process.env.SP || '/tmp';
     const g = DB.groups[0], gk = DB.kids.filter(k => k.gr === g.id && k.st === 'dang');
     const [a, b2, c] = gk; a.pe = 'pa@x.vn'; a.pp = ''; b2.pe = 'pa@x.vn'; b2.pp = ''; c.pe = 'pc@x.vn'; c.pp = '';
     const other = DB.kids.find(k => k.st === 'dang' && k.gr !== g.id && !gk.includes(k)); if (other) { other.pe = 'po@x.vn'; other.pp = ''; }
-    const gv1 = DB.staff.find(s => s.id === g.gv), gv2 = DB.staff.find(s => s.role === 'gv' && s.st === 'dang' && s.id !== g.gv && s.id !== g.tg && !DB.kids.some(k => k.gv === s.id && gk.some(x => x.id === k.id)) && !DB.lich.some(l => l.gv === s.id && gk.some(x => x.id === l.hs)));
+    const gv1 = DB.staff.find(s => s.id === grTs(g)[0]), gv2 = DB.staff.find(s => s.role === 'gv' && s.st === 'dang' && !grTs(g).includes(s.id) && !DB.kids.some(k => k.gv === s.id && gk.some(x => x.id === k.id)) && !DB.lich.some(l => l.gv === s.id && gk.some(x => x.id === l.hs)));
     gv1.em = 'gv1@gb.vn'; gv2.em = 'gv2@gb.vn';
     const ql = DB.staff.find(s => s.role === 'ql' && s.st === 'dang'), vp = DB.staff.find(s => s.role === 'vp' && s.st === 'dang'); ql.em = 'ql@gb.vn'; vp.em = 'vp@gb.vn';
     DB.media = []; DB.lg = DB.lg.filter(e => ![a.id, b2.id, c.id].includes(e.hs));

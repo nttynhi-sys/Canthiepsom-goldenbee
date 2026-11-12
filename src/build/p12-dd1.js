@@ -30,7 +30,7 @@ ACT.att=v=>{const [d,sid,h,c]=v.split('|');if(!canKid(h)||!canEditAtt(d)){toast(
 ACT.attall=v=>{const [d,sid]=v.split('|'),s=dayList(d).find(x=>x.sid===sid);if(!s||!canEditAtt(d)){toast('Bạn chưa thể sửa điểm danh này');return false}
  let n=0;s.kids.forEach(k=>{const key=attKey(d,sid,k.id);if(!DB.att[key]){DB.att[key]='cm';n++}});toast(n?'Đã ghi có mặt cho '+n+' trẻ':'Mọi trẻ đã được điểm danh')};
 function ddRoll(){const t=S.dd,d=t.date,can=canEditAtt(d);
- let ds=dayList(d).filter(s=>seesAll()?(!t.gv||s.gv===t.gv||s.tg===t.gv):(s.gv===U.id||s.tg===U.id));
+ let ds=dayList(d).filter(s=>seesAll()?(!t.gv||rowHas(s,t.gv)):rowHas(s,U.id));
  const pend=s=>s.kids.some(k=>!DB.att[attKey(d,s.sid,k.id)]);if(t.un)ds=ds.filter(pend);
  const one=ds.filter(s=>s.kind!=='bt'),grp=ds.filter(s=>s.kind==='bt');let tot=0,rec=0,cm=0;
  ds.forEach(s=>s.kids.forEach(k=>{tot++;const c=DB.att[attKey(d,s.sid,k.id)];if(c){rec++;if(c==='cm')cm++}}));
@@ -41,7 +41,7 @@ function ddRoll(){const t=S.dd,d=t.date,can=canEditAtt(d);
  if(!ds.length)return ctl+`<div class="card"><p class="empty">${dow(d)===0?'Chủ nhật trung tâm nghỉ.':isClosed(d)?'Trung tâm nghỉ ngày này: '+esc(holOf(d).n)+'. Ngày nghỉ không tính học phí và không cần điểm danh.':'Không có buổi học nào phù hợp trong ngày này.'}</p></div>`;
  const hint=`<p class="note sm" style="margin-bottom:12px"><b>Cách ghi P và KP:</b> Nghỉ P khi phụ huynh báo trong nhóm chung trước 7g sáng cùng ngày với ca sáng, trước 12g với ca chiều và tối (bán trú: báo trước 1 ngày hoặc trước 7g sáng). Báo sau mốc này hoặc không báo thì ghi KP. Bấm lại vào trạng thái đang chọn để xóa.</p>`;
  const t1=one.length?`<div class="card"><h2>Can thiệp 1-1 và học bù</h2>`+tbl(['Ca','Bé','Giáo viên','Phòng','Trạng thái','Ghi chú'],one.map(s=>{const k=s.kids[0];return`<tr><td class="nw">${slotLb(s.slot)}${s.kind==='bu'?'<br>'+tg('Học bù','y'):''}${s.inc?'<br>'+tg('1-1 của bán trú','in'):''}</td><td><b>${esc(k.n)}</b></td><td>${esc(given(sn(s.gv)))}</td><td class="nw">${esc(s.room)}</td><td>${stb(d,s,k,can)}</td><td>${feeNote(d,s,k)} ${mkBtn(d,s,k)}</td></tr>`}).join(''))+`</div>`:'';
- const t2=grp.map(s=>`<div class="card"><div class="top"><div><h2>${esc(s.label)}</h2><p class="mu sm">Giáo viên ${esc(sn(s.gv))} · Trợ giảng ${esc(sn(s.tg))} · ${s.kids.length} trẻ</p></div><button class="btn s" data-a="attall" data-v="${d}|${s.sid}" ${can?'':'disabled'}>Ghi mọi trẻ có mặt</button></div>`+tbl(['Bé','Trạng thái','Ghi chú'],s.kids.map(k=>`<tr><td><b>${esc(k.n)}</b></td><td>${stb(d,s,k,can)}</td><td>${feeNote(d,s,k)}</td></tr>`).join(''))+`</div>`).join('');
+ const t2=grp.map(s=>`<div class="card"><div class="top"><div><h2>${esc(s.label)}</h2><p class="mu sm">Giáo viên ${esc(s.ts.map(sn).join(', ')||'Chưa phân công')} · ${s.kids.length} trẻ</p></div><button class="btn s" data-a="attall" data-v="${d}|${s.sid}" ${can?'':'disabled'}>Ghi mọi trẻ có mặt</button></div>`+tbl(['Bé','Trạng thái','Ghi chú'],s.kids.map(k=>`<tr><td><b>${esc(k.n)}</b></td><td>${stb(d,s,k,can)}</td><td>${feeNote(d,s,k)}</td></tr>`).join(''))+`</div>`).join('');
  return ctl+kp+hint+t1+t2}
 /* --- sửa nhanh một ô trong bảng chấm công --- */
 ACT.scopen=v=>{const [h,d]=v.split('|');S.modal={t:'sc',id:h,d}};

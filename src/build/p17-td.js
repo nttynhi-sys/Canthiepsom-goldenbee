@@ -263,7 +263,7 @@ ACT.mdel=v=>{const m=medList().find(x=>x.id===v);if(!m||!medDel(m))return false;
 /* ---- ảnh mẫu cho chế độ ?demo ---- */
 function seedMedia(D){
  const svg=(t,a,b)=>'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="640" height="480" fill="url(#g)"/><circle cx="470" cy="150" r="64" fill="#fff" fill-opacity=".55"/><rect x="90" y="270" width="300" height="110" rx="22" fill="#fff" fill-opacity=".5"/><text x="320" y="440" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#4a3b00">${t}</text></svg>`);
- const g=D.groups[0]||{id:'G1',gv:''},gk=D.kids.filter(k=>k.gr===g.id&&k.st==='dang'),gv=D.staff.find(s=>s.id===g.gv),by=gv?gv.id:'',bn=gv?gv.n:'Giáo viên',d0=lastWork(TODAY),d1=lastWork(addD(d0,-1));
+ const g=D.groups[0]||{id:'G1',ts:[]},gk=D.kids.filter(k=>k.gr===g.id&&k.st==='dang'),gv=D.staff.find(s=>s.id===(g.ts||[g.gv])[0]),by=gv?gv.id:'',bn=gv?gv.n:'Giáo viên',d0=lastWork(TODAY),d1=lastWork(addD(d0,-1));
  const mk=(id,t,a,b,o)=>Object.assign({id,kind:'img',t,ct:'image/svg+xml',sz:0,d:d0,by,bn,at:d0+'T09:00:00.000Z',ks:[],gr:g.id,sh:1,n:'',u:svg(t,a,b),demo:1},o);
  D.media=[
   mk('md1','Tô màu cùng cô','#ffe08a','#ffb36b',{ks:gk.slice(0,2).map(k=>k.id)}),

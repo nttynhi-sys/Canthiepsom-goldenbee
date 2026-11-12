@@ -93,6 +93,6 @@ FORM.nvf=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.i
 const canDelStaff=s=>!!U&&isLead()&&!!s&&s.id!==U.id&&!lockAcc(s)&&!(s.role==='tt'&&DB.staff.filter(x=>x.role==='tt').length<=1)&&!accOf(s);
 ACT.nvdel=v=>{const s=stBy(v);if(!s)return false;
  if(!canDelStaff(s)){toast(accOf(s)?'Hãy thu hồi quyền đăng nhập của '+s.n+' trước khi xóa hồ sơ':'Bạn không có quyền xóa hồ sơ này');return false}
- const used=DB.kids.filter(k=>k.gv===s.id).length+DB.lich.filter(l=>l.gv===s.id).length+DB.groups.filter(g=>g.gv===s.id).length;
+ const used=DB.kids.filter(k=>k.gv===s.id).length+DB.lich.filter(l=>l.gv===s.id).length+DB.groups.filter(g=>grHas(g,s.id)).length;
  if(used){toast(s.n+' đang phụ trách '+used+' bé, buổi 1-1 hoặc lớp. Hãy chuyển phân công trước khi xóa.');return false}
  ask('Xóa hồ sơ nhân sự '+s.n+'? Lịch sử đã dạy và chấm công vẫn giữ, nhưng tên người này sẽ hiện là “(đã xóa)”.',()=>{DB.staff=DB.staff.filter(x=>x.id!==s.id);S.modal=null;toast('Đã xóa hồ sơ nhân sự');render()},'Xóa hồ sơ');return false};

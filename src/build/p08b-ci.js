@@ -3,8 +3,10 @@ const trunc=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
 const domTag=(d,g)=>g&&isPlay(g)?`<span class="tag gy" title="Chơi (thuộc lĩnh vực ${esc(DM[d].n)})">Chơi</span>`:`<span class="tag gy" title="${esc(DM[d].n)}">${esc(DM[d].s)}</span>`;
 const supTag=s=>`<span class="sp sp-${s}" title="${esc(SUP[s].n+': '+SUP[s].h)}">${esc(SUP[s].n)}</span>`;
 const strip=tr=>`<span class="trs" role="img" aria-label="${trOk(tr)} lượt đúng trên ${trN(tr)} lượt">${tr.split('').map(c=>`<i class="${c==='V'?'tv':c==='X'?'tx':'to'}"></i>`).join('')}</span>`;
-const kidGV=k=>k.gv||(grBy(k.gr)||{}).gv||'';
-const canEditSess=s=>!!U&&canKid(s.k)&&(isLead()||(isGV()&&(s.by===U.id||kidGV(kidBy(s.k)||{})===U.id)&&s.date>=addD(TODAY,-14)));
+/* người phụ trách bé: giáo viên 1-1 của bé, nếu không có thì mọi giáo viên của lớp bán trú (ngang nhau) */
+const kidGVs=k=>k.gv?[k.gv]:grTs(grBy(k.gr));
+const kidGV=k=>kidGVs(k)[0]||'';
+const canEditSess=s=>!!U&&canKid(s.k)&&(isLead()||(isGV()&&(s.by===U.id||kidGVs(kidBy(s.k)||{}).includes(U.id))&&s.date>=addD(TODAY,-14)));
 const planBy=id=>DB.plans.find(p=>p.id===id);
 function addPlanItem(k,g,h,up){if(DB.plans.some(p=>p.k===k&&p.g===g&&p.s!=='dat'))return false;const o={id:'p'+uid(),k,g,h,s:'dang',from:TODAY,due:addD(TODAY,HZ[h][2]),by:U?U.id:''},l=h==='n'&&up?planBy(up):null;if(l&&l.k===k&&l.h==='d')o.up=up;DB.plans.push(o);return o.id}
 

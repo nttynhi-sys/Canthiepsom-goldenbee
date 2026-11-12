@@ -11,7 +11,7 @@ function seedProg(D){
  const lvOf=i=>+((i.a||'').match(/\d/)||[0])[0];
  const NOTES=['Bé hợp tác tốt, giữ chú ý lâu hơn mọi khi.','Cần nhắc nhở nhiều hơn khi chuyển hoạt động.','Có tiến bộ rõ ở mục tiêu mới, bé chủ động hơn.','Bé mệt, chỉ thực hiện được một phần mục tiêu.','Bé hào hứng với trò chơi luân phiên, nhìn cô khi được gọi tên.','Bé dễ xao nhãng khi có tiếng ồn, cần nhắc nhẹ.','Bé tự thử trước khi chờ cô giúp, rất đáng khen.'];
  let pn=0,sn=0;
- const grGV=k=>{const g=D.groups.find(x=>x.id===k.gr);return g?g.gv:null};
+ const grGV=k=>{const g=D.groups.find(x=>x.id===k.gr);return g?(g.ts||[g.gv])[0]||null:null};
  const kids=D.kids.filter(k=>k.st==='dang');
  const W0=lastWork(addD(WD,-76)),attFrom=sm(CM,-1)+'-01';
  const sk={},plansOf={};

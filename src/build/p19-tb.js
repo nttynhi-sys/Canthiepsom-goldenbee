@@ -19,18 +19,25 @@ FORM.tbf=f=>{const e=f.elements,g=e.tg.value;if(!g)return false;
  DB.nt.push({id:'n'+uid(),aud:S.modal.aud,tg:g.startsWith('k:')?g.slice(2):g,t:e.t.value.trim(),b:e.b.value.trim(),by:U.id,at:TODAY,pin:!!(e.pin&&e.pin.checked),fin:canMoney()&&!!(e.fin&&e.fin.checked)});S.modal=null;toast('Đã gửi thông báo')};
 /* ===== 15. Thống kê ===== */
 CHG.tkm=v=>{S.tk.m=v};
-function attStats(m){const lich={};DB.lich.forEach(l=>{lich[l.id]=l});const by={};
- for(const key in DB.att){if(!key.startsWith(m))continue;const sid=key.split('|')[1],c=DB.att[key];let gv;if(sid[0]==='G'){const g=grBy(sid);gv=g&&g.gv}else{const l=lich[sid];gv=l&&l.gv}
-  if(!gv)continue;const o=by[gv]=by[gv]||{t:0,cm:0,p:0,kp:0,tt:0,bv:0};o.t++;o[c]++}
+/* điểm danh trong tháng, kèm những giáo viên phụ trách buổi đó (ca 1-1: một người; bán trú: mọi giáo viên của lớp, ngang nhau). Buổi chưa có giáo viên thì bỏ qua. */
+function attRows(m){const lich={},out=[];DB.lich.forEach(l=>{lich[l.id]=l});
+ for(const key in DB.att){if(!key.startsWith(m))continue;const sid=key.split('|')[1],c=DB.att[key];let gvs;if(sid[0]==='G')gvs=grTs(grBy(sid));else{const l=lich[sid];gvs=l&&l.gv?[l.gv]:[]}
+  if(gvs.length)out.push({gvs,c})}
+ return out}
+/* theo từng giáo viên: một buổi bán trú tính cho mọi giáo viên của lớp */
+function attStats(m){const by={};
+ attRows(m).forEach(({gvs,c})=>gvs.forEach(gv=>{const o=by[gv]=by[gv]||{t:0,cm:0,p:0,kp:0,tt:0,bv:0};o.t++;o[c]++}));
  return by}
-function tkData(m){const act=DB.kids.filter(k=>k.st==='dang'),as=attStats(m),tot=Object.values(as).reduce((a,o)=>({t:a.t+o.t,cm:a.cm+o.cm}),{t:0,cm:0}),fs=feeStats(m);
+/* tổng toàn trung tâm: mỗi lượt điểm danh tính một lần, không nhân theo số giáo viên của lớp */
+const attTot=m=>attRows(m).reduce((a,r)=>({t:a.t+1,cm:a.cm+(r.c==='cm'?1:0)}),{t:0,cm:0});
+function tkData(m){const act=DB.kids.filter(k=>k.st==='dang'),as=attStats(m),tot=attTot(m),fs=feeStats(m);
  const prog=[['Chỉ can thiệp 1-1',k=>wk11(k.id)&&!k.bt],['Cả 1-1 và bán trú',k=>wk11(k.id)&&k.bt],['Chỉ bán trú',k=>!wk11(k.id)&&k.bt]].map(([l,f])=>{const ks=act.filter(f);return{l,n:ks.length,due:ks.reduce((s,k)=>s+billed(k.id,m),0),paid:ks.reduce((s,k)=>s+paidM(k.id,m),0)}});
  const tr=DB.staff.filter(s=>isTeacher(s)&&s.st==='dang'&&(s.role==='gv'||teachesNow(s.id))).map(s=>({s,o:as[s.id]||{t:0,cm:0,p:0,kp:0,tt:0,bv:0},ks:act.filter(k=>k.gv===s.id).length}));
  const refund=DB.lg.filter(e=>e.kind==='hoan'&&e.m===m).reduce((s,e)=>s+e.amt,0);
  return{act,tot,fs,prog,tr,refund,rate:tot.t?Math.round(tot.cm*100/tot.t):0}}
 VIEWS.tk=()=>{const t=S.tk=Object.assign({m:sm(WD.slice(0,7),0)},S.tk),m=t.m,d=tkData(m),$=canMoney(),pt=d.act.filter(k=>k.bt).length;
- const kps=$?[kpi('Trẻ đang học',d.act.length,DB.kids.length+' hồ sơ'),kpi('Chuyên cần',d.rate+'%',d.tot.t+' lượt đã điểm danh',d.rate>=85?'ok':'er'),kpi('Đã thu',fmt(d.fs.paid),'phải thu '+fmt(d.fs.due)),kpi('Công nợ',fmt(totalDebt()),debtors().length+' gia đình',totalDebt()?'er':'ok'),kpi('Hoàn phí nghỉ',fmt(d.refund),'trừ vào học phí '+mLow(m)),kpi('Nhân sự đang làm',DB.staff.filter(s=>s.st==='dang').length,activeTeachers().length+' giáo viên và trợ giảng')]
-  :[kpi('Trẻ đang học',d.act.length,DB.kids.length+' hồ sơ'),kpi('Chuyên cần',d.rate+'%',d.tot.t+' lượt đã điểm danh',d.rate>=85?'ok':'er'),kpi('Trẻ có can thiệp 1-1',d.act.filter(k=>wk11(k.id)).length,DB.lich.filter(l=>l.type==='11').length+' buổi mỗi tuần'),kpi('Trẻ bán trú',pt,DB.groups.map(g=>g.n+' '+d.act.filter(k=>k.gr===g.id).length).join(', ')),kpi('Nhân sự đang làm',DB.staff.filter(s=>s.st==='dang').length,activeTeachers().length+' giáo viên và trợ giảng'),kpi('Chưa điểm danh',unrecorded(WD),'ngày '+vdm(WD),unrecorded(WD)?'er':'ok')];
+ const kps=$?[kpi('Trẻ đang học',d.act.length,DB.kids.length+' hồ sơ'),kpi('Chuyên cần',d.rate+'%',d.tot.t+' lượt đã điểm danh',d.rate>=85?'ok':'er'),kpi('Đã thu',fmt(d.fs.paid),'phải thu '+fmt(d.fs.due)),kpi('Công nợ',fmt(totalDebt()),debtors().length+' gia đình',totalDebt()?'er':'ok'),kpi('Hoàn phí nghỉ',fmt(d.refund),'trừ vào học phí '+mLow(m)),kpi('Nhân sự đang làm',DB.staff.filter(s=>s.st==='dang').length,activeTeachers().length+' giáo viên')]
+  :[kpi('Trẻ đang học',d.act.length,DB.kids.length+' hồ sơ'),kpi('Chuyên cần',d.rate+'%',d.tot.t+' lượt đã điểm danh',d.rate>=85?'ok':'er'),kpi('Trẻ có can thiệp 1-1',d.act.filter(k=>wk11(k.id)).length,DB.lich.filter(l=>l.type==='11').length+' buổi mỗi tuần'),kpi('Trẻ bán trú',pt,DB.groups.map(g=>g.n+' '+d.act.filter(k=>k.gr===g.id).length).join(', ')),kpi('Nhân sự đang làm',DB.staff.filter(s=>s.st==='dang').length,activeTeachers().length+' giáo viên'),kpi('Chưa điểm danh',unrecorded(WD),'ngày '+vdm(WD),unrecorded(WD)?'er':'ok')];
  return head('Thống kê','Số liệu tổng hợp theo tháng, xuất Excel hoặc PDF','<button class="btn s" data-a="tkxl">Xuất Excel</button><button class="btn s" data-a="tkpdf">Xuất PDF</button>')
  +`<div class="card"><div class="f2"><div><label for="tkm">Tháng</label><select id="tkm" data-c="tkm">${opts([sm(CM,-2),sm(CM,-1),CM].map(x=>[x,mLabel(x)]),m)}</select></div></div></div>`
  +`<div class="grid g3">${kps.join('')}</div>`

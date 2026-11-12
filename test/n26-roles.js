@@ -335,7 +335,7 @@ const EXP={
    o.groups=DB.groups.map(g=>g.id+':'+g.n);
    o.grOK=DB.kids.filter(k=>k.gr).every(k=>['G1','G2'].includes(k.gr));
    o.byAge=DB.kids.filter(k=>k.gr&&k.st==='dang').every(k=>k.gr===grByAge(k.dob));
-   o.bt=DB.kids.filter(k=>k.gr).length;o.btStaff=DB.groups.map(g=>stBy(g.gv).pos+'/'+stBy(g.tg).pos);
+   o.bt=DB.kids.filter(k=>k.gr).length;o.btStaff=DB.groups.map(g=>grTs(g).map(i=>stBy(i).pos).join('/'));
    o.mk=DB.mk.every(r=>SLOTS.includes(r.from.slot)&&r.props.every(p=>SLOTS.includes(p.slot)));
    o.attRows=Object.keys(DB.att).filter(k=>/\|G\d+\|/.test(k)).every(k=>/\|G[12]\|/.test(k));
    /* không trùng giờ: một giáo viên, một bé, một phòng không ở 2 buổi cùng lúc */

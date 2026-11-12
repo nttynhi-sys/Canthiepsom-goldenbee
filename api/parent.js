@@ -156,13 +156,15 @@ const SLOT_MIN = 50, SLOT_FIRST = '07:15', SLOT_LAST = '19:10';   /* ca 50 phút
 const slotOk = v => typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v) && v >= SLOT_FIRST && v <= SLOT_LAST;
 const tmin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
 const slotOver = (a, b) => Math.abs(tmin(a) - tmin(b)) < SLOT_MIN;
+/* giáo viên lớp bán trú ngang nhau: g.ts; dữ liệu cũ chỉ có g.gv và g.tg (giống grTs ở src/build/p04-domain.js) */
+const grTs = g => Array.isArray(g.ts) ? g.ts.filter(Boolean) : [g.gv, g.tg].filter(Boolean);
 async function lichConflict(x) {
   const w = dowOf(x.date);
   const hol = await fetchRows('records', 'collection=eq.hol');
   const closed = hol.find(r => r.data && r.data.d === x.date);
   if (closed) return 'Trung tâm nghỉ ngày này (' + (closed.data.n || 'nghỉ lễ') + ')';
   const gs = await fetchRows('records', 'collection=eq.groups');
-  if (w >= 1 && w <= 5 && gs.some(g => g.data && (g.data.gv === x.gv || g.data.tg === x.gv))) return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
+  if (w >= 1 && w <= 5 && gs.some(g => g.data && grTs(g.data).includes(x.gv))) return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
   const ls = await fetchRows('records', 'collection=eq.lich&' + orList([1], () => 'data->>date.eq.' + x.date + ',data->>day.eq.' + w));
   const same = ls.map(r => r.data).filter(l => l.id !== x.id && l.slot && slotOver(l.slot, x.slot) && ((l.type === 'bu' && l.date === x.date) || (l.type === '11' && +l.day === w)));
   if (same.some(l => l.gv === x.gv)) return 'Giáo viên đã có buổi khác ở khung giờ này';

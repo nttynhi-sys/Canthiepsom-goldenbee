@@ -283,7 +283,7 @@ async function cloudSetup(kind){
  else{
   const me={id:'nv01',n:name,role:'tt',pos:'Trưởng Trung tâm',ph:'',em:email,st:'dang',sd:TODAY,sup:'',pay:PAY_STUB()};
   DB.staff=[me];['kids','cg','tg','plans','sess','lich','lr','mk','lg','rp','nt','vio'].forEach(k=>{DB[k]=[]});['att','ts','set','rd','menu','bon','vam','kpr'].forEach(k=>{DB[k]={}});
-  DB.groups=[{id:'G1',n:BTN[0],gv:'',tg:''},{id:'G2',n:BTN[1],gv:'',tg:''}];DB.tkb=tkbDefault(DB.groups)}
+  DB.groups=[{id:'G1',n:BTN[0],ts:[],gv:'',tg:''},{id:'G2',n:BTN[1],ts:[],gv:'',tg:''}];DB.tkb=tkbDefault(DB.groups)}
  CLD.snap=new Map();CLD.ord={};CLD.maxo=0;
  cloudEnter();if(CLD.stage==='app')cloudFlush()}
 ACT.csetup=v=>{cloudSetup(v);return false};
@@ -545,11 +545,11 @@ function seed(){
   else if(n<=3){role='tt';pos=n===2?'Trưởng trung tâm':'Trưởng chuyên môn';base=20e6;allow=2e6}
   else if(n<=17||(n>=22&&n<=25)){pos=POS11[n%4];mode='buoi';rate=n%2?60e3:80e3} /* giáo viên 1-1 lương theo ca: 60.000 hoặc 80.000 ₫ mỗi ca */
   else if(n<=19){pos='Giáo viên bán trú';base=9e6;allow=5e5} /* giáo viên bán trú lương cố định */
-  else if(n<=21){pos='Trợ giảng bán trú';base=7e6}
+  else if(n<=21){pos='Giáo viên bán trú';base=7e6}
   else if(n===26){role='vp';pos='Nhân viên văn phòng';base=11e6;allow=3e5}
   else{role='hc';pos=['Lễ tân','Lễ tân','Bảo mẫu','Tạp vụ'][n-27];base=[8e6,8e6,7e6,6e6][n-27]}
   D.staff.push({id,n:nm,role,pos,ph:'09'+String(RI(10000000,99999999)),em:ascii(nm)+'@goldenbee.vn',st:'dang',sd:iso(new Date(RI(2019,2025),RI(0,11),RI(1,28))),sup:role==='ql'?'':role==='vp'?'nv02':role==='tt'||role==='hc'?'nv01':n<=11?'nv02':'nv03',cc:mode!=='buoi'||rateBt>0,pay:{mode,base,rate,rateBt,allow,bh:mode==='buoi'?0:10.5,latePen:role==='gv'||role==='hc'||role==='vp'?50000:0}})}
- BTN.forEach((n,i)=>D.groups.push({id:'G'+(i+1),n,gv:'nv'+(18+i),tg:'nv'+(20+i)}));
+ BTN.forEach((n,i)=>D.groups.push({id:'G'+(i+1),n,ts:['nv'+(18+i),'nv'+(20+i)],gv:'nv'+(18+i),tg:'nv'+(20+i)}));
  D.tkb=tkbDefault(D.groups);
  const T11=[];for(let n=4;n<=17;n++)T11.push('nv'+pad(n));for(let n=22;n<=25;n++)T11.push('nv'+pad(n));
  /* ca mẫu không xếp vào giờ nghỉ trưa (11:25 và 12:15); khi xếp tay vẫn chọn được mọi ca */
@@ -687,7 +687,7 @@ function seedProg(D){
  const lvOf=i=>+((i.a||'').match(/\d/)||[0])[0];
  const NOTES=['Bé hợp tác tốt, giữ chú ý lâu hơn mọi khi.','Cần nhắc nhở nhiều hơn khi chuyển hoạt động.','Có tiến bộ rõ ở mục tiêu mới, bé chủ động hơn.','Bé mệt, chỉ thực hiện được một phần mục tiêu.','Bé hào hứng với trò chơi luân phiên, nhìn cô khi được gọi tên.','Bé dễ xao nhãng khi có tiếng ồn, cần nhắc nhẹ.','Bé tự thử trước khi chờ cô giúp, rất đáng khen.'];
  let pn=0,sn=0;
- const grGV=k=>{const g=D.groups.find(x=>x.id===k.gr);return g?g.gv:null};
+ const grGV=k=>{const g=D.groups.find(x=>x.id===k.gr);return g?(g.ts||[g.gv])[0]||null:null};
  const kids=D.kids.filter(k=>k.st==='dang');
  const W0=lastWork(addD(WD,-76)),attFrom=sm(CM,-1)+'-01';
  const sk={},plansOf={};
@@ -1116,6 +1116,14 @@ function seedDx(R,k){const pick=a=>a[Math.floor(R()*a.length)],m={
 const kidBy=id=>DB.kids.find(k=>k.id===id);
 const stBy=id=>DB.staff.find(s=>s.id===id);
 const grBy=id=>DB.groups.find(g=>g.id===id);
+/* Giáo viên lớp bán trú: g.ts là danh sách người phụ trách, ngang nhau, không có chính hay phụ (mỗi lớp thường có 3 người). Dữ liệu cũ chỉ có g.gv và g.tg thì đọc từ hai trường đó. Khi lưu, grSet còn ghi hai người đầu vào g.gv, g.tg chỉ để bản cũ vẫn đọc được; mã mới không đọc hai trường này, luôn dùng grTs. */
+const grTs=g=>!g?[]:Array.isArray(g.ts)?g.ts.filter(Boolean):[g.gv,g.tg].filter(Boolean);
+const grHas=(g,id)=>!!id&&grTs(g).includes(id);
+const grOf=id=>DB.groups.find(g=>grHas(g,id));
+const grNames=g=>grTs(g).map(stBy).filter(Boolean).map(s=>s.n).join(', ')||'Chưa phân công';
+const grSet=(g,ids)=>{ids=[...new Set((ids||[]).filter(Boolean))];g.ts=ids;g.gv=ids[0]||'';g.tg=ids[1]||''};
+/* một dòng của dayList có người này phụ trách không (ca 1-1, học bù: một giáo viên; bán trú: cả danh sách giáo viên của lớp) */
+const rowHas=(s,id)=>!!id&&(s.gv===id||(s.ts||[]).includes(id));
 const kn=id=>{const k=kidBy(id);return k?k.n:'(đã xóa)'};
 const sn=id=>{const s=stBy(id);return s?s.n:'Chưa phân công'};
 const policyH=k=>`<div class="note"><b>${esc(POLICY[k].t)}</b>${POLICY[k].p.map(t=>`<p style="margin-top:6px">${esc(t)}</p>`).join('')}</div>`;
@@ -1203,7 +1211,7 @@ function lichAt(w,slot,date){return DB.lich.filter(l=>l.slot===slot&&((l.type===
 function lichNear(w,slot,date){return DB.lich.filter(l=>l.slot&&slotOver(l.slot,slot)&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)))}
 function conflict(x){const w=x.date?dow(x.date):x.day;
  if(x.date&&isClosed(x.date))return 'Trung tâm nghỉ ngày này ('+holOf(x.date).n+')';
- if(DB.groups.some(g=>(g.gv===x.gv||g.tg===x.gv)&&grOpen(g,w)))return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
+ if(DB.groups.some(g=>grHas(g,x.gv)&&grOpen(g,w)))return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
  const same=lichNear(w,x.slot,x.date).filter(l=>l.id!==x.id);
  if(same.some(l=>l.gv===x.gv))return 'Giáo viên đã có buổi khác ở khung giờ này';
  if(same.some(l=>l.hs===x.hs))return 'Trẻ đã có buổi khác ở khung giờ này';
@@ -1218,7 +1226,7 @@ function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))retur
  DB.lich.forEach(l=>{if(l.type==='11'&&l.day===w&&(!first[l.hs]||l.slot<first[l.hs].slot))first[l.hs]=l});
  DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);
   if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:l.gv,slot:l.slot,room:l.room,kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
- DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',gv:g.gv,tg:g.tg,slot:BT.s,room:'',kids:ks})});
+ DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,room:'',kids:ks})});
  return out.sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0)}
 
 /* --- Chấm công nhân viên và lương --- */
@@ -1238,7 +1246,7 @@ const vioList=(id,m)=>(DB.vio||[]).filter(v=>v.st===id&&v.s==='duyet'&&(!m||Stri
 const vioSum=(id,m)=>vioList(id,m).reduce((a,v)=>a+vioAmt(v),0);
 function payroll(s,m){
  const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id),pc=gvPct();
- const myGr=DB.groups.filter(g=>g.gv===s.id||g.tg===s.id),open6=myGr.some(g=>grOpen(g,6));
+ const myGr=DB.groups.filter(g=>grHas(g,s.id)),open6=myGr.some(g=>grOpen(g,6));
  let cong=0,late=0,btd=0,leave=0,abs=0,hol=0;
  const ss={cm:0,kp:0,p:0,tt:0,bv:0,bu:0,none:0},cc=needCC(s);
  for(const d of dts){const t=tsSt(s.id,d),w=dow(d),worked=cc?(t==='ok'||t==='late'):t==='';   /* trả theo ca: không chấm công, ngày làm việc thường (không nghỉ phép, không nghỉ lễ) coi là có mặt để đếm ca chưa điểm danh */
@@ -1396,8 +1404,8 @@ const vlab=v=>((VLAB[U&&U.role]||{})[v])||NAV.find(n=>n[0]===v)[1];
 const isQL=()=>!!U&&U.role==='ql',isTT=()=>!!U&&U.role==='tt',isVP=()=>!!U&&U.role==='vp',isLead=()=>!!U&&(U.role==='ql'||U.role==='tt'),isGV=()=>!!U&&U.role==='gv',isPH=()=>!!U&&U.role==='ph';
 /* Người được phân giao dạy trẻ (1-1, bán trú, học bù): Giáo viên (gv) và Quản lý (ql). Trưởng Trung tâm, Văn phòng và hành chính không nằm trong danh sách phân giao. Quản lý vẫn giữ quyền Quản lý của mình, chỉ thêm việc được chọn làm người dạy. */
 const TEACH_ROLES=['gv','ql'],isTeacher=s=>!!s&&TEACH_ROLES.includes(s.role);
-/* Quản lý đang thực sự dạy: có bé 1-1 đang học, có ca 1-1 cố định hoặc phụ trách nhóm bán trú. Dùng để đếm 'giáo viên và trợ giảng' mà không tính quản lý chưa dạy. */
-const teachesNow=id=>DB.kids.some(k=>k.gv===id&&k.st==='dang')||DB.lich.some(l=>l.gv===id)||DB.groups.some(g=>g.gv===id||g.tg===id);
+/* Quản lý đang thực sự dạy: có bé 1-1 đang học, có ca 1-1 cố định hoặc phụ trách nhóm bán trú. Dùng để đếm số giáo viên mà không tính quản lý chưa dạy. */
+const teachesNow=id=>DB.kids.some(k=>k.gv===id&&k.st==='dang')||DB.lich.some(l=>l.gv===id)||DB.groups.some(g=>grHas(g,id));
 /* Tên hiển thị trong danh sách chọn người dạy: quản lý có ghi chú để phân biệt với giáo viên. */
 const tName=s=>s.n+(s.role==='ql'?' (Quản lý)':'');
 const activeTeachers=()=>DB.staff.filter(s=>s.st==='dang'&&(s.role==='gv'||(s.role==='ql'&&teachesNow(s.id))));
@@ -1408,8 +1416,8 @@ const activeTeachers=()=>DB.staff.filter(s=>s.st==='dang'&&(s.role==='gv'||(s.ro
 const canMoney=()=>isTT()||isVP(),canCfg=()=>isTT(),seesAll=()=>isLead()||isVP(),noFee=()=>isQL()||isGV(),feeTx=t=>noFee()?'':t;
 /* hồ sơ nhân sự Quản lý, Trưởng Trung tâm và Văn phòng chỉ Trưởng Trung tâm sửa (Quản lý chỉ sửa được hồ sơ của chính mình) */
 const lockAcc=s=>!isTT()&&!!s&&(s.role==='tt'||s.role==='vp'||(s.role==='ql'&&(!U||s.id!==U.id)));
-const myGroups=()=>isGV()?DB.groups.filter(g=>g.gv===U.id||g.tg===U.id):[];
-/* Thực đơn và thời khóa biểu bán trú: Trưởng Trung tâm, Quản lý, Văn phòng, phụ huynh và giáo viên đứng lớp bán trú (giáo viên chính hoặc trợ giảng). Giáo viên chỉ dạy 1-1 không thấy. */
+const myGroups=()=>isGV()?DB.groups.filter(g=>grHas(g,U.id)):[];
+/* Thực đơn và thời khóa biểu bán trú: Trưởng Trung tâm, Quản lý, Văn phòng, phụ huynh và giáo viên đứng lớp bán trú (mọi giáo viên được phân vào lớp, ngang nhau). Giáo viên chỉ dạy 1-1 không thấy. */
 const btView=()=>!isGV()||myGroups().length>0;
 const navList=()=>ACCESS[U.role].filter(v=>v!=='tn'||btView());
 function myKids(){if(!U)return[];if(seesAll())return DB.kids;
@@ -1518,13 +1526,13 @@ function dashLead(){
  const days=[];for(let d=addD(WD,-1);days.length<14&&d>addD(WD,-40);d=addD(d,-1))if(isW(d)&&attRate(d)!=null)days.push(d);days.reverse();
  const mix=[['Chỉ can thiệp 1-1',act.filter(k=>k.m11>0&&!k.bt).length],['Cả 1-1 và bán trú',act.filter(k=>k.m11>0&&k.bt).length],['Chỉ bán trú',act.filter(k=>!k.m11&&k.bt).length]];
  return head('Dashboard','Tổng quan vận hành '+esc(DB.cfg.name))
- +`<div class="grid g3">${kpi('Trẻ đang học',act.length,DB.kids.length+' hồ sơ, '+(DB.kids.length-act.length)+' nghỉ hoặc bảo lưu')}${kpi('Nhân sự',DB.staff.filter(s=>s.st==='dang').length,activeTeachers().length+' giáo viên và trợ giảng')}${kpi('Ngày '+vdm(WD),one+' buổi 1-1',btk+' trẻ bán trú')}${$?kpi('Đã thu '+mLow(CM),fmt(fs.paid),'Phải thu '+fmt(fs.due))+kpi('Công nợ',fmt(totalDebt()),debtors().length+' gia đình còn nợ',totalDebt()?'er':'ok'):kpi('Bán trú',DB.kids.filter(k=>k.st==='dang'&&k.gr).length+' trẻ',btc)+kpi('Chờ xử lý',wait,'đơn nghỉ phép, học bù, báo cáo',wait?'er':'ok')}${kpi('Chưa điểm danh',un,'ngày '+vdm(WD),un?'er':'ok')}</div>`
+ +`<div class="grid g3">${kpi('Trẻ đang học',act.length,DB.kids.length+' hồ sơ, '+(DB.kids.length-act.length)+' nghỉ hoặc bảo lưu')}${kpi('Nhân sự',DB.staff.filter(s=>s.st==='dang').length,activeTeachers().length+' giáo viên')}${kpi('Ngày '+vdm(WD),one+' buổi 1-1',btk+' trẻ bán trú')}${$?kpi('Đã thu '+mLow(CM),fmt(fs.paid),'Phải thu '+fmt(fs.due))+kpi('Công nợ',fmt(totalDebt()),debtors().length+' gia đình còn nợ',totalDebt()?'er':'ok'):kpi('Bán trú',DB.kids.filter(k=>k.st==='dang'&&k.gr).length+' trẻ',btc)+kpi('Chờ xử lý',wait,'đơn nghỉ phép, học bù, báo cáo',wait?'er':'ok')}${kpi('Chưa điểm danh',un,'ngày '+vdm(WD),un?'er':'ok')}</div>`
  +plockCard()+`<div class="two"><div class="card"><h2>Việc cần làm</h2>${todo(DB.lr.filter(l=>l.s==='cho').length,'đơn nghỉ phép chờ duyệt','cc')}${todo(DB.mk.filter(r=>r.s==='dk').length,'yêu cầu học bù chờ xếp lịch','hb')}${todo(DB.rp.filter(r=>r.s==='cho').length,'báo cáo chuyên môn chờ duyệt','bc')}${todo(un,'lượt học chưa điểm danh ngày '+vdm(WD),'dd','er')}${$?todo(debtors().length,'gia đình còn nợ học phí','hp','er'):''}${DB.lr.every(l=>l.s!=='cho')&&!DB.mk.some(r=>r.s==='dk')&&!DB.rp.some(r=>r.s==='cho')&&!un&&!($&&debtors().length)?'<p class="empty">Không còn việc tồn đọng.</p>':''}</div>
  <div class="card"><h2>Chuyên cần ${days.length} ngày gần nhất</h2><div style="display:flex;align-items:flex-end;gap:5px;height:120px" role="img" aria-label="Tỷ lệ có mặt theo ngày">${days.map(d=>{const r=attRate(d);return`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:0" title="${vd(d)}: ${r}%"><i style="display:block;height:${r}%;background:${r>=85?'var(--ok)':r>=75?'var(--wa)':'var(--er)'};border-radius:4px 4px 0 0"></i></div>`}).join('')}</div><div style="display:flex;gap:5px;margin-top:4px">${days.map(d=>`<span class="sm mu" style="flex:1;font-size:10px;text-align:center;min-width:0">${vdm(d).slice(0,2)}</span>`).join('')}</div><p class="sm mu" style="margin-top:6px">Chiều cao cột là tỷ lệ có mặt; cột xanh từ 85% trở lên, vàng từ 75%, đỏ dưới 75%.</p></div></div>`
  +`<div class="two"><div class="card"><h2>Cơ cấu chương trình</h2>${mix.map(([l,n])=>`<div class="rw"><span>${l}</span><span style="display:flex;gap:8px;align-items:center;min-width:160px"><div style="flex:1">${bar(n*100/(act.length||1))}</div><b>${n}</b></span></div>`).join('')}</div>
  <div class="card"><h2>Lịch ngày ${vdm(WD)} theo ca</h2>${[...new Set(SLOTS.concat(ds.filter(x=>x.kind!=='bt'&&x.slot).map(x=>x.slot)))].sort().map(s=>{const n=ds.filter(x=>x.slot===s&&x.kind!=='bt').length;return`<div class="rw"><span>${slotLb(s)}</span><span style="display:flex;gap:8px;align-items:center;min-width:140px"><div style="flex:1">${bar(n*100/ROOMS.length)}</div><b>${n}/${ROOMS.length}</b></span></div>`}).join('')}<p class="sm mu" style="margin-top:6px">Số phòng đang dùng trên tổng ${ROOMS.length} phòng.</p></div></div>`}
 function dashGV(){
- const me=stBy(U.id),ds=dayList(WD).filter(s=>s.gv===U.id||s.tg===U.id),ks=myKids().filter(k=>k.st==='dang'),pr=payroll(me,CM),t=DB.ts[U.id+'|'+WD],rp=DB.rp.filter(r=>r.au===U.id);
+ const me=stBy(U.id),ds=dayList(WD).filter(s=>rowHas(s,U.id)),ks=myKids().filter(k=>k.st==='dang'),pr=payroll(me,CM),t=DB.ts[U.id+'|'+WD],rp=DB.rp.filter(r=>r.au===U.id);
  return head('Xin chào, '+esc(given(U.name)),'Công việc của bạn ngày '+DAYN[dow(WD)]+' '+vd(WD)+(WD!==TODAY?' (ngày làm việc gần nhất)':''))
  +`<div class="grid">${kpi('Trẻ phụ trách',ks.length,ks.filter(k=>k.gv===U.id).length+' trẻ 1-1, '+ks.filter(k=>k.gr).length+' trẻ bán trú')}${kpi('Buổi hôm nay',ds.length,unrecorded(WD)?'còn lượt chưa điểm danh':'đã điểm danh đủ')}${(needCC(me)?kpi('Công '+mLow(CM),pr.cong+'/'+DB.cfg.cc,pr.late+' lần đi muộn'):kpi('Ca đã dạy '+mLow(CM),pr.teach,'trả lương theo ca 1-1, không chấm công'))}${kpi('Báo cáo của tôi',rp.length,rp.filter(r=>r.s==='nhap').length+' bản nháp, '+rp.filter(r=>r.s==='cho').length+' chờ duyệt')}</div>`
  +`<div class="two"><div class="card"><h2>Lịch dạy</h2>${ds.length?ds.map(s=>`<div class="rw"><span><b>${esc(s.label)}</b><br><span class="mu sm">${s.kids.length>3?s.kids.length+' trẻ':esc(s.kids.map(k=>k.n).join(', '))}${s.room?' · '+s.room:''}</span></span><button class="btn s" data-a="ddgo" data-v="${WD}">Điểm danh</button></div>`).join(''):'<p class="empty">Không có buổi dạy trong ngày này.</p>'}</div>
@@ -1627,7 +1635,7 @@ FORM.nvf=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.i
 const canDelStaff=s=>!!U&&isLead()&&!!s&&s.id!==U.id&&!lockAcc(s)&&!(s.role==='tt'&&DB.staff.filter(x=>x.role==='tt').length<=1)&&!accOf(s);
 ACT.nvdel=v=>{const s=stBy(v);if(!s)return false;
  if(!canDelStaff(s)){toast(accOf(s)?'Hãy thu hồi quyền đăng nhập của '+s.n+' trước khi xóa hồ sơ':'Bạn không có quyền xóa hồ sơ này');return false}
- const used=DB.kids.filter(k=>k.gv===s.id).length+DB.lich.filter(l=>l.gv===s.id).length+DB.groups.filter(g=>g.gv===s.id).length;
+ const used=DB.kids.filter(k=>k.gv===s.id).length+DB.lich.filter(l=>l.gv===s.id).length+DB.groups.filter(g=>grHas(g,s.id)).length;
  if(used){toast(s.n+' đang phụ trách '+used+' bé, buổi 1-1 hoặc lớp. Hãy chuyển phân công trước khi xóa.');return false}
  ask('Xóa hồ sơ nhân sự '+s.n+'? Lịch sử đã dạy và chấm công vẫn giữ, nhưng tên người này sẽ hiện là “(đã xóa)”.',()=>{DB.staff=DB.staff.filter(x=>x.id!==s.id);S.modal=null;toast('Đã xóa hồ sơ nhân sự');render()},'Xóa hồ sơ');return false};
 /* ===== 3. Học sinh ===== */
@@ -1646,7 +1654,7 @@ const progOf=k=>{const bd=btOf(k),g=bd.length&&grBy(k.gr),e=ex11(k),a=[];
  if(g)a.push('Bán trú '+g.n+' ('+dayTx(bd)+')');
  if(e>0)a.push(g?'1-1 thêm '+e+' buổi/tuần':'1-1 ('+e+' buổi/tuần)');
  return a.join(', ')||'Chưa đăng ký'};
-const mainGV=k=>k.gv?sn(k.gv):(grBy(k.gr)?sn(grBy(k.gr).gv):'Chưa phân công');
+const mainGV=k=>k.gv?sn(k.gv):(grBy(k.gr)?grNames(grBy(k.gr)):'Chưa phân công');
 const grByAge=dob=>mo(dob)<72?'G1':'G2'; /* Ong non: dưới 6 tuổi, Ong mật: từ 6 tuổi (chỉ là gợi ý, chọn lớp tay được) */
 const hsInit=()=>S.hs=Object.assign({tab:'ds',q:'',st:'dang',pr:'',gv:'',dx:'',lib:{dom:'',src:'',head:'',age:'',q:''},bi:{date:WD,gv:'',q:''}},S.hs);
 VIEWS.hs=()=>{const h=hsInit();
@@ -1658,7 +1666,7 @@ INP.hsq=v=>{S.hs.q=v;S.pg.hs=1};
 CHG.hsf1=v=>{S.hs.st=v;S.pg.hs=1};CHG.hsf2=v=>{S.hs.pr=v;S.pg.hs=1};CHG.hsf3=v=>{S.hs.gv=v;S.pg.hs=1};CHG.hsf4=v=>{S.hs.dx=v;S.pg.hs=1};
 const dxCell=k=>{const a=dxNames(k);return a.length?esc(a.slice(0,2).join('; '))+(a.length>2?' <b>+'+(a.length-2)+'</b>':''):'<span class="mu">Chưa ghi</span>'};
 function hsList(){const h=S.hs,q=h.q.toLowerCase();
- const all=myKids().filter(k=>(!h.st||k.st===h.st)&&(!h.pr||(h.pr==='11'?wk11(k.id)>0:k.bt))&&(!h.gv||k.gv===h.gv||(grBy(k.gr)||{}).gv===h.gv)&&(!h.dx||dxOf(k).includes(h.dx))&&(!q||(k.n+' '+kcode(k)+' '+k.id+' '+k.pn+' '+k.pp+' '+dxNames(k).join(' ')).toLowerCase().includes(q))),p=pg('hs',all,15);
+ const all=myKids().filter(k=>(!h.st||k.st===h.st)&&(!h.pr||(h.pr==='11'?wk11(k.id)>0:k.bt))&&(!h.gv||k.gv===h.gv||grHas(grBy(k.gr),h.gv))&&(!h.dx||dxOf(k).includes(h.dx))&&(!q||(k.n+' '+kcode(k)+' '+k.id+' '+k.pn+' '+k.pp+' '+dxNames(k).join(' ')).toLowerCase().includes(q))),p=pg('hs',all,15);
  const dxUsed=DXG.map(g=>[g.t,g.a.filter(x=>DB.kids.some(k=>dxOf(k).includes(x[0])))]).filter(g=>g[1].length);
  return`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="hsq">Tìm theo tên bé, mã, phụ huynh hoặc chẩn đoán</label><input id="hsq" data-i="hsq" value="${esc(h.q)}"></div><div><label for="hs1">Trạng thái</label><select id="hs1" data-c="hsf1"><option value="">Tất cả</option>${opts(Object.entries(KST),h.st)}</select></div><div><label for="hs2">Chương trình</label><select id="hs2" data-c="hsf2"><option value="">Tất cả</option>${opts([['11','Có can thiệp 1-1'],['bt','Có bán trú']],h.pr)}</select></div><div><label for="hs4">Chẩn đoán</label><select id="hs4" data-c="hsf4"><option value="">Tất cả</option>${dxUsed.map(g=>`<optgroup label="${esc(g[0])}">${opts(g[1].map(x=>[x[0],dxShort(x[0])]),h.dx)}</optgroup>`).join('')}</select></div>${isLead()?`<div><label for="hs3">Giáo viên</label><select id="hs3" data-c="hsf3"><option value="">Tất cả</option>${opts(DB.staff.filter(isTeacher).map(s=>[s.id,tName(s)]),h.gv)}</select></div>`:''}</div>`
  +tbl(['Mã','Họ tên','Tuổi','Nhu cầu, chẩn đoán','Chương trình','Giáo viên','Phụ huynh','Trạng thái'],p.rows.map(k=>`<tr class="k" data-a="hsopen" data-v="${k.id}"><td class="nw"><b>${esc(kcode(k))}</b></td><td><b>${esc(k.n)}</b></td><td class="nw">${age(k.dob)}</td><td>${esc(k.nd)}<br><span class="sm">${dxCell(k)}</span></td><td>${esc(progOf(k))}</td><td>${esc(mainGV(k))}</td><td>${esc(k.pr)} ${esc(given(k.pn))}<br><span class="sm mu">${esc(k.pp)}</span></td><td>${tg(KST[k.st],k.st==='dang'?'ok':k.st==='bl'?'wa':'gy')}</td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+`</div>`}
@@ -1837,8 +1845,10 @@ const trunc=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
 const domTag=(d,g)=>g&&isPlay(g)?`<span class="tag gy" title="Chơi (thuộc lĩnh vực ${esc(DM[d].n)})">Chơi</span>`:`<span class="tag gy" title="${esc(DM[d].n)}">${esc(DM[d].s)}</span>`;
 const supTag=s=>`<span class="sp sp-${s}" title="${esc(SUP[s].n+': '+SUP[s].h)}">${esc(SUP[s].n)}</span>`;
 const strip=tr=>`<span class="trs" role="img" aria-label="${trOk(tr)} lượt đúng trên ${trN(tr)} lượt">${tr.split('').map(c=>`<i class="${c==='V'?'tv':c==='X'?'tx':'to'}"></i>`).join('')}</span>`;
-const kidGV=k=>k.gv||(grBy(k.gr)||{}).gv||'';
-const canEditSess=s=>!!U&&canKid(s.k)&&(isLead()||(isGV()&&(s.by===U.id||kidGV(kidBy(s.k)||{})===U.id)&&s.date>=addD(TODAY,-14)));
+/* người phụ trách bé: giáo viên 1-1 của bé, nếu không có thì mọi giáo viên của lớp bán trú (ngang nhau) */
+const kidGVs=k=>k.gv?[k.gv]:grTs(grBy(k.gr));
+const kidGV=k=>kidGVs(k)[0]||'';
+const canEditSess=s=>!!U&&canKid(s.k)&&(isLead()||(isGV()&&(s.by===U.id||kidGVs(kidBy(s.k)||{}).includes(U.id))&&s.date>=addD(TODAY,-14)));
 const planBy=id=>DB.plans.find(p=>p.id===id);
 function addPlanItem(k,g,h,up){if(DB.plans.some(p=>p.k===k&&p.g===g&&p.s!=='dat'))return false;const o={id:'p'+uid(),k,g,h,s:'dang',from:TODAY,due:addD(TODAY,HZ[h][2]),by:U?U.id:''},l=h==='n'&&up?planBy(up):null;if(l&&l.k===k&&l.h==='d')o.up=up;DB.plans.push(o);return o.id}
 
@@ -2070,7 +2080,7 @@ ACT.tgdel=v=>{const t=(DB.tg||[]).find(x=>x.id===v);if(!t)return;if(!(isLead()||
  const n=DB.plans.filter(p=>p.g==='tg:'+v).length;
  ask('Xóa mục tiêu này khỏi ngân hàng?'+(n?' Có '+n+' bé đang có mục tiêu này trong kế hoạch, mục tiêu sẽ hiện là “đã xóa”.':''),()=>{DB.tg=DB.tg.filter(x=>x.id!==v);S.modal=null;toast('Đã xóa mục tiêu')},'Xóa')};
 /* ===== 4. Phân công ===== */
-const isGrStaff=id=>DB.groups.some(g=>g.gv===id||g.tg===id);
+const isGrStaff=id=>DB.groups.some(g=>grHas(g,id));
 const pool11=()=>DB.staff.filter(s=>isTeacher(s)&&s.st==='dang'&&!isGrStaff(s.id));
 const poolBt=()=>DB.staff.filter(s=>isTeacher(s)&&s.st==='dang'&&!DB.lich.some(l=>l.type==='11'&&l.gv===s.id&&l.day<=5));
 VIEWS.pc=()=>{const p=S.pc=Object.assign({tab:'gv',q:'',gv:''},S.pc);
@@ -2088,16 +2098,23 @@ function reassign(k,gv,dry){const ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.i
 CHG.pcmv=(v,t)=>{const k=kidBy(t.dataset.k);if(!v||!k)return;const c=reassign(k,v,1);
  if(c){toast(c);return}
  ask('Chuyển bé '+k.n+' từ '+sn(k.gv)+' sang '+sn(v)+'? Mọi buổi 1-1 cố định của bé sẽ do giáo viên mới phụ trách.',()=>{reassign(k,v);toast('Đã chuyển bé '+k.n+' sang '+sn(v))},'Chuyển')};
-function pcBt(){return`<div class="two">`+DB.groups.map(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'),P=poolBt().concat([stBy(g.gv),stBy(g.tg)]).filter((s,i,a)=>s&&a.indexOf(s)===i);
- const sel=(role,cur,l)=>`<div><label for="g-${g.id}-${role}">${l}</label><select id="g-${g.id}-${role}" data-c="pcgr" data-k="${g.id}|${role}">${opts(P.map(s=>[s.id,tName(s)]),cur)}</select></div>`;
- return`<div class="card"><h2>${esc(g.n)} <span class="mu sm">· ${ks.length} trẻ</span></h2><div class="f2">${sel('gv',g.gv,'Giáo viên chính')}${sel('tg',g.tg,'Trợ giảng')}</div>
- <details style="margin-top:10px"><summary class="sm" style="cursor:pointer">Danh sách trẻ và chuyển nhóm</summary>${ks.map(k=>`<div class="rw"><span>${esc(k.n)} <span class="mu sm">${age(k.dob)}</span></span><select data-c="pcmvg" data-k="${k.id}" aria-label="Chuyển nhóm cho ${esc(k.n)}" style="width:auto">${opts(DB.groups.map(x=>[x.id,x.n]),k.gr)}</select></div>`).join('')||'<p class="empty">Nhóm chưa có trẻ.</p>'}</details></div>`}).join('')+`</div><p class="note sm">Giáo viên bán trú phải rảnh từ thứ Hai đến thứ Sáu, nên chỉ những giáo viên không có buổi 1-1 cố định các ngày này mới được chọn.</p>`}
-CHG.pcgr=(v,t)=>{const [id,role]=t.dataset.k.split('|'),g=grBy(id),other=role==='gv'?g.tg:g.gv;if(v===other){toast('Giáo viên chính và trợ giảng phải là hai người khác nhau');return}
- if(v!==g[role]&&DB.groups.some(x=>x.id!==id&&(x.gv===v||x.tg===v))){toast('Người này đã phụ trách nhóm bán trú khác');return}
- g[role]=v;toast('Đã cập nhật '+g.n)};
+function pcBt(){const free=poolBt();
+ return`<div class="two">`+DB.groups.map(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'),ts=grTs(g),P=DB.staff.filter(s=>isTeacher(s)&&(ts.includes(s.id)||(s.st==='dang'&&free.includes(s))));
+  const row=s=>{const on=ts.includes(s.id),o=grOf(s.id),other=o&&o.id!==g.id?o:null;
+   return`<label class="chk pcts-r" style="display:flex;gap:8px;align-items:center;margin:0;padding:6px 0"><input type="checkbox" data-c="pcts" data-k="${g.id}|${s.id}" aria-label="${esc(tName(s))} phụ trách ${esc(g.n)}" ${on?'checked':''} ${other?'disabled':''}> <span>${esc(tName(s))} <span class="mu sm">${esc(s.pos)}${other?' · đang phụ trách '+esc(other.n):''}</span></span></label>`};
+  return`<div class="card"><h2>${esc(g.n)} <span class="mu sm">· ${ks.length} trẻ</span></h2>
+ <div role="group" aria-label="Giáo viên bán trú của ${esc(g.n)}"><p class="sm" style="margin:0 0 4px"><b>Giáo viên bán trú</b> <span class="mu">· ${ts.length?ts.length+' người, ngang nhau':'chưa chọn ai'}</span></p>${P.map(row).join('')||'<p class="empty">Chưa có giáo viên nào rảnh từ thứ Hai đến thứ Sáu.</p>'}</div>
+ <details style="margin-top:10px"><summary class="sm" style="cursor:pointer">Danh sách trẻ và chuyển nhóm</summary>${ks.map(k=>`<div class="rw"><span>${esc(k.n)} <span class="mu sm">${age(k.dob)}</span></span><select data-c="pcmvg" data-k="${k.id}" aria-label="Chuyển nhóm cho ${esc(k.n)}" style="width:auto">${opts(DB.groups.map(x=>[x.id,x.n]),k.gr)}</select></div>`).join('')||'<p class="empty">Nhóm chưa có trẻ.</p>'}</details></div>`}).join('')+`</div><p class="note sm">Mỗi lớp chọn được nhiều giáo viên, tất cả ngang nhau. Mỗi người chỉ phụ trách một lớp. Giáo viên bán trú phải rảnh từ thứ Hai đến thứ Sáu, nên chỉ những giáo viên không có buổi 1-1 cố định các ngày này mới được chọn.</p>`}
+CHG.pcts=(v,t)=>{const [id,sid]=t.dataset.k.split('|'),g=grBy(id),s=stBy(sid);if(!g||!s)return;const ts=grTs(g);
+ if(t.checked){if(ts.includes(sid))return;const o=grOf(sid);
+  if(o&&o.id!==id){toast(s.n+' đã phụ trách '+o.n+', hãy bỏ khỏi lớp đó trước');return}
+  if(!isTeacher(s)||s.st!=='dang'){toast('Người này không thể phụ trách lớp bán trú');return}
+  if(DB.lich.some(l=>l.type==='11'&&l.gv===sid&&l.day<=5)){toast(s.n+' đang có buổi 1-1 cố định từ thứ Hai đến thứ Sáu nên chưa thể phụ trách lớp bán trú');return}
+  grSet(g,ts.concat(sid));toast('Đã thêm '+s.n+' vào '+g.n)}
+ else{if(!ts.includes(sid))return;grSet(g,ts.filter(x=>x!==sid));toast('Đã bỏ '+s.n+' khỏi '+g.n)}};
 CHG.pcmvg=(v,t)=>{const k=kidBy(t.dataset.k);if(k&&v){k.gr=v;toast('Đã chuyển '+k.n+' sang '+grBy(v).n)}};
-function pcLoad(){const rows=DB.staff.filter(s=>isTeacher(s)&&s.st==='dang').map(s=>{const gr=DB.groups.find(g=>g.gv===s.id||g.tg===s.id),n=DB.lich.filter(l=>l.type==='11'&&l.gv===s.id).length,ks=DB.kids.filter(k=>k.gv===s.id&&k.st==='dang').length;return{s,gr,n,ks,u:Math.min(100,Math.round(n*100/LOAD_MAX))}});
- return`<div class="card">`+tbl(['Giáo viên','Vai trò','Trẻ 1-1','Buổi 1-1/tuần','Mức tải so với '+LOAD_MAX+' buổi/tuần'],rows.map(r=>`<tr><td><b>${esc(r.s.n)}</b></td><td>${esc(r.s.pos)}${r.gr?'<br><span class="sm mu">'+esc(r.gr.n)+(r.gr.gv===r.s.id?' · giáo viên chính':' · trợ giảng')+'</span>':''}</td><td>${r.ks}</td><td>${r.n}</td><td style="min-width:160px"><div style="display:flex;gap:8px;align-items:center"><div style="flex:1">${bar(r.u,r.u>75?'var(--er)':'')}</div><span class="sm">${r.u}%</span></div></td></tr>`).join(''))+`<p class="sm mu" style="margin-top:8px">Khung giờ 1-1 là ${DAY_OPEN}–${DAY_CLOSE}, ${SLOTS.length} ca mỗi ngày (mỗi ca ${SLOT_MIN} phút), thứ Hai đến thứ Bảy. Mức tải tính theo ${LOAD_MAX} buổi 1-1 mỗi tuần là đủ tải.</p></div>`}
+function pcLoad(){const rows=DB.staff.filter(s=>isTeacher(s)&&s.st==='dang').map(s=>{const gr=grOf(s.id),n=DB.lich.filter(l=>l.type==='11'&&l.gv===s.id).length,ks=DB.kids.filter(k=>k.gv===s.id&&k.st==='dang').length;return{s,gr,n,ks,u:Math.min(100,Math.round(n*100/LOAD_MAX))}});
+ return`<div class="card">`+tbl(['Giáo viên','Vai trò','Trẻ 1-1','Buổi 1-1/tuần','Mức tải so với '+LOAD_MAX+' buổi/tuần'],rows.map(r=>`<tr><td><b>${esc(r.s.n)}</b></td><td>${esc(r.s.pos)}${r.gr?'<br><span class="sm mu">'+esc(r.gr.n)+' · giáo viên bán trú'+'</span>':''}</td><td>${r.ks}</td><td>${r.n}</td><td style="min-width:160px"><div style="display:flex;gap:8px;align-items:center"><div style="flex:1">${bar(r.u,r.u>75?'var(--er)':'')}</div><span class="sm">${r.u}%</span></div></td></tr>`).join(''))+`<p class="sm mu" style="margin-top:8px">Khung giờ 1-1 là ${DAY_OPEN}–${DAY_CLOSE}, ${SLOTS.length} ca mỗi ngày (mỗi ca ${SLOT_MIN} phút), thứ Hai đến thứ Bảy. Mức tải tính theo ${LOAD_MAX} buổi 1-1 mỗi tuần là đủ tải.</p></div>`}
 /* ===== 5. Lịch học ===== */
 const monOf=d=>{let x=d;while(dow(x)!==1)x=addD(x,-1);return x};
 const onLeave=(id,d)=>DB.lr.some(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t);
@@ -2115,11 +2132,11 @@ function slotRows(days,pred){const ds=new Set(days),ex=DB.lich.filter(l=>l.slot&
 function lhWeek(h){const mon=h.wk,days=[0,1,2,3,4,5].map(i=>addD(mon,i));
  const ctl=isGV()?'':`<div class="f2" style="margin-bottom:12px"><div><label for="lhm">Xem theo</label><select id="lhm" data-c="lhmode">${opts([['gv','Giáo viên'],['room','Phòng'],['kid','Từng bé'],['all','Tổng hợp số buổi']],h.mode)}</select></div>
  ${h.mode==='gv'?`<div><label for="lhg">Giáo viên</label><select id="lhg" data-c="lhgv">${opts(pool11().map(s=>[s.id,tName(s)]),h.gv)}</select></div>`:h.mode==='room'?`<div><label for="lhr">Phòng</label><select id="lhr" data-c="lhroom">${opts(ROOMS.map(r=>[r,r]),h.room)}</select></div>`:h.mode==='kid'?`<div><label for="lhk">Bé</label><select id="lhk" data-c="lhkid">${opts(DB.kids.filter(k=>k.st==='dang'&&wk11(k.id)).map(k=>[k.id,k.n]),h.kid)}</select></div>`:''}</div>`;
- const gr=h.mode==='gv'&&DB.groups.find(g=>g.gv===h.gv||g.tg===h.gv);
+ const gr=h.mode==='gv'&&grOf(h.gv);
  const mineL=l=>h.mode==='gv'?l.gv===h.gv:h.mode==='room'?l.room===h.room:h.mode==='kid'?l.hs===h.kid:true;
  const rows=slotRows(days,mineL).map(s=>`<tr><th class="nw">${slotLb(s)}${SLOTS.includes(s)?'':'<br><small class="mu">giờ riêng</small>'}</th>${days.map((d,i)=>lhCell(h,d,i+1,s)).join('')}</tr>`).join('');
  return`<div class="card">${ctl}<div class="acts" style="justify-content:space-between;margin-bottom:10px"><div class="acts"><button class="btn s" data-a="lhwk" data-v="-7">Tuần trước</button><button class="btn s" data-a="lhwk" data-v="0">Tuần này</button><button class="btn s" data-a="lhwk" data-v="7">Tuần sau</button></div><b>${vd(days[0])} đến ${vd(days[5])}</b></div>
- ${gr?`<p class="note sm" style="margin-bottom:10px">${esc(sn(h.gv))} phụ trách ${esc(gr.n)} (${gr.gv===h.gv?'giáo viên chính':'trợ giảng'}) từ thứ Hai đến thứ Sáu nên không có ca 1-1 các ngày này.</p>`:''}
+ ${gr?`<p class="note sm" style="margin-bottom:10px">${esc(sn(h.gv))} phụ trách ${esc(gr.n)} từ thứ Hai đến thứ Sáu nên không có ca 1-1 các ngày này.</p>`:''}
  <div class="tw"><table class="wkt"><thead><tr><th></th>${days.map(d=>`<th>${DAYN[dow(d)]}<br><span class="mu">${vdm(d)}</span>${isClosed(d)?'<br>'+tg('Nghỉ','in'):''}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
  <p class="sm mu" style="margin-top:8px">Ô vàng là buổi học bù, ô đỏ nhạt là buổi nghỉ. ${isLead()&&h.mode==='gv'?'Bấm dấu cộng để thêm buổi cố định cho giáo viên đang chọn.':''}</p></div>`}
 function lhCell(h,d,w,s){if(isClosed(d))return`<td class="cell off"><span class="sm mu">${esc(holOf(d).n)}</span></td>`;const ls=lichAt(w,s,d);
@@ -2185,7 +2202,7 @@ function lhBt(){const gs=isGV()?myGroups():DB.groups;
  const miss=ks.filter(k=>btOf(k).some(w=>!DB.lich.some(l=>l.type==='11'&&l.hs===k.id&&l.day===w)));
  const ctl=`<div class="card"><div class="top" style="align-items:flex-end"><div class="f2" style="flex:1">${gs.length>1?`<div><label for="lhbg">Lớp</label><select id="lhbg" data-c="lhbtg">${opts(gs.map(x=>[x.id,x.n]),h.btg)}</select></div>`:''}${h.btm==='be'?`<div><label for="lhbk">Bé</label><select id="lhbk" data-c="lhbtk">${opts(ks.map(k=>[k.id,k.n]),h.btk)}</select></div>`:''}</div>${isLead()&&h.btm==='lop'?`<button class="btn p" data-a="tkbedit">Sửa thời khóa biểu</button>`:''}</div>
   <div style="margin-top:10px">${tabsH([['lop','Thời khóa biểu lớp'],['be','Từng bé']],h.btm,'lhbtm')}</div></div>`;
- const sum=`<div class="card"><h2>${esc(g.n)} <span class="mu sm">· ${ks.length} trẻ</span></h2><p class="sm">Giáo viên chính <b>${esc(sn(g.gv))}</b> · Trợ giảng <b>${esc(sn(g.tg))}</b> · ${BTLB}<br>Số bé theo ngày: ${DAY_ALL.map(w=>DAYS[w]+' '+ks.filter(k=>btHas(k,w)).length).join(' · ')}</p>${miss.length?`<p class="note sm" style="margin-top:8px"><b>Bé chưa đủ ca 1-1 cho các ngày bán trú:</b> ${esc(miss.map(k=>given(k.n)).join(', '))}. Mở hồ sơ bé, thẻ Lịch học, để xếp ca.</p>`:''}</div>`;
+ const sum=`<div class="card"><h2>${esc(g.n)} <span class="mu sm">· ${ks.length} trẻ</span></h2><p class="sm">Giáo viên bán trú <b>${esc(grNames(g))}</b> · ${BTLB}<br>Số bé theo ngày: ${DAY_ALL.map(w=>DAYS[w]+' '+ks.filter(k=>btHas(k,w)).length).join(' · ')}</p>${miss.length?`<p class="note sm" style="margin-top:8px"><b>Bé chưa đủ ca 1-1 cho các ngày bán trú:</b> ${esc(miss.map(k=>given(k.n)).join(', '))}. Mở hồ sơ bé, thẻ Lịch học, để xếp ca.</p>`:''}</div>`;
  if(h.btm==='be'){const k=kidBy(h.btk);return ctl+(k?`<div class="card"><h2>Thời khóa biểu của ${esc(k.n)}</h2><p class="sm mu" style="margin-bottom:8px">${esc(progOf(k))}${isLead()?' · <button class="lk" data-a="hsopenlh" data-v="'+k.id+'">Sửa lịch học của bé</button>':''}</p>${kidWeek(k)}</div>`:'<div class="card"><p class="empty">Lớp chưa có bé nào.</p></div>')}
  return ctl+sum+`<div class="card"><h2>Thời khóa biểu lớp ${esc(g.n)}</h2>${tkbClass(g,ks)}<p class="sm mu" style="margin-top:8px">Các hoạt động chung của lớp theo khung giờ. Tên bé hiện ở ô giờ bé ra học can thiệp 1-1 (giờ ghi cạnh tên); mỗi ngày bán trú mỗi bé có một ca 1-1 ${SLOT_MIN} phút. Bé được chọn ngày bán trú riêng: thứ Hai đến thứ Sáu hoặc thứ Hai đến thứ Bảy.</p></div>`}
 ACT.hsopenlh=v=>{S.modal={t:'hs',id:v,tab:'lh'}};
@@ -2330,7 +2347,7 @@ ACT.att=v=>{const [d,sid,h,c]=v.split('|');if(!canKid(h)||!canEditAtt(d)){toast(
 ACT.attall=v=>{const [d,sid]=v.split('|'),s=dayList(d).find(x=>x.sid===sid);if(!s||!canEditAtt(d)){toast('Bạn chưa thể sửa điểm danh này');return false}
  let n=0;s.kids.forEach(k=>{const key=attKey(d,sid,k.id);if(!DB.att[key]){DB.att[key]='cm';n++}});toast(n?'Đã ghi có mặt cho '+n+' trẻ':'Mọi trẻ đã được điểm danh')};
 function ddRoll(){const t=S.dd,d=t.date,can=canEditAtt(d);
- let ds=dayList(d).filter(s=>seesAll()?(!t.gv||s.gv===t.gv||s.tg===t.gv):(s.gv===U.id||s.tg===U.id));
+ let ds=dayList(d).filter(s=>seesAll()?(!t.gv||rowHas(s,t.gv)):rowHas(s,U.id));
  const pend=s=>s.kids.some(k=>!DB.att[attKey(d,s.sid,k.id)]);if(t.un)ds=ds.filter(pend);
  const one=ds.filter(s=>s.kind!=='bt'),grp=ds.filter(s=>s.kind==='bt');let tot=0,rec=0,cm=0;
  ds.forEach(s=>s.kids.forEach(k=>{tot++;const c=DB.att[attKey(d,s.sid,k.id)];if(c){rec++;if(c==='cm')cm++}}));
@@ -2341,7 +2358,7 @@ function ddRoll(){const t=S.dd,d=t.date,can=canEditAtt(d);
  if(!ds.length)return ctl+`<div class="card"><p class="empty">${dow(d)===0?'Chủ nhật trung tâm nghỉ.':isClosed(d)?'Trung tâm nghỉ ngày này: '+esc(holOf(d).n)+'. Ngày nghỉ không tính học phí và không cần điểm danh.':'Không có buổi học nào phù hợp trong ngày này.'}</p></div>`;
  const hint=`<p class="note sm" style="margin-bottom:12px"><b>Cách ghi P và KP:</b> Nghỉ P khi phụ huynh báo trong nhóm chung trước 7g sáng cùng ngày với ca sáng, trước 12g với ca chiều và tối (bán trú: báo trước 1 ngày hoặc trước 7g sáng). Báo sau mốc này hoặc không báo thì ghi KP. Bấm lại vào trạng thái đang chọn để xóa.</p>`;
  const t1=one.length?`<div class="card"><h2>Can thiệp 1-1 và học bù</h2>`+tbl(['Ca','Bé','Giáo viên','Phòng','Trạng thái','Ghi chú'],one.map(s=>{const k=s.kids[0];return`<tr><td class="nw">${slotLb(s.slot)}${s.kind==='bu'?'<br>'+tg('Học bù','y'):''}${s.inc?'<br>'+tg('1-1 của bán trú','in'):''}</td><td><b>${esc(k.n)}</b></td><td>${esc(given(sn(s.gv)))}</td><td class="nw">${esc(s.room)}</td><td>${stb(d,s,k,can)}</td><td>${feeNote(d,s,k)} ${mkBtn(d,s,k)}</td></tr>`}).join(''))+`</div>`:'';
- const t2=grp.map(s=>`<div class="card"><div class="top"><div><h2>${esc(s.label)}</h2><p class="mu sm">Giáo viên ${esc(sn(s.gv))} · Trợ giảng ${esc(sn(s.tg))} · ${s.kids.length} trẻ</p></div><button class="btn s" data-a="attall" data-v="${d}|${s.sid}" ${can?'':'disabled'}>Ghi mọi trẻ có mặt</button></div>`+tbl(['Bé','Trạng thái','Ghi chú'],s.kids.map(k=>`<tr><td><b>${esc(k.n)}</b></td><td>${stb(d,s,k,can)}</td><td>${feeNote(d,s,k)}</td></tr>`).join(''))+`</div>`).join('');
+ const t2=grp.map(s=>`<div class="card"><div class="top"><div><h2>${esc(s.label)}</h2><p class="mu sm">Giáo viên ${esc(s.ts.map(sn).join(', ')||'Chưa phân công')} · ${s.kids.length} trẻ</p></div><button class="btn s" data-a="attall" data-v="${d}|${s.sid}" ${can?'':'disabled'}>Ghi mọi trẻ có mặt</button></div>`+tbl(['Bé','Trạng thái','Ghi chú'],s.kids.map(k=>`<tr><td><b>${esc(k.n)}</b></td><td>${stb(d,s,k,can)}</td><td>${feeNote(d,s,k)}</td></tr>`).join(''))+`</div>`).join('');
  return ctl+kp+hint+t1+t2}
 /* --- sửa nhanh một ô trong bảng chấm công --- */
 ACT.scopen=v=>{const [h,d]=v.split('|');S.modal={t:'sc',id:h,d}};
@@ -2874,7 +2891,7 @@ ACT.mdel=v=>{const m=medList().find(x=>x.id===v);if(!m||!medDel(m))return false;
 /* ---- ảnh mẫu cho chế độ ?demo ---- */
 function seedMedia(D){
  const svg=(t,a,b)=>'data:image/svg+xml;utf8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="640" height="480" fill="url(#g)"/><circle cx="470" cy="150" r="64" fill="#fff" fill-opacity=".55"/><rect x="90" y="270" width="300" height="110" rx="22" fill="#fff" fill-opacity=".5"/><text x="320" y="440" text-anchor="middle" font-family="Arial,sans-serif" font-size="34" font-weight="700" fill="#4a3b00">${t}</text></svg>`);
- const g=D.groups[0]||{id:'G1',gv:''},gk=D.kids.filter(k=>k.gr===g.id&&k.st==='dang'),gv=D.staff.find(s=>s.id===g.gv),by=gv?gv.id:'',bn=gv?gv.n:'Giáo viên',d0=lastWork(TODAY),d1=lastWork(addD(d0,-1));
+ const g=D.groups[0]||{id:'G1',ts:[]},gk=D.kids.filter(k=>k.gr===g.id&&k.st==='dang'),gv=D.staff.find(s=>s.id===(g.ts||[g.gv])[0]),by=gv?gv.id:'',bn=gv?gv.n:'Giáo viên',d0=lastWork(TODAY),d1=lastWork(addD(d0,-1));
  const mk=(id,t,a,b,o)=>Object.assign({id,kind:'img',t,ct:'image/svg+xml',sz:0,d:d0,by,bn,at:d0+'T09:00:00.000Z',ks:[],gr:g.id,sh:1,n:'',u:svg(t,a,b),demo:1},o);
  D.media=[
   mk('md1','Tô màu cùng cô','#ffe08a','#ffb36b',{ks:gk.slice(0,2).map(k=>k.id)}),
@@ -3221,18 +3238,25 @@ FORM.tbf=f=>{const e=f.elements,g=e.tg.value;if(!g)return false;
  DB.nt.push({id:'n'+uid(),aud:S.modal.aud,tg:g.startsWith('k:')?g.slice(2):g,t:e.t.value.trim(),b:e.b.value.trim(),by:U.id,at:TODAY,pin:!!(e.pin&&e.pin.checked),fin:canMoney()&&!!(e.fin&&e.fin.checked)});S.modal=null;toast('Đã gửi thông báo')};
 /* ===== 15. Thống kê ===== */
 CHG.tkm=v=>{S.tk.m=v};
-function attStats(m){const lich={};DB.lich.forEach(l=>{lich[l.id]=l});const by={};
- for(const key in DB.att){if(!key.startsWith(m))continue;const sid=key.split('|')[1],c=DB.att[key];let gv;if(sid[0]==='G'){const g=grBy(sid);gv=g&&g.gv}else{const l=lich[sid];gv=l&&l.gv}
-  if(!gv)continue;const o=by[gv]=by[gv]||{t:0,cm:0,p:0,kp:0,tt:0,bv:0};o.t++;o[c]++}
+/* điểm danh trong tháng, kèm những giáo viên phụ trách buổi đó (ca 1-1: một người; bán trú: mọi giáo viên của lớp, ngang nhau). Buổi chưa có giáo viên thì bỏ qua. */
+function attRows(m){const lich={},out=[];DB.lich.forEach(l=>{lich[l.id]=l});
+ for(const key in DB.att){if(!key.startsWith(m))continue;const sid=key.split('|')[1],c=DB.att[key];let gvs;if(sid[0]==='G')gvs=grTs(grBy(sid));else{const l=lich[sid];gvs=l&&l.gv?[l.gv]:[]}
+  if(gvs.length)out.push({gvs,c})}
+ return out}
+/* theo từng giáo viên: một buổi bán trú tính cho mọi giáo viên của lớp */
+function attStats(m){const by={};
+ attRows(m).forEach(({gvs,c})=>gvs.forEach(gv=>{const o=by[gv]=by[gv]||{t:0,cm:0,p:0,kp:0,tt:0,bv:0};o.t++;o[c]++}));
  return by}
-function tkData(m){const act=DB.kids.filter(k=>k.st==='dang'),as=attStats(m),tot=Object.values(as).reduce((a,o)=>({t:a.t+o.t,cm:a.cm+o.cm}),{t:0,cm:0}),fs=feeStats(m);
+/* tổng toàn trung tâm: mỗi lượt điểm danh tính một lần, không nhân theo số giáo viên của lớp */
+const attTot=m=>attRows(m).reduce((a,r)=>({t:a.t+1,cm:a.cm+(r.c==='cm'?1:0)}),{t:0,cm:0});
+function tkData(m){const act=DB.kids.filter(k=>k.st==='dang'),as=attStats(m),tot=attTot(m),fs=feeStats(m);
  const prog=[['Chỉ can thiệp 1-1',k=>wk11(k.id)&&!k.bt],['Cả 1-1 và bán trú',k=>wk11(k.id)&&k.bt],['Chỉ bán trú',k=>!wk11(k.id)&&k.bt]].map(([l,f])=>{const ks=act.filter(f);return{l,n:ks.length,due:ks.reduce((s,k)=>s+billed(k.id,m),0),paid:ks.reduce((s,k)=>s+paidM(k.id,m),0)}});
  const tr=DB.staff.filter(s=>isTeacher(s)&&s.st==='dang'&&(s.role==='gv'||teachesNow(s.id))).map(s=>({s,o:as[s.id]||{t:0,cm:0,p:0,kp:0,tt:0,bv:0},ks:act.filter(k=>k.gv===s.id).length}));
  const refund=DB.lg.filter(e=>e.kind==='hoan'&&e.m===m).reduce((s,e)=>s+e.amt,0);
  return{act,tot,fs,prog,tr,refund,rate:tot.t?Math.round(tot.cm*100/tot.t):0}}
 VIEWS.tk=()=>{const t=S.tk=Object.assign({m:sm(WD.slice(0,7),0)},S.tk),m=t.m,d=tkData(m),$=canMoney(),pt=d.act.filter(k=>k.bt).length;
- const kps=$?[kpi('Trẻ đang học',d.act.length,DB.kids.length+' hồ sơ'),kpi('Chuyên cần',d.rate+'%',d.tot.t+' lượt đã điểm danh',d.rate>=85?'ok':'er'),kpi('Đã thu',fmt(d.fs.paid),'phải thu '+fmt(d.fs.due)),kpi('Công nợ',fmt(totalDebt()),debtors().length+' gia đình',totalDebt()?'er':'ok'),kpi('Hoàn phí nghỉ',fmt(d.refund),'trừ vào học phí '+mLow(m)),kpi('Nhân sự đang làm',DB.staff.filter(s=>s.st==='dang').length,activeTeachers().length+' giáo viên và trợ giảng')]
-  :[kpi('Trẻ đang học',d.act.length,DB.kids.length+' hồ sơ'),kpi('Chuyên cần',d.rate+'%',d.tot.t+' lượt đã điểm danh',d.rate>=85?'ok':'er'),kpi('Trẻ có can thiệp 1-1',d.act.filter(k=>wk11(k.id)).length,DB.lich.filter(l=>l.type==='11').length+' buổi mỗi tuần'),kpi('Trẻ bán trú',pt,DB.groups.map(g=>g.n+' '+d.act.filter(k=>k.gr===g.id).length).join(', ')),kpi('Nhân sự đang làm',DB.staff.filter(s=>s.st==='dang').length,activeTeachers().length+' giáo viên và trợ giảng'),kpi('Chưa điểm danh',unrecorded(WD),'ngày '+vdm(WD),unrecorded(WD)?'er':'ok')];
+ const kps=$?[kpi('Trẻ đang học',d.act.length,DB.kids.length+' hồ sơ'),kpi('Chuyên cần',d.rate+'%',d.tot.t+' lượt đã điểm danh',d.rate>=85?'ok':'er'),kpi('Đã thu',fmt(d.fs.paid),'phải thu '+fmt(d.fs.due)),kpi('Công nợ',fmt(totalDebt()),debtors().length+' gia đình',totalDebt()?'er':'ok'),kpi('Hoàn phí nghỉ',fmt(d.refund),'trừ vào học phí '+mLow(m)),kpi('Nhân sự đang làm',DB.staff.filter(s=>s.st==='dang').length,activeTeachers().length+' giáo viên')]
+  :[kpi('Trẻ đang học',d.act.length,DB.kids.length+' hồ sơ'),kpi('Chuyên cần',d.rate+'%',d.tot.t+' lượt đã điểm danh',d.rate>=85?'ok':'er'),kpi('Trẻ có can thiệp 1-1',d.act.filter(k=>wk11(k.id)).length,DB.lich.filter(l=>l.type==='11').length+' buổi mỗi tuần'),kpi('Trẻ bán trú',pt,DB.groups.map(g=>g.n+' '+d.act.filter(k=>k.gr===g.id).length).join(', ')),kpi('Nhân sự đang làm',DB.staff.filter(s=>s.st==='dang').length,activeTeachers().length+' giáo viên'),kpi('Chưa điểm danh',unrecorded(WD),'ngày '+vdm(WD),unrecorded(WD)?'er':'ok')];
  return head('Thống kê','Số liệu tổng hợp theo tháng, xuất Excel hoặc PDF','<button class="btn s" data-a="tkxl">Xuất Excel</button><button class="btn s" data-a="tkpdf">Xuất PDF</button>')
  +`<div class="card"><div class="f2"><div><label for="tkm">Tháng</label><select id="tkm" data-c="tkm">${opts([sm(CM,-2),sm(CM,-1),CM].map(x=>[x,mLabel(x)]),m)}</select></div></div></div>`
  +`<div class="grid g3">${kps.join('')}</div>`
