@@ -13,7 +13,9 @@ const LT=[{c:'ng',n:'Học cá nhân ngôn ngữ',f:180000},{c:'nh',n:'Học nh�
 const LTM=Object.fromEntries(LT.map(x=>[x.c,x]));
 /* Giá từng loại do Trưởng Trung tâm chỉnh ở Nhân sự → Cài đặt (DB.cfg['lt_'+mã], tiền nên đi theo CFG_MONEY); chưa chỉnh thì dùng giá gốc x.f. */
 const ltFee=x=>{const v=DB.cfg&&DB.cfg['lt_'+x.c];return v==null?x.f:v};
-const feeSlot=(k,sid)=>{const l=DB.lich.find(x=>x.id===sid);return l&&l.lt&&LTM[l.lt]?ltFee(LTM[l.lt]):fee11(k)};
+/* Giá riêng từng bé (money_records, collection kpr, khóa = mã bé, {mã loại: giá}): đứng trước giá chung của loại. Không có thì dùng giá chung. */
+const kidLt=(k,c)=>{const o=(DB.kpr||{})[k.id];return o&&o[c]!=null?o[c]:null};
+const feeSlot=(k,sid)=>{const l=DB.lich.find(x=>x.id===sid);if(l&&l.lt&&LTM[l.lt]){const p=kidLt(k,l.lt);return p!=null?p:ltFee(LTM[l.lt])}return fee11(k)};
 /* --- Thời khóa biểu bán trú và giờ 1-1 --- */
 const tmin=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m};
 const tkbRows=gid=>(DB.tkb||[]).filter(r=>r.gr===gid||!r.gr).slice().sort((a,b)=>tmin(a.s)-tmin(b.s)||tmin(a.e)-tmin(b.e));

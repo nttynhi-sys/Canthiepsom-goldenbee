@@ -62,7 +62,7 @@ document.addEventListener('change',e=>{const t=e.target;if(!t||t.name!=='dx')ret
 /* khối "Hình thức học": tích Bán trú và/hoặc Can thiệp 1-1; mỗi hình thức tích các buổi (thứ) học cụ thể, buổi 1-1 chọn được giờ riêng từng ngày */
 function s11Row(w,lt,tm){return`<div class="s11r"><select name="s11day" aria-label="Ngày">${opts(DAY_ALL.map(x=>[x,DAYN[x]]),w)}</select><select name="s11lt" aria-label="Loại 1-1">${opts(LT.map(x=>[x.c,x.n]),lt)}</select><input type="time" name="s11tm" step="60" value="${esc(tm||'')}" aria-label="Giờ bắt đầu ca (ca ${SLOT_MIN} phút)"><button class="btn s no" type="button" data-a="s11del">Xóa ca</button></div>`}
 function ltBlock(k){const on=k.lt||{};return`<div class="lt-grid">${LT.map(x=>`<div class="lt-row"><label class="chk"><input type="checkbox" name="lt_${x.c}" ${on[x.c]?'checked':''}> ${esc(x.n)}</label><span class="sm mu">${canMoney()?fmt(ltFee(x))+' ₫/giờ':''}</span><label class="sm">Số giờ/ngày <input type="number" name="lq_${x.c}" min="1" max="4" step="1" value="${on[x.c]||''}" style="width:64px"></label></div>`).join('')}</div>`}
-function ltSummary(k){const o=k.lt||{},a=LT.filter(x=>o[x.c]).map(x=>esc(x.n)+': '+o[x.c]+' giờ/ngày');return a.length?a.join('<br>'):'<span class="mu">Chưa ghi</span>'}
+function ltSummary(k){const o=k.lt||{},a=LT.filter(x=>o[x.c]).map(x=>esc(x.n)+': '+o[x.c]+' giờ/ngày'+(canMoney()&&kidLt(k,x.c)!=null?' · giá riêng '+fnum(kidLt(k,x.c))+' ₫/giờ':''));return a.length?a.join('<br>'):'<span class="mu">Chưa ghi</span>'}
 ACT.s11add=(v,b)=>{const box=b.closest('.hth-b').querySelector('#s11');if(box)box.insertAdjacentHTML('beforeend',s11Row(DAY_ALL[0],LT[0].c,''));return false};
 ACT.s11del=(v,b)=>{const r=b.closest('.s11r');if(r)r.remove();return false};
 function hthField(k,edit){const bt=!!k.bt,bd=btOf(k),ls=edit?DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).sort((a,b)=>a.day-b.day||(a.slot<b.slot?-1:a.slot>b.slot?1:0)):[],has=ls.length>0,pool=pool11();
@@ -134,7 +134,7 @@ function hsSchedule(k){const lead=isLead(),m=S.modal,bd=btOf(k),g=grBy(k.gr),$$=
   <p class="sm mu">Mỗi ngày bán trú có một ca 1-1 (${SLOT_MIN} phút) nằm trong gói bán trú${$$?' ('+fmt(DB.cfg.pbtDay)+' mỗi ngày, trong đó '+fmt(DB.cfg.pbtDay11)+' là ca 1-1)':''}. Thứ Bảy chỉ chọn cho bé học thứ Bảy.</p>
   <div class="acts" style="justify-content:flex-end"><button class="btn p" type="submit">Lưu bán trú</button></div></form>`
   :`<p>${bd.length&&g?'Lớp <b>'+esc(g.n)+'</b>, học '+esc(dayTx(bd)):'Bé không học bán trú.'}</p>`)+`</div>`;
- const rows=ls.map(l=>`<tr><td class="nw">${DAYN[l.day]}</td><td class="nw">${slotLb(l.slot)}${l.lt&&LTM[l.lt]?'<br><span class="sm mu">'+esc(LTM[l.lt].n)+'</span>':''}</td><td>${esc(sn(l.gv))}</td><td>${esc(l.room)}</td><td>${inc.has(l.id)?tg('Ca của bán trú','in'):tg('Ca 1-1 thêm','gy')}${$$&&!inc.has(l.id)?' <span class="sm mu">'+fnum(fee11(k))+' ₫</span>':''}${(btWarn(k,l.day,l.slot)?'<br><span class="sm mu">Lưu ý: '+esc(btWarn(k,l.day,l.slot))+'</span>':'')}</td>${lead?`<td class="r"><button class="btn s no" data-a="hslsdel" data-v="${l.id}">Xóa</button></td>`:''}</tr>`).join('');
+ const rows=ls.map(l=>`<tr><td class="nw">${DAYN[l.day]}</td><td class="nw">${slotLb(l.slot)}${l.lt&&LTM[l.lt]?'<br><span class="sm mu">'+esc(LTM[l.lt].n)+'</span>':''}</td><td>${esc(sn(l.gv))}</td><td>${esc(l.room)}</td><td>${inc.has(l.id)?tg('Ca của bán trú','in'):tg('Ca 1-1 thêm','gy')}${$$&&!inc.has(l.id)?' <span class="sm mu">'+fnum(feeSlot(k,l.id))+' ₫</span>':''}${(btWarn(k,l.day,l.slot)?'<br><span class="sm mu">Lưu ý: '+esc(btWarn(k,l.day,l.slot))+'</span>':'')}</td>${lead?`<td class="r"><button class="btn s no" data-a="hslsdel" data-v="${l.id}">Xóa</button></td>`:''}</tr>`).join('');
  const res=m.res?`<div class="note sm" style="margin-bottom:10px">${m.res.ok?'<b>Đã thêm '+m.res.ok+' buổi.</b> ':''}${m.res.bad.length?'<b>Không thêm được:</b> '+esc(m.res.bad.join('; '))+'. ':''}${m.res.warn.length?'<b>Lưu ý:</b> '+esc(m.res.warn.join('; ')):''}</div>`:'';
  const pool=pool11(),one=`<div class="card"><h2>Các buổi 1-1 hằng tuần</h2>${res}${miss.length?`<p class="note sm" style="margin-bottom:10px">Ngày bán trú chưa có ca 1-1: ${esc(miss.map(w=>DAYS[w]).join(', '))}.</p>`:''}`
   +tbl(['Thứ','Ca','Giáo viên','Phòng','Loại'].concat(lead?['']:[]),rows,'Bé chưa có buổi 1-1 cố định.')
@@ -143,7 +143,17 @@ function hsSchedule(k){const lead=isLead(),m=S.modal,bd=btOf(k),g=grBy(k.gr),$$=
    <p class="sm mu">Mỗi bé chọn ngày riêng: có bé học T2–T7, có bé chỉ vài buổi mỗi tuần. Hệ thống kiểm tra trùng giáo viên, bé, phòng ở từng ngày và chỉ thêm những ngày còn trống.</p>
    <div class="acts" style="justify-content:flex-end"><button class="btn p" type="submit">Thêm các buổi</button></div></form>`:'')+`</div>`;
  const tt=`<div class="card"><h2>Thời khóa biểu của ${esc(given(k.n))}</h2>${kidWeek(k)}</div>`;
- return bt+one+tt}
+ return bt+one+kprCard(k)+tt}
+/* Giá riêng của bé theo loại 1-1: chỉ Trưởng TT và Văn phòng thấy và sửa (là dữ liệu tiền). Bỏ trống = giá chung. Khi bỏ hết vẫn ghi {} (không xóa dòng) để máy phụ huynh đồng bộ gia tăng nhận được thay đổi. */
+function kprCard(k){if(!canMoney())return'';const o=(DB.kpr||{})[k.id]||{},has=LT.some(x=>o[x.c]!=null);
+ return`<div class="card"><h2>Giá riêng của bé</h2><p class="sm mu">Bỏ trống thì tính theo giá chung của loại (Nhân sự → Cài đặt). Giá riêng chỉ áp dụng cho ca 1-1 đã chọn đúng loại đó, tính từ nay; hóa đơn đã lập không tự đổi. Ca cũ chưa chọn loại thì tính theo giá chung 1 buổi 1-1.</p>
+ <form id="kprf" class="f"><div class="f2">${LT.map(x=>`<div><label for="kp-${x.c}">${esc(x.n)}</label><input id="kp-${x.c}" name="kp_${x.c}" type="number" min="0" step="any" value="${o[x.c]!=null?esc(o[x.c]):''}" placeholder="${fnum(ltFee(x))} (giá chung)"></div>`).join('')}</div>
+ <div class="acts" style="justify-content:flex-end">${has?`<button class="btn" type="button" data-a="kprclr" data-v="${k.id}">Bỏ hết giá riêng</button>`:''}<button class="btn p" type="submit">Lưu giá riêng</button></div></form></div>`}
+FORM.kprf=f=>{if(!canMoney())return false;const k=kidBy(S.modal.id);if(!k)return false;const o={};
+ LT.forEach(x=>{const v=f.elements['kp_'+x.c].value.trim();if(v!==''){const n=+v;if(isFinite(n))o[x.c]=Math.max(0,n)}});
+ if(!DB.kpr)DB.kpr={};if(Object.keys(o).length||DB.kpr[k.id])DB.kpr[k.id]=o;
+ toast(Object.keys(o).length?'Đã lưu giá riêng của '+given(k.n):'Không có giá riêng: '+given(k.n)+' tính theo giá chung')};
+ACT.kprclr=v=>{const k=kidBy(v);if(!k||!canMoney())return false;ask('Bỏ hết giá riêng của '+given(k.n)+'? Các ca 1-1 sẽ tính theo giá chung của từng loại.',()=>{if(!DB.kpr)DB.kpr={};DB.kpr[v]={};toast('Đã bỏ giá riêng')},'Bỏ')};
 FORM.btf=f=>{if(!isLead())return false;const k=kidBy(S.modal.id),bt=f.elements.bt.value==='1',bd=daysOf(f,'bd');
  if(bt&&!bd.length){toast('Hãy chọn ít nhất một ngày bán trú');return false}
  k.bt=bt;if(bt){k.gr=f.elements.gr.value||grByAge(k.dob);k.btd=bd}else{k.gr='';delete k.btd}
@@ -160,6 +170,7 @@ ACT.hslsdel=v=>{const l=DB.lich.find(x=>x.id===v),k=l&&kidBy(l.hs),back=S.modal;
 
 /* --- xóa hồ sơ bé (Trưởng Trung tâm, Quản lý): nhập sai hoặc bé không còn học; bé chỉ nghỉ thì dùng "Ngưng can thiệp" --- */
 function hsDelKid(id){
+ if(DB.kpr)delete DB.kpr[id];
  DB.kids=DB.kids.filter(x=>x.id!==id);
  DB.sess=DB.sess.filter(x=>x.k!==id);
  DB.plans=DB.plans.filter(x=>x.k!==id);
