@@ -13,7 +13,7 @@ const EXP={
  ql:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','mt','bc','td','cp','tb','tk'],
  tt:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','hp','tl','mt','bc','td','cp','tb','tk'],
  vp:['dash','tn','cc','vi','dd','hp','tl','td','tb','tk'],
- gv:['dash','hs','lh','tn','cc','vi','dd','hb','tl','mt','bc','td','tb'],
+ gv:['dash','hs','lh','cc','vi','dd','hb','tl','mt','bc','td','tb'],
  ph:['cp','lh','tn','hb','hp','tb']};
 (async()=>{
  /* ---------- 1. đăng nhập nhanh, hộp chuyển vai trò, thanh bên của từng vai trò ---------- */
@@ -216,8 +216,8 @@ const EXP={
   ok('Giáo viên: mở được phiếu lương của mình',own);
   await page.evaluate(()=>{S.modal=null;render()});
   /* thực đơn chỉ xem */
-  await nav(page,'tn');
-  ok('Giáo viên: xem thực đơn, không có nút sửa',(await page.$$eval('#main .mday',e=>e.length))===6&&!(await page.$('#main [data-a="tnedit"]'))&&!(await page.$('#main [data-a="tncopy"]')));
+  /* giáo viên chỉ dạy 1-1 (không đứng lớp bán trú) không có mục Thực đơn; vẫn thử gọi thẳng các thao tác sửa */
+  ok('Giáo viên chỉ dạy 1-1: không có mục Thực đơn bán trú',!(await page.$('.nav button[data-v="tn"]')));
   const g=await page.evaluate(()=>{const d=Object.keys(DB.menu)[0],b=JSON.stringify(DB.menu);return{a:ACT.tnedit(d),c:ACT.tnclr(d),cp:ACT.tncopy(),f:(S.modal={t:'tnd',d},FORM.tndf({elements:{s:{value:'x'},t:{value:''},x:{value:''},n:{value:''}}})),same:JSON.stringify(DB.menu)===b}});
   ok('Giáo viên: gọi thẳng sửa thực đơn bị từ chối',g.a===false&&g.c===false&&g.cp===false&&g.f===false&&g.same,g);
   await page.evaluate(()=>{S.modal=null;render()});
@@ -241,7 +241,7 @@ const EXP={
   ok('Phụ huynh: Cổng phụ huynh có thẻ thực đơn bán trú hôm nay',/Thực đơn bán trú/.test(cp)&&/Bữa trưa/.test(cp)&&!!(await page.$('#main [data-a="nav"][data-v="tn"]')),cp.slice(0,300));
   await nav(page,'lh');
   const lh=await main(page);
-  ok('Phụ huynh: Lịch học của bé nêu giờ 1-1 07:15–20:00, ca 50 phút',/Can thiệp 1-1 nhận bé từ 07:15 đến 20:00, mỗi ca 50 phút/.test(lh),lh.slice(-400));
+  ok('Phụ huynh: Lịch học của bé không nêu giờ 1-1 chung 07:15–20:00 (đã bỏ theo yêu cầu)',!/Can thiệp 1-1 nhận bé từ 07:15 đến 20:00/.test(lh),lh.slice(-400));
   const ths=await page.$$eval('#main table.wkt tbody th',e=>e.map(x=>x.textContent));
   /* bé bán trú: bảng là thời khóa biểu lớp ghép giờ 1-1; bé chỉ 1-1: bảng theo ca 50 phút */
   const kid=info.ks.find(k=>k.gr);const gname=await page.evaluate(g=>grBy(g).n,kid.gr);
