@@ -84,8 +84,8 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
 
  /* 5. sửa hồ sơ: 1-1 đang có thì tích sẵn, liệt kê buổi hiện có; không bỏ tích khi còn buổi; thêm buổi mới được */
  await ev(()=>{S.modal=null;render();const k=DB.kids.find(x=>x.n==='Bé Thử Hình Thức');ACT.hsedit(k.id);render()});await page.waitForSelector('#hsff');
- const ed=await ev(()=>{const f=document.querySelector('#hsff');return{hbt:f.elements.hbt.checked,h11:f.elements.h11.checked,bd:[1,2,3,4,5,6].filter(w=>f.elements['bd'+w].checked),note:(document.querySelector('#hth-11 .note')||{}).textContent,gv:f.elements.gv.value}});
- ok('sửa hồ sơ: tích sẵn Bán trú và 1-1, ngày bán trú T2, T4, T6, liệt kê 3 buổi 1-1 đang có',ed.hbt&&ed.h11&&JSON.stringify(ed.bd)===JSON.stringify([1,3,5])&&/3 buổi 1-1/.test(ed.note||'')&&new RegExp('T2 '+T.A).test(ed.note||''),ed);
+ const ed=await ev(()=>{const f=document.querySelector('#hsff');return{hbt:f.elements.hbt.checked,h11:f.elements.h11.checked,bd:[1,2,3,4,5,6].filter(w=>f.elements['bd'+w].checked),note:(document.querySelector('#hth-11 .note')||{}).textContent,gv:f.elements.gv.value,rows:[...document.querySelectorAll('#s11 .s11r')].map(r=>[+r.querySelector('[name=s11day]').value,r.querySelector('[name=s11tm]').value]),d11:[...document.querySelectorAll('#s11d input[data-s11w]')].filter(c=>c.checked).map(c=>+c.dataset.s11w)}});
+ ok('sửa hồ sơ: tích sẵn Bán trú và 1-1, ngày bán trú T2, T4, T6; 3 ca 1-1 đang có hiện sẵn thành 3 dòng (thứ, giờ) và 3 nút ngày 1-1 đã bật',ed.hbt&&ed.h11&&JSON.stringify(ed.bd)===JSON.stringify([1,3,5])&&/3 ca 1-1/.test(ed.note||'')&&ed.rows.length===3&&ed.rows.some(r=>r[0]===1&&r[1]===T.A)&&ed.d11.length===3,ed);
  await page.uncheck('#hf-h11');await page.click('#hsff button[type=submit]');await W(80);
  ok('bỏ tích 1-1 khi bé còn buổi 1-1: báo phải xóa từng buổi ở thẻ Lịch học, không xóa gì',/xóa từng buổi/.test(await toastTx())&&(await ev(()=>wk11(DB.kids.find(x=>x.n==='Bé Thử Hình Thức').id)))===3,await toastTx());
  await page.check('#hf-h11');

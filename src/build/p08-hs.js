@@ -60,40 +60,51 @@ document.addEventListener('input',e=>{const t=e.target;if(!t.dataset||!t.dataset
  root.querySelectorAll('details[data-fg]').forEach(d=>{const any=!!d.querySelector('[data-ft]:not([hidden])');d.hidden=!any;if(q&&any)d.open=true})});
 document.addEventListener('change',e=>{const t=e.target;if(!t||t.name!=='dx')return;const f=t.closest('form'),s=f&&f.querySelector('#dxsum');if(s)s.textContent=dxSumTx(f.querySelectorAll('input[name=dx]:checked').length)});
 /* khối "Hình thức học": tích Bán trú và/hoặc Can thiệp 1-1; mỗi hình thức tích các buổi (thứ) học cụ thể, buổi 1-1 chọn được giờ riêng từng ngày */
-function s11Row(w,lt,tm){return`<div class="s11r"><select name="s11day" aria-label="Ngày">${opts(DAY_ALL.map(x=>[x,DAYN[x]]),w)}</select><select name="s11lt" aria-label="Loại 1-1">${opts(LT.map(x=>[x.c,x.n]),lt)}</select><input type="time" name="s11tm" step="60" value="${esc(tm||'')}" aria-label="Giờ bắt đầu ca (ca ${SLOT_MIN} phút)"><button class="btn s no" type="button" data-a="s11del">Xóa ca</button></div>`}
-function ltBlock(k){const on=k.lt||{};return`<div class="lt-grid">${LT.map(x=>`<div class="lt-row"><label class="chk"><input type="checkbox" name="lt_${x.c}" ${on[x.c]?'checked':''}> ${esc(x.n)}</label><span class="sm mu">${canMoney()?fmt(ltFee(x))+' ₫/giờ':''}</span><label class="sm">Số giờ/ngày <input type="number" name="lq_${x.c}" min="1" max="4" step="1" value="${on[x.c]||''}" style="width:64px"></label></div>`).join('')}</div>`}
+/* Một dòng ca 1-1. Dòng của ca đã lưu (tham số l) mang mã buổi trong data-lid để lúc lưu biết sửa đúng buổi đó; ca cũ chưa chọn loại có thêm lựa chọn "Chưa chọn loại" để lưu lại không tự gán loại (loại quyết định giá). Bấm "Xóa ca" ở dòng đã lưu chỉ đánh dấu bỏ (gạch ngang, có nút Giữ lại), việc xóa thật diễn ra khi bấm Lưu hồ sơ; bấm Hủy thì mọi thứ giữ nguyên. */
+function s11Row(w,lt,tm,l){const sv=!!l;return`<div class="s11r${sv?' sv':''}"${sv?` data-lid="${esc(l.id)}"`:''}><select name="s11day" aria-label="Ngày">${opts(DAY_ALL.map(x=>[x,DAYN[x]]),w)}</select><select name="s11lt" aria-label="Loại 1-1">${sv&&!l.lt?'<option value="" selected>Chưa chọn loại</option>':''}${opts(LT.map(x=>[x.c,x.n]),lt)}</select><input type="time" name="s11tm" step="60" value="${esc(tm||'')}" aria-label="Giờ bắt đầu ca (ca ${SLOT_MIN} phút)"><button class="btn s no" type="button" data-a="s11del">Xóa ca</button>${sv?`<span class="sm mu s11m"><span class="m1">Đã lưu · ${esc(given(sn(l.gv)))}${l.room?' · '+esc(l.room):''}</span><span class="m2">Sẽ bị xóa khi bấm Lưu hồ sơ (điểm danh cũ vẫn giữ). Bấm Giữ lại nếu không muốn xóa.</span></span>`:''}</div>`}
+/* số giờ/ngày của từng loại: lấy số đã ghi ở hồ sơ, bổ sung từ các ca đã xếp (bé có ca gắn loại nhưng hồ sơ chưa ghi số giờ vẫn hiện đủ để xem lại) */
+function ltEff(k,ls){const o=Object.assign({},k.lt||{}),cnt={};(ls||[]).forEach(l=>{if(l.lt&&LTM[l.lt]){const key=l.day+'|'+l.lt;cnt[key]=(cnt[key]||0)+1;o[l.lt]=Math.min(4,Math.max(o[l.lt]||0,cnt[key]))}});return o}
+function ltBlock(k,eff){const on=eff||k.lt||{};return`<div class="lt-grid">${LT.map(x=>`<div class="lt-row"><label class="chk"><input type="checkbox" name="lt_${x.c}" ${on[x.c]?'checked':''}> ${esc(x.n)}</label><span class="sm mu">${canMoney()?fmt(ltFee(x))+' ₫/giờ':''}</span><label class="sm">Số giờ/ngày <input type="number" name="lq_${x.c}" min="1" max="4" step="1" value="${on[x.c]||''}" style="width:64px"></label></div>`).join('')}</div>`}
 function ltSummary(k){const o=k.lt||{},a=LT.filter(x=>o[x.c]).map(x=>esc(x.n)+': '+o[x.c]+' giờ/ngày'+(canMoney()&&kidLt(k,x.c)!=null?' · giá riêng '+fnum(kidLt(k,x.c))+' ₫/giờ':''));return a.length?a.join('<br>'):'<span class="mu">Chưa ghi</span>'}
 /* nút chọn ngày học 1-1: bấm một ngày thì thêm một ca cho ngày đó (loại là loại đầu đã tích, giờ lấy theo ca đầu đã nhập), bấm lại thì bỏ các ca của ngày đó */
-const s11Days=f=>[...f.querySelectorAll('#s11 .s11r [name=s11day]')].map(s=>+s.value);
+const s11Days=f=>[...f.querySelectorAll('#s11 .s11r:not(.gone) [name=s11day]')].map(s=>+s.value);
 const s11Sync=f=>{if(f)f.querySelectorAll('#s11d input[data-s11w]').forEach(c=>{c.checked=s11Days(f).includes(+c.dataset.s11w)})};
-const s11Defs=f=>{const first=[...f.querySelectorAll('#s11 .s11r [name=s11tm]')].find(i=>i.value),on=LT.find(x=>f.elements['lt_'+x.c]&&f.elements['lt_'+x.c].checked);return{lt:(on||LT[0]).c,tm:first?first.value:''}};
+const s11Defs=f=>{const first=[...f.querySelectorAll('#s11 .s11r:not(.gone) [name=s11tm]')].find(i=>i.value),on=LT.find(x=>f.elements['lt_'+x.c]&&f.elements['lt_'+x.c].checked);return{lt:(on||LT[0]).c,tm:first?first.value:''}};
+/* đánh dấu / bỏ đánh dấu một dòng ca đã lưu là "sẽ xóa khi lưu"; dòng mới thêm (chưa lưu) thì xóa thẳng khỏi biểu mẫu */
+const s11Gone=(r,on)=>{if(!r.dataset.lid){if(on)r.remove();return}r.classList.toggle('gone',!!on);r.querySelectorAll('select,input').forEach(i=>{i.disabled=!!on});const b=r.querySelector('[data-a=s11del]');if(b)b.textContent=on?'Giữ lại':'Xóa ca'};
 const s11Set=(f,list)=>{const box=f&&f.querySelector('#s11');if(!box)return;const d=s11Defs(f);
- [...box.querySelectorAll('.s11r')].forEach(r=>{if(!list.includes(+r.querySelector('[name=s11day]').value))r.remove()});
- const have=s11Days(f);list.forEach(w=>{if(!have.includes(w))box.insertAdjacentHTML('beforeend',s11Row(w,d.lt,d.tm))});
+ [...box.querySelectorAll('.s11r:not(.gone)')].forEach(r=>{if(!list.includes(+r.querySelector('[name=s11day]').value))s11Gone(r,true)});
+ const have=s11Days(f);list.forEach(w=>{if(have.includes(w))return;const back=[...box.querySelectorAll('.s11r.gone')].find(r=>+r.querySelector('[name=s11day]').value===w);   /* bấm lại ngày vừa bỏ thì giữ lại ca cũ, không tạo ca trùng */
+  if(back)s11Gone(back,false);else box.insertAdjacentHTML('beforeend',s11Row(w,d.lt,d.tm))});
  [...box.querySelectorAll('.s11r')].sort((a,b)=>a.querySelector('[name=s11day]').value-b.querySelector('[name=s11day]').value).forEach(r=>box.appendChild(r));s11Sync(f)};
 ACT.s11add=(v,b)=>{const f=b.closest('form'),box=b.closest('.hth-b').querySelector('#s11'),d=s11Defs(f);if(box)box.insertAdjacentHTML('beforeend',s11Row(DAY_ALL.find(w=>!s11Days(f).includes(w))||DAY_ALL[0],d.lt,d.tm));s11Sync(f);return false};
-ACT.s11del=(v,b)=>{const f=b.closest('form'),r=b.closest('.s11r');if(r)r.remove();s11Sync(f);return false};
+ACT.s11del=(v,b)=>{const f=b.closest('form'),r=b.closest('.s11r');if(r)s11Gone(r,!r.classList.contains('gone'));s11Sync(f);return false};
 ACT.s11days=(v,b)=>{s11Set(b.closest('form'),v?v.split(',').map(Number):[]);return false};
 document.addEventListener('change',e=>{const t=e.target,f=t&&t.closest&&t.closest('form');if(!f)return;
  if(t.dataset&&t.dataset.s11w){const w=+t.dataset.s11w,cur=s11Days(f);s11Set(f,t.checked?[...new Set(cur.concat(w))]:cur.filter(x=>x!==w))}
  else if(t.name==='s11day')s11Sync(f)});
-function hthField(k,edit){const bt=!!k.bt,bd=btOf(k),ls=edit?DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).sort((a,b)=>a.day-b.day||(a.slot<b.slot?-1:a.slot>b.slot?1:0)):[],has=ls.length>0,pool=pool11();
- const ex=has?`<div class="note sm"><b>Bé đang có ${ls.length} buổi 1-1:</b> ${ls.map(l=>DAYS[l.day]+' '+slotLb(l.slot)+' ('+esc(given(sn(l.gv)))+')'+(l.lt&&LTM[l.lt]?' · '+esc(LTM[l.lt].n):'')).join('; ')}. Đổi giờ hoặc xóa buổi cũ ở thẻ Lịch học; phần bên dưới để thêm ca mới.</div>`:'';
+/* Khi sửa hồ sơ, mọi thứ đã nhập trước đó phải hiện sẵn để chỉ xem lại và chỉnh một chút: hình thức học, lớp, các ngày bán trú, giáo viên, loại và số giờ 1-1, và từng ca 1-1 đã xếp (thứ, loại, giờ). */
+function hthField(k,edit){const bt=!!k.bt,bd=k.bt&&Array.isArray(k.btd)&&k.btd.length?k.btd.filter(w=>w>=1&&w<=6):btOf(k),   /* ngày đã lưu hiện đúng như đã nhập, kể cả khi bé chưa có lớp */
+  ls=edit?DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).sort((a,b)=>a.day-b.day||(a.slot<b.slot?-1:a.slot>b.slot?1:0)):[],has=ls.length>0,pool=pool11(),lte=ltEff(k,ls),has11=has||!!k.lt,
+  cnt={};ls.forEach(l=>{cnt[l.gv]=(cnt[l.gv]||0)+1});
+ const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0],gvSel=k.gv&&pool.some(s=>s.id===k.gv)?k.gv:(top&&pool.some(s=>s.id===top)?top:''),
+  days=[...new Set(ls.map(l=>l.day))],
+  ex=has?`<div class="note sm"><b>Bé đang có ${ls.length} ca 1-1, đã hiện sẵn bên dưới.</b> Chỉ cần sửa thứ, loại hoặc giờ của ca nào cần đổi rồi bấm Lưu hồ sơ; ca không đụng đến thì giữ nguyên. Bấm Xóa ca để bỏ một ca (chỉ xóa thật khi bấm Lưu hồ sơ). Giáo viên và phòng ở dưới áp dụng cho các ca thêm mới.</div>`:'';
  return`<h3>Hình thức học</h3><p class="sm mu" style="margin-bottom:8px">Bấm chọn hình thức bé học. Bé có thể học cả hai: bán trú và các ca 1-1.</p>
- <div class="bpks hth-pick" role="group" aria-label="Hình thức học"><label class="bpk big" for="hf-hbt"><input type="checkbox" id="hf-hbt" name="hbt" ${bt?'checked':''}><span><b>Bán trú</b><small>${BTLB}</small></span></label><label class="bpk big" for="hf-h11"><input type="checkbox" id="hf-h11" name="h11" ${has||k.lt?'checked':''}><span><b>Can thiệp 1-1</b><small>Ca ${SLOT_MIN} phút</small></span></label></div>
+ <div class="bpks hth-pick" role="group" aria-label="Hình thức học"><label class="bpk big" for="hf-hbt"><input type="checkbox" id="hf-hbt" name="hbt" ${bt?'checked':''}><span><b>Bán trú</b><small>${BTLB}</small></span></label><label class="bpk big" for="hf-h11"><input type="checkbox" id="hf-h11" name="h11" ${has11?'checked':''}><span><b>Can thiệp 1-1</b><small>Ca ${SLOT_MIN} phút</small></span></label></div>
  <div class="hth">
   <div class="hth-b" id="hth-bt" ${bt?'':'hidden'}><b class="hth-t">Bán trú</b><div><label for="hf-gr">Lớp bán trú</label><select id="hf-gr" name="gr"><option value="">Tự chọn theo tuổi</option>${opts(DB.groups.map(g=>[g.id,g.n]),k.gr)}</select></div>
    <div><span class="lbl">Các ngày bán trú trong tuần (bấm chọn ngày bé học, ${BTLB})</span>${dayBoxes('bd',bd.length?bd:DAY_BT)}</div>
    <p class="sm mu">Mỗi ngày bán trú có một ca 1-1 nằm trong gói bán trú. Thứ Bảy chỉ chọn khi bé học thứ Bảy.</p></div>
-  <div class="hth-b" id="hth-11" ${has||k.lt?'':'hidden'}><b class="hth-t">Can thiệp 1-1</b>${ex}
-   <div class="f2"><div><label for="hf-gv">Giáo viên 1-1</label><select id="hf-gv" name="gv"><option value="">Chọn giáo viên</option>${opts(pool.map(s=>[s.id,tName(s)]),k.gv&&pool.some(s=>s.id===k.gv)?k.gv:'')}</select></div><div><label for="hf-rm">Phòng</label><select id="hf-rm" name="room"><option value="">Tự chọn phòng trống</option>${opts(ROOMS.map(r=>[r,r]),'')}</select></div></div>
-   <div><span class="lbl">Loại 1-1 và số giờ đăng ký trong 1 ngày (tích loại bé học)</span>${ltBlock(k)}</div>
+  <div class="hth-b" id="hth-11" ${has11?'':'hidden'}><b class="hth-t">Can thiệp 1-1</b>${ex}
+   <div class="f2"><div><label for="hf-gv">Giáo viên 1-1${has?' (cho ca thêm mới)':''}</label><select id="hf-gv" name="gv"><option value="">Chọn giáo viên</option>${opts(pool.map(s=>[s.id,tName(s)]),gvSel)}</select></div><div><label for="hf-rm">Phòng${has?' (cho ca thêm mới)':''}</label><select id="hf-rm" name="room"><option value="">Tự chọn phòng trống</option>${opts(ROOMS.map(r=>[r,r]),'')}</select></div></div>
+   <div><span class="lbl">Loại 1-1 và số giờ đăng ký trong 1 ngày (tích loại bé học)</span>${ltBlock(k,lte)}</div>
    <div><span class="lbl">Các ngày học 1-1 (bấm chọn ngày bé học; mỗi ngày một ca)</span>
-    <div class="dybx bpks" id="s11d" role="group" aria-label="Chọn ngày học 1-1">${DAY_ALL.map(w=>`<label class="bpk day"><input type="checkbox" data-s11w="${w}" aria-label="${DAYN[w]}"><span>${DAYS[w]}</span></label>`).join('')}</div>
+    <div class="dybx bpks" id="s11d" role="group" aria-label="Chọn ngày học 1-1">${DAY_ALL.map(w=>`<label class="bpk day"><input type="checkbox" data-s11w="${w}" aria-label="${DAYN[w]}" ${days.includes(w)?'checked':''}><span>${DAYS[w]}</span></label>`).join('')}</div>
     <div class="acts" style="margin-top:6px"><button class="btn s" type="button" data-a="s11days" data-v="1,2,3,4,5">T2–T6</button><button class="btn s" type="button" data-a="s11days" data-v="1,2,3,4,5,6">T2–T7</button><button class="btn s" type="button" data-a="s11days" data-v="">Bỏ chọn</button></div>
-    <span class="lbl" style="margin-top:10px">Loại và giờ bắt đầu của từng ngày (ca ${SLOT_MIN} phút, đổi riêng từng ngày được)</span><div id="s11"></div>
+    <span class="lbl" style="margin-top:10px">Loại và giờ bắt đầu của từng ngày (ca ${SLOT_MIN} phút, đổi riêng từng ngày được)</span><div id="s11" data-ids="${esc(ls.map(l=>l.id).join(','))}">${ls.map(l=>s11Row(l.day,l.lt||'',l.slot,l)).join('')}</div>
     <div class="acts" style="margin-top:6px"><button class="btn s" type="button" data-a="s11add">+ Thêm ca</button><span class="sm mu">dùng khi một ngày bé học nhiều ca</span></div></div>
-   <p class="sm mu">Số ca của một loại trong cùng một ngày không vượt số giờ đăng ký của loại đó. Ca cũ đã xếp xem và sửa ở thẻ Lịch học.</p>
+   <p class="sm mu">Số ca của một loại trong cùng một ngày không vượt số giờ đăng ký của loại đó. Ca cũ chưa chọn loại thì giữ nguyên, tính theo giá chung 1 buổi 1-1.</p>
   </div>
  </div>`}
 document.addEventListener('change',e=>{const t=e.target;if(!t||(t.name!=='hbt'&&t.name!=='h11'))return;const f=t.closest('form'),p=f&&f.querySelector(t.name==='hbt'?'#hth-bt':'#hth-11');if(p)p.hidden=!t.checked});
@@ -111,7 +122,7 @@ MODALS.hsf=()=>{const id=S.modal.id,k=id?kidBy(id):{n:'',g:'M',dob:addD(TODAY,-3
  ${hthField(k,!!id)}
  ${dxField(k)}
  <h3>Phụ huynh</h3><div class="f2"><div><label for="hf-pr">Quan hệ</label><select id="hf-pr" name="pr">${opts(['Mẹ','Bố','Ông bà','Người giám hộ'].map(x=>[x,x]),k.pr)}</select></div>${f('pn','Họ tên phụ huynh',k.pn,'text','required')}${f('pp','Điện thoại',k.pp,'tel','required')}${f('pe','Email cổng phụ huynh (hoặc dùng số điện thoại)',k.pe,'email')}</div>
- <p class="note sm">Hệ thống kiểm tra trùng giáo viên, bé và phòng khi thêm buổi 1-1. Muốn đổi giờ hoặc xóa một buổi đã có, vào thẻ Lịch học trong hồ sơ bé.</p>
+ <p class="note sm">Thông tin đã nhập được giữ lại: mở hồ sơ là thấy sẵn, chỉ sửa chỗ cần đổi rồi bấm Lưu. Hệ thống kiểm tra trùng giáo viên, bé và phòng khi thêm hoặc đổi giờ ca 1-1; nếu có ca không đổi được thì hồ sơ chưa được lưu và báo rõ lý do.</p>
  <div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu hồ sơ</button></div></form>`)};
 FORM.hsff=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.id,isNew=!id;
  const old=isNew?null:kidBy(id);
@@ -120,25 +131,46 @@ FORM.hsff=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.
  if(bt&&!bd.length){toast('Hãy tích ít nhất một buổi bán trú trong tuần');return false}
  const room=f.elements.room.value,gv=g('gv'),ltq={};
  LT.forEach(x=>{const c=f.elements['lt_'+x.c];if(h11&&c&&c.checked)ltq[x.c]=Math.min(4,Math.max(1,parseInt(f.elements['lq_'+x.c].value,10)||1))});
- const picks=h11?[...f.querySelectorAll('#s11 .s11r')].map(r=>({w:+r.querySelector('[name=s11day]').value,lt:r.querySelector('[name=s11lt]').value,slot:String(r.querySelector('[name=s11tm]').value||'').slice(0,5)})):[],old11=isNew?0:wk11(id);
- if(!h11&&old11){toast('Bé đang có '+old11+' buổi 1-1. Muốn bỏ hình thức 1-1, hãy xóa từng buổi ở thẻ Lịch học của hồ sơ bé');return false}
- if(h11&&picks.length&&!Object.keys(ltq).length){toast('Hãy tích ít nhất một loại 1-1 và ghi số giờ mỗi ngày');return false}
- if(h11&&!picks.length&&!old11){toast('Hãy thêm ít nhất một ca 1-1 (hoặc bỏ tích Can thiệp 1-1)');return false}
- if(picks.some(p=>!ltq[p.lt])){toast('Mỗi ca mới phải chọn một loại 1-1 đã tích');return false}
- for(const p of picks){const have=isNew?0:DB.lich.filter(l=>l.type==='11'&&l.hs===id&&l.day===p.w&&l.lt===p.lt).length,n=picks.filter(q=>q.w===p.w&&q.lt===p.lt).length;
-  if(have+n>ltq[p.lt]){toast(DAYN[p.w]+': '+LTM[p.lt].n+' vượt số giờ đăng ký '+ltq[p.lt]+' giờ/ngày');return false}}
- if(picks.length){if(!gv){toast('Hãy chọn giáo viên 1-1');return false}
-  const bad=picks.find(p=>!slotValid(p.slot));if(bad){toast(DAYS[bad.w]+': '+slotMsg);return false}}
- const k=isNew?{id:newKidId(),m11:0,gv:picks.length?gv:null}:old;
+ /* Các dòng ca trong biểu mẫu. Dòng có data-lid là ca đã lưu (sửa đúng buổi đó); dòng không có là ca mới. Chỉ những ca đã hiện trong biểu mẫu lúc mở (data-ids) mới có thể bị xóa, nên ca do người khác vừa thêm trong lúc đang sửa không bị mất. */
+ const box=f.querySelector('#s11'),loaded=new Set(((box&&box.dataset.ids)||'').split(',').filter(Boolean)),cur=isNew?[]:DB.lich.filter(l=>l.type==='11'&&l.hs===id),old11=cur.length,
+  rows=h11?[...f.querySelectorAll('#s11 .s11r')].map(r=>({lid:r.dataset.lid||'',gone:r.classList.contains('gone'),w:+r.querySelector('[name=s11day]').value,lt:r.querySelector('[name=s11lt]').value,slot:String(r.querySelector('[name=s11tm]').value||'').slice(0,5)})):[];
+ if(!h11&&old11){toast('Bé đang có '+old11+' buổi 1-1. Muốn bỏ hình thức 1-1, hãy xóa từng buổi: tích lại Can thiệp 1-1 rồi bấm Xóa ca ở từng ca (hoặc xóa ở thẻ Lịch học của hồ sơ bé)');return false}
+ const act=rows.filter(r=>!r.gone&&(!r.lid||cur.some(l=>l.id===r.lid))),keepIds=new Set(act.filter(r=>r.lid).map(r=>r.lid)),
+  gone=cur.filter(l=>loaded.has(l.id)&&!keepIds.has(l.id)),
+  ups=act.filter(r=>r.lid).map(r=>{const l=cur.find(x=>x.id===r.lid);return{r,l,o:Object.assign({},l)}}).filter(u=>u.r.w!==u.o.day||u.r.slot!==u.o.slot||u.r.lt!==(u.o.lt||'')),
+  news=act.filter(r=>!r.lid);
+ if(h11&&news.length&&!Object.keys(ltq).length){toast('Hãy tích ít nhất một loại 1-1 và ghi số giờ mỗi ngày');return false}
+ if(h11&&!act.length&&!old11){toast('Hãy thêm ít nhất một ca 1-1 (hoặc bỏ tích Can thiệp 1-1)');return false}
+ const noLt=act.find(r=>r.lt?!ltq[r.lt]:!r.lid);   /* ca cũ chưa có loại thì để nguyên; ca đã có loại hoặc ca mới thì loại phải còn được tích */
+ if(noLt){toast(noLt.lid&&noLt.lt?DAYN[noLt.w]+': loại "'+LTM[noLt.lt].n+'" chưa được tích ở phần loại 1-1. Hãy tích lại loại này hoặc đổi loại của ca':'Mỗi ca mới phải chọn một loại 1-1 đã tích');return false}
+ const fin=act.map(r=>({w:r.w,lt:r.lt})).concat(cur.filter(l=>!loaded.has(l.id)).map(l=>({w:l.day,lt:l.lt||''})));   /* số ca mỗi loại trong ngày sau khi lưu */
+ for(const p of fin){if(!p.lt||!ltq[p.lt])continue;if(fin.filter(q=>q.w===p.w&&q.lt===p.lt).length>ltq[p.lt]){toast(DAYN[p.w]+': '+LTM[p.lt].n+' vượt số giờ đăng ký '+ltq[p.lt]+' giờ/ngày');return false}}
+ if(ups.length||news.length){if(news.length&&!gv){toast('Hãy chọn giáo viên 1-1');return false}
+  const bad=ups.map(u=>u.r).concat(news).find(p=>!slotValid(p.slot));if(bad){toast(DAYS[bad.w]+': '+slotMsg);return false}}
+ /* Sửa và xóa ca đã lưu làm trước, kiểm tra trùng giờ trên trạng thái sau khi đổi; có ca nào không đổi được thì hoàn tác tất cả và chưa lưu gì. */
+ if(gone.length||ups.length){const snapL=DB.lich.slice(),undo=()=>{DB.lich=snapL;ups.forEach(u=>Object.assign(u.l,u.o))};
+  DB.lich=DB.lich.filter(l=>!gone.some(x=>x.id===l.id));
+  ups.forEach(u=>{u.l.day=u.r.w;u.l.slot=u.r.slot});
+  for(const u of ups.filter(u=>u.r.w!==u.o.day||u.r.slot!==u.o.slot)){const l=u.l,base={id:l.id,day:l.day,slot:l.slot,gv:l.gv,hs:l.hs},
+    keep=l.room&&!conflict(Object.assign({},base,{room:l.room})),rm=keep?l.room:(ROOMS.find(r=>!conflict(Object.assign({},base,{room:r})))||''),
+    c=rm?'':(conflict(Object.assign({},base,{room:''}))||'Không còn phòng trống');
+   if(c){undo();toast(DAYS[l.day]+' '+slotLb(l.slot)+': '+c+'. Hồ sơ chưa được lưu, hãy chọn thứ hoặc giờ khác');return false}
+   l.room=rm}
+  ups.forEach(u=>{if(u.r.lt!==(u.o.lt||''))u.l.lt=u.r.lt||null})}
+ const k=isNew?{id:newKidId(),m11:0,gv:news.length?gv:null}:old;
  Object.assign(k,{n:g('n'),g:g('g'),dob:g('dob'),sd:g('sd')||TODAY,st:g('st'),nd:g('nd'),bt,gr:bt?(g('gr')||grByAge(g('dob'))):'',pr:g('pr'),pn:g('pn'),pp:g('pp'),pe:g('pe').toLowerCase(),
   dx:[...f.querySelectorAll('input[name=dx]:checked')].map(x=>x.value),dxo:g('dxo'),dxn:g('dxn')});
  if(bt)k.btd=bd;else delete k.btd;
- if(!h11)delete k.lt;else if(Object.keys(ltq).length)k.lt=ltq;   /* bé cũ có ca 1-1 chưa gắn loại: giữ nguyên, không bắt buộc */
+ if(!h11||(old11&&!act.length&&!(old11-gone.length)))delete k.lt;else if(Object.keys(ltq).length)k.lt=ltq;   /* bỏ hết ca thì bỏ luôn số giờ đã ghi; bé cũ có ca 1-1 chưa gắn loại: giữ nguyên, không bắt buộc */
  if(wasSt!=='nghi'&&k.st==='nghi')k.stopAt=TODAY;else if(k.st!=='nghi')delete k.stopAt;   /* ngưng đột ngột: không hoàn phí dư nào (xem settle) */
  if(isNew)DB.kids.push(k);if(!bt)k.gr='';
- const res=picks.length?add11(k,picks,gv,room):null,flag=res&&(res.bad.length||res.warn.length);
- S.modal={t:'hs',id:k.id,tab:flag?'lh':'tt',res:res||null};
- toast(flag?'Đã lưu hồ sơ. Có buổi 1-1 chưa thêm được hoặc cần lưu ý, xem thẻ Lịch học':isNew?'Đã thêm học sinh'+(res?' và '+res.ok+' buổi 1-1':''):wasSt!=='nghi'&&k.st==='nghi'?'Đã lưu: bé ngưng can thiệp, học phí đã đóng và phí dư không hoàn':'Đã lưu hồ sơ'+(res?', thêm '+res.ok+' buổi 1-1':''))};
+ const res=news.length?add11(k,news.map(r=>({w:r.w,lt:r.lt,slot:r.slot})),gv,room):null;
+ const mvWarn=ups.map(u=>{const w=btWarn(k,u.l.day,u.l.slot);return(u.r.w!==u.o.day||u.r.slot!==u.o.slot)&&w?DAYS[u.l.day]+': '+w:''}).filter(Boolean);
+ if(ups.length||gone.length)k.m11=wk11(k.id);
+ const out=res||(mvWarn.length?{ok:0,bad:[],warn:[]}:null);if(out)out.warn=out.warn.concat(mvWarn);
+ const flag=out&&(out.bad.length||out.warn.length),more=(ups.length?', sửa '+ups.length+' buổi 1-1':'')+(gone.length?', bỏ '+gone.length+' buổi 1-1':'');
+ S.modal={t:'hs',id:k.id,tab:flag?'lh':'tt',res:out||null};
+ toast(flag?'Đã lưu hồ sơ. Có buổi 1-1 chưa thêm được hoặc cần lưu ý, xem thẻ Lịch học':isNew?'Đã thêm học sinh'+(res?' và '+res.ok+' buổi 1-1':''):wasSt!=='nghi'&&k.st==='nghi'?'Đã lưu: bé ngưng can thiệp, học phí đã đóng và phí dư không hoàn':'Đã lưu hồ sơ'+(res?', thêm '+res.ok+' buổi 1-1':'')+more)};
 
 /* --- thẻ Lịch học trong hồ sơ bé: ngày bán trú, các buổi 1-1 hằng tuần, thời khóa biểu --- */
 function hsSchedule(k){const lead=isLead(),m=S.modal,bd=btOf(k),g=grBy(k.gr),$$=canMoney();
@@ -153,6 +185,7 @@ function hsSchedule(k){const lead=isLead(),m=S.modal,bd=btOf(k),g=grBy(k.gr),$$=
  const res=m.res?`<div class="note sm" style="margin-bottom:10px">${m.res.ok?'<b>Đã thêm '+m.res.ok+' buổi.</b> ':''}${m.res.bad.length?'<b>Không thêm được:</b> '+esc(m.res.bad.join('; '))+'. ':''}${m.res.warn.length?'<b>Lưu ý:</b> '+esc(m.res.warn.join('; ')):''}</div>`:'';
  const pool=pool11(),one=`<div class="card"><h2>Các buổi 1-1 hằng tuần</h2>${res}${miss.length?`<p class="note sm" style="margin-bottom:10px">Ngày bán trú chưa có ca 1-1: ${esc(miss.map(w=>DAYS[w]).join(', '))}.</p>`:''}`
   +tbl(['Thứ','Ca','Giáo viên','Phòng','Loại'].concat(lead?['']:[]),rows,'Bé chưa có buổi 1-1 cố định.')
+  +(lead&&ls.length?`<p class="sm mu" style="margin-top:8px">Muốn đổi thứ, giờ hoặc loại của các ca, mở hồ sơ để sửa: mọi ca đã lưu hiện sẵn, chỉ chỉnh chỗ cần đổi.</p><div class="acts"><button class="btn s" type="button" data-a="hsedit" data-v="${k.id}">Sửa các ca trong hồ sơ</button></div>`:'')
   +(lead?`<form id="lsmf" class="f" style="margin-top:14px"><h3>Thêm buổi 1-1 cho nhiều ngày cùng lúc</h3><div class="f2"><div><label for="lm-g">Giáo viên</label><select id="lm-g" name="gv"><option value="">Chọn giáo viên</option>${opts(pool.map(s=>[s.id,tName(s)]),k.gv&&pool.some(s=>s.id===k.gv)?k.gv:'')}</select></div><div><label for="lm-s">Giờ bắt đầu</label>${slotInput('lm-s',m.slot||SLOTS[1])}<small class="mu">Ca ${SLOT_MIN} phút, tự tính giờ kết thúc.</small></div><div><label for="lm-r">Phòng</label><select id="lm-r" name="room"><option value="">Tự chọn phòng trống</option>${opts(ROOMS.map(r=>[r,r]),'')}</select></div></div>
    <div><span class="lbl">Học vào các ngày</span>${dayBoxes('d',bd.length?bd:[])}</div>
    <p class="sm mu">Mỗi bé chọn ngày riêng: có bé học T2–T7, có bé chỉ vài buổi mỗi tuần. Hệ thống kiểm tra trùng giáo viên, bé, phòng ở từng ngày và chỉ thêm những ngày còn trống.</p>

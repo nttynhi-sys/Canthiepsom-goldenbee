@@ -115,11 +115,11 @@ const SP='/tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratc
  /* ---------- E. sửa hồ sơ: ngày bán trú tích sẵn; nút 1-1 để thêm ca mới, không đụng ca cũ ---------- */
  await ev(()=>{S.modal=null;render();const k=DB.kids.find(x=>x.n==='Bé Thử Nút Ngày');ACT.hsedit(k.id);render()});await page.waitForSelector('#hsff');
  const E=await ev(()=>{const f=document.querySelector('#hsff');return{bd:[1,2,3,4,5,6].filter(w=>f.elements['bd'+w].checked),btns:[...document.querySelectorAll('#s11d input')].map(c=>c.checked),rows:document.querySelectorAll('#s11 .s11r').length,note:(document.querySelector('#hth-11 .note')||{}).textContent||'',btOn:f.elements.hbt.checked,h11On:f.elements.h11.checked}});
- ok('sửa hồ sơ: hai nút hình thức sáng sẵn, nút ngày bán trú T2, T4 sáng, nút ngày 1-1 để trống (chỉ để thêm ca mới)',E.btOn&&E.h11On&&JSON.stringify(E.bd)===JSON.stringify([1,3])&&E.btns.every(x=>!x)&&E.rows===0&&/2 buổi 1-1/.test(E.note),E);
+ ok('sửa hồ sơ: hai nút hình thức sáng sẵn, nút ngày bán trú T2, T4 sáng, nút ngày 1-1 sáng đúng các ngày đã lưu (T3, T5) và 2 dòng ca hiện sẵn',E.btOn&&E.h11On&&JSON.stringify(E.bd)===JSON.stringify([1,3])&&JSON.stringify(E.btns)===JSON.stringify([false,true,false,true,false,false])&&E.rows===2&&/2 ca 1-1/.test(E.note),E);
  const nb=await ev(()=>DB.lich.filter(l=>l.type==='11').length);
  await page.click('#hsff button[type=submit]');await W(100);
  const nb2=await ev(()=>DB.lich.filter(l=>l.type==='11').length);
- ok('lưu lại hồ sơ mà không bấm ngày 1-1 mới: không thêm, không mất ca nào',nb===nb2,{nb,nb2});
+ ok('lưu lại hồ sơ mà không đổi gì ở các ca: không thêm, không mất ca nào',nb===nb2,{nb,nb2});
 
  /* ---------- F. giao diện: không tràn ngang ở điện thoại, màu sáng/tối ---------- */
  await ev(()=>{S.modal=null;render();S.modal={t:'hsf'};render()});await page.waitForSelector('#hsff');
