@@ -33,7 +33,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   R('staff', 'nv10', { id: 'nv10', n: 'Cô Một', role: 'gv', em: 'm@gb.vn', ph: '', pos: 'Giáo viên 1-1', st: 'dang', pay: { base: 99 } });
   R('staff', 'nv11', { id: 'nv11', n: 'Cô Hai', role: 'gv', em: 'h@gb.vn', ph: '', pos: 'Giáo viên 1-1', st: 'dang' });
   const kid = (id, n, pe, pp, gr) => ({ id, n, pe, pp, pn: 'PH ' + n, gr: gr || '', st: 'dang', gv: 'nv04' });
-  R('kids', 'hs001', kid('hs001', 'An', 'A@x.vn', '0912345678', 'G1')); R('kids', 'hs002', kid('hs002', 'Bình', 'a@x.vn', '0912345678', 'G1'));
+  R('kids', 'hs001', Object.assign(kid('hs001', 'An', 'A@x.vn', '0912345678', 'G1'), { no: 5 })); R('kids', 'hs002', kid('hs002', 'Bình', 'a@x.vn', '0912345678', 'G1'));
   R('kids', 'hs003', kid('hs003', 'Chi', '', '0933 111 222', 'G2')); R('kids', 'hs004', kid('hs004', 'Dũng', 'b@x.vn', '0912345678', 'G2')); R('kids', 'hs005', kid('hs005', 'Em', '', '', ''));
   R('groups', 'G1', { id: 'G1', n: 'Ong non', gv: 'nv04', tg: 'nv05' }); R('groups', 'G2', { id: 'G2', n: 'Ong mật', ts: ['nv05', 'nv09', 'nv12'] });   /* G1: dữ liệu cũ gv, tg; G2: danh sách ts, ba giáo viên ngang nhau */
   R('cfg', '_', { name: 'Golden Bee', cc: 26 }); R('menu', '2026-11-09', { a: 'Cháo' }); R('tpl', 'x', { k: 'x' }); R('cg', '1', { id: '1', t: 'mục tiêu' }); R('tkb', 'tkG1-01', { id: 'tkG1-01', gr: 'G1', s: '07:30', e: '08:15', n: 'Đón trẻ', k: 'don' });
@@ -131,6 +131,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   const ids = c => (J.records || []).filter(r => r.collection === c).map(r => r.id).sort().join(',');
   const mids = c => (J.money || []).filter(r => r.collection === c).map(r => r.id).sort().join(',');
   ok('parent A: chỉ thấy 2 bé của mình', la.code === 200 && ids('kids') === 'hs001,hs002' && J.kids.join() === 'hs001,hs002', la.body.slice(0, 200));
+  ok('parent A: hồ sơ bé mang số thứ tự hiển thị của mã (kids.no), bé chưa dồn mã thì không có', (J.records.find(r => r.collection === 'kids' && r.id === 'hs001') || { data: {} }).data.no === 5 && (J.records.find(r => r.collection === 'kids' && r.id === 'hs002') || { data: {} }).data.no === undefined);
   ok('parent A: nhận được danh sách ngày nghỉ của Trung tâm', ids('hol') === 'hl1');
   ok('parent A: lịch, buổi học, kế hoạch chỉ của bé mình', ids('lich') === 'l1,l3' && ids('sess') === 's1' && ids('plans') === 'p1' && ids('mk') === 'mk1');
   ok('parent A: chỉ báo cáo đã gửi, không có bản nháp hay của bé khác', ids('rp') === 'r1');

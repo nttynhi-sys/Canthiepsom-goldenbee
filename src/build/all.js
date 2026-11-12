@@ -1645,8 +1645,18 @@ const wk11=id=>DB.lich.filter(l=>l.type==='11'&&l.hs===id).length;
 const kidNo=id=>{const m=/^[Hh][Ss](\d+)$/.exec(String(id||''));return m?+m[1]:0};
 /* Mã cho bé mới = số lớn nhất đang có cộng 1, bắt đầu từ HS01 khi chưa có bé nào (trước đây Math.max của danh sách rỗng ra -Infinity thành mã "hs-Infinity"), và không bao giờ trùng mã đang có. */
 function newKidId(){const ks=DB.kids||[];let n=ks.reduce((a,k)=>Math.max(a,kidNo(k.id)),0)+1,id;do{id='HS'+pad(n++)}while(ks.some(k=>k.id===id));return id}
-/* Mã học sinh hiển thị: HS01-BT (có bán trú, kèm 1-1) hoặc HS01-CN (chỉ can thiệp 1-1 cá nhân). Mã nội bộ k.id làm khóa dữ liệu nên không đổi; bé học cả bán trú và 1-1 thêm tính là BT. */
-const kStt=k=>{const n=kidNo(k&&k.id);return n?'HS'+pad(n):String((k&&k.id)||'')};
+/* Mã học sinh hiển thị: HS01-BT (có bán trú, kèm 1-1) hoặc HS01-CN (chỉ can thiệp 1-1 cá nhân). Mã nội bộ k.id làm khóa dữ liệu nên không đổi; bé học cả bán trú và 1-1 thêm tính là BT.
+   Số trong mã hiển thị là k.no (số thứ tự hiển thị) nếu bé có, chưa có thì lấy số trong k.id nên dữ liệu cũ không đổi. Khi xóa hồ sơ bé thì các số còn lại được dồn cho liên tục (kidRenumber),
+   chỉ đổi k.no chứ không đổi k.id: khóa nối bé với buổi học, kế hoạch, điểm danh, học phí và tài khoản phụ huynh vẫn nguyên. Muốn trả về mã cũ thì bỏ k.no. */
+const kNo=k=>k&&Number.isInteger(k.no)&&k.no>0?k.no:kidNo(k&&k.id);
+const kStt=k=>{const n=kNo(k);return n?'HS'+pad(n):String((k&&k.id)||'')};
+/* số hiển thị cho bé mới: số lớn nhất đang có cộng 1 (khóa k.id vẫn lấy từ newKidId, hai số này có thể khác nhau sau khi đã dồn mã) */
+const nextKNo=()=>(DB.kids||[]).reduce((a,k)=>Math.max(a,kNo(k)),0)+1;
+/* kế hoạch dồn mã: xếp theo số hiển thị hiện có (giữ nguyên thứ tự), đánh lại 1..N; chỉ liệt kê bé phải đổi số. Tính trên toàn bộ DB.kids nên chỉ dùng cho Trưởng Trung tâm, Quản lý (thấy đủ mọi bé). */
+function kidRenumPlan(){
+ const ks=(DB.kids||[]).slice().sort((a,b)=>(kNo(a)||1e9)-(kNo(b)||1e9)||kidNo(a.id)-kidNo(b.id)||String(a.id).localeCompare(String(b.id)));
+ return ks.map((k,i)=>({k,from:kNo(k),to:i+1})).filter(x=>x.from!==x.to)}
+function kidRenumber(){const pl=kidRenumPlan();pl.forEach(x=>{x.k.no=x.to});return pl.length}
 const kcode=k=>kStt(k)+'-'+(k&&k.bt?'BT':'CN');
 const kcodeOf=id=>{const k=kidBy(id);return k?kcode(k):String(id||'')};
 const ex11=k=>{const bd=btOf(k),ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.id);return ls.length-bd.filter(w=>ls.some(l=>l.day===w)).length};
@@ -1660,7 +1670,7 @@ const hsInit=()=>S.hs=Object.assign({tab:'ds',q:'',st:'dang',pr:'',gv:'',dx:'',l
 VIEWS.hs=()=>{const h=hsInit();
  const tabs=[['ds',isGV()?'Học sinh của tôi':'Danh sách học sinh'],['bi','Buổi can thiệp'],['mt','Ngân hàng mục tiêu']];
  if(!tabs.some(t=>t[0]===h.tab))h.tab='ds';
- return head(isGV()?'Học sinh của tôi':'Học sinh',myKids().filter(k=>k.st==='dang').length+' trẻ đang học',isLead()&&h.tab==='ds'?'<button class="btn p" data-a="hsnew">Thêm học sinh</button>':h.tab==='mt'&&isLead()?'<button class="btn p" data-a="cgnew">Thêm mục tiêu của Trung tâm</button>':'')+tabsH(tabs,h.tab,'hstab')+(h.tab==='ds'?hsList():h.tab==='bi'?hsBi():hsLib())};
+ return head(isGV()?'Học sinh của tôi':'Học sinh',myKids().filter(k=>k.st==='dang').length+' trẻ đang học',isLead()&&h.tab==='ds'?(kidRenumPlan().length?'<button class="btn" data-a="krenopen">Sắp xếp lại mã</button> ':'')+'<button class="btn p" data-a="hsnew">Thêm học sinh</button>':h.tab==='mt'&&isLead()?'<button class="btn p" data-a="cgnew">Thêm mục tiêu của Trung tâm</button>':'')+tabsH(tabs,h.tab,'hstab')+(h.tab==='ds'?hsList():h.tab==='bi'?hsBi():hsLib())};
 ACT.hstab=v=>{S.hs.tab=v};
 INP.hsq=v=>{S.hs.q=v;S.pg.hs=1};
 CHG.hsf1=v=>{S.hs.st=v;S.pg.hs=1};CHG.hsf2=v=>{S.hs.pr=v;S.pg.hs=1};CHG.hsf3=v=>{S.hs.gv=v;S.pg.hs=1};CHG.hsf4=v=>{S.hs.dx=v;S.pg.hs=1};
@@ -1670,6 +1680,13 @@ function hsList(){const h=S.hs,q=h.q.toLowerCase();
  const dxUsed=DXG.map(g=>[g.t,g.a.filter(x=>DB.kids.some(k=>dxOf(k).includes(x[0])))]).filter(g=>g[1].length);
  return`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="hsq">Tìm theo tên bé, mã, phụ huynh hoặc chẩn đoán</label><input id="hsq" data-i="hsq" value="${esc(h.q)}"></div><div><label for="hs1">Trạng thái</label><select id="hs1" data-c="hsf1"><option value="">Tất cả</option>${opts(Object.entries(KST),h.st)}</select></div><div><label for="hs2">Chương trình</label><select id="hs2" data-c="hsf2"><option value="">Tất cả</option>${opts([['11','Có can thiệp 1-1'],['bt','Có bán trú']],h.pr)}</select></div><div><label for="hs4">Chẩn đoán</label><select id="hs4" data-c="hsf4"><option value="">Tất cả</option>${dxUsed.map(g=>`<optgroup label="${esc(g[0])}">${opts(g[1].map(x=>[x[0],dxShort(x[0])]),h.dx)}</optgroup>`).join('')}</select></div>${isLead()?`<div><label for="hs3">Giáo viên</label><select id="hs3" data-c="hsf3"><option value="">Tất cả</option>${opts(DB.staff.filter(isTeacher).map(s=>[s.id,tName(s)]),h.gv)}</select></div>`:''}</div>`
  +tbl(['Mã','Họ tên','Tuổi','Nhu cầu, chẩn đoán','Chương trình','Giáo viên','Phụ huynh','Trạng thái'],p.rows.map(k=>`<tr class="k" data-a="hsopen" data-v="${k.id}"><td class="nw"><b>${esc(kcode(k))}</b></td><td><b>${esc(k.n)}</b></td><td class="nw">${age(k.dob)}</td><td>${esc(k.nd)}<br><span class="sm">${dxCell(k)}</span></td><td>${esc(progOf(k))}</td><td>${esc(mainGV(k))}</td><td>${esc(k.pr)} ${esc(given(k.pn))}<br><span class="sm mu">${esc(k.pp)}</span></td><td>${tg(KST[k.st],k.st==='dang'?'ok':k.st==='bl'?'wa':'gy')}</td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+`</div>`}
+/* --- sắp xếp lại mã học sinh: sau khi xóa hồ sơ, số thứ tự trong mã (HS01, HS02...) có thể đứt quãng; dồn lại cho liên tục, xem trước từng bé trước khi lưu --- */
+MODALS.kren=()=>{if(!isLead()){S.modal=null;return''}const pl=kidRenumPlan();if(!pl.length){S.modal=null;return''}
+ return mdl('Sắp xếp lại mã học sinh','<p>Mã học sinh đang đứt quãng do đã xóa hồ sơ. Bấm “Sắp xếp lại” để mã đi liên tục từ HS01, giữ nguyên thứ tự hiện có. Chỉ mã hiển thị đổi; buổi học, kế hoạch, điểm danh, học phí và tài khoản phụ huynh của bé không bị ảnh hưởng.</p>'
+  +tbl(['Họ tên','Mã hiện tại','Mã mới'],pl.map(x=>`<tr><td>${esc(x.k.n)}</td><td class="nw">${esc(kcode(x.k))}</td><td class="nw"><b>${esc('HS'+pad(x.to)+'-'+(x.k.bt?'BT':'CN'))}</b></td></tr>`).join(''),'')
+  +'<div class="acts" style="margin-top:14px;justify-content:flex-end"><button class="btn" data-a="mx">Hủy</button><button class="btn p" data-a="krenyes">Sắp xếp lại</button></div>')};
+ACT.krenopen=()=>{if(!isLead())return false;if(!kidRenumPlan().length){toast('Mã học sinh đã liên tục, không cần sắp xếp lại');return false}S.modal={t:'kren'}};
+ACT.krenyes=()=>{if(!isLead())return false;const n=kidRenumber();S.modal=null;toast(n?'Đã sắp xếp lại mã của '+n+' bé':'Mã học sinh đã liên tục')};
 ACT.hsopen=v=>{S.modal={t:'hs',id:v,tab:'tt'}};
 ACT.hstab2=v=>{S.modal.tab=v};
 MODALS.hs=()=>{const m=S.modal,k=kidBy(m.id);if(!k||!canKid(k.id)){S.modal=null;return''}
@@ -1797,7 +1814,7 @@ FORM.hsff=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.
    if(c){undo();toast(DAYS[l.day]+' '+slotLb(l.slot)+': '+c+'. Hồ sơ chưa được lưu, hãy chọn thứ hoặc giờ khác');return false}
    l.room=rm}
   ups.forEach(u=>{if(u.r.lt!==(u.o.lt||''))u.l.lt=u.r.lt||null})}
- const k=isNew?{id:newKidId(),m11:0,gv:news.length?gv:null}:old;
+ const k=isNew?{id:newKidId(),no:nextKNo(),m11:0,gv:news.length?gv:null}:old;
  Object.assign(k,{n:g('n'),g:g('g'),dob:g('dob'),sd:g('sd')||TODAY,st:g('st'),nd:g('nd'),bt,gr:bt?(g('gr')||grByAge(g('dob'))):'',pr:g('pr'),pn:g('pn'),pp:g('pp'),pe:g('pe').toLowerCase(),
   dx:[...f.querySelectorAll('input[name=dx]:checked')].map(x=>x.value),dxo:g('dxo'),dxn:g('dxn')});
  if(bt)k.btd=bd;else delete k.btd;
@@ -1869,10 +1886,12 @@ function hsDelKid(id){
  DB.media.forEach(m=>{if(Array.isArray(m.ks)&&m.ks.includes(id))m.ks=m.ks.filter(x=>x!==id)});
  Object.keys(DB.att).forEach(x=>{if(x.split('|').includes(id))delete DB.att[x]});
  Object.keys(DB.set).forEach(x=>{if(x.split('|').includes(id))delete DB.set[x]});
+ kidRenumber();   /* dồn số hiển thị của các bé còn lại cho liên tục, không đụng đến khóa k.id */
 }
 ACT.hsdelk=v=>{const k=kidBy(v);if(!k||!isLead()||!canKid(k.id))return false;
  const n=DB.sess.filter(s=>s.k===k.id).length;
- ask('Xóa hồ sơ của bé '+k.n+' ('+kcode(k)+')? Sẽ xóa cả '+n+' buổi can thiệp, kế hoạch, lịch 1-1, điểm danh, báo cáo và học phí của bé. Không hoàn tác được. Nếu bé chỉ nghỉ, hãy dùng “Ngưng can thiệp” thay vì xóa.',()=>{hsDelKid(k.id);S.modal=null;toast('Đã xóa hồ sơ bé '+k.n);render()},'Xóa hồ sơ');return false};
+ const later=DB.kids.filter(x=>kNo(x)>kNo(k)).length;
+ ask('Xóa hồ sơ của bé '+k.n+' ('+kcode(k)+')? Sẽ xóa cả '+n+' buổi can thiệp, kế hoạch, lịch 1-1, điểm danh, báo cáo và học phí của bé. Không hoàn tác được.'+(later?' Mã của '+later+' bé phía sau sẽ được dồn lên cho liên tục.':'')+' Nếu bé chỉ nghỉ, hãy dùng “Ngưng can thiệp” thay vì xóa.',()=>{hsDelKid(k.id);S.modal=null;toast('Đã xóa hồ sơ bé '+k.n);render()},'Xóa hồ sơ');return false};
 /* ===== 3b. Can thiệp cá nhân: kế hoạch mục tiêu, buổi can thiệp, ngân hàng mục tiêu ===== */
 const trunc=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
 const domTag=(d,g)=>g&&isPlay(g)?`<span class="tag gy" title="Chơi (thuộc lĩnh vực ${esc(DM[d].n)})">Chơi</span>`:`<span class="tag gy" title="${esc(DM[d].n)}">${esc(DM[d].s)}</span>`;
