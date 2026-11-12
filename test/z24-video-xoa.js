@@ -29,7 +29,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   });
   ok('tt xóa hồ sơ bé và các buổi liên quan', r1.after === r1.before - 1 && r1.gone && r1.sessLeft === 0, r1);
   const r2 = await tp.evaluate(() => {
-    const s = DB.staff.find(x => x.role === 'gv' && x.id !== U.id && !accOf(x) && !DB.kids.some(k => k.gv === x.id) && !DB.lich.some(l => l.gv === x.id) && !DB.groups.some(g => g.gv === x.id));
+    const s = DB.staff.find(x => x.role === 'gv' && x.id !== U.id && !accOf(x) && !DB.kids.some(k => k.gv === x.id) && !DB.lich.some(l => l.gv === x.id) && !DB.groups.some(g => grHas(g, x.id)));
     if (!s) return { none: true };
     return { can: canDelStaff(s), self: canDelStaff(stBy(U.id)), id: s.id };
   });

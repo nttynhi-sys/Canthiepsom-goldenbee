@@ -7,13 +7,13 @@ const navTxt = page => page.evaluate(() => [...document.querySelectorAll('.nav b
   const ev = (f, a) => page.evaluate(f, a); const W = ms => page.waitForTimeout(ms || 120);
   // 1. giáo viên đứng lớp bán trú
   await login(page, 'gv');
-  await ev(() => { const g = DB.groups[0]; g.gv = U.id; render(); }); await W();
+  await ev(() => { const g = DB.groups[0]; grSet(g, grTs(g).concat(U.id)); render(); }); await W();
   ok('giáo viên đứng lớp bán trú thấy mục Thực đơn bán trú', (await navTxt(page)).includes('tn'), await navTxt(page));
   await ev(() => { go('lh'); S.lh = Object.assign(S.lh || {}, { tab: 'wk' }); render(); }); await W();
   let tabs = await ev(() => [...document.querySelectorAll('[data-a="lhtab"]')].map(e => e.textContent.trim()));
   ok('giáo viên bán trú thấy tab Thời khóa biểu bán trú', tabs.some(t => /Thời khóa biểu bán trú/.test(t)), tabs);
   // 2. giáo viên chỉ dạy 1-1 (không đứng lớp nào)
-  await ev(() => { DB.groups.forEach(g => { if (g.gv === U.id) g.gv = 'nvx1'; if (g.tg === U.id) g.tg = 'nvx2'; }); go('tn'); render(); }); await W();
+  await ev(() => { DB.groups.forEach(g => { if (grHas(g, U.id)) grSet(g, grTs(g).filter(i => i !== U.id)); }); go('tn'); render(); }); await W();
   ok('giáo viên chỉ dạy 1-1: không có mục Thực đơn trong menu', !(await navTxt(page)).includes('tn'), await navTxt(page));
   const view = await ev(() => ({ v: S.v, h: document.querySelector('main').textContent.slice(0, 200) }));
   ok('vào thẳng Thực đơn bị đưa về trang đầu, không hiện thực đơn', view.v !== 'tn' && !/Thực đơn bán trú/.test(view.h.slice(0, 60)), view);

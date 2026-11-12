@@ -35,7 +35,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   const kid = (id, n, pe, pp, gr) => ({ id, n, pe, pp, pn: 'PH ' + n, gr: gr || '', st: 'dang', gv: 'nv04' });
   R('kids', 'hs001', kid('hs001', 'An', 'A@x.vn', '0912345678', 'G1')); R('kids', 'hs002', kid('hs002', 'Bình', 'a@x.vn', '0912345678', 'G1'));
   R('kids', 'hs003', kid('hs003', 'Chi', '', '0933 111 222', 'G2')); R('kids', 'hs004', kid('hs004', 'Dũng', 'b@x.vn', '0912345678', 'G2')); R('kids', 'hs005', kid('hs005', 'Em', '', '', ''));
-  R('groups', 'G1', { id: 'G1', n: 'Ong non', gv: 'nv04', tg: 'nv05' }); R('groups', 'G2', { id: 'G2', n: 'Ong mật', gv: 'nv05', tg: '' });
+  R('groups', 'G1', { id: 'G1', n: 'Ong non', gv: 'nv04', tg: 'nv05' }); R('groups', 'G2', { id: 'G2', n: 'Ong mật', ts: ['nv05', 'nv09', 'nv12'] });   /* G1: dữ liệu cũ gv, tg; G2: danh sách ts, ba giáo viên ngang nhau */
   R('cfg', '_', { name: 'Golden Bee', cc: 26 }); R('menu', '2026-11-09', { a: 'Cháo' }); R('tpl', 'x', { k: 'x' }); R('cg', '1', { id: '1', t: 'mục tiêu' }); R('tkb', 'tkG1-01', { id: 'tkG1-01', gr: 'G1', s: '07:30', e: '08:15', n: 'Đón trẻ', k: 'don' });
   R('lich', 'l1', { id: 'l1', type: '11', hs: 'hs001', day: 3, slot: '08:00', gv: 'nv10', room: 'P1' });
   R('lich', 'l2', { id: 'l2', type: '11', hs: 'hs004', day: 3, slot: '08:00', gv: 'nv11', room: 'P2' });
@@ -200,6 +200,12 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   ok('put: ngày Trung tâm nghỉ không đăng ký học bù được (403)', cf7.code === 403 && /Trung tâm nghỉ/.test(cf7.json.error) && !E.recs.has('lich|lb29'), cf7.body);
   const cf4 = await pw([lb1('lb25', { gv: 'nv05', date: '2026-11-16', slot: '10:00', room: 'P8' })]);   /* nv05 phụ trách lớp bán trú, thứ Hai */
   ok('put: giáo viên đang phụ trách lớp bán trú bị chặn (403)', cf4.code === 403 && /bán trú/.test(cf4.json.error), cf4.body);
+  for (const t of ['nv09', 'nv12']) {
+    const cfx = await pw([lb1('lb25' + t, { gv: t, date: '2026-11-16', slot: '10:00', room: 'P8' })]);   /* giáo viên thứ hai, thứ ba trong danh sách ts của lớp */
+    ok('put: giáo viên ' + t + ' trong danh sách giáo viên lớp bán trú (ts) cũng bị chặn (403)', cfx.code === 403 && /bán trú/.test(cfx.json.error) && !E.recs.has('lich|lb25' + t), cfx.body);
+  }
+  const cfg1 = await pw([lb1('lb25g', { gv: 'nv04', date: '2026-11-16', slot: '10:00', room: 'P8' })]);   /* nv04 là giáo viên lớp G1 theo dữ liệu cũ (gv) */
+  ok('put: dữ liệu lớp kiểu cũ (gv, tg) vẫn chặn đúng (403)', cfg1.code === 403 && /bán trú/.test(cfg1.json.error), cfg1.body);
   ok('put: dời giờ buổi bù của mình', (await pw([lb1('lb20', { date: '2026-11-17' })])).code === 200 && E.recs.get('lich|lb20').data.date === '2026-11-17');
   ok('put: xóa buổi bù của mình', (await pw([], [{ collection: 'lich', id: 'lb20' }])).code === 200 && !E.recs.has('lich|lb20'));
   ok('put: không xóa buổi bù của bé khác (403)', (await pw([], [{ collection: 'lich', id: 'lb9' }])).code === 403 && E.recs.has('lich|lb9'));

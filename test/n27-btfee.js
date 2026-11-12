@@ -20,7 +20,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
    tkb:DB.tkb.length,tkbG:[...new Set(DB.tkb.map(r=>r.gr))].sort().join(),
    dx:DB.kids.filter(k=>Array.isArray(k.dx)&&k.dx.length).length,all:DB.kids.length,
    rates:[...new Set(DB.staff.filter(s=>s.pay.mode==='buoi').map(s=>s.pay.rate))].sort().join(),
-   grp:DB.groups.every(g=>[g.gv,g.tg].every(id=>{const s=DB.staff.find(x=>x.id===id);return s&&s.pay.mode==='thang'&&s.pay.base>0}))}});
+   grp:DB.groups.every(g=>grTs(g).length>0&&grTs(g).every(id=>{const s=DB.staff.find(x=>x.id===id);return s&&s.pay.mode==='thang'&&s.pay.base>0}))}});
  ok('dữ liệu mẫu: có bé học T2–T7 và bé học T2–T6; mọi ngày bán trú đều có ca 1-1',sd.sat>0&&sd.fri>0&&sd.miss===0,sd);
  ok('dữ liệu mẫu: thời khóa biểu cho cả hai lớp, mọi bé có chẩn đoán',sd.tkb>=20&&sd.tkbG==='G1,G2'&&sd.dx===sd.all,sd);
  ok('dữ liệu mẫu: giáo viên bán trú lương cố định, giáo viên 1-1 theo ca 60.000/80.000',sd.grp&&sd.rates==='60000,80000',sd);

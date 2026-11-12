@@ -172,7 +172,7 @@ async function cloudSetup(kind){
  else{
   const me={id:'nv01',n:name,role:'tt',pos:'Trưởng Trung tâm',ph:'',em:email,st:'dang',sd:TODAY,sup:'',pay:PAY_STUB()};
   DB.staff=[me];['kids','cg','tg','plans','sess','lich','lr','mk','lg','rp','nt','vio'].forEach(k=>{DB[k]=[]});['att','ts','set','rd','menu','bon','vam','kpr'].forEach(k=>{DB[k]={}});
-  DB.groups=[{id:'G1',n:BTN[0],gv:'',tg:''},{id:'G2',n:BTN[1],gv:'',tg:''}];DB.tkb=tkbDefault(DB.groups)}
+  DB.groups=[{id:'G1',n:BTN[0],ts:[],gv:'',tg:''},{id:'G2',n:BTN[1],ts:[],gv:'',tg:''}];DB.tkb=tkbDefault(DB.groups)}
  CLD.snap=new Map();CLD.ord={};CLD.maxo=0;
  cloudEnter();if(CLD.stage==='app')cloudFlush()}
 ACT.csetup=v=>{cloudSetup(v);return false};

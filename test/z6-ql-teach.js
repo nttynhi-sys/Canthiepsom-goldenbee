@@ -81,11 +81,11 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
 
  /* ---------- 5. Nhóm bán trú: Quản lý phụ trách nhóm ---------- */
  await nav('Phân công');await page.click('[data-a="pctab"][data-v="bt"]');await W(120);
- const g=await ev(()=>({gv:DB.groups[0].gv,tg:DB.groups[0].tg,opt:[...document.querySelectorAll('#g-G1-gv option')].filter(o=>o.value==='nv91').map(o=>o.textContent)}));
- ok('Phân công → Nhóm bán trú: Quản lý có trong ô giáo viên chính, có ghi chú "(Quản lý)"',g.opt.length===1&&/Quản lý\)/.test(g.opt[0]),g);
- await page.selectOption('#g-G1-gv','nv91');await W(100);
- const g2=await ev(()=>({gv:DB.groups[0].gv,grp:isGrStaff('nv91'),in11:pool11().some(s=>s.id==='nv91')}));
- ok('Quản lý được giao làm giáo viên chính nhóm bán trú; người phụ trách nhóm không bị xếp thêm 1-1 (quy tắc cũ giữ nguyên)',g2.gv==='nv91'&&g2.grp&&!g2.in11,g2);
+ const g=await ev(()=>({n0:grTs(DB.groups[0]).length,opt:[...document.querySelectorAll('[data-c="pcts"][data-k="G1|nv91"]')].map(o=>o.closest('label').textContent)}));
+ ok('Phân công → Nhóm bán trú: Quản lý có trong danh sách giáo viên của lớp, có ghi chú "(Quản lý)"',g.opt.length===1&&/Quản lý\)/.test(g.opt[0]),g);
+ await page.check('[data-c="pcts"][data-k="G1|nv91"]');await W(100);
+ const g2=await ev(()=>({ts:grTs(DB.groups[0]),grp:isGrStaff('nv91'),in11:pool11().some(s=>s.id==='nv91')}));
+ ok('Quản lý được chọn làm giáo viên nhóm bán trú (thêm vào, ngang các giáo viên khác); người phụ trách nhóm không bị xếp thêm 1-1 (quy tắc cũ giữ nguyên)',g2.ts.includes('nv91')&&g2.ts.length===g.n0+1&&g2.grp&&!g2.in11,g2);
 
  /* ---------- 6. Lương và chấm công tính theo ca dạy ---------- */
  const pay=await ev(()=>{const q=stBy('nv01');q.pay=Object.assign({},q.pay,{mode:'kethop',base:0,rate:60000,rateBt:0,allow:0,bh:0,latePen:0});

@@ -53,7 +53,7 @@ const PDF = pdfBuf('Huong dan A', [['Trang mot: xep khoi', 'Buoc 1 va buoc 2'], 
   const info = await tt.evaluate(() => {
     const g = DB.groups[0], gk = DB.kids.filter(k => k.gr === g.id && k.st === 'dang'); const [a, b2, c] = gk;
     a.pe = 'pa@x.vn'; a.pp = ''; b2.pe = 'pa@x.vn'; b2.pp = ''; c.pe = 'pc@x.vn'; c.pp = '';
-    const gv1 = DB.staff.find(s => s.id === g.gv); gv1.em = 'gv1@gb.vn';
+    const gv1 = DB.staff.find(s => s.id === grTs(g)[0]); gv1.em = 'gv1@gb.vn';
     const ql = DB.staff.find(s => s.role === 'ql' && s.st === 'dang'), vp = DB.staff.find(s => s.role === 'vp' && s.st === 'dang'); ql.em = 'ql@gb.vn'; vp.em = 'vp@gb.vn';
     const demoRef = DB.ref.length, demoTri = DB.tri.length; DB.ref = []; DB.tri = []; DB.media = []; DB.lg = DB.lg.filter(e => ![a.id, b2.id, c.id].includes(e.hs));
     render(); return { a: a.id, an: a.n, c: c.id, cn: c.n, gv1: gv1.id, ql: ql.id, vp: vp.id, demoRef, demoTri };

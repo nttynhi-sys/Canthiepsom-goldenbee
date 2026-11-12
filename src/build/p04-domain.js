@@ -2,6 +2,14 @@
 const kidBy=id=>DB.kids.find(k=>k.id===id);
 const stBy=id=>DB.staff.find(s=>s.id===id);
 const grBy=id=>DB.groups.find(g=>g.id===id);
+/* Giáo viên lớp bán trú: g.ts là danh sách người phụ trách, ngang nhau, không có chính hay phụ (mỗi lớp thường có 3 người). Dữ liệu cũ chỉ có g.gv và g.tg thì đọc từ hai trường đó. Khi lưu, grSet còn ghi hai người đầu vào g.gv, g.tg chỉ để bản cũ vẫn đọc được; mã mới không đọc hai trường này, luôn dùng grTs. */
+const grTs=g=>!g?[]:Array.isArray(g.ts)?g.ts.filter(Boolean):[g.gv,g.tg].filter(Boolean);
+const grHas=(g,id)=>!!id&&grTs(g).includes(id);
+const grOf=id=>DB.groups.find(g=>grHas(g,id));
+const grNames=g=>grTs(g).map(stBy).filter(Boolean).map(s=>s.n).join(', ')||'Chưa phân công';
+const grSet=(g,ids)=>{ids=[...new Set((ids||[]).filter(Boolean))];g.ts=ids;g.gv=ids[0]||'';g.tg=ids[1]||''};
+/* một dòng của dayList có người này phụ trách không (ca 1-1, học bù: một giáo viên; bán trú: cả danh sách giáo viên của lớp) */
+const rowHas=(s,id)=>!!id&&(s.gv===id||(s.ts||[]).includes(id));
 const kn=id=>{const k=kidBy(id);return k?k.n:'(đã xóa)'};
 const sn=id=>{const s=stBy(id);return s?s.n:'Chưa phân công'};
 const policyH=k=>`<div class="note"><b>${esc(POLICY[k].t)}</b>${POLICY[k].p.map(t=>`<p style="margin-top:6px">${esc(t)}</p>`).join('')}</div>`;
@@ -89,7 +97,7 @@ function lichAt(w,slot,date){return DB.lich.filter(l=>l.slot===slot&&((l.type===
 function lichNear(w,slot,date){return DB.lich.filter(l=>l.slot&&slotOver(l.slot,slot)&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)))}
 function conflict(x){const w=x.date?dow(x.date):x.day;
  if(x.date&&isClosed(x.date))return 'Trung tâm nghỉ ngày này ('+holOf(x.date).n+')';
- if(DB.groups.some(g=>(g.gv===x.gv||g.tg===x.gv)&&grOpen(g,w)))return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
+ if(DB.groups.some(g=>grHas(g,x.gv)&&grOpen(g,w)))return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
  const same=lichNear(w,x.slot,x.date).filter(l=>l.id!==x.id);
  if(same.some(l=>l.gv===x.gv))return 'Giáo viên đã có buổi khác ở khung giờ này';
  if(same.some(l=>l.hs===x.hs))return 'Trẻ đã có buổi khác ở khung giờ này';
@@ -104,7 +112,7 @@ function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))retur
  DB.lich.forEach(l=>{if(l.type==='11'&&l.day===w&&(!first[l.hs]||l.slot<first[l.hs].slot))first[l.hs]=l});
  DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);
   if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:l.gv,slot:l.slot,room:l.room,kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
- DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',gv:g.gv,tg:g.tg,slot:BT.s,room:'',kids:ks})});
+ DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,room:'',kids:ks})});
  return out.sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0)}
 
 /* --- Chấm công nhân viên và lương --- */
@@ -124,7 +132,7 @@ const vioList=(id,m)=>(DB.vio||[]).filter(v=>v.st===id&&v.s==='duyet'&&(!m||Stri
 const vioSum=(id,m)=>vioList(id,m).reduce((a,v)=>a+vioAmt(v),0);
 function payroll(s,m){
  const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id),pc=gvPct();
- const myGr=DB.groups.filter(g=>g.gv===s.id||g.tg===s.id),open6=myGr.some(g=>grOpen(g,6));
+ const myGr=DB.groups.filter(g=>grHas(g,s.id)),open6=myGr.some(g=>grOpen(g,6));
  let cong=0,late=0,btd=0,leave=0,abs=0,hol=0;
  const ss={cm:0,kp:0,p:0,tt:0,bv:0,bu:0,none:0},cc=needCC(s);
  for(const d of dts){const t=tsSt(s.id,d),w=dow(d),worked=cc?(t==='ok'||t==='late'):t==='';   /* trả theo ca: không chấm công, ngày làm việc thường (không nghỉ phép, không nghỉ lễ) coi là có mặt để đếm ca chưa điểm danh */
