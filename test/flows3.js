@@ -18,7 +18,7 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  // ===== GV =====
  await login('gv');
  const gv=await ev(()=>U.id);
- ok('gv nav limited',JSON.stringify(await page.$$eval('.nav button',e=>e.map(x=>x.dataset.v)))===JSON.stringify(['dash','hs','lh','tn','cc','vi','dd','hb','tl','mt','bc','td','tb']));
+ ok('gv nav limited (giáo viên 1-1 không thấy Thực đơn bán trú)',JSON.stringify(await page.$$eval('.nav button',e=>e.map(x=>x.dataset.v)))===JSON.stringify(['dash','hs','lh','cc','vi','dd','hb','tl','mt','bc','td','tb']));
  await ev(()=>{S.v='ns';render()});ok('gv cannot open Nhân sự (falls back)',(await ev(()=>S.v))==='dash');
  const sess=await page.$$('[data-a="ddgo"]');
  if(sess.length){await sess[0].click();await W(80)}else await nav('dd');

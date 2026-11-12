@@ -263,3 +263,10 @@ body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit
 .pw-eye:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
 
 .gi .bl{margin:2px 0 4px;padding-left:22px}.gi .bl li{margin:2px 0}
+/* Vấn đề, mục tiêu và bài tập (ADHD, Tích hợp giác quan, Điều hòa cảm giác) */
+.gx{margin:8px 0 2px;padding:8px 12px;border:1px solid var(--bd);border-left:4px solid var(--ac);border-radius:8px;background:var(--bg);min-width:0;font-size:13.5px}
+.gx>summary,.gx-h{font-weight:600;color:var(--ac)}.gx>summary{cursor:pointer}
+.gx-r{margin:5px 0}
+.gx .bl{margin:2px 0 4px;padding-left:22px}.gx .bl li{margin:5px 0}
+.gtp .gx,.gts .gx,.gtg .gx{font-size:16px}
+.gtg .gx{margin-top:8px}
