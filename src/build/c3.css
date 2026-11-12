@@ -261,3 +261,5 @@ body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit
 .pw-eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);min-height:30px;padding:3px 9px;border:0;border-radius:7px;background:transparent;color:var(--ac);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 .pw-eye:hover{background:var(--card)}
 .pw-eye:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+
+.gi .bl{margin:2px 0 4px;padding-left:22px}.gi .bl li{margin:2px 0}
