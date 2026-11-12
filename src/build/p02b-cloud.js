@@ -123,10 +123,12 @@ async function cloudLoad(){
   /* máy chủ chưa có thời khóa biểu bán trú: dùng bản mẫu (mã dòng cố định nên nhiều người mở cùng lúc không bị trùng) và lưu lên */
   const needTkb=!DB.tkb.length&&DB.groups.length>0;if(needTkb)DB.tkb=tkbDefault(DB.groups);
   /* nhân sự chỉ trả theo ca 1-1 chưa có cờ không-chấm-công (s.cc): Trưởng Trung tâm hoặc Văn phòng đăng nhập (đọc được hình thức trả lương) thì ghi cờ một lần; các vai trò khác không thấy lương nên không tự suy ra */
-  const nCC=canM()?ccBackfill():0;
+  const nCC=canM()?ccBackfill()+ftBackfill():0;
   cloudEnter();if((needTkb||nCC)&&CLD.stage==='app')cloudSave()}
  catch(e){CLD.stage='login';CLD.err=viLoginErr(e.message);render()}}
 function ccBackfill(){let n=0;DB.staff.forEach(s=>{if(s.cc==null&&s.pay&&!ccOf(s.pay)){s.cc=false;n++}});return n}
+/* nhân sự chưa có loại hình làm việc (s.ft): Trưởng Trung tâm hoặc Văn phòng đăng nhập (đọc được hình thức trả lương) thì ghi một lần để Quản lý cũng thấy nhóm Fulltime/Partime đúng */
+function ftBackfill(){let n=0;DB.staff.forEach(s=>{if(typeof s.ft!=='boolean'&&s.pay&&s.pay.mode){s.ft=s.pay.mode!=='buoi';n++}});return n}
 /* Tài khoản nhân viên: ghép theo mã nhân viên trong hồ sơ vai trò; chưa có mã (tài khoản Trưởng Trung tâm tạo tay) thì ghép theo email */
 function staffAccount(){
  const s=CLD.sid?DB.staff.find(x=>x.id===CLD.sid&&x.st==='dang'&&x.role!=='hc'):null;
