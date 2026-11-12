@@ -24,7 +24,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   const tt = E.addUser('tt@gb.vn', 'ttpass123', { role: 'tt', full_name: 'TT' });
   const gv = E.addUser('gv@gb.vn', 'gvpass123', { role: 'gv', staff_id: 'nv04', full_name: 'GV' });
   const TT = await signin('tt@gb.vn', 'ttpass123'), GV = await signin('gv@gb.vn', 'gvpass123');
-  R('staff', 'nv04', { id: 'nv04', n: 'Cô Lan', role: 'gv', em: 'gv@gb.vn', ph: '0988111222', pos: 'Giáo viên', st: 'dang', sd: '2024-01-01', sup: 'nv02', edu: 'Cử nhân Tâm lý học; BÍ-MẬT-TRÌNH-ĐỘ', cert: 'Chứng chỉ BÍ-MẬT-CHỨNG-CHỈ' });
+  R('staff', 'nv04', { id: 'nv04', n: 'Cô Lan', role: 'gv', em: 'gv@gb.vn', ph: '0988111222', pos: 'Giáo viên', st: 'dang', sd: '2024-01-01', sup: 'nv02', ft: false, edu: 'Cử nhân Tâm lý học; BÍ-MẬT-TRÌNH-ĐỘ', cert: 'Chứng chỉ BÍ-MẬT-CHỨNG-CHỈ' });
   R('staff', 'nv05', { id: 'nv05', n: 'Cô Hoa', role: 'gv', em: '', ph: '0901 234 567', pos: 'Giáo viên', st: 'dang' });
   R('staff', 'nv06', { id: 'nv06', n: 'Anh Vũ', role: 'vp', em: 'vu@gb.vn', ph: '0901234567', pos: 'Văn phòng', st: 'dang' });   /* trùng số với nv05 */
   R('staff', 'nv07', { id: 'nv07', n: 'Cô Nghỉ', role: 'gv', em: 'nghi@gb.vn', ph: '', st: 'nghi' });
@@ -148,6 +148,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   ok('parent A: không nhận giảm trừ gia cảnh, thuế, mức trừ vi phạm, khóa lạ', !('giamTru' in cm) && !('thue' in cm) && !('v1' in cm) && !('v2' in cm) && !('khoaLa' in cm) && !('pbtCN' in cm) && !JSON.stringify(J).includes('15500000'), cm);
   ok('parent A: nhận giá riêng của bé mình, không nhận giá riêng của bé khác', mids('kpr') === 'hs001' && ((J.money || []).find(r => r.collection === 'kpr') || {}).data.gq === 150000);
   ok('parent A: không nhận trình độ và chứng chỉ của nhân viên', stf.every(s => !('edu' in s.data) && !('cert' in s.data)) && !JSON.stringify(J).includes('BÍ-MẬT'));
+  ok('parent A: không nhận loại hình làm việc (Fulltime/Partime) của nhân viên', stf.some(s => s.id === 'nv04') && stf.every(s => !('ft' in s.data)));
   ok('parent A: không có dữ liệu của bé khác ở bất cứ đâu', !JSON.stringify(J).includes('hs004') && !JSON.stringify(J).includes('b@x.vn'));
   const lc = (await call('parent', { action: 'load' }, TC)).json;
   ok('parent C (chỉ SĐT): thấy bé Chi, không thấy ai khác', lc.kids.join() === 'hs003' && !JSON.stringify(lc).includes('hs001'));

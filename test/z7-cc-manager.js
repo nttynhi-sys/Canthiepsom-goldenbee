@@ -74,19 +74,19 @@ const W=ms=>new Promise(r=>setTimeout(r,ms));
  await sw(page,'tt');await nav(page,'cc');
  ok('Trưởng Trung tâm có nút Có mặt khi còn người chưa chấm hoặc nút Sửa giờ',(await page.$$('[data-a="ccon"],[data-a="tsedit"]')).length>0);
 
- /* ---------- F. Hồ sơ nhân sự: hình thức trả lương quyết định có cần chấm công ---------- */
+ /* ---------- F. Hồ sơ nhân sự: hình thức trả lương quyết định có cần chấm công (nút Fulltime / Partime đi trước, cách tính theo sau) ---------- */
  await nav(page,'ns');await page.evaluate(()=>{ACT.nvopen('nv04');render()});await page.waitForSelector('#nvf');
  ok('Hồ sơ có lời giải thích: lương cố định thì Quản lý chấm công, theo ca 1-1 thì không',/Quản lý chấm công/.test(await page.textContent('#nvf'))&&/không cần chấm công/.test(await page.textContent('#nvf')));
- await page.selectOption('#nv-mode','thang');await page.fill('#nvf [name=base]','8000000');await page.click('#nvf button[type=submit]');await W(80);
+ await page.click('label[for="nv-ft1"]');await page.selectOption('#nv-mode','thang');await page.fill('#nvf [name=base]','8000000');await page.click('#nvf button[type=submit]');await W(80);
  ok('đổi sang lương cố định: nhân sự cần chấm công (cc=true)',(await page.evaluate(()=>stBy('nv04').cc))===true&&(await page.evaluate(()=>needCC(stBy('nv04')))));
  await page.evaluate(()=>{ACT.nvopen('nv04');render()});await page.waitForSelector('#nvf');
- await page.selectOption('#nv-mode','buoi');await page.fill('#nvf [name=rateBt]','0');await page.click('#nvf button[type=submit]');await W(80);
+ await page.click('label[for="nv-ft0"]');await page.selectOption('#nv-mode','buoi');await page.fill('#nvf [name=rateBt]','0');await page.click('#nvf button[type=submit]');await W(80);
  ok('đổi về trả theo ca: không cần chấm công (cc=false)',(await page.evaluate(()=>stBy('nv04').cc))===false);
  await page.evaluate(()=>{ACT.nvopen('nv04');render()});await page.waitForSelector('#nvf');
- await page.selectOption('#nv-mode','buoi');await page.fill('#nvf [name=rateBt]','50000');await page.click('#nvf button[type=submit]');await W(80);
+ await page.click('label[for="nv-ft0"]');await page.selectOption('#nv-mode','buoi');await page.fill('#nvf [name=rateBt]','50000');await page.click('#nvf button[type=submit]');await W(80);
  ok('trả theo ca nhưng có phụ cấp bán trú theo ngày: vẫn cần chấm công',(await page.evaluate(()=>stBy('nv04').cc))===true);
  await page.evaluate(()=>{ACT.nvopen('nv04');render()});await page.waitForSelector('#nvf');
- await page.selectOption('#nv-mode','buoi');await page.fill('#nvf [name=rateBt]','0');await page.click('#nvf button[type=submit]');await W(80);
+ await page.click('label[for="nv-ft0"]');await page.selectOption('#nv-mode','buoi');await page.fill('#nvf [name=rateBt]','0');await page.click('#nvf button[type=submit]');await W(80);
 
  /* ---------- G. Cài đặt giờ mặc định ---------- */
  await page.evaluate(()=>{S.ns.tab='cd';render()});await W(60);
