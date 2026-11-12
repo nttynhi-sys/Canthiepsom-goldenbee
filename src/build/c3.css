@@ -290,3 +290,6 @@ body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit
 .gtp .gx,.gts .gx,.gtg .gx{font-size:16px}
 .gtg .gx{margin-top:8px}
 .si .gx{margin:6px 0 4px}
+/* lưới lịch 1-1: nút + của ô trống chỉ hiện khi rê chuột / chọn bằng bàn phím (màn hình cảm ứng vẫn hiện mờ) cho khỏi rối mắt */
+@media (hover:hover){.wkt .cell .ls.add{opacity:0}.wkt .cell:hover .ls.add,.wkt .cell .ls.add:focus-visible{opacity:1}}
+@media (hover:none){.wkt .cell .ls.add{opacity:.55}}

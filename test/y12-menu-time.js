@@ -66,7 +66,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  /* lưới tuần hiện dòng giờ riêng, bấm vào được */
  await ev(()=>{go('lh');render();S.lh.mode='gv';S.lh.gv='gvy1';S.lh.wk=monOf(WD);render()});await W(100);
  const gr=await ev(()=>({th:[...document.querySelectorAll('#main table.wkt tbody th')].map(t=>t.innerText.replace(/\s+/g,' ')),btn:document.querySelectorAll('#main button.ls[data-a="lsopen"]').length}));
- ok('lưới tuần: có dòng 08:20–09:10 ghi "giờ riêng", 09:10–10:00 và đủ các mốc gợi ý',gr.th.some(t=>/08:20–09:10 giờ riêng/.test(t))&&gr.th.some(t=>/09:10–10:00 giờ riêng/.test(t))&&gr.th.some(t=>/07:15–08:05/.test(t))&&gr.btn===2,gr);
+ ok('lưới tuần: chỉ còn các dòng giờ giáo viên đang dạy (08:20–09:10 và 09:10–10:00), không vẽ sẵn mốc giờ hệ thống như 07:15–08:05, không còn nhãn "giờ riêng"',gr.th.length===2&&gr.th.some(t=>/08:20–09:10/.test(t))&&gr.th.some(t=>/09:10–10:00/.test(t))&&!gr.th.some(t=>/giờ riêng|07:15–08:05/.test(t))&&gr.btn===2,gr);
  /* đổi giờ buổi đã có: không tự xung đột với chính nó */
  const id=await ev(()=>DB.lich.find(l=>l.hs==='ya').id);
  await ev(i=>{ACT.lsopen(i+'|'+monOf(WD));render()},id);await page.waitForSelector('#lsf');
