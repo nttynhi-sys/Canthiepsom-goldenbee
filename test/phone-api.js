@@ -179,34 +179,36 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   ok('put: không tạo yêu cầu cho bé của người khác (403)', (await pw([mkRow('mk21', 'hs004')])).code === 403 && !E.recs.has('mk|mk21'));
   ok('put: không ghi đè yêu cầu của bé khác (403)', (await pw([mkRow('mk9', 'hs001')])).code === 403 && E.recs.get('mk|mk9').data.hs === 'hs004');
   ok('put: cả lô bị từ chối nếu một dòng sai, không ghi dòng nào', (await pw([mkRow('mk22', 'hs001'), mkRow('mk23', 'hs004')])).code === 403 && !E.recs.has('mk|mk22'));
-  const lb1 = (id, o) => ({ collection: 'lich', id, data: Object.assign({ id, type: 'bu', hs: 'hs001', date: '2026-11-16', slot: '10:00', gv: 'nv10', room: 'P1', mk: 'mk20' }, o || {}) });
+  const lb1 = (id, o) => ({ collection: 'lich', id, data: Object.assign({ id, type: 'bu', hs: 'hs001', date: '2026-11-16', slot: '10:00', gv: 'nv10', mk: 'mk20' }, o || {}) });
   ok('put: lịch học bù của bé mình', (await pw([lb1('lb20')])).code === 200 && E.recs.has('lich|lb20'));
   ok('put: không tạo buổi 1-1 cố định (403)', (await pw([lb1('l50', { type: '11', day: 2 })])).code === 403);
   ok('put: không đặt lịch cho bé khác (403)', (await pw([lb1('lb21', { hs: 'hs004' })])).code === 403);
-  const cf = await pw([lb1('lb22', { gv: 'nv11', slot: '10:00', date: '2026-11-13', room: 'P9' })]);
+  const cf = await pw([lb1('lb22', { gv: 'nv11', slot: '10:00', date: '2026-11-13' })]);
   ok('put: trùng giáo viên cùng khung giờ bị chặn (403)', cf.code === 403 && /đã có buổi khác/.test(cf.json.error) && !E.recs.has('lich|lb22'), cf.body);
+  /* không còn khái niệm phòng: cùng khung giờ, khác giáo viên và khác bé thì được lưu dù máy cũ vẫn gửi kèm mã phòng trùng với buổi khác */
   const cf2 = await pw([lb1('lb23', { room: 'P3', date: '2026-11-13', slot: '10:00', gv: 'nv10' })]);
-  ok('put: trùng phòng cùng khung giờ bị chặn (403)', cf2.code === 403, cf2.body);
-  const cf3 = await pw([lb1('lb24', { gv: 'nv10', date: '2026-11-11', slot: '08:00', room: 'P7' })]);
+  ok('put: cùng khung giờ, khác giáo viên và bé: không bị chặn vì phòng (200)', cf2.code === 200 && E.recs.has('lich|lb23'), cf2.body);
+  await pw([], [{ collection: 'lich', id: 'lb23' }]);
+  const cf3 = await pw([lb1('lb24', { gv: 'nv10', date: '2026-11-11', slot: '08:00' })]);
   ok('put: trùng buổi 1-1 cố định cùng thứ trong tuần bị chặn (403)', cf3.code === 403 && /đã có buổi khác/.test(cf3.json.error), cf3.body);
-  const cf5 = await pw([lb1('lb26', { gv: 'nv11', date: '2026-11-13', slot: '10:30', room: 'P6' })]);   /* nv11 có buổi bù 10:00 cùng ngày: chồng giờ dù khác mốc */
+  const cf5 = await pw([lb1('lb26', { gv: 'nv11', date: '2026-11-13', slot: '10:30' })]);   /* nv11 có buổi bù 10:00 cùng ngày: chồng giờ dù khác mốc */
   ok('put: chồng giờ (10:30 so với 10:00) với buổi khác của giáo viên bị chặn (403)', cf5.code === 403 && /đã có buổi khác/.test(cf5.json.error) && !E.recs.has('lich|lb26'), cf5.body);
-  const cf6 = await pw([lb1('lb27', { gv: 'nv11', date: '2026-11-13', slot: '10:50', room: 'P6' })]);   /* cách đúng 50 phút: không chồng */
+  const cf6 = await pw([lb1('lb27', { gv: 'nv11', date: '2026-11-13', slot: '10:50' })]);   /* cách đúng 50 phút: không chồng */
   ok('put: giờ bắt đầu tự chọn cách đủ 50 phút thì được lưu', cf6.code === 200 && E.recs.has('lich|lb27'), cf6.body);
   await pw([], [{ collection: 'lich', id: 'lb27' }]);
   for (const bad of ['06:00', '19:30', '25:99', '8:00', '']) {
     const r = await pw([lb1('lb28', { slot: bad, date: '2026-11-16' })]);
     ok('put: giờ không hợp lệ "' + bad + '" bị từ chối (403)', r.code === 403 && !E.recs.has('lich|lb28'), r.body);
   }
-  const cf7 = await pw([lb1('lb29', { date: '2026-11-18', slot: '14:00', room: 'P2' })]);
+  const cf7 = await pw([lb1('lb29', { date: '2026-11-18', slot: '14:00' })]);
   ok('put: ngày Trung tâm nghỉ không đăng ký học bù được (403)', cf7.code === 403 && /Trung tâm nghỉ/.test(cf7.json.error) && !E.recs.has('lich|lb29'), cf7.body);
-  const cf4 = await pw([lb1('lb25', { gv: 'nv05', date: '2026-11-16', slot: '10:00', room: 'P8' })]);   /* nv05 phụ trách lớp bán trú, thứ Hai */
+  const cf4 = await pw([lb1('lb25', { gv: 'nv05', date: '2026-11-16', slot: '10:00' })]);   /* nv05 phụ trách lớp bán trú, thứ Hai */
   ok('put: giáo viên đang phụ trách lớp bán trú bị chặn (403)', cf4.code === 403 && /bán trú/.test(cf4.json.error), cf4.body);
   for (const t of ['nv09', 'nv12']) {
-    const cfx = await pw([lb1('lb25' + t, { gv: t, date: '2026-11-16', slot: '10:00', room: 'P8' })]);   /* giáo viên thứ hai, thứ ba trong danh sách ts của lớp */
+    const cfx = await pw([lb1('lb25' + t, { gv: t, date: '2026-11-16', slot: '10:00' })]);   /* giáo viên thứ hai, thứ ba trong danh sách ts của lớp */
     ok('put: giáo viên ' + t + ' trong danh sách giáo viên lớp bán trú (ts) cũng bị chặn (403)', cfx.code === 403 && /bán trú/.test(cfx.json.error) && !E.recs.has('lich|lb25' + t), cfx.body);
   }
-  const cfg1 = await pw([lb1('lb25g', { gv: 'nv04', date: '2026-11-16', slot: '10:00', room: 'P8' })]);   /* nv04 là giáo viên lớp G1 theo dữ liệu cũ (gv) */
+  const cfg1 = await pw([lb1('lb25g', { gv: 'nv04', date: '2026-11-16', slot: '10:00' })]);   /* nv04 là giáo viên lớp G1 theo dữ liệu cũ (gv) */
   ok('put: dữ liệu lớp kiểu cũ (gv, tg) vẫn chặn đúng (403)', cfg1.code === 403 && /bán trú/.test(cfg1.json.error), cfg1.body);
   ok('put: dời giờ buổi bù của mình', (await pw([lb1('lb20', { date: '2026-11-17' })])).code === 200 && E.recs.get('lich|lb20').data.date === '2026-11-17');
   ok('put: xóa buổi bù của mình', (await pw([], [{ collection: 'lich', id: 'lb20' }])).code === 200 && !E.recs.has('lich|lb20'));

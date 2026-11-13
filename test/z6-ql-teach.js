@@ -42,7 +42,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  ok('chuyển bé sang Quản lý: giáo viên chính của bé và mọi buổi 1-1 cố định đều là Quản lý đó',mv.gv==='nv90'&&mv.all,mv);
 
  /* ---------- 3. Hồ sơ bé mới: chỉ 1-1 (CN) và bán trú kèm 1-1 (BT) do Quản lý dạy ---------- */
- const slots=await ev(()=>{const fr=(w,s,g)=>ROOMS.some(r=>!conflict({day:w,slot:s,gv:g,hs:'hsX',room:r})),rs=[...SLOTS].reverse();
+ const slots=await ev(()=>{const fr=(w,s,g)=>!conflict({day:w,slot:s,gv:g,hs:'hsX' }),rs=[...SLOTS].reverse();
   const A=rs.find(s=>fr(1,s,'nv01')&&fr(3,s,'nv01')),C=rs.find(s=>s!==A&&Math.abs(tmin(s)-tmin(A))>=SLOT_MIN&&fr(2,s,'nv01')&&fr(4,s,'nv01'));return{A,C}});
  ok('tìm được khung giờ trống của Quản lý để xếp bé mới',slots.A&&slots.C,slots);
  const fill=async(name,h11,hbt,days,slot,bd)=>{
@@ -56,7 +56,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
    if(bd)[1,2,3,4,5,6].forEach(w=>{f.elements['bd'+w].checked=bd.includes(w)})},[days,slot,bd]);
   await page.click('#hsff button[type=submit]');await W(150);return opts};
  const o1=await fill('Bé Thử Chỉ 1-1',true,false,[1,3],slots.A,null);
- const cn=await ev(()=>{const k=DB.kids.find(x=>x.n==='Bé Thử Chỉ 1-1'),ls=k?DB.lich.filter(l=>l.type==='11'&&l.hs===k.id):[];return k?{id:k.id,bt:!!k.bt,gv:k.gv,n:ls.length,all:ls.length>0&&ls.every(l=>l.gv==='nv01'&&l.room),code:kcode(k)}:null});
+ const cn=await ev(()=>{const k=DB.kids.find(x=>x.n==='Bé Thử Chỉ 1-1'),ls=k?DB.lich.filter(l=>l.type==='11'&&l.hs===k.id):[];return k?{id:k.id,bt:!!k.bt,gv:k.gv,n:ls.length,all:ls.length>0&&ls.every(l=>l.gv==='nv01'),code:kcode(k)}:null});
  ok('ô giáo viên trong form thêm bé có Quản lý (ghi chú "(Quản lý)")',o1.length===1&&/Quản lý\)/.test(o1[0]),o1);
  ok('bé chỉ học 1-1 giao cho Quản lý: lưu đủ 2 buổi, mã dạng HSnn-CN, giáo viên là Quản lý',cn&&!cn.bt&&cn.gv==='nv01'&&cn.n===2&&cn.all&&/-CN$/.test(cn.code),cn||await toastTx());
  const o2=await fill('Bé Thử Bán Trú',true,true,[2,4],slots.C,[1,2,3,4,5]);

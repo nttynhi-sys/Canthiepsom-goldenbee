@@ -11,16 +11,16 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
   if(!c)return null;return{h2:c.querySelector('h2').textContent.trim(),rows:[...c.querySelectorAll('.rw')].map(r=>({lb:r.querySelector('span').textContent.trim(),n:r.querySelector('b').textContent.trim()})),txt:c.innerText}});
  const show=async()=>{await ev(()=>{go('dash');render()});await W(150);return card()};
  /* khung giờ có ca 1-1 trong ngày, tính trực tiếp từ dữ liệu buổi của ngày đang xem */
- const want=()=>ev(()=>{const ds=dayList(WD).filter(x=>x.kind!=='bt'&&x.slot),sl=[...new Set(ds.map(x=>x.slot))].sort();return sl.map(s=>({lb:slotLb(s),n:ds.filter(x=>x.slot===s).length+'/'+ROOMS.length}))});
+ const want=()=>ev(()=>{const ds=dayList(WD).filter(x=>x.kind!=='bt'&&x.slot),sl=[...new Set(ds.map(x=>x.slot))].sort();return sl.map(s=>({lb:slotLb(s),n:ds.filter(x=>x.slot===s).length+' ca'}))});
  await login(page,'tt');
  let c=await show(),w=await want();
  ok('Dashboard có thẻ Lịch ngày theo ca',!!c&&/Lịch ngày/.test(c.h2),c);
  ok('ngày đang xem có ca 1-1 để thử',w.length>=1,w);
- ok('thẻ chỉ liệt kê đúng các khung giờ có ca 1-1 trong ngày, kèm số phòng đang dùng',JSON.stringify(c.rows)===JSON.stringify(w),{c:c.rows,w});
+ ok('thẻ chỉ liệt kê đúng các khung giờ có ca 1-1 trong ngày, kèm số ca đang diễn ra',JSON.stringify(c.rows)===JSON.stringify(w),{c:c.rows,w});
  const sys=await ev(()=>SLOTS.map(s=>slotLb(s)));
- ok('không còn dòng giờ nào của hệ thống nếu ngày đó không có ca ở giờ ấy',sys.some(s=>!w.some(x=>x.lb===s))&&c.rows.every(r=>!/^0\//.test(r.n)),{sys,rows:c.rows});
- ok('mọi dòng đều có ít nhất một phòng đang dùng',c.rows.length>=1&&c.rows.every(r=>+r.n.split('/')[0]>=1),c.rows);
- ok('có ghi chú nói rõ chỉ liệt kê khung giờ có giáo viên dạy 1-1',/Chỉ liệt kê các khung giờ có giáo viên dạy 1-1/.test(c.txt)&&/trên tổng \d+ phòng/.test(c.txt),c.txt);
+ ok('không còn dòng giờ nào của hệ thống nếu ngày đó không có ca ở giờ ấy',sys.some(s=>!w.some(x=>x.lb===s))&&c.rows.every(r=>!/^0 /.test(r.n)),{sys,rows:c.rows});
+ ok('mọi dòng đều có ít nhất một ca',c.rows.length>=1&&c.rows.every(r=>/^\d+ ca$/.test(r.n)&&+r.n.split(' ')[0]>=1),c.rows);
+ ok('có ghi chú nói rõ chỉ liệt kê khung giờ có giáo viên dạy 1-1',/Chỉ liệt kê các khung giờ có giáo viên dạy 1-1/.test(c.txt)&&!/phòng/i.test(c.txt),c.txt);
 
  /* thêm ca ở giờ riêng, ngoài mốc hệ thống: hiện thêm đúng một dòng ở đúng chỗ */
  const free=await ev(()=>{const day=dow(WD),base=DB.lich.find(l=>l.type==='11'&&l.day===day&&l.slot);if(!base)return'';

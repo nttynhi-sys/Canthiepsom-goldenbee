@@ -113,18 +113,17 @@ function conflict(x){const w=x.date?dow(x.date):x.day;
  const same=lichNear(w,x.slot,x.date).filter(l=>l.id!==x.id);
  if(same.some(l=>l.gv===x.gv))return 'Giáo viên đã có buổi khác ở khung giờ này';
  if(same.some(l=>l.hs===x.hs))return 'Trẻ đã có buổi khác ở khung giờ này';
- if(x.room&&same.some(l=>l.room===x.room))return 'Phòng đã được dùng ở khung giờ này';
  if(x.date&&DB.lr.some(l=>l.st===x.gv&&l.s==='duyet'&&l.f<=x.date&&x.date<=l.t))return 'Giáo viên có đơn nghỉ đã duyệt vào ngày này';
  return ''}
 function freeSlots(gv,hs,from,n){const out=[];let d=from;
  for(let i=0;i<28&&out.length<n;i++,d=addD(d,1)){if(!isW(d)||isClosed(d))continue;let c=0;
-  for(const s of SLOTS){if(c>=2)break;const room=ROOMS.find(r=>!conflict({date:d,slot:s,gv,hs,room:r}));if(room){out.push({date:d,slot:s,room});c++}}}
+  for(const s of SLOTS){if(c>=2)break;if(!conflict({date:d,slot:s,gv,hs})){out.push({date:d,slot:s});c++}}}
  return out}
 function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))return out;
  DB.lich.forEach(l=>{if(l.type==='11'&&l.day===w&&(!first[l.hs]||l.slot<first[l.hs].slot))first[l.hs]=l});
  DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);
-  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:l.gv,slot:l.slot,room:l.room,kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
- DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,room:'',kids:ks})});
+  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:l.gv,slot:l.slot,kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
+ DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,kids:ks})});
  return out.sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0)}
 
 /* --- Chấm công nhân viên và lương --- */

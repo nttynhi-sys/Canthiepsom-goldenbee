@@ -23,7 +23,7 @@ async function login(page,e,p){await page.waitForSelector('#login');await page.f
  /* chọn một bé có bán trú và ít nhất 2 ca 1-1 trong dữ liệu mẫu; tìm khung giờ trống cho ca đầu */
  const P=await page.evaluate(()=>{const k=DB.kids.find(x=>x.st==='dang'&&x.bt&&DB.lich.filter(l=>l.type==='11'&&l.hs===x.id).length>=3);if(!k)return null;
   const ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).sort((a,b)=>a.day-b.day||(a.slot<b.slot?-1:1)),l0=ls[0],l1=ls[1];
-  const fr=(l,s)=>ROOMS.some(r=>!conflict({id:l.id,day:l.day,slot:s,gv:l.gv,hs:l.hs,room:r})),pick=l=>[...SLOTS].reverse().find(s=>s!==l.slot&&fr(l,s)&&ls.filter(o=>o.id!==l.id&&o.day===l.day).every(o=>Math.abs(tmin(o.slot)-tmin(s))>=SLOT_MIN));
+  const fr=(l,s)=>!conflict({id:l.id,day:l.day,slot:s,gv:l.gv,hs:l.hs }),pick=l=>[...SLOTS].reverse().find(s=>s!==l.slot&&fr(l,s)&&ls.filter(o=>o.id!==l.id&&o.day===l.day).every(o=>Math.abs(tmin(o.slot)-tmin(s))>=SLOT_MIN));
   return{id:k.id,n:ls.length,l0:{id:l0.id,day:l0.day,slot:l0.slot,lt:l0.lt||''},l1:{id:l1.id},new0:pick(l0)}});
  ok('có bé mẫu bán trú với từ 3 ca 1-1 để thử',!!P&&!!P.new0,P);
  const lessonOf=lid=>srv.recs.get('lich|'+lid);

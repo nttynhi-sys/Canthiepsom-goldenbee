@@ -65,7 +65,7 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('add fixed session',(await ev(()=>DB.lich.length))===l0+1||!!(await page.$('#lsf .err:not(:empty)')),'lich '+l0+'->'+(await ev(()=>DB.lich.length)));
   if(await page.$('.mdl'))await page.click('.mdl [data-a="mx"]')}
  // conflict check via API
- const cf=await ev(()=>{const l=DB.lich.find(x=>x.type==='11');const other=DB.kids.find(k=>k.id!==l.hs&&k.st==='dang');return conflict({id:'new',type:'11',day:l.day,slot:l.slot,gv:l.gv,hs:other.id,room:'Phòng 9'})});
+ const cf=await ev(()=>{const l=DB.lich.find(x=>x.type==='11');const other=DB.kids.find(k=>k.id!==l.hs&&k.st==='dang');return conflict({id:'new',type:'11',day:l.day,slot:l.slot,gv:l.gv,hs:other.id})});
  ok('conflict detection (same teacher same slot)',/Giáo viên/.test(cf),cf);
  // Báo cáo duyệt và gửi
  await nav('bc');

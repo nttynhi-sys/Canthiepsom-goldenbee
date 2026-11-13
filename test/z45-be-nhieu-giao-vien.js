@@ -35,7 +35,7 @@ const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
  /* chọn 4 giáo viên và các khung giờ mà cả 4 đều rảnh */
  const gvs=await ev(()=>pool11().map(s=>s.id)),[G1,G2,G3,G4]=gvs;
  ok('có đủ 4 giáo viên 1-1 để thử',gvs.length>=4,gvs);
- const FREE=await ev(g=>{const fr=(w,s)=>g.every(x=>ROOMS.some(r=>!conflict({day:w,slot:s,gv:x,hs:'hsX',room:r}))),rs=[...SLOTS].reverse(),
+ const FREE=await ev(g=>{const fr=(w,s)=>g.every(x=>!conflict({day:w,slot:s,gv:x,hs:'hsX' })),rs=[...SLOTS].reverse(),
   pick=(w,ex)=>rs.find(s=>!ex.includes(s)&&ex.every(e=>Math.abs(tmin(s)-tmin(e))>=SLOT_MIN)&&fr(w,s));
   const a=pick(1,[]),b=pick(1,[a]),c=pick(3,[]),d=pick(3,[c]),e=pick(5,[]);return{a,b,c,d,e}},[G1,G2,G3,G4]);
  ok('tìm được các khung giờ rảnh cho cả 4 giáo viên',Object.values(FREE).every(Boolean),FREE);
@@ -75,7 +75,7 @@ const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 
  /* 3. đổi giáo viên của một ca sang người đang bận đúng giờ đó: báo lý do, hoàn tác tất cả, chưa lưu */
  const OTHER=await ev(id=>DB.kids.find(k=>k.id!==id&&k.st==='dang').id,KID);
- await ev(([g,s,o])=>{DB.lich.push({id:'lDummy',type:'11',day:1,slot:s,gv:g,hs:o,room:ROOMS.find(r=>true),lt:null})},[G3,FREE.b,OTHER]);
+ await ev(([g,s,o])=>{DB.lich.push({id:'lDummy',type:'11',day:1,slot:s,gv:g,hs:o,lt:null})},[G3,FREE.b,OTHER]);
  await page.click('[data-a="gvadd"]');await W(40);
  await page.selectOption('#gvl .gvr:nth-child(3) select',G3);
  const opt3=await ev(()=>[...document.querySelectorAll('#hsff #s11 .s11r')[0].querySelector('[name=s11gv]').options].map(o=>o.value));
@@ -160,7 +160,7 @@ const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
  const sel=await ev(()=>[...document.querySelectorAll('select[data-c=lsgv]')].length);
  ok('thẻ Lịch học: mỗi ca 1-1 có ô chọn giáo viên',sel===4,sel);
  const lg=(await caOf(KID)).find(l=>l.lt==='gq'&&l.day===1);
- await ev(([g,s,o])=>{DB.lich.push({id:'lDummy2',type:'11',day:1,slot:s,gv:g,hs:o,room:ROOMS[0],lt:null})},[G2,lg.slot,OTHER]);
+ await ev(([g,s,o])=>{DB.lich.push({id:'lDummy2',type:'11',day:1,slot:s,gv:g,hs:o,lt:null})},[G2,lg.slot,OTHER]);
  await page.selectOption('select[data-c=lsgv][data-l="'+lg.id+'"]',G2);await W(120);
  const t10=await toastTx();
  ok('đổi giáo viên của ca sang người đang bận: báo lý do, không hỏi xác nhận, ca giữ nguyên',/Giáo viên đã có buổi khác/.test(t10)&&await ev(()=>!S.modal||S.modal.t!=='ask')&&(await caOf(KID)).find(l=>l.id===lg.id).gv===G1,t10);

@@ -19,7 +19,7 @@
 ## Bán trú, học phí và lương
 - **Học phí bán trú:** 380.000 ₫ mỗi ngày, đã gồm 1 ca can thiệp 1-1 (50 phút, 180.000 ₫). Đặt ở Nhân sự → Cài đặt (`pbtDay`, `pbtDay11`). Trong 380.000 ₫ có 200.000 ₫ phí bán trú và 180.000 ₫ phí ca 1-1. Hóa đơn tháng = số ngày bán trú của bé × 380.000 + số ca 1-1 tính riêng × giá buổi 1-1 (`p11`, mặc định 180.000 ₫).
 - **Ngày bán trú riêng từng bé:** mở hồ sơ bé → thẻ Lịch học. Chọn T2–T6, T2–T7 hoặc từng ngày (`btd`; bé cũ chưa có thì mặc định T2–T6). Lớp chỉ mở thứ Bảy khi có bé chọn T7.
-- **Lịch 1-1 linh hoạt:** cùng thẻ Lịch học, thêm cùng lúc nhiều ngày cho một giáo viên và một ca. Hệ thống kiểm tra trùng giáo viên, bé, phòng, lớp bán trú từng ngày, chỉ thêm các ngày còn trống và báo ngày không thêm được kèm lý do. Bé không bán trú học vài buổi mỗi tuần thì chỉ tính theo số buổi.
+- **Lịch 1-1 linh hoạt:** cùng thẻ Lịch học, thêm cùng lúc nhiều ngày cho một giáo viên và một ca. Hệ thống kiểm tra trùng giáo viên, bé, lớp bán trú từng ngày, chỉ thêm các ngày còn trống và báo ngày không thêm được kèm lý do. Bé không bán trú học vài buổi mỗi tuần thì chỉ tính theo số buổi.
 - **Ca 1-1 trong gói:** mỗi ngày bán trú, ca 1-1 sớm nhất của bé là ca nằm trong gói (không tính riêng). Ca thứ hai trở đi trong ngày tính riêng. Ghi nghỉ ở ngày bán trú thì ca trong gói nghỉ theo. Nghỉ có phép (báo trước) hoàn 180.000 ₫ phí 1-1, mất phần còn lại; nghỉ không phép mất cả ngày. Nhập viện có giấy: hoàn 50% phí bán trú (100.000 ₫) và 100% phí ca 1-1 (180.000 ₫), tổng 280.000 ₫ mỗi ngày (chỉnh ở Nhân sự → Cài đặt: `bvRefund`, `bvRefund11`; cấu hình cũ chưa có `bvRefund11` tự dùng 100%). Buổi 1-1 riêng: nghỉ có phép mất 30% và hoàn 70%, nghỉ không phép mất 100%, Trung tâm hoặc giáo viên nghỉ hoàn 100%. Mọi khoản hoàn trừ vào học phí tháng sau, ghi vào công nợ ngày đầu tháng đó.
 - **Thời khóa biểu bán trú** (Lịch học → Thời khóa biểu bán trú): thời khóa biểu lớp kiểu mầm non (đón trẻ, thể dục sáng, ăn, ngủ, hoạt động...) theo từng lớp, sửa được (Trưởng Trung tâm, Quản lý). Giờ 1-1 của từng bé ghép lên thời khóa biểu: tên bé hiện ở ô giờ ra học 1-1; có chế độ xem từng bé. Phụ huynh xem thời khóa biểu của bé mình. Lưu ở bộ sưu tập `tkb` của bảng `records`, không cần chạy thêm SQL.
 - **Chẩn đoán** (hồ sơ bé): chọn nhiều trong thư viện hơn 120 mục chia nhóm (ngôn ngữ, nói, giao tiếp xã hội và phổ tự kỷ, phát triển, thính giác, thần kinh, hành vi và cảm xúc...) kèm mã ICD-10 để tra cứu, có ô lọc nhanh, thêm ô "chẩn đoán khác" và nơi chẩn đoán. Thư viện ở `src/build/p03d-dx.js`.
@@ -28,7 +28,7 @@
 
 ## Thực đơn, giờ 1-1 và ngày nghỉ
 - **Thực đơn bán trú** nhập từ thứ Hai đến thứ Bảy (6 ngày); sao chép tuần có cả thứ Bảy, Chủ nhật chuyển sang thứ Hai.
-- **Giờ 1-1 chọn tự do** như giờ bán trú: gõ giờ bắt đầu bất kỳ trong khung 07:15 đến 20:00 (ca cuối bắt đầu muộn nhất 19:10), mỗi ca 50 phút, giờ kết thúc tự tính. Trùng giáo viên, bé, phòng kiểm tra theo khoảng giờ chồng nhau (hai ca cách nhau dưới 50 phút là trùng); phòng có thể để "Tự chọn phòng trống". Quy tắc này chạy cả ở trình duyệt và ở `api/parent.js` (phụ huynh đăng ký học bù).
+- **Giờ 1-1 chọn tự do** như giờ bán trú: gõ giờ bắt đầu bất kỳ trong khung 07:15 đến 20:00 (ca cuối bắt đầu muộn nhất 19:10), mỗi ca 50 phút, giờ kết thúc tự tính. Trùng giáo viên hoặc bé kiểm tra theo khoảng giờ chồng nhau (hai ca cách nhau dưới 50 phút là trùng). Hệ thống không quản lý phòng học (giáo viên không dạy cố định phòng) nên không giới hạn số ca cùng giờ. Quy tắc này chạy cả ở trình duyệt và ở `api/parent.js` (phụ huynh đăng ký học bù).
 - **Ngày nghỉ lễ, Trung tâm cho nghỉ** (`hol`, mục Lịch học → Ngày nghỉ): đặt trước để lên học phí đầu tháng. Ngày nghỉ không tính học phí bán trú, ca 1-1 và không cần điểm danh. Học phí tháng sau của phụ huynh = học phí tháng sau trừ phí dư của tháng trước; bé ngưng đột ngột thì phí dư không hoàn ("Dư không hoàn"). Trưởng Trung tâm, Quản lý, Văn phòng sửa được; giáo viên chỉ đọc. Hóa đơn đã lập không tự đổi khi thêm ngày nghỉ sau đó.
 
 ## Khóa cổng phụ huynh quá hạn học phí
@@ -113,7 +113,7 @@
 
 ## Phụ huynh
 - Phụ huynh không đọc hay ghi trực tiếp bảng dữ liệu (chính sách SQL chặn hoàn toàn). Mọi thứ đi qua `api/parent.js`: hàm xác nhận phụ huynh, chỉ trả dữ liệu của các bé gắn với tài khoản, nhân viên chỉ lộ tên và chức vụ, học phí chỉ của bé mình.
-- Phụ huynh được ghi: yêu cầu học bù của bé mình, lịch học bù của bé mình (kiểm tra trùng giáo viên, phòng, bé, lớp bán trú), đánh dấu đã đọc thông báo. Không ghi được gì khác.
+- Phụ huynh được ghi: yêu cầu học bù của bé mình, lịch học bù của bé mình (kiểm tra trùng giáo viên, bé, lớp bán trú), đánh dấu đã đọc thông báo. Không ghi được gì khác.
 - Bé gắn với tài khoản theo email phụ huynh trong hồ sơ bé, nếu không có email thì theo số điện thoại. Các bé cùng email (hoặc cùng số điện thoại) dùng chung một tài khoản.
 - Cấp tài khoản: mục Cổng phụ huynh → nút Tài khoản cho từng người, hoặc "Cấp tài khoản cho phụ huynh chưa có" để cấp hàng loạt và tải danh sách mật khẩu (Excel). Mật khẩu chỉ có trong tệp tải về.
 

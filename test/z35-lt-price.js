@@ -32,7 +32,7 @@ const SP='/tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratc
  /* ---------- C. đổi giá và lưu ---------- */
  const lt=await ev(()=>{const k=DB.kids.find(x=>x.st==='dang');
   /* hai ca 1-1 của bé: một ca loại gq, một ca cũ chưa có loại */
-  const mk=(id,slot,t)=>DB.lich.push(Object.assign({id,type:'11',day:1,slot,gv:DB.staff[0].id,hs:k.id,room:'P1'},t?{lt:t}:{}));
+  const mk=(id,slot,t)=>DB.lich.push(Object.assign({id,type:'11',day:1,slot,gv:DB.staff[0].id,hs:k.id},t?{lt:t}:{}));
   mk('zz-gq',SLOTS[2],'gq');mk('zz-old',SLOTS[4],null);mk('zz-nc',SLOTS[6],'nc');
   return{kid:k.id,p11:DB.cfg.p11,before:{gq:feeSlot(k,'zz-gq'),old:feeSlot(k,'zz-old'),nc:feeSlot(k,'zz-nc')}}});
  ok('trước khi đổi: ca loại gq 200.000, ca nước 190.000, ca cũ không loại theo giá chung',lt.before.gq===200000&&lt.before.nc===190000&&lt.before.old===lt.p11,lt);

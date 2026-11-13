@@ -36,12 +36,12 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
   out.f11=fee11(k);
   out.a=invoice(k,m);                                   /* T2–T6, chưa có ca 1-1 */
   k.btd=[1,2,3,4,5,6];out.b=invoice(k,m);               /* T2–T7 */
-  [1,2,3,4,5,6].forEach(w=>DB.lich.push({id:'tl'+w,type:'11',day:w,slot:'09:00',gv:'nv04',hs:id,room:'Phòng 1'}));
+  [1,2,3,4,5,6].forEach(w=>DB.lich.push({id:'tl'+w,type:'11',day:w,slot:'09:00',gv:'nv04',hs:id}));
   out.c=invoice(k,m);                                   /* thêm một ca 1-1 mỗi ngày bán trú: nằm trong gói */
-  DB.lich.push({id:'tlx',type:'11',day:1,slot:'15:00',gv:'nv04',hs:id,room:'Phòng 2'});
+  DB.lich.push({id:'tlx',type:'11',day:1,slot:'15:00',gv:'nv04',hs:id});
   out.d=invoice(k,m);                                   /* thêm ca thứ hai vào thứ Hai: tính riêng */
   k.bt=false;k.gr='';delete k.btd;DB.lich=DB.lich.filter(l=>l.hs!==id);
-  [2,4].forEach(w=>DB.lich.push({id:'tn'+w,type:'11',day:w,slot:'10:00',gv:'nv04',hs:id,room:'Phòng 1'}));
+  [2,4].forEach(w=>DB.lich.push({id:'tn'+w,type:'11',day:w,slot:'10:00',gv:'nv04',hs:id}));
   out.e=invoice(k,m);                                   /* không bán trú, học thứ Ba và thứ Năm */
   return out});
  ok('bán trú T2–T6: mỗi ngày 380.000',fee.a===fee.n5*380000,fee);
@@ -77,7 +77,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  let ls=await ev(()=>DB.lich.filter(l=>l.hs==='tst1').map(l=>l.day+'@'+l.slot).sort());
  ok('thêm cùng lúc 2 buổi 1-1 vào thứ Ba và thứ Năm',ls.join()===['2@'+SL1,'4@'+SL1].join(),{ls,SL1});
  /* trùng giờ: bé khác cùng giáo viên và ca ở thứ Ba thì không thêm được */
- await ev(sv=>{const o=DB.kids.find(x=>x.bt&&x.id!=='tst1'&&x.st==='dang');DB.lich=DB.lich.filter(l=>!(l.hs===o.id&&l.day===3));DB.lich.push({id:'tcf',type:'11',day:3,slot:sv,gv:'gvt0',hs:o.id,room:'Phòng 4'});S.modal={t:'hs',id:'tst1',tab:'lh'};render()},SL2);
+ await ev(sv=>{const o=DB.kids.find(x=>x.bt&&x.id!=='tst1'&&x.st==='dang');DB.lich=DB.lich.filter(l=>!(l.hs===o.id&&l.day===3));DB.lich.push({id:'tcf',type:'11',day:3,slot:sv,gv:'gvt0',hs:o.id});S.modal={t:'hs',id:'tst1',tab:'lh'};render()},SL2);
  await page.waitForSelector('#lsmf');
  await page.selectOption('#lsmf [name=gv]','gvt0');
  await page.fill('#lsmf [name=slot]',SL2);
@@ -131,12 +131,12 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
   const mkT=(id,rate,mode)=>({id,n:'GV '+id,role:'gv',st:'dang',pay:{mode:mode||'buoi',base:mode==='thang'?8000000:0,rate:rate,rateBt:0,allow:0,latePen:0,bh:0}});
   const s60=mkT('gvt60',60000),s80=mkT('gvt80',80000),sf=mkT('gvtf',0,'thang');
   DB.staff.push(s60,s80,sf);
-  const put=(sid,hs,day,i,code)=>{const dd=dts.filter(d=>dow(d)===day)[i];DB.lich.push({id:'p'+sid+hs+day+i,type:'11',day:day,slot:'11:00',gv:sid,hs:hs,room:'Phòng 5'});DB.att[dd+'|p'+sid+hs+day+i+'|'+hs]=code;return dd};
+  const put=(sid,hs,day,i,code)=>{const dd=dts.filter(d=>dow(d)===day)[i];DB.lich.push({id:'p'+sid+hs+day+i,type:'11',day:day,slot:'11:00',gv:sid,hs:hs});DB.att[dd+'|p'+sid+hs+day+i+'|'+hs]=code;return dd};
   const run=(sid,rate)=>{
    /* thứ Hai đến thứ Sáu: có mặt, nghỉ KP, nghỉ có phép, Trung tâm nghỉ, có mặt */
    put(sid,'tst9',1,0,'cm');put(sid,'tst9',2,0,'kp');put(sid,'tst9',3,0,'p');put(sid,'tst9',4,0,'tt');put(sid,'tst9',5,0,'cm');
    /* buổi học bù (dạy bù) một ngày thứ Hai khác */
-   const d=dts.filter(x=>dow(x)===1)[1];DB.lich.push({id:'bu'+sid,type:'bu',date:d,slot:'12:00',gv:sid,hs:'tst9',room:'Phòng 5'});DB.att[d+'|bu'+sid+'|tst9']='cm'};
+   const d=dts.filter(x=>dow(x)===1)[1];DB.lich.push({id:'bu'+sid,type:'bu',date:d,slot:'12:00',gv:sid,hs:'tst9'});DB.att[d+'|bu'+sid+'|tst9']='cm'};
   run('gvt60');run('gvt80');run('gvtf');
   const A=payroll(s60,m),B=payroll(s80,m),F=payroll(sf,m);
   const r1={a:A.bySess,b:B.bySess,f:F.bySess,cm:A.teach,kp:A.kp,p:A.p,tt:A.tt,bu:A.bu};

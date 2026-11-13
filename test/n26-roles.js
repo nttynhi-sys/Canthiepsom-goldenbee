@@ -338,8 +338,8 @@ const EXP={
    o.bt=DB.kids.filter(k=>k.gr).length;o.btStaff=DB.groups.map(g=>grTs(g).map(i=>stBy(i).pos).join('/'));
    o.mk=DB.mk.every(r=>SLOTS.includes(r.from.slot)&&r.props.every(p=>SLOTS.includes(p.slot)));
    o.attRows=Object.keys(DB.att).filter(k=>/\|G\d+\|/.test(k)).every(k=>/\|G[12]\|/.test(k));
-   /* không trùng giờ: một giáo viên, một bé, một phòng không ở 2 buổi cùng lúc */
-   const seen={};let dup=0;DB.lich.filter(l=>l.type==='11').forEach(l=>[l.gv,l.hs,l.room].forEach(x=>{const k=x+l.day+l.slot;if(seen[k])dup++;seen[k]=1}));o.dup=dup;
+   /* không trùng giờ: một giáo viên, một bé không ở 2 buổi cùng lúc (không còn khái niệm phòng) */
+   const seen={};let dup=0;DB.lich.filter(l=>l.type==='11').forEach(l=>[l.gv,l.hs].forEach(x=>{const k=x+l.day+l.slot;if(seen[k])dup++;seen[k]=1}));o.dup=dup;
    o.menu=Object.keys(DB.menu).length;o.menuDays=Object.keys(DB.menu).every(d=>{const w=dow(d);return w>=1&&w<=6});
    o.nt=DB.nt.some(n=>n.t==='Giờ học 1-1 và bán trú');
    o.vp=DB.staff.filter(s=>s.role==='vp').map(s=>s.id+':'+s.pos);o.v=DB.v;
@@ -352,7 +352,7 @@ const EXP={
   ok('dữ liệu mẫu: đúng 2 lớp bán trú G1 Ong non, G2 Ong mật',JSON.stringify(r.groups)==='["G1:Ong non","G2:Ong mật"]'&&r.grOK&&r.bt>10,r);
   ok('dữ liệu mẫu: bé bán trú xếp lớp theo tuổi (dưới 6 tuổi Ong non)',r.byAge,r);
   ok('dữ liệu mẫu: điểm danh bán trú chỉ có lớp G1, G2; học bù dùng ca mới',r.attRows&&r.mk,r);
-  ok('dữ liệu mẫu: không trùng giáo viên, bé, phòng cùng lúc',r.dup===0,r.dup);
+  ok('dữ liệu mẫu: không trùng giáo viên, bé cùng lúc; không buổi nào có phòng',r.dup===0,r.dup);
   ok('dữ liệu mẫu: thực đơn 3 tuần, thứ Hai–thứ Bảy',r.menu===18&&r.menuDays,[r.menu,r.menuDays]);
   ok('dữ liệu mẫu: có thông báo giờ 1-1 và bán trú; thông báo học phí có cờ fin',r.nt&&r.fin.length>=1,r.fin);
   ok('dữ liệu mẫu: có đúng nhân sự Văn phòng và dữ liệu bản 7',r.vp.length===1&&/văn phòng/i.test(r.vp[0])&&r.v===7,r.vp);
