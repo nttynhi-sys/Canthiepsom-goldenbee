@@ -3,8 +3,8 @@ const trunc=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
 const domTag=(d,g)=>g&&isPlay(g)?`<span class="tag gy" title="Chơi (thuộc lĩnh vực ${esc(DM[d].n)})">Chơi</span>`:`<span class="tag gy" title="${esc(DM[d].n)}">${esc(DM[d].s)}</span>`;
 const supTag=s=>`<span class="sp sp-${s}" title="${esc(SUP[s].n+': '+SUP[s].h)}">${esc(SUP[s].n)}</span>`;
 const strip=tr=>`<span class="trs" role="img" aria-label="${trOk(tr)} lượt đúng trên ${trN(tr)} lượt">${tr.split('').map(c=>`<i class="${c==='V'?'tv':c==='X'?'tx':'to'}"></i>`).join('')}</span>`;
-/* người phụ trách bé: giáo viên 1-1 của bé, nếu không có thì mọi giáo viên của lớp bán trú (ngang nhau) */
-const kidGVs=k=>k.gv?[k.gv]:grTs(grBy(k.gr));
+/* người phụ trách bé: các giáo viên 1-1 của bé (nhiều người, ngang nhau), nếu không có thì mọi giáo viên của lớp bán trú (ngang nhau) */
+const kidGVs=k=>kTs(k).length?kTs(k):grTs(grBy(k.gr));
 const kidGV=k=>kidGVs(k)[0]||'';
 const canEditSess=s=>!!U&&canKid(s.k)&&(isLead()||(isGV()&&(s.by===U.id||kidGVs(kidBy(s.k)||{}).includes(U.id))&&s.date>=addD(TODAY,-14)));
 const planBy=id=>DB.plans.find(p=>p.id===id);

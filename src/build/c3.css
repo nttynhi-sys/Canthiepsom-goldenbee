@@ -250,14 +250,19 @@ body.gph .mi,body.gph .mbig{-webkit-user-drag:none;user-select:none;-webkit-touc
 .lt-row:first-child{border-top:0}
 .lt-row>.chk{grid-area:n;margin:0}.lt-row>span.sm{grid-area:p;padding-left:28px}.lt-row>label.sm{grid-area:h;display:flex;align-items:center;gap:6px;margin:0;white-space:nowrap}
 /* mỗi ca 1-1 một hàng: ngày, loại, giờ, nút xóa; điện thoại thì loại xuống hàng riêng */
-.s11r{display:grid;grid-template-columns:minmax(112px,.6fr) minmax(0,2fr) minmax(120px,.8fr) auto;grid-template-areas:"d lt tm x";gap:8px;align-items:center;padding:8px 0;border-top:1px dashed var(--bd)}
-.s11r [name=s11day]{grid-area:d}.s11r [name=s11lt]{grid-area:lt}.s11r [name=s11tm]{grid-area:tm}.s11r .btn{grid-area:x}
+.s11r{display:grid;grid-template-columns:minmax(104px,.55fr) minmax(0,1.8fr) minmax(136px,.8fr) auto;grid-template-areas:"d lt tm x" "g g g g";gap:8px;align-items:center;padding:8px 0;border-top:1px dashed var(--bd)}
+.s11r [name=s11day]{grid-area:d}.s11r [name=s11lt]{grid-area:lt}.s11r [name=s11gv]{grid-area:g}.s11r [name=s11tm]{grid-area:tm}.s11r .btn{grid-area:x}
 .s11r select,.s11r input{min-width:0;width:100%}
-@media (max-width:640px){.s11r{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"d tm" "lt lt" "x x"}.s11r .btn{justify-self:start}}
-.s11r.sv{grid-template-areas:"d lt tm x" "m m m m"}.s11r .s11m{grid-area:m}
+@media (max-width:640px){.s11r{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"d tm" "lt lt" "g g" "x x"}.s11r .btn{justify-self:start}}
+.s11r.sv{grid-template-areas:"d lt tm x" "g g g g" "m m m m"}.s11r .s11m{grid-area:m}
 .s11r .s11m .m2{display:none;color:var(--er)}.s11r.gone .s11m .m1{display:none}.s11r.gone .s11m .m2{display:inline}
 .s11r.gone select,.s11r.gone input{opacity:.5;text-decoration:line-through}
-@media (max-width:640px){.s11r.sv{grid-template-areas:"d tm" "lt lt" "m m" "x x"}}
+@media (max-width:640px){.s11r.sv{grid-template-areas:"d tm" "lt lt" "g g" "m m" "x x"}}
+/* danh sách giáo viên của một bé (nhiều giáo viên, mỗi người một nội dung) */
+.gvr{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) auto;gap:8px;align-items:center;padding:6px 0;border-top:1px dashed var(--bd)}.gvr:first-child{border-top:0}
+.gvr select,.gvr input{min-width:0;width:100%}
+@media (max-width:640px){.gvr{grid-template-columns:minmax(0,1fr)}.gvr .btn{justify-self:start}}
+.gvs{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}.gvs .gvt{display:inline-flex;gap:4px;align-items:baseline}
 .d11{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:3px 0}.d11 .chk{width:62px;flex:none}.d11 input[type=time]{width:140px;flex:none}
 
 /* Tài liệu tham khảo, Góc tri ân, xem PDF trong trang */

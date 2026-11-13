@@ -1,6 +1,6 @@
 /* ===== 11. Báo cáo chuyên môn ===== */
 const RPS={nhap:['Bản nháp','gy'],cho:['Chờ duyệt','wa'],duyet:['Đã duyệt','in'],gui:['Đã gửi phụ huynh','ok']};
-const rpList=()=>DB.rp.filter(r=>{const k=kidBy(r.hs);return k&&canKid(r.hs)&&(isLead()||r.au===U.id||k.gv===U.id)});
+const rpList=()=>DB.rp.filter(r=>{const k=kidBy(r.hs);return k&&canKid(r.hs)&&(isLead()||r.au===U.id||kHas(k,U.id))});
 function rpDoc(r,pdf){const k=kidBy(r.hs);
  return`<div style="margin-bottom:10px"><b>${esc(k.n)}</b> · ${age(k.dob)} · ${esc(k.nd)}<br><span class="sm mu">${mLabel(r.per)} · Giáo viên phụ trách: ${esc(sn(r.au))}</span></div>`+progReport(k,r.per,pdf)+DB.tpl.map(t=>`<div class="nb"><h3 style="margin-top:12px">${esc(t.t)}</h3><p style="white-space:pre-line">${esc((r.sec&&r.sec[t.k])||'Chưa có nội dung.')}</p></div>`).join('')}
 VIEWS.bc=()=>{const b=S.bc=Object.assign({tab:'ds',f:'',per:'',q:''},S.bc);
@@ -24,7 +24,7 @@ CHG.bcnk=v=>{S.modal.k=v};CHG.bcnp=v=>{S.modal.per=v};
 MODALS.bcn=()=>{const m=S.modal,ks=bcKids();
  return mdl('Soạn báo cáo mới',`<form id="bcnf" class="f"><div class="f2"><div><label for="bn-k">Bé</label><select id="bn-k" data-c="bcnk">${opts(ks.map(k=>[k.id,k.n]),m.k)}</select></div><div><label for="bn-p">Kỳ báo cáo</label><select id="bn-p" data-c="bcnp">${opts([sm(CM,-2),sm(CM,-1),CM].map(x=>[x,mLabel(x)]),m.per)}</select></div></div><p class="note sm">Hệ thống điền sẵn tổng quan và kết quả từ số liệu các buổi trị liệu. Bạn chỉnh lại cho đúng với quan sát của mình.</p><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit" ${m.k?'':'disabled'}>Bắt đầu soạn</button></div></form>`)};
 FORM.bcnf=()=>{const m=S.modal,k=kidBy(m.k);if(!k)return false;let r=DB.rp.find(x=>x.hs===k.id&&x.per===m.per);
- if(!r){r={id:'r'+uid(),hs:k.id,per:m.per,au:isGV()?U.id:(k.gv||U.id),s:'nhap',rv:'',cm:'',sec:autoSec(k,m.per)};DB.rp.push(r)}S.modal={t:'bce',id:r.id}};
+ if(!r){r={id:'r'+uid(),hs:k.id,per:m.per,au:isGV()?U.id:(kTs(k)[0]||U.id),s:'nhap',rv:'',cm:'',sec:autoSec(k,m.per)};DB.rp.push(r)}S.modal={t:'bce',id:r.id}};
 ACT.bcedit=v=>{S.modal={t:'bce',id:v}};
 MODALS.bce=()=>{const r=DB.rp.find(x=>x.id===S.modal.id);if(!r||!canKid(r.hs)){S.modal=null;return''}
  return mdl('Soạn báo cáo · '+kn(r.hs)+' · '+mLabel(r.per),`<form id="bcef" class="f">${r.cm&&r.s==='nhap'?`<p class="note sm"><b>Góp ý của người duyệt:</b> ${esc(r.cm)}</p>`:''}${DB.tpl.map(t=>`<div><label for="be-${t.k}">${esc(t.t)} <span class="sm">· ${esc(t.h)}</span></label><textarea id="be-${t.k}" name="${t.k}" rows="4">${esc((r.sec&&r.sec[t.k])||'')}</textarea></div>`).join('')}<div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Đóng</button><button class="btn" type="submit" name="act" value="save">Lưu</button><button class="btn p" type="submit" name="act" value="sub" ${r.s==='nhap'?'':'disabled'}>Lưu và nộp duyệt</button></div></form>`,1)};

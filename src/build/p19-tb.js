@@ -32,7 +32,7 @@ function attStats(m){const by={};
 const attTot=m=>attRows(m).reduce((a,r)=>({t:a.t+1,cm:a.cm+(r.c==='cm'?1:0)}),{t:0,cm:0});
 function tkData(m){const act=DB.kids.filter(k=>k.st==='dang'),as=attStats(m),tot=attTot(m),fs=feeStats(m);
  const prog=[['Chỉ can thiệp 1-1',k=>wk11(k.id)&&!k.bt],['Cả 1-1 và bán trú',k=>wk11(k.id)&&k.bt],['Chỉ bán trú',k=>!wk11(k.id)&&k.bt]].map(([l,f])=>{const ks=act.filter(f);return{l,n:ks.length,due:ks.reduce((s,k)=>s+billed(k.id,m),0),paid:ks.reduce((s,k)=>s+paidM(k.id,m),0)}});
- const tr=DB.staff.filter(s=>isTeacher(s)&&s.st==='dang'&&(s.role==='gv'||teachesNow(s.id))).map(s=>({s,o:as[s.id]||{t:0,cm:0,p:0,kp:0,tt:0,bv:0},ks:act.filter(k=>k.gv===s.id).length}));
+ const tr=DB.staff.filter(s=>isTeacher(s)&&s.st==='dang'&&(s.role==='gv'||teachesNow(s.id))).map(s=>({s,o:as[s.id]||{t:0,cm:0,p:0,kp:0,tt:0,bv:0},ks:act.filter(k=>kHas(k,s.id)).length}));
  const refund=DB.lg.filter(e=>e.kind==='hoan'&&e.m===m).reduce((s,e)=>s+e.amt,0);
  return{act,tot,fs,prog,tr,refund,rate:tot.t?Math.round(tot.cm*100/tot.t):0}}
 VIEWS.tk=()=>{const t=S.tk=Object.assign({m:sm(WD.slice(0,7),0)},S.tk),m=t.m,d=tkData(m),$=canMoney(),pt=d.act.filter(k=>k.bt).length;

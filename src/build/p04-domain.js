@@ -12,6 +12,18 @@ const grSet=(g,ids)=>{ids=[...new Set((ids||[]).filter(Boolean))];g.ts=ids;g.gv=
 const rowHas=(s,id)=>!!id&&(s.gv===id||(s.ts||[]).includes(id));
 const kn=id=>{const k=kidBy(id);return k?k.n:'(đã xóa)'};
 const sn=id=>{const s=stBy(id);return s?s.n:'Chưa phân công'};
+/* Giáo viên 1-1 của một bé: k.ts là danh sách, ngang nhau (không có giáo viên chính), vì nhiều giáo viên dạy chung một bé và mỗi người có thể dạy nội dung khác nhau (ví dụ cô A dạy Ngôn ngữ, cô B dạy Vận động – giác quan). Mỗi ca 1-1 (l.gv) do đúng một người dạy; k.tc[mã nhân sự] là ghi chú nội dung người đó phụ trách. Dữ liệu cũ chỉ có k.gv thì đọc từ đó. kSet ghi k.ts và giữ người đầu ở k.gv chỉ để bản cũ vẫn đọc được; mã mới không đọc k.gv, không viết k.gv===. */
+const TC_MAX=80,TC_HINT=['Ngôn ngữ','Vận động – giác quan','Vận động thô – vận động tinh','Kỹ năng tự chăm sóc','Hòa nhập nhóm','Nhận thức','Chơi và tương tác','Massage cảm thụ','Vận động dưới nước'];
+const kTs=k=>!k?[]:Array.isArray(k.ts)?k.ts.filter(Boolean):(k.gv?[k.gv]:[]);
+const kHas=(k,id)=>!!id&&kTs(k).includes(id);
+const kTc=(k,id)=>(k&&k.tc&&k.tc[id])||'';
+/* tên các giáo viên của bé; withTc=true kèm nội dung phụ trách trong ngoặc */
+const kNames=(k,withTc)=>kTs(k).map(id=>sn(id)+(withTc&&kTc(k,id)?' ('+kTc(k,id)+')':'')).join(', ');
+/* tên gọi ngắn của các giáo viên (hai chữ cuối của mỗi tên), cách nhau dấu phẩy */
+const kGiven=k=>kTs(k).map(id=>given(sn(id))).join(', ');
+const kSet=(k,ids,tc)=>{ids=[...new Set((ids||[]).filter(Boolean))];k.ts=ids;k.gv=ids[0]||'';
+ const src=tc!==undefined?(tc||{}):(k.tc||{}),o={};ids.forEach(id=>{const t=String(src[id]||'').trim().slice(0,TC_MAX);if(t)o[id]=t});
+ if(Object.keys(o).length)k.tc=o;else delete k.tc};
 const policyH=k=>`<div class="note"><b>${esc(POLICY[k].t)}</b>${POLICY[k].p.map(t=>`<p style="margin-top:6px">${esc(t)}</p>`).join('')}</div>`;
 
 /* --- Học phí và bảng tính chấm công học sinh --- */

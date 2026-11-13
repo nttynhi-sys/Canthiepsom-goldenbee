@@ -16,7 +16,7 @@ const isQL=()=>!!U&&U.role==='ql',isTT=()=>!!U&&U.role==='tt',isVP=()=>!!U&&U.ro
 /* Người được phân giao dạy trẻ (1-1, bán trú, học bù): Giáo viên (gv) và Quản lý (ql). Trưởng Trung tâm, Văn phòng và hành chính không nằm trong danh sách phân giao. Quản lý vẫn giữ quyền Quản lý của mình, chỉ thêm việc được chọn làm người dạy. */
 const TEACH_ROLES=['gv','ql'],isTeacher=s=>!!s&&TEACH_ROLES.includes(s.role);
 /* Quản lý đang thực sự dạy: có bé 1-1 đang học, có ca 1-1 cố định hoặc phụ trách nhóm bán trú. Dùng để đếm số giáo viên mà không tính quản lý chưa dạy. */
-const teachesNow=id=>DB.kids.some(k=>k.gv===id&&k.st==='dang')||DB.lich.some(l=>l.gv===id)||DB.groups.some(g=>grHas(g,id));
+const teachesNow=id=>DB.kids.some(k=>kHas(k,id)&&k.st==='dang')||DB.lich.some(l=>l.gv===id)||DB.groups.some(g=>grHas(g,id));
 /* Tên hiển thị trong danh sách chọn người dạy: quản lý có ghi chú để phân biệt với giáo viên. */
 const tName=s=>s.n+(s.role==='ql'?' (Quản lý)':'');
 const activeTeachers=()=>DB.staff.filter(s=>s.st==='dang'&&(s.role==='gv'||(s.role==='ql'&&teachesNow(s.id))));
@@ -32,7 +32,7 @@ const myGroups=()=>isGV()?DB.groups.filter(g=>grHas(g,U.id)):[];
 const btView=()=>!isGV()||myGroups().length>0;
 const navList=()=>ACCESS[U.role].filter(v=>v!=='tn'||btView());
 function myKids(){if(!U)return[];if(seesAll())return DB.kids;
- if(isGV()){const gs=myGroups().map(g=>g.id);return DB.kids.filter(k=>k.gv===U.id||(k.gr&&gs.includes(k.gr))||DB.lich.some(l=>l.gv===U.id&&l.hs===k.id))}
+ if(isGV()){const gs=myGroups().map(g=>g.id);return DB.kids.filter(k=>kHas(k,U.id)||(k.gr&&gs.includes(k.gr))||DB.lich.some(l=>l.gv===U.id&&l.hs===k.id))}
  return DB.kids.filter(k=>pkeyOf(k)===U.pkey)}
 const canKid=id=>myKids().some(k=>k.id===id);
 const rdKey=n=>n.id+'|'+(U?U.id:'');
