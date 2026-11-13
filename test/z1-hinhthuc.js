@@ -24,7 +24,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  await page.check('#hf-hbt');await W(40);
  ok('tích Bán trú: hiện lớp bán trú và các ngày',await ev(()=>!document.querySelector('#hth-bt').hidden&&document.querySelector('#hth-11').hidden));
  await page.check('#hf-h11');await W(40);
- ok('tích 1-1: hiện giáo viên, loại 1-1, phòng và các ca',await ev(()=>!document.querySelector('#hth-11').hidden));
+ ok('tích 1-1: hiện giáo viên, loại 1-1 và các ca',await ev(()=>!document.querySelector('#hth-11').hidden));
  await page.uncheck('#hf-hbt');await W(40);
  ok('bỏ tích Bán trú: phần bán trú ẩn lại',await ev(()=>document.querySelector('#hth-bt').hidden));
  await page.check('#hf-hbt');await W(40);
@@ -42,7 +42,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  ok('tích buổi 1-1 mà chưa chọn giáo viên: báo lỗi',/chọn giáo viên/.test(await toastTx()),await toastTx());
  const gvs=await ev(()=>pool11().map(s=>s.id));
  /* dữ liệu mẫu xếp dày: tìm khung giờ còn trống phòng và giáo viên cho các ngày cần dùng */
- const T=await ev(g=>{const fr=(w,s)=>ROOMS.some(r=>!conflict({day:w,slot:s,gv:g,hs:'hsX',room:r})),rs=[...SLOTS].reverse();
+ const T=await ev(g=>{const fr=(w,s)=>!conflict({day:w,slot:s,gv:g,hs:'hsX' }),rs=[...SLOTS].reverse();
   const A=rs.find(s=>fr(1,s)),C=rs.find(s=>s!==A&&Math.abs(tmin(s)-tmin(A))>=SLOT_MIN&&[2,3,4].every(w=>fr(w,s))),B=rs.find(s=>s!==A&&s!==C&&Math.abs(tmin(s)-tmin(C))>=SLOT_MIN&&Math.abs(tmin(s)-tmin(A))>=SLOT_MIN&&fr(5,s));return{A,C,B}},gvs[0]);
  ok('tìm được khung giờ trống cho giáo viên thử',T.A&&T.C&&T.B,T);
  await page.selectOption('#hf-gv',gvs[0]);
@@ -56,9 +56,9 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  const before=await ev(()=>({kids:DB.kids.length,lich:DB.lich.length}));
  await page.click('#hsff button[type=submit]');await W(120);
  const r=await ev(()=>{const k=DB.kids.find(x=>x.n==='Bé Thử Hình Thức'),ls=k?DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).sort((a,b)=>a.day-b.day):[];
-  return k?{id:k.id,bt:k.bt,btd:k.btd,gr:k.gr,gv:k.gv,m11:k.m11,ls:ls.map(l=>[l.day,l.slot,l.gv,!!l.room]),modal:S.modal&&{t:S.modal.t,tab:S.modal.tab},prog:progShort(k),wk:wk11(k.id)}:null});
+  return k?{id:k.id,bt:k.bt,btd:k.btd,gr:k.gr,gv:k.gv,m11:k.m11,ls:ls.map(l=>[l.day,l.slot,l.gv,!('room' in l)]),modal:S.modal&&{t:S.modal.t,tab:S.modal.tab},prog:progShort(k),wk:wk11(k.id)}:null});
  ok('lưu hồ sơ: bán trú T2, T4, T6; có lớp bán trú theo tuổi',r&&r.bt&&JSON.stringify(r.btd)===JSON.stringify([1,3,5])&&!!r.gr,r);
- ok('lưu 3 buổi 1-1: T2 giờ riêng, T3 và T5 giờ chung, có phòng, đúng giáo viên',r&&r.ls.length===3&&JSON.stringify(r.ls.map(x=>[x[0],x[1]]))===JSON.stringify([[1,T.A],[2,T.C],[4,T.C]])&&r.ls.every(x=>x[2]===gvs[0]&&x[3]),r);
+ ok('lưu 3 buổi 1-1: T2 giờ riêng, T3 và T5 giờ chung, không gán phòng, đúng giáo viên',r&&r.ls.length===3&&JSON.stringify(r.ls.map(x=>[x[0],x[1]]))===JSON.stringify([[1,T.A],[2,T.C],[4,T.C]])&&r.ls.every(x=>x[2]===gvs[0]&&x[3]),r);
  ok('giáo viên 1-1 chính của bé là giáo viên đã chọn; số buổi/tuần cập nhật',r&&r.gv===gvs[0]&&r.m11===3&&r.wk===3,r);
  ok('tóm tắt chương trình: Bán trú T2, T4, T6 + 1-1 thêm 2 buổi (ca của ngày bán trú nằm trong gói)',r&&/Bán trú/.test(r.prog)&&/1-1 x2 thêm/.test(r.prog),r.prog);
  const rw=await ev(()=>S.modal.res);

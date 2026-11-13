@@ -103,7 +103,7 @@ const SP='/tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratc
  await page.fill('#hf-n','Bé Thử Nút Ngày');await page.fill('#hf-pn','Mẹ Thử');await page.fill('#hf-pp','0905123456');
  const gv=await ev(()=>pool11()[0].id);
  /* tìm giờ trống của giáo viên cho T3 và T5 */
- const T=await ev(g=>{const fr=(w,s)=>ROOMS.some(r=>!conflict({day:w,slot:s,gv:g,hs:'hsX',room:r})),rs=[...SLOTS].reverse();return rs.find(s=>fr(2,s)&&fr(4,s))},gv);
+ const T=await ev(g=>{const fr=(w,s)=>!conflict({day:w,slot:s,gv:g,hs:'hsX' }),rs=[...SLOTS].reverse();return rs.find(s=>fr(2,s)&&fr(4,s))},gv);
  ok('tìm được giờ trống cho giáo viên thử',!!T,T);
  await page.selectOption('#hf-gv',gv);
  await day11(2);await day11(4);await W(30);

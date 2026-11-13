@@ -11,7 +11,7 @@ const SP='/tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratc
 
  /* ---------- A. tính phí: giá riêng đứng trước giá chung ---------- */
  const S0=await ev(()=>{const ks=DB.kids.filter(x=>x.st==='dang'),k=ks[0],k2=ks[1];
-  const mk=(id,kid,slot,t)=>DB.lich.push(Object.assign({id,type:'11',day:1,slot,gv:DB.staff[0].id,hs:kid.id,room:'P1'},t?{lt:t}:{}));
+  const mk=(id,kid,slot,t)=>DB.lich.push(Object.assign({id,type:'11',day:1,slot,gv:DB.staff[0].id,hs:kid.id},t?{lt:t}:{}));
   mk('kp-a1',k,SLOTS[2],'gq');mk('kp-a2',k,SLOTS[4],'ng');mk('kp-a3',k,SLOTS[6],null);mk('kp-b1',k2,SLOTS[2],'gq');
   const f=(kid,id)=>feeSlot(kid,id);
   const r={kid:k.id,kid2:k2.id,hasKpr:typeof DB.kpr==='object'&&!Array.isArray(DB.kpr),before:{a1:f(k,'kp-a1'),a2:f(k,'kp-a2'),a3:f(k,'kp-a3'),b1:f(k2,'kp-b1')}};

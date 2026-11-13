@@ -25,7 +25,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
   DB.staff.push({id:'gvy1',n:'Giáo viên Thử Y',role:'gv',st:'dang',pos:'',em:'',ph:'',pay:{mode:'buoi',base:0,rate:60000,rateBt:0,allow:0,latePen:0,bh:0}});
   const src=DB.kids.find(k=>!k.bt&&k.st==='dang');
   ['ya','yb'].forEach((id,i)=>{const k=JSON.parse(JSON.stringify(src));k.id=id;k.n='Bé Thử '+id.toUpperCase();k.gv='';k.m11=0;DB.kids.push(k)});
-  DB.lich=[];   /* lịch trống để kiểm tra riêng logic giờ và phòng */
+  DB.lich=[];   /* lịch trống để kiểm tra riêng logic giờ */
   go('lh');render();S.lh.mode='gv';S.lh.gv='gvy1';S.lh.tab='wk';render()});
  await W(100);
  const lo=await ev(()=>({v:[slotValid('07:15'),slotValid('19:10'),slotValid('19:11'),slotValid('07:14'),slotValid(''),slotValid('8:20'),slotValid('08:20')],over:[slotOver('08:05','08:55'),slotOver('08:05','08:54'),slotOver('08:20','08:50')]}));
@@ -54,13 +54,17 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  await ev(()=>{S.modal=null;render()});
  ok('không có buổi nào bị thêm khi giờ không hợp lệ',(await ev(()=>DB.lich.filter(l=>l.gv==='gvy1'&&l.day===4).length))===0);
 
- /* đủ 8 phòng đang dùng quanh 12:00 thì báo hết phòng, không báo nhầm lý do khác */
- await ev(()=>{ROOMS.forEach((r,i)=>DB.lich.push({id:'yr'+i,type:'11',day:2,slot:'12:00',gv:'zz'+i,hs:'zk'+i,room:r}))});
+ /* nhiều ca cùng lúc (hơn 8) không bị chặn vì không còn giới hạn phòng; chỉ trùng giáo viên hoặc bé mới bị báo, và lý do báo đúng */
+ await ev(()=>{for(let i=0;i<10;i++)DB.lich.push({id:'yr'+i,type:'11',day:2,slot:'12:00',gv:'zz'+i,hs:'zk'+i})});
  r=await addAt(2,'12:30','yb');
- ok('đủ 8 phòng đang dùng: báo "Không còn phòng trống" (không báo trùng giáo viên hay bé)',r.modal&&/Không còn phòng trống/.test(r.err),r);
+ ok('đã có 10 ca đang diễn ra quanh 12:00: ca của giáo viên và bé khác vẫn thêm được (không còn giới hạn phòng)',!r.modal&&(await ev(()=>!!DB.lich.find(x=>x.hs==='yb'&&x.slot==='12:30'))),r);
+ await ev(()=>{DB.lich=DB.lich.filter(l=>!(l.hs==='yb'&&l.slot==='12:30'))});
+ await ev(()=>{DB.lich.push({id:'yrz',type:'11',day:2,slot:'12:00',gv:'gvy1',hs:'zkz'})});
+ r=await addAt(2,'12:30','yb');
+ ok('trùng giáo viên vẫn báo đúng lý do, không nhắc phòng',r.modal&&/Giáo viên đã có buổi khác/.test(r.err)&&!/phòng/i.test(r.err),r);
  await ev(()=>{S.modal=null;DB.lich=DB.lich.filter(l=>!/^yr/.test(l.id));render()});
  r=await addAt(2,'12:50','yb');
- ok('đúng 50 phút sau ca 12:00 thì nhận phòng trống tự chọn',!r.modal&&(await ev(()=>{const l=DB.lich.find(x=>x.hs==='yb'&&x.slot==='12:50');return !!l&&ROOMS.includes(l.room)})),r);
+ ok('đúng 50 phút sau ca 12:00 thì nhận ca (không gán phòng)',!r.modal&&(await ev(()=>{const l=DB.lich.find(x=>x.hs==='yb'&&x.slot==='12:50');return !!l&&!('room' in l)})),r);
  await ev(()=>{DB.lich=DB.lich.filter(l=>!(l.hs==='yb'&&l.slot==='12:50'))});
 
  /* lưới tuần hiện dòng giờ riêng, bấm vào được */

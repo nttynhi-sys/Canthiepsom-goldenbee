@@ -19,7 +19,6 @@ const slotValid=s=>/^([01]\d|2[0-3]):[0-5]\d$/.test(String(s||''))&&s>=DAY_OPEN&
 const slotOver=(a,b)=>Math.abs(tmin(a)-tmin(b))<SLOT_MIN;   /* hai ca chồng giờ khi cách nhau dưới SLOT_MIN phút */
 const slotMsg='Giờ bắt đầu phải từ '+DAY_OPEN+' đến '+SLOT_LAST+' để ca '+SLOT_MIN+' phút kết thúc trước '+DAY_CLOSE;
 const slotInput=(id,val)=>`<input id="${id}" name="slot" type="time" step="60" value="${esc(val||'')}" list="slotdl"><datalist id="slotdl">${SLOTS.map(s=>`<option value="${s}"></option>`).join('')}</datalist>`;
-const ROOMS=['Phòng 1','Phòng 2','Phòng 3','Phòng 4','Phòng 5','Phòng 6','Phòng 7','Phòng 8'];
 const AC={cm:'Có mặt',p:'Nghỉ P',kp:'Nghỉ KP',tt:'TT/GV nghỉ',bv:'Nhập viện'};
 const NEEDS=['Chậm nói','Khó khăn giao tiếp xã hội','Rối loạn phát âm','Chậm phát triển ngôn ngữ','Cần hỗ trợ đa lĩnh vực'];
 const KST={dang:'Đang học',nghi:'Đã nghỉ',bl:'Bảo lưu'};
@@ -110,26 +109,26 @@ function seed(){
   k.dx=seedDx(R,k);
   D.kids.push(k);last=k}
  /* lịch 1-1: không trùng giáo viên, trẻ, phòng */
- let lid=0;const tk={},ck={},rk={};
+ let lid=0;const tk={},ck={};
  /* ca 1-1 trong gói bán trú: mỗi ngày bán trú một ca, cố định giáo viên và khung giờ, xếp trong giờ học (tránh giờ ăn, ngủ trưa) */
  const BTSL=SLOTS.filter(s=>['08:05','08:55','09:45','10:35','13:55','14:45','15:35'].includes(s));
- const freeAt=(g,h,day,s)=>!tk[g+day+s]&&!ck[h+day+s]&&ROOMS.find(x=>!rk[x+day+s]);
- const putAt=(k,day,s)=>{const room=ROOMS.find(x=>!rk[x+day+s]);tk[k.gv+day+s]=ck[k.id+day+s]=rk[room+day+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day,slot:s,gv:k.gv,hs:k.id,room})};
+ const freeAt=(g,h,day,s)=>!tk[g+day+s]&&!ck[h+day+s];
+ const putAt=(k,day,s)=>{tk[k.gv+day+s]=ck[k.id+day+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day,slot:s,gv:k.gv,hs:k.id})};
  SH(D.kids.filter(k=>k.st==='dang'&&k.bt)).forEach(k=>{const days=k.btd,one=SH(BTSL).find(s=>days.every(d=>freeAt(k.gv,k.id,d,s)));
   if(one)days.forEach(d=>putAt(k,d,one));else days.forEach(d=>{const s=SH(BTSL).find(x=>freeAt(k.gv,k.id,d,x));if(s)putAt(k,d,s)})});
  SH(D.kids.filter(k=>k.st==='dang'&&k.m11>0)).forEach(k=>{let placed=0;
   for(const day of SH([1,2,3,4,5,6])){if(placed>=k.m11)break;
-   for(const s of SH(SEEDSL)){if(tk[k.gv+day+s]||ck[k.id+day+s])continue;const room=ROOMS.find(x=>!rk[x+day+s]);if(!room)continue;
-    tk[k.gv+day+s]=ck[k.id+day+s]=rk[room+day+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day,slot:s,gv:k.gv,hs:k.id,room});placed++;break}}});
+   for(const s of SH(SEEDSL)){if(tk[k.gv+day+s]||ck[k.id+day+s])continue;
+    tk[k.gv+day+s]=ck[k.id+day+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day,slot:s,gv:k.gv,hs:k.id});placed++;break}}});
  /* giáo viên mẫu (nv04) luôn có buổi vào thứ Bảy để thử điểm danh */
  if(!D.lich.some(l=>l.gv==='nv04'&&l.day===6)){let mv=0;
   for(const l of D.lich.filter(x=>x.type==='11'&&x.gv==='nv04'&&!(D.kids.find(k=>k.id===x.hs)||{}).bt)){if(mv>=2)break;if(D.lich.some(x=>x.type==='11'&&x.hs===l.hs&&x.day===6))continue;
-   for(const s of SEEDSL){if(tk['nv04'+6+s]||ck[l.hs+6+s])continue;const room=ROOMS.find(x=>!rk[x+6+s]);if(!room)continue;
-    delete tk['nv04'+l.day+l.slot];delete ck[l.hs+l.day+l.slot];delete rk[l.room+l.day+l.slot];
-    tk['nv04'+6+s]=ck[l.hs+6+s]=rk[room+6+s]=1;l.day=6;l.slot=s;l.room=room;mv++;break}}
+   for(const s of SEEDSL){if(tk['nv04'+6+s]||ck[l.hs+6+s])continue;
+    delete tk['nv04'+l.day+l.slot];delete ck[l.hs+l.day+l.slot];
+    tk['nv04'+6+s]=ck[l.hs+6+s]=1;l.day=6;l.slot=s;mv++;break}}
   if(!mv){const k=D.kids.find(x=>x.gv==='nv04'&&x.st==='dang');   /* giáo viên mẫu chưa có ca 1-1 thuần: thêm một ca thứ Bảy */
-   if(k)for(const s of SEEDSL){if(tk['nv04'+6+s]||ck[k.id+6+s])continue;const room=ROOMS.find(x=>!rk[x+6+s]);if(!room)continue;
-    tk['nv04'+6+s]=ck[k.id+6+s]=rk[room+6+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day:6,slot:s,gv:'nv04',hs:k.id,room});break}}}
+   if(k)for(const s of SEEDSL){if(tk['nv04'+6+s]||ck[k.id+6+s])continue;
+    tk['nv04'+6+s]=ck[k.id+6+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day:6,slot:s,gv:'nv04',hs:k.id});break}}}
  D.kids.forEach(k=>{k.m11=D.lich.filter(l=>l.type==='11'&&l.hs===k.id).length});
  /* điểm danh 2 tháng gần nhất (ngày làm việc gần nhất để trống cho bạn thử) */
  const range=[];for(let d=sm(CM,-1)+'-01';d<WD;d=addD(d,1))if(isW(d))range.push(d);
@@ -168,9 +167,9 @@ function seed(){
  cand.slice(0,8).forEach((key,i)=>{const [d,s,h]=key.split('|'),l=D.lich.find(x=>x.id===s),k=D.kids.find(x=>x.id===h);
   const r={id:'mk'+i,hs:h,from:{d,sid:s,kind:'11',slot:l.slot},by:i%2?'ph':'gv',why:D.att[key]==='tt'?'Trung tâm/giáo viên nghỉ':'Bé nghỉ có phép',s:'dk',props:[],pick:null,log:[{at:d,by:'ph',tx:'Đăng ký học bù'}]};
   const fs=freeSlots(l.gv,h,addD(d,1),4);
-  if(i>=2&&fs.length){r.props=fs.slice(0,2).map((f,x)=>({id:'p'+x,d:f.date,slot:f.slot,gv:l.gv,room:f.room,by:'gv'}));r.s='tt';r.log.push({at:d,by:'gv',tx:'Đề xuất 2 khung giờ học bù'})}
+  if(i>=2&&fs.length){r.props=fs.slice(0,2).map((f,x)=>({id:'p'+x,d:f.date,slot:f.slot,gv:l.gv,by:'gv'}));r.s='tt';r.log.push({at:d,by:'gv',tx:'Đề xuất 2 khung giờ học bù'})}
   if(i>=5&&r.props.length){const p=r.props[0];r.pick=p.id;r.s='xn';r.log.push({at:d,by:'ph',tx:'Phụ huynh đồng ý lịch bù'});
-   D.lich.push({id:'lb'+i,type:'bu',date:p.d,slot:p.slot,gv:p.gv,hs:h,room:p.room,mk:r.id});
+   D.lich.push({id:'lb'+i,type:'bu',date:p.d,slot:p.slot,gv:p.gv,hs:h,mk:r.id});
    if(i===7&&p.d<WD){D.att[p.d+'|lb'+i+'|'+h]='cm';r.s='xong'}}
   D.mk.push(r)});
  D.kids.forEach(k=>{if(k.st==='dang')postSettle(k,sm(CM,-1))});

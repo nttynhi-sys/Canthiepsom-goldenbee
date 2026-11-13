@@ -486,7 +486,6 @@ const slotValid=s=>/^([01]\d|2[0-3]):[0-5]\d$/.test(String(s||''))&&s>=DAY_OPEN&
 const slotOver=(a,b)=>Math.abs(tmin(a)-tmin(b))<SLOT_MIN;   /* hai ca chồng giờ khi cách nhau dưới SLOT_MIN phút */
 const slotMsg='Giờ bắt đầu phải từ '+DAY_OPEN+' đến '+SLOT_LAST+' để ca '+SLOT_MIN+' phút kết thúc trước '+DAY_CLOSE;
 const slotInput=(id,val)=>`<input id="${id}" name="slot" type="time" step="60" value="${esc(val||'')}" list="slotdl"><datalist id="slotdl">${SLOTS.map(s=>`<option value="${s}"></option>`).join('')}</datalist>`;
-const ROOMS=['Phòng 1','Phòng 2','Phòng 3','Phòng 4','Phòng 5','Phòng 6','Phòng 7','Phòng 8'];
 const AC={cm:'Có mặt',p:'Nghỉ P',kp:'Nghỉ KP',tt:'TT/GV nghỉ',bv:'Nhập viện'};
 const NEEDS=['Chậm nói','Khó khăn giao tiếp xã hội','Rối loạn phát âm','Chậm phát triển ngôn ngữ','Cần hỗ trợ đa lĩnh vực'];
 const KST={dang:'Đang học',nghi:'Đã nghỉ',bl:'Bảo lưu'};
@@ -577,26 +576,26 @@ function seed(){
   k.dx=seedDx(R,k);
   D.kids.push(k);last=k}
  /* lịch 1-1: không trùng giáo viên, trẻ, phòng */
- let lid=0;const tk={},ck={},rk={};
+ let lid=0;const tk={},ck={};
  /* ca 1-1 trong gói bán trú: mỗi ngày bán trú một ca, cố định giáo viên và khung giờ, xếp trong giờ học (tránh giờ ăn, ngủ trưa) */
  const BTSL=SLOTS.filter(s=>['08:05','08:55','09:45','10:35','13:55','14:45','15:35'].includes(s));
- const freeAt=(g,h,day,s)=>!tk[g+day+s]&&!ck[h+day+s]&&ROOMS.find(x=>!rk[x+day+s]);
- const putAt=(k,day,s)=>{const room=ROOMS.find(x=>!rk[x+day+s]);tk[k.gv+day+s]=ck[k.id+day+s]=rk[room+day+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day,slot:s,gv:k.gv,hs:k.id,room})};
+ const freeAt=(g,h,day,s)=>!tk[g+day+s]&&!ck[h+day+s];
+ const putAt=(k,day,s)=>{tk[k.gv+day+s]=ck[k.id+day+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day,slot:s,gv:k.gv,hs:k.id})};
  SH(D.kids.filter(k=>k.st==='dang'&&k.bt)).forEach(k=>{const days=k.btd,one=SH(BTSL).find(s=>days.every(d=>freeAt(k.gv,k.id,d,s)));
   if(one)days.forEach(d=>putAt(k,d,one));else days.forEach(d=>{const s=SH(BTSL).find(x=>freeAt(k.gv,k.id,d,x));if(s)putAt(k,d,s)})});
  SH(D.kids.filter(k=>k.st==='dang'&&k.m11>0)).forEach(k=>{let placed=0;
   for(const day of SH([1,2,3,4,5,6])){if(placed>=k.m11)break;
-   for(const s of SH(SEEDSL)){if(tk[k.gv+day+s]||ck[k.id+day+s])continue;const room=ROOMS.find(x=>!rk[x+day+s]);if(!room)continue;
-    tk[k.gv+day+s]=ck[k.id+day+s]=rk[room+day+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day,slot:s,gv:k.gv,hs:k.id,room});placed++;break}}});
+   for(const s of SH(SEEDSL)){if(tk[k.gv+day+s]||ck[k.id+day+s])continue;
+    tk[k.gv+day+s]=ck[k.id+day+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day,slot:s,gv:k.gv,hs:k.id});placed++;break}}});
  /* giáo viên mẫu (nv04) luôn có buổi vào thứ Bảy để thử điểm danh */
  if(!D.lich.some(l=>l.gv==='nv04'&&l.day===6)){let mv=0;
   for(const l of D.lich.filter(x=>x.type==='11'&&x.gv==='nv04'&&!(D.kids.find(k=>k.id===x.hs)||{}).bt)){if(mv>=2)break;if(D.lich.some(x=>x.type==='11'&&x.hs===l.hs&&x.day===6))continue;
-   for(const s of SEEDSL){if(tk['nv04'+6+s]||ck[l.hs+6+s])continue;const room=ROOMS.find(x=>!rk[x+6+s]);if(!room)continue;
-    delete tk['nv04'+l.day+l.slot];delete ck[l.hs+l.day+l.slot];delete rk[l.room+l.day+l.slot];
-    tk['nv04'+6+s]=ck[l.hs+6+s]=rk[room+6+s]=1;l.day=6;l.slot=s;l.room=room;mv++;break}}
+   for(const s of SEEDSL){if(tk['nv04'+6+s]||ck[l.hs+6+s])continue;
+    delete tk['nv04'+l.day+l.slot];delete ck[l.hs+l.day+l.slot];
+    tk['nv04'+6+s]=ck[l.hs+6+s]=1;l.day=6;l.slot=s;mv++;break}}
   if(!mv){const k=D.kids.find(x=>x.gv==='nv04'&&x.st==='dang');   /* giáo viên mẫu chưa có ca 1-1 thuần: thêm một ca thứ Bảy */
-   if(k)for(const s of SEEDSL){if(tk['nv04'+6+s]||ck[k.id+6+s])continue;const room=ROOMS.find(x=>!rk[x+6+s]);if(!room)continue;
-    tk['nv04'+6+s]=ck[k.id+6+s]=rk[room+6+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day:6,slot:s,gv:'nv04',hs:k.id,room});break}}}
+   if(k)for(const s of SEEDSL){if(tk['nv04'+6+s]||ck[k.id+6+s])continue;
+    tk['nv04'+6+s]=ck[k.id+6+s]=1;D.lich.push({id:'l'+(++lid),type:'11',day:6,slot:s,gv:'nv04',hs:k.id});break}}}
  D.kids.forEach(k=>{k.m11=D.lich.filter(l=>l.type==='11'&&l.hs===k.id).length});
  /* điểm danh 2 tháng gần nhất (ngày làm việc gần nhất để trống cho bạn thử) */
  const range=[];for(let d=sm(CM,-1)+'-01';d<WD;d=addD(d,1))if(isW(d))range.push(d);
@@ -635,9 +634,9 @@ function seed(){
  cand.slice(0,8).forEach((key,i)=>{const [d,s,h]=key.split('|'),l=D.lich.find(x=>x.id===s),k=D.kids.find(x=>x.id===h);
   const r={id:'mk'+i,hs:h,from:{d,sid:s,kind:'11',slot:l.slot},by:i%2?'ph':'gv',why:D.att[key]==='tt'?'Trung tâm/giáo viên nghỉ':'Bé nghỉ có phép',s:'dk',props:[],pick:null,log:[{at:d,by:'ph',tx:'Đăng ký học bù'}]};
   const fs=freeSlots(l.gv,h,addD(d,1),4);
-  if(i>=2&&fs.length){r.props=fs.slice(0,2).map((f,x)=>({id:'p'+x,d:f.date,slot:f.slot,gv:l.gv,room:f.room,by:'gv'}));r.s='tt';r.log.push({at:d,by:'gv',tx:'Đề xuất 2 khung giờ học bù'})}
+  if(i>=2&&fs.length){r.props=fs.slice(0,2).map((f,x)=>({id:'p'+x,d:f.date,slot:f.slot,gv:l.gv,by:'gv'}));r.s='tt';r.log.push({at:d,by:'gv',tx:'Đề xuất 2 khung giờ học bù'})}
   if(i>=5&&r.props.length){const p=r.props[0];r.pick=p.id;r.s='xn';r.log.push({at:d,by:'ph',tx:'Phụ huynh đồng ý lịch bù'});
-   D.lich.push({id:'lb'+i,type:'bu',date:p.d,slot:p.slot,gv:p.gv,hs:h,room:p.room,mk:r.id});
+   D.lich.push({id:'lb'+i,type:'bu',date:p.d,slot:p.slot,gv:p.gv,hs:h,mk:r.id});
    if(i===7&&p.d<WD){D.att[p.d+'|lb'+i+'|'+h]='cm';r.s='xong'}}
   D.mk.push(r)});
  D.kids.forEach(k=>{if(k.st==='dang')postSettle(k,sm(CM,-1))});
@@ -1331,18 +1330,17 @@ function conflict(x){const w=x.date?dow(x.date):x.day;
  const same=lichNear(w,x.slot,x.date).filter(l=>l.id!==x.id);
  if(same.some(l=>l.gv===x.gv))return 'Giáo viên đã có buổi khác ở khung giờ này';
  if(same.some(l=>l.hs===x.hs))return 'Trẻ đã có buổi khác ở khung giờ này';
- if(x.room&&same.some(l=>l.room===x.room))return 'Phòng đã được dùng ở khung giờ này';
  if(x.date&&DB.lr.some(l=>l.st===x.gv&&l.s==='duyet'&&l.f<=x.date&&x.date<=l.t))return 'Giáo viên có đơn nghỉ đã duyệt vào ngày này';
  return ''}
 function freeSlots(gv,hs,from,n){const out=[];let d=from;
  for(let i=0;i<28&&out.length<n;i++,d=addD(d,1)){if(!isW(d)||isClosed(d))continue;let c=0;
-  for(const s of SLOTS){if(c>=2)break;const room=ROOMS.find(r=>!conflict({date:d,slot:s,gv,hs,room:r}));if(room){out.push({date:d,slot:s,room});c++}}}
+  for(const s of SLOTS){if(c>=2)break;if(!conflict({date:d,slot:s,gv,hs})){out.push({date:d,slot:s});c++}}}
  return out}
 function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))return out;
  DB.lich.forEach(l=>{if(l.type==='11'&&l.day===w&&(!first[l.hs]||l.slot<first[l.hs].slot))first[l.hs]=l});
  DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);
-  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:l.gv,slot:l.slot,room:l.room,kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
- DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,room:'',kids:ks})});
+  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:l.gv,slot:l.slot,kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
+ DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,kids:ks})});
  return out.sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0)}
 
 /* --- Chấm công nhân viên và lương --- */
@@ -1646,12 +1644,12 @@ function dashLead(){
  +plockCard()+`<div class="two"><div class="card"><h2>Việc cần làm</h2>${todo(DB.lr.filter(l=>l.s==='cho').length,'đơn nghỉ phép chờ duyệt','cc')}${todo(DB.mk.filter(r=>r.s==='dk').length,'yêu cầu học bù chờ xếp lịch','hb')}${todo(DB.rp.filter(r=>r.s==='cho').length,'báo cáo chuyên môn chờ duyệt','bc')}${todo(un,'lượt học chưa điểm danh ngày '+vdm(WD),'dd','er')}${$?todo(debtors().length,'gia đình còn nợ học phí','hp','er'):''}${DB.lr.every(l=>l.s!=='cho')&&!DB.mk.some(r=>r.s==='dk')&&!DB.rp.some(r=>r.s==='cho')&&!un&&!($&&debtors().length)?'<p class="empty">Không còn việc tồn đọng.</p>':''}</div>
  <div class="card"><h2>Chuyên cần ${days.length} ngày gần nhất</h2><div style="display:flex;align-items:flex-end;gap:5px;height:120px" role="img" aria-label="Tỷ lệ có mặt theo ngày">${days.map(d=>{const r=attRate(d);return`<div style="flex:1;display:flex;flex-direction:column;justify-content:flex-end;height:100%;min-width:0" title="${vd(d)}: ${r}%"><i style="display:block;height:${r}%;background:${r>=85?'var(--ok)':r>=75?'var(--wa)':'var(--er)'};border-radius:4px 4px 0 0"></i></div>`}).join('')}</div><div style="display:flex;gap:5px;margin-top:4px">${days.map(d=>`<span class="sm mu" style="flex:1;font-size:10px;text-align:center;min-width:0">${vdm(d).slice(0,2)}</span>`).join('')}</div><p class="sm mu" style="margin-top:6px">Chiều cao cột là tỷ lệ có mặt; cột xanh từ 85% trở lên, vàng từ 75%, đỏ dưới 75%.</p></div></div>`
  +`<div class="two"><div class="card"><h2>Cơ cấu chương trình</h2>${mix.map(([l,n])=>`<div class="rw"><span>${l}</span><span style="display:flex;gap:8px;align-items:center;min-width:160px"><div style="flex:1">${bar(n*100/(act.length||1))}</div><b>${n}</b></span></div>`).join('')}</div>
- <div class="card"><h2>Lịch ngày ${vdm(WD)} theo ca</h2>${(sl=>sl.length?sl.map(s=>{const n=ds.filter(x=>x.slot===s&&x.kind!=='bt').length;return`<div class="rw"><span>${slotLb(s)}</span><span style="display:flex;gap:8px;align-items:center;min-width:140px"><div style="flex:1">${bar(n*100/ROOMS.length)}</div><b>${n}/${ROOMS.length}</b></span></div>`}).join('')+`<p class="sm mu" style="margin-top:6px">Chỉ liệt kê các khung giờ có giáo viên dạy 1-1. Số phòng đang dùng trên tổng ${ROOMS.length} phòng.</p>`:'<p class="empty">Ngày này chưa có ca 1-1 nào.</p>')([...new Set(ds.filter(x=>x.kind!=='bt'&&x.slot).map(x=>x.slot))].sort())}</div></div>`}
+ <div class="card"><h2>Lịch ngày ${vdm(WD)} theo ca</h2>${(sl=>sl.length?sl.map(s=>{const n=ds.filter(x=>x.slot===s&&x.kind!=='bt').length;return`<div class="rw"><span>${slotLb(s)}</span><b>${n} ca</b></div>`}).join('')+`<p class="sm mu" style="margin-top:6px">Chỉ liệt kê các khung giờ có giáo viên dạy 1-1, kèm số ca đang diễn ra cùng lúc.</p>`:'<p class="empty">Ngày này chưa có ca 1-1 nào.</p>')([...new Set(ds.filter(x=>x.kind!=='bt'&&x.slot).map(x=>x.slot))].sort())}</div></div>`}
 function dashGV(){
  const me=stBy(U.id),ds=dayList(WD).filter(s=>rowHas(s,U.id)),ks=myKids().filter(k=>k.st==='dang'),pr=payroll(me,CM),t=DB.ts[U.id+'|'+WD],rp=DB.rp.filter(r=>r.au===U.id);
  return head('Xin chào, '+esc(given(U.name)),'Công việc của bạn ngày '+DAYN[dow(WD)]+' '+vd(WD)+(WD!==TODAY?' (ngày làm việc gần nhất)':''))
  +`<div class="grid">${kpi('Trẻ phụ trách',ks.length,ks.filter(k=>kHas(k,U.id)).length+' trẻ 1-1, '+ks.filter(k=>k.gr).length+' trẻ bán trú')}${kpi('Buổi hôm nay',ds.length,unrecorded(WD)?'còn lượt chưa điểm danh':'đã điểm danh đủ')}${(needCC(me)?kpi('Công '+mLow(CM),pr.cong+'/'+DB.cfg.cc,pr.late+' lần đi muộn'):kpi('Ca đã dạy '+mLow(CM),pr.teach,'trả lương theo ca 1-1, không chấm công'))}${kpi('Báo cáo của tôi',rp.length,rp.filter(r=>r.s==='nhap').length+' bản nháp, '+rp.filter(r=>r.s==='cho').length+' chờ duyệt')}</div>`
- +`<div class="two"><div class="card"><h2>Lịch dạy</h2>${ds.length?ds.map(s=>`<div class="rw"><span><b>${esc(s.label)}</b><br><span class="mu sm">${s.kids.length>3?s.kids.length+' trẻ':esc(s.kids.map(k=>k.n).join(', '))}${s.room?' · '+s.room:''}</span></span><button class="btn s" data-a="ddgo" data-v="${WD}">Điểm danh</button></div>`).join(''):'<p class="empty">Không có buổi dạy trong ngày này.</p>'}</div>
+ +`<div class="two"><div class="card"><h2>Lịch dạy</h2>${ds.length?ds.map(s=>`<div class="rw"><span><b>${esc(s.label)}</b><br><span class="mu sm">${s.kids.length>3?s.kids.length+' trẻ':esc(s.kids.map(k=>k.n).join(', '))}</span></span><button class="btn s" data-a="ddgo" data-v="${WD}">Điểm danh</button></div>`).join(''):'<p class="empty">Không có buổi dạy trong ngày này.</p>'}</div>
  <div class="card"><h2>Chấm công hôm nay</h2>${needCC(me)?`<p>${t&&t.i?'Quản lý đã chấm công: vào lúc <b>'+t.i+'</b>'+(t.o?', ra lúc <b>'+t.o+'</b>':''):'Quản lý chưa chấm công cho bạn.'}</p><div class="acts" style="margin-top:10px"><button class="btn" data-a="nav" data-v="cc">Xem bảng công của tôi</button></div><p class="sm mu" style="margin-top:8px">Giáo viên làm giờ cố định không tự chấm công, Quản lý chấm công mỗi ngày. Đi muộn nếu vào sau ${DB.cfg.lateAfter}.</p>`:`<p>Bạn được trả lương theo ca 1-1 nên <b>không cần chấm công</b>. Tiền công tính theo số ca đã dạy.</p><div class="acts" style="margin-top:10px"><button class="btn" data-a="nav" data-v="tl">Xem phiếu lương của tôi</button></div>`}</div></div>`
  +`<div class="card"><h2>Ghi buổi can thiệp ngày ${vdm(WD)}</h2>${ds.filter(s=>s.kind!=='bt'&&s.gv===U.id).map(s=>{const k=s.kids[0],x=DB.sess.filter(y=>y.k===k.id&&y.date===WD),dn=x.some(y=>y.st==='xong');return`<div class="rw"><span><b>${esc(k.n)}</b> · ${slotLb(s.slot)} ${dn?tg('Đã ghi','ok'):x.length?tg('Kế hoạch','y'):tg('Chưa ghi','wa')}</span><button class="btn s ${dn?'':'p'}" data-a="senew" data-v="${k.id}|${WD}">${dn?'Sửa':x.length?'Ghi kết quả':'Ghi buổi'}</button></div>`}).join('')||'<p class="empty">Không có buổi 1-1 trong ngày này.</p>'}<div class="acts" style="margin-top:10px"><button class="btn s" data-a="hsbi">Mở trang Buổi can thiệp</button><button class="btn s" data-a="nav" data-v="mt">Chọn mục tiêu từ ngân hàng</button></div></div>`}
 ACT.hsbi=()=>{go('hs',{hs:Object.assign(S.hs||{},{tab:'bi'})})};
@@ -1851,7 +1849,7 @@ const gvIds=f=>[...f.querySelectorAll(GVSEL)].map(x=>x.value).filter(Boolean);
 const gvSelOpts=(ids,cur)=>'<option value="">Chọn giáo viên</option>'+opts([...new Set((ids||[]).concat(cur?[cur]:[]).filter(Boolean))].map(id=>[id,sn(id)]),cur||'');
 function gvRow(id,tc,first){const P=pool11().slice();if(id&&!P.some(x=>x.id===id)){const x=stBy(id);if(x)P.push(x)}
  return`<div class="gvr"><select ${first?'name="gv" id="hf-gv"':'name="tgv"'} data-prev="${esc(id||'')}" aria-label="Giáo viên dạy bé"><option value="">Chọn giáo viên</option>${opts(P.map(x=>[x.id,tName(x)]),id||'')}</select><input name="tgc" list="gv-dl" maxlength="${TC_MAX}" value="${esc(tc||'')}" placeholder="Nội dung phụ trách, ví dụ: Ngôn ngữ" aria-label="Nội dung giáo viên này dạy bé"><button class="btn s no" type="button" data-a="gvdel">Bỏ</button></div>`}
-function s11Row(w,lt,tm,l,gvs,gsel){const sv=!!l,cur=sv?l.gv:(gsel||'');return`<div class="s11r${sv?' sv':''}"${sv?` data-lid="${esc(l.id)}"`:''}><select name="s11day" aria-label="Ngày">${opts(DAY_ALL.map(x=>[x,DAYN[x]]),w)}</select><select name="s11lt" aria-label="Loại 1-1">${sv&&!l.lt?'<option value="" selected>Chưa chọn loại</option>':''}${opts(LT.map(x=>[x.c,x.n]),lt)}</select><select name="s11gv" aria-label="Giáo viên dạy ca này">${gvSelOpts(gvs,cur)}</select><input type="time" name="s11tm" step="60" value="${esc(tm||'')}" aria-label="Giờ bắt đầu ca (ca ${SLOT_MIN} phút)"><button class="btn s no" type="button" data-a="s11del">Xóa ca</button>${sv?`<span class="sm mu s11m"><span class="m1">Đã lưu · ${esc(given(sn(l.gv)))}${l.room?' · '+esc(l.room):''}</span><span class="m2">Sẽ bị xóa khi bấm Lưu hồ sơ (điểm danh cũ vẫn giữ). Bấm Giữ lại nếu không muốn xóa.</span></span>`:''}</div>`}
+function s11Row(w,lt,tm,l,gvs,gsel){const sv=!!l,cur=sv?l.gv:(gsel||'');return`<div class="s11r${sv?' sv':''}"${sv?` data-lid="${esc(l.id)}"`:''}><select name="s11day" aria-label="Ngày">${opts(DAY_ALL.map(x=>[x,DAYN[x]]),w)}</select><select name="s11lt" aria-label="Loại 1-1">${sv&&!l.lt?'<option value="" selected>Chưa chọn loại</option>':''}${opts(LT.map(x=>[x.c,x.n]),lt)}</select><select name="s11gv" aria-label="Giáo viên dạy ca này">${gvSelOpts(gvs,cur)}</select><input type="time" name="s11tm" step="60" value="${esc(tm||'')}" aria-label="Giờ bắt đầu ca (ca ${SLOT_MIN} phút)"><button class="btn s no" type="button" data-a="s11del">Xóa ca</button>${sv?`<span class="sm mu s11m"><span class="m1">Đã lưu · ${esc(given(sn(l.gv)))}</span><span class="m2">Sẽ bị xóa khi bấm Lưu hồ sơ (điểm danh cũ vẫn giữ). Bấm Giữ lại nếu không muốn xóa.</span></span>`:''}</div>`}
 /* số giờ/ngày của từng loại: lấy số đã ghi ở hồ sơ, bổ sung từ các ca đã xếp (bé có ca gắn loại nhưng hồ sơ chưa ghi số giờ vẫn hiện đủ để xem lại) */
 function ltEff(k,ls){const o=Object.assign({},k.lt||{}),cnt={};(ls||[]).forEach(l=>{if(l.lt&&LTM[l.lt]){const key=l.day+'|'+l.lt;cnt[key]=(cnt[key]||0)+1;o[l.lt]=Math.min(4,Math.max(o[l.lt]||0,cnt[key]))}});return o}
 function ltBlock(k,eff){const on=eff||k.lt||{};return`<div class="lt-grid">${LT.map(x=>`<div class="lt-row"><label class="chk"><input type="checkbox" name="lt_${x.c}" ${on[x.c]?'checked':''}> ${esc(x.n)}</label><span class="sm mu">${canMoney()?fmt(ltFee(x))+' ₫/giờ':''}</span><label class="sm">Số giờ/ngày <input type="number" name="lq_${x.c}" min="1" max="4" step="1" value="${on[x.c]||''}" style="width:64px"></label></div>`).join('')}</div>`}
@@ -1890,7 +1888,7 @@ function hthField(k,edit){const bt=!!k.bt,bd=k.bt&&Array.isArray(k.btd)&&k.btd.l
   cnt={};ls.forEach(l=>{cnt[l.gv]=(cnt[l.gv]||0)+1});
  const gvInit=[...new Set(kTs(k).concat(Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])))],gvRows=gvInit.length?gvInit:[''],   /* giáo viên của bé, thêm người đang có ca mà chưa nằm trong danh sách */
   days=[...new Set(ls.map(l=>l.day))],
-  ex=has?`<div class="note sm"><b>Bé đang có ${ls.length} ca 1-1, đã hiện sẵn bên dưới.</b> Chỉ cần sửa thứ, loại hoặc giờ của ca nào cần đổi rồi bấm Lưu hồ sơ; ca không đụng đến thì giữ nguyên. Bấm Xóa ca để bỏ một ca (chỉ xóa thật khi bấm Lưu hồ sơ). Mỗi ca có ô chọn giáo viên riêng; phòng ở dưới áp dụng cho các ca thêm mới.</div>`:'';
+  ex=has?`<div class="note sm"><b>Bé đang có ${ls.length} ca 1-1, đã hiện sẵn bên dưới.</b> Chỉ cần sửa thứ, loại hoặc giờ của ca nào cần đổi rồi bấm Lưu hồ sơ; ca không đụng đến thì giữ nguyên. Bấm Xóa ca để bỏ một ca (chỉ xóa thật khi bấm Lưu hồ sơ). Mỗi ca có ô chọn giáo viên riêng.</div>`:'';
  return`<h3>Hình thức học</h3><p class="sm mu" style="margin-bottom:8px">Bấm chọn hình thức bé học. Bé có thể học cả hai: bán trú và các ca 1-1.</p>
  <div class="bpks hth-pick" role="group" aria-label="Hình thức học"><label class="bpk big" for="hf-hbt"><input type="checkbox" id="hf-hbt" name="hbt" ${bt?'checked':''}><span><b>Bán trú</b><small>${BTLB}</small></span></label><label class="bpk big" for="hf-h11"><input type="checkbox" id="hf-h11" name="h11" ${has11?'checked':''}><span><b>Can thiệp 1-1</b><small>Ca ${SLOT_MIN} phút</small></span></label></div>
  <div class="hth">
@@ -1901,7 +1899,6 @@ function hthField(k,edit){const bt=!!k.bt,bd=k.bt&&Array.isArray(k.btd)&&k.btd.l
    <div><span class="lbl">Giáo viên dạy bé (chọn nhiều giáo viên nếu có nhiều người dạy chung; ghi nội dung mỗi người phụ trách, ví dụ cô A: Ngôn ngữ, cô B: Vận động – giác quan)</span>
     <div id="gvl" role="group" aria-label="Giáo viên dạy bé">${gvRows.map((id,i)=>gvRow(id,kTc(k,id),i===0)).join('')}</div><datalist id="gv-dl">${TC_HINT.map(x=>`<option value="${esc(x)}">`).join('')}</datalist>
     <div class="acts" style="margin-top:6px"><button class="btn s" type="button" data-a="gvadd">+ Thêm giáo viên</button><span class="sm mu">các giáo viên ngang nhau; mỗi ca bên dưới chọn giáo viên dạy ca đó</span></div></div>
-   <div class="f2"><div><label for="hf-rm">Phòng${has?' (cho ca thêm mới)':''}</label><select id="hf-rm" name="room"><option value="">Tự chọn phòng trống</option>${opts(ROOMS.map(r=>[r,r]),'')}</select></div></div>
    <div><span class="lbl">Loại 1-1 và số giờ đăng ký trong 1 ngày (tích loại bé học)</span>${ltBlock(k,lte)}</div>
    <div><span class="lbl">Các ngày học 1-1 (bấm chọn ngày bé học; mỗi ngày một ca)</span>
     <div class="dybx bpks" id="s11d" role="group" aria-label="Chọn ngày học 1-1">${DAY_ALL.map(w=>`<label class="bpk day"><input type="checkbox" data-s11w="${w}" aria-label="${DAYN[w]}" ${days.includes(w)?'checked':''}><span>${DAYS[w]}</span></label>`).join('')}</div>
@@ -1913,9 +1910,9 @@ function hthField(k,edit){const bt=!!k.bt,bd=k.bt&&Array.isArray(k.btd)&&k.btd.l
  </div>`}
 document.addEventListener('change',e=>{const t=e.target;if(!t||(t.name!=='hbt'&&t.name!=='h11'))return;const f=t.closest('form'),p=f&&f.querySelector(t.name==='hbt'?'#hth-bt':'#hth-11');if(p)p.hidden=!t.checked});
 ACT.d11bt=()=>{const f=$q('#hsff');if(!f)return false;DAY_ALL.forEach(w=>{const a=f.elements['bd'+w],c=f.elements['d'+w];if(a&&c)c.checked=a.checked});return false};
-/* thêm các buổi 1-1 cho một bé: mỗi buổi {w: thứ, slot: giờ bắt đầu}; kiểm tra trùng giáo viên, bé, phòng từng ngày */
-function add11(k,picks,gv0,room){const res={ok:0,bad:[],warn:[]},used=[];
- picks.forEach(p=>{const w=p.w,slot=p.slot,gv=p.gv||gv0,rm=room||ROOMS.find(r=>!conflict({day:w,slot,gv,hs:k.id,room:r}))||'',x={id:'l'+uid(),type:'11',day:w,slot,gv,hs:k.id,room:rm,lt:p.lt||null},c=rm?conflict(x):(conflict(Object.assign({},x,{room:''}))||'Không còn phòng trống');   /* hết phòng vì giáo viên hoặc bé đã bận thì báo đúng lý do */
+/* thêm các buổi 1-1 cho một bé: mỗi buổi {w: thứ, slot: giờ bắt đầu}; kiểm tra trùng giáo viên và bé từng ngày */
+function add11(k,picks,gv0){const res={ok:0,bad:[],warn:[]},used=[];
+ picks.forEach(p=>{const w=p.w,slot=p.slot,gv=p.gv||gv0,x={id:'l'+uid(),type:'11',day:w,slot,gv,hs:k.id,lt:p.lt||null},c=conflict(x);
   if(c){res.bad.push(DAYS[w]+': '+c);return}
   DB.lich.push(x);res.ok++;used.push(gv);const wn=btWarn(k,w,slot);if(wn)res.warn.push(DAYS[w]+': '+wn)});
  if(used.some(g=>!kHas(k,g)))kSet(k,kTs(k).concat(used));   /* giáo viên của ca mới vào danh sách giáo viên của bé, ngang các giáo viên đang có */
@@ -1927,14 +1924,14 @@ MODALS.hsf=()=>{const id=S.modal.id,k=id?kidBy(id):{n:'',g:'M',dob:addD(TODAY,-3
  ${hthField(k,!!id)}
  ${dxField(k)}
  <h3>Phụ huynh</h3><div class="f2"><div><label for="hf-pr">Quan hệ</label><select id="hf-pr" name="pr">${opts(['Mẹ','Bố','Ông bà','Người giám hộ'].map(x=>[x,x]),k.pr)}</select></div>${f('pn','Họ tên phụ huynh',k.pn,'text','required')}${f('pp','Điện thoại',k.pp,'tel','required')}${f('pe','Email cổng phụ huynh (hoặc dùng số điện thoại)',k.pe,'email')}</div>
- <p class="note sm">Thông tin đã nhập được giữ lại: mở hồ sơ là thấy sẵn, chỉ sửa chỗ cần đổi rồi bấm Lưu. Hệ thống kiểm tra trùng giáo viên, bé và phòng khi thêm hoặc đổi giờ ca 1-1; nếu có ca không đổi được thì hồ sơ chưa được lưu và báo rõ lý do.</p>
+ <p class="note sm">Thông tin đã nhập được giữ lại: mở hồ sơ là thấy sẵn, chỉ sửa chỗ cần đổi rồi bấm Lưu. Hệ thống kiểm tra trùng giáo viên và bé khi thêm hoặc đổi giờ ca 1-1; nếu có ca không đổi được thì hồ sơ chưa được lưu và báo rõ lý do.</p>
  <div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu hồ sơ</button></div></form>`)};
 FORM.hsff=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.id,isNew=!id;
  const old=isNew?null:kidBy(id);
  if(!g('n')||!g('pn')||(!g('pe')&&!telNorm(g('pp')))){toast('Vui lòng nhập tên bé, tên phụ huynh và email hoặc số điện thoại phụ huynh');return false}
  const bt=f.elements.hbt.checked,h11=f.elements.h11.checked,bd=daysOf(f,'bd'),wasSt=isNew?'dang':old.st;
  if(bt&&!bd.length){toast('Hãy tích ít nhất một buổi bán trú trong tuần');return false}
- const room=f.elements.room.value,ltq={},
+ const ltq={},
   gvr=h11?[...f.querySelectorAll('#gvl .gvr')].map(r=>({id:r.querySelector('select').value,tc:r.querySelector('[name=tgc]').value.trim()})).filter(x=>x.id):[];   /* giáo viên của bé và nội dung mỗi người phụ trách */
  if(new Set(gvr.map(x=>x.id)).size!==gvr.length){toast('Một giáo viên chỉ chọn một lần trong danh sách; hãy gộp nội dung phụ trách vào cùng một dòng');return false}
  LT.forEach(x=>{const c=f.elements['lt_'+x.c];if(h11&&c&&c.checked)ltq[x.c]=Math.min(4,Math.max(1,parseInt(f.elements['lq_'+x.c].value,10)||1))});
@@ -1960,10 +1957,8 @@ FORM.hsff=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.
   DB.lich=DB.lich.filter(l=>!gone.some(x=>x.id===l.id));
   ups.forEach(u=>{u.l.day=u.r.w;u.l.slot=u.r.slot;u.l.gv=u.r.gv});   /* đổi giáo viên của một ca: lương và chấm công theo ca tính theo người dạy mới */
   for(const u of ups.filter(u=>u.r.w!==u.o.day||u.r.slot!==u.o.slot||u.r.gv!==u.o.gv)){const l=u.l,base={id:l.id,day:l.day,slot:l.slot,gv:l.gv,hs:l.hs},
-    keep=l.room&&!conflict(Object.assign({},base,{room:l.room})),rm=keep?l.room:(ROOMS.find(r=>!conflict(Object.assign({},base,{room:r})))||''),
-    c=rm?'':(conflict(Object.assign({},base,{room:''}))||'Không còn phòng trống');
-   if(c){undo();toast(DAYS[l.day]+' '+slotLb(l.slot)+': '+c+'. Hồ sơ chưa được lưu, hãy chọn thứ, giờ hoặc giáo viên khác');return false}
-   l.room=rm}
+    c=conflict(base);
+   if(c){undo();toast(DAYS[l.day]+' '+slotLb(l.slot)+': '+c+'. Hồ sơ chưa được lưu, hãy chọn thứ, giờ hoặc giáo viên khác');return false}}
   ups.forEach(u=>{if(u.r.lt!==(u.o.lt||''))u.l.lt=u.r.lt||null})}
  const k=isNew?{id:newKidId(),no:nextKNo(),m11:0,gv:null}:old;
  Object.assign(k,{n:g('n'),g:g('g'),dob:g('dob'),sd:g('sd')||TODAY,st:g('st'),nd:g('nd'),bt,gr:bt?(g('gr')||grByAge(g('dob'))):'',pr:g('pr'),pn:g('pn'),pp:g('pp'),pe:g('pe').toLowerCase(),
@@ -1973,7 +1968,7 @@ FORM.hsff=f=>{const g=n=>f.elements[n]?f.elements[n].value.trim():'',id=S.modal.
  if(!h11||(old11&&!act.length&&!(old11-gone.length)))delete k.lt;else if(Object.keys(ltq).length)k.lt=ltq;   /* bỏ hết ca thì bỏ luôn số giờ đã ghi; bé cũ có ca 1-1 chưa gắn loại: giữ nguyên, không bắt buộc */
  if(wasSt!=='nghi'&&k.st==='nghi')k.stopAt=TODAY;else if(k.st!=='nghi')delete k.stopAt;   /* ngưng đột ngột: không hoàn phí dư nào (xem settle) */
  if(isNew)DB.kids.push(k);if(!bt)k.gr='';
- const res=news.length?add11(k,news.map(r=>({w:r.w,lt:r.lt,slot:r.slot,gv:r.gv})),'',room):null;
+ const res=news.length?add11(k,news.map(r=>({w:r.w,lt:r.lt,slot:r.slot,gv:r.gv})),''):null;
  const mvWarn=ups.map(u=>{const w=btWarn(k,u.l.day,u.l.slot);return(u.r.w!==u.o.day||u.r.slot!==u.o.slot)&&w?DAYS[u.l.day]+': '+w:''}).filter(Boolean);
  if(ups.length||gone.length)k.m11=wk11(k.id);
  const out=res||(mvWarn.length?{ok:0,bad:[],warn:[]}:null);if(out)out.warn=out.warn.concat(mvWarn);
@@ -1991,15 +1986,15 @@ function hsSchedule(k){const lead=isLead(),m=S.modal,bd=btOf(k),g=grBy(k.gr),$$=
   <div class="acts" style="justify-content:flex-end"><button class="btn p" type="submit">Lưu bán trú</button></div></form>`
   :`<p>${bd.length&&g?'Lớp <b>'+esc(g.n)+'</b>, học '+esc(dayTx(bd)):'Bé không học bán trú.'}</p>`)+`</div>`;
  const P11=pool11(),gvCell=l=>lead?`<select data-c="lsgv" data-l="${l.id}" aria-label="Giáo viên ca ${DAYN[l.day]} ${slotLb(l.slot)}" style="max-width:220px">${opts(P11.concat(P11.some(x=>x.id===l.gv)?[]:[stBy(l.gv)].filter(Boolean)).map(x=>[x.id,tName(x)]),l.gv)}</select>`:esc(sn(l.gv));   /* mỗi ca do một giáo viên dạy; bé có nhiều giáo viên thì mỗi ca chọn đúng người */
- const rows=ls.map(l=>`<tr><td class="nw">${DAYN[l.day]}</td><td class="nw">${slotLb(l.slot)}${l.lt&&LTM[l.lt]?'<br><span class="sm mu">'+esc(LTM[l.lt].n)+'</span>':''}</td><td>${gvCell(l)}</td><td>${esc(l.room)}</td><td>${inc.has(l.id)?tg('Ca của bán trú','in'):tg('Ca 1-1 thêm','gy')}${$$&&!inc.has(l.id)?' <span class="sm mu">'+fnum(feeSlot(k,l.id))+' ₫</span>':''}${(btWarn(k,l.day,l.slot)?'<br><span class="sm mu">Lưu ý: '+esc(btWarn(k,l.day,l.slot))+'</span>':'')}</td>${lead?`<td class="r"><button class="btn s no" data-a="hslsdel" data-v="${l.id}">Xóa</button></td>`:''}</tr>`).join('');
+ const rows=ls.map(l=>`<tr><td class="nw">${DAYN[l.day]}</td><td class="nw">${slotLb(l.slot)}${l.lt&&LTM[l.lt]?'<br><span class="sm mu">'+esc(LTM[l.lt].n)+'</span>':''}</td><td>${gvCell(l)}</td><td>${inc.has(l.id)?tg('Ca của bán trú','in'):tg('Ca 1-1 thêm','gy')}${$$&&!inc.has(l.id)?' <span class="sm mu">'+fnum(feeSlot(k,l.id))+' ₫</span>':''}${(btWarn(k,l.day,l.slot)?'<br><span class="sm mu">Lưu ý: '+esc(btWarn(k,l.day,l.slot))+'</span>':'')}</td>${lead?`<td class="r"><button class="btn s no" data-a="hslsdel" data-v="${l.id}">Xóa</button></td>`:''}</tr>`).join('');
  const res=m.res?`<div class="note sm" style="margin-bottom:10px">${m.res.ok?'<b>Đã thêm '+m.res.ok+' buổi.</b> ':''}${m.res.bad.length?'<b>Không thêm được:</b> '+esc(m.res.bad.join('; '))+'. ':''}${m.res.warn.length?'<b>Lưu ý:</b> '+esc(m.res.warn.join('; ')):''}</div>`:'';
  const pool=pool11(),one=`<div class="card"><h2>Các buổi 1-1 hằng tuần</h2>${res}${miss.length?`<p class="note sm" style="margin-bottom:10px">Ngày bán trú chưa có ca 1-1: ${esc(miss.map(w=>DAYS[w]).join(', '))}.</p>`:''}`
   +(kTs(k).length>1||ls.some(l=>l.gv!==kTs(k)[0])?`<p class="sm" style="margin-bottom:8px"><b>Giáo viên dạy bé:</b> ${esc(kNames(k,true))}</p>`:'')
-  +tbl(['Thứ','Ca','Giáo viên','Phòng','Loại'].concat(lead?['']:[]),rows,'Bé chưa có buổi 1-1 cố định.')
+  +tbl(['Thứ','Ca','Giáo viên','Loại'].concat(lead?['']:[]),rows,'Bé chưa có buổi 1-1 cố định.')
   +(lead&&ls.length?`<p class="sm mu" style="margin-top:8px">Muốn đổi thứ, giờ hoặc loại của các ca, mở hồ sơ để sửa: mọi ca đã lưu hiện sẵn, chỉ chỉnh chỗ cần đổi.</p><div class="acts"><button class="btn s" type="button" data-a="hsedit" data-v="${k.id}">Sửa các ca trong hồ sơ</button></div>`:'')
-  +(lead?`<form id="lsmf" class="f" style="margin-top:14px"><h3>Thêm buổi 1-1 cho nhiều ngày cùng lúc</h3><div class="f2"><div><label for="lm-g">Giáo viên</label><select id="lm-g" name="gv"><option value="">Chọn giáo viên</option>${opts(pool.map(s=>[s.id,tName(s)]),kTs(k).find(id=>pool.some(s=>s.id===id))||'')}</select></div><div><label for="lm-s">Giờ bắt đầu</label>${slotInput('lm-s',m.slot||SLOTS[1])}<small class="mu">Ca ${SLOT_MIN} phút, tự tính giờ kết thúc.</small></div><div><label for="lm-r">Phòng</label><select id="lm-r" name="room"><option value="">Tự chọn phòng trống</option>${opts(ROOMS.map(r=>[r,r]),'')}</select></div></div>
+  +(lead?`<form id="lsmf" class="f" style="margin-top:14px"><h3>Thêm buổi 1-1 cho nhiều ngày cùng lúc</h3><div class="f2"><div><label for="lm-g">Giáo viên</label><select id="lm-g" name="gv"><option value="">Chọn giáo viên</option>${opts(pool.map(s=>[s.id,tName(s)]),kTs(k).find(id=>pool.some(s=>s.id===id))||'')}</select></div><div><label for="lm-s">Giờ bắt đầu</label>${slotInput('lm-s',m.slot||SLOTS[1])}<small class="mu">Ca ${SLOT_MIN} phút, tự tính giờ kết thúc.</small></div></div>
    <div><span class="lbl">Học vào các ngày</span>${dayBoxes('d',bd.length?bd:[])}</div>
-   <p class="sm mu">Mỗi bé chọn ngày riêng: có bé học T2–T7, có bé chỉ vài buổi mỗi tuần. Hệ thống kiểm tra trùng giáo viên, bé, phòng ở từng ngày và chỉ thêm những ngày còn trống.</p>
+   <p class="sm mu">Mỗi bé chọn ngày riêng: có bé học T2–T7, có bé chỉ vài buổi mỗi tuần. Hệ thống kiểm tra trùng giáo viên và bé ở từng ngày và chỉ thêm những ngày còn trống.</p>
    <div class="acts" style="justify-content:flex-end"><button class="btn p" type="submit">Thêm các buổi</button></div></form>`:'')+`</div>`;
  const tt=`<div class="card"><h2>Thời khóa biểu của ${esc(given(k.n))}</h2>${kidWeek(k)}</div>`;
  return bt+one+kprCard(k)+tt}
@@ -2021,7 +2016,7 @@ FORM.lsmf=f=>{if(!isLead())return false;const k=kidBy(S.modal.id),e=f.elements,g
  if(!gv){toast('Hãy chọn giáo viên');return false}
  if(!slotValid(slot)){toast(slotMsg);return false}
  if(!days.length){toast('Hãy chọn ít nhất một ngày');return false}
- const res=add11(k,days.map(w=>({w,slot})),gv,e.room.value);
+ const res=add11(k,days.map(w=>({w,slot})),gv);
  S.modal.res=res;S.modal.slot=slot;
  if(res.ok&&!res.bad.length)toast('Đã thêm '+res.ok+' buổi 1-1')};
 CHG.lsgv=(v,t)=>{const l=DB.lich.find(x=>x.id===t.dataset.l),k=l&&kidBy(l.hs),back=S.modal;if(!l||!k||!v||v===l.gv||!isLead())return;
@@ -2336,52 +2331,52 @@ function pcLoad(){const rows=DB.staff.filter(s=>isTeacher(s)&&s.st==='dang').map
 const monOf=d=>{let x=d;while(dow(x)!==1)x=addD(x,-1);return x};
 const onLeave=(id,d)=>DB.lr.some(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t);
 VIEWS.lh=()=>isPH()?lhParent():lhStaff();
-const lhStaff=()=>{const h=S.lh=Object.assign({tab:'wk',mode:'gv',wk:monOf(WD),gv:'',room:ROOMS[0],kid:''},S.lh);
+const lhStaff=()=>{const h=S.lh=Object.assign({tab:'wk',mode:'gv',wk:monOf(WD),gv:'',kid:''},S.lh);
+ if(h.mode==='room')h.mode='gv';   /* bản cũ có chế độ xem theo phòng; nay đã bỏ khái niệm phòng */
  const bv=btView();if(!bv&&h.tab==='bt')h.tab='wk';
  if(isGV()){h.mode='gv';h.gv=U.id}else if(!h.gv)h.gv=(pool11().find(s=>U&&s.id===U.id)||pool11()[0]||{}).id||'';
  if(!h.kid)h.kid=(myKids().find(k=>k.st==='dang'&&wk11(k.id))||{}).id||'';
  return head(isGV()?'Lịch dạy của tôi':'Lịch học','Lịch 1-1 cố định theo tuần ('+DAY_OPEN+'–'+DAY_CLOSE+', mỗi ca '+SLOT_MIN+' phút), lịch học bù'+(bv?' và thời khóa biểu bán trú':''))+tabsH([['wk','Lịch 1-1 theo tuần']].concat(bv?[['bt','Thời khóa biểu bán trú']]:[],[['hol','Ngày nghỉ lễ']]),h.tab,'lhtab')+(h.tab==='wk'?lhWeek(h):h.tab==='hol'?holTab():lhBt())};
 ACT.lhtab=v=>{S.lh.tab=v};
 ACT.lhwk=v=>{S.lh.wk=v==='0'?monOf(WD):addD(S.lh.wk,+v)};
-CHG.lhmode=v=>{S.lh.mode=v};CHG.lhgv=v=>{S.lh.gv=v};CHG.lhroom=v=>{S.lh.room=v};CHG.lhkid=v=>{S.lh.kid=v};
+CHG.lhmode=v=>{S.lh.mode=v};CHG.lhgv=v=>{S.lh.gv=v};CHG.lhkid=v=>{S.lh.kid=v};
 /* các dòng giờ của lưới tuần: chỉ những khung giờ đang có giáo viên dạy 1-1 cho trẻ (theo bộ lọc đang xem), không vẽ sẵn các mốc giờ của hệ thống cho khỏi rối mắt; muốn thêm ca ở giờ khác thì dùng nút "+ Thêm buổi 1-1" */
 function slotRows(days,pred){const ds=new Set(days),ex=DB.lich.filter(l=>l.slot&&(l.type==='11'||ds.has(l.date))&&(!pred||pred(l))).map(l=>l.slot);return[...new Set(ex)].sort()}
 function lhWeek(h){const mon=h.wk,days=[0,1,2,3,4,5].map(i=>addD(mon,i));
- const ctl=isGV()?'':`<div class="f2" style="margin-bottom:12px"><div><label for="lhm">Xem theo</label><select id="lhm" data-c="lhmode">${opts([['gv','Giáo viên'],['room','Phòng'],['kid','Từng bé'],['all','Tổng hợp số buổi']],h.mode)}</select></div>
- ${h.mode==='gv'?`<div><label for="lhg">Giáo viên</label><select id="lhg" data-c="lhgv">${opts(pool11().map(s=>[s.id,tName(s)]),h.gv)}</select></div>`:h.mode==='room'?`<div><label for="lhr">Phòng</label><select id="lhr" data-c="lhroom">${opts(ROOMS.map(r=>[r,r]),h.room)}</select></div>`:h.mode==='kid'?`<div><label for="lhk">Bé</label><select id="lhk" data-c="lhkid">${opts(DB.kids.filter(k=>k.st==='dang'&&wk11(k.id)).map(k=>[k.id,k.n]),h.kid)}</select></div>`:''}</div>`;
+ const ctl=isGV()?'':`<div class="f2" style="margin-bottom:12px"><div><label for="lhm">Xem theo</label><select id="lhm" data-c="lhmode">${opts([['gv','Giáo viên'],['kid','Từng bé'],['all','Tổng hợp số buổi']],h.mode)}</select></div>
+ ${h.mode==='gv'?`<div><label for="lhg">Giáo viên</label><select id="lhg" data-c="lhgv">${opts(pool11().map(s=>[s.id,tName(s)]),h.gv)}</select></div>`:h.mode==='kid'?`<div><label for="lhk">Bé</label><select id="lhk" data-c="lhkid">${opts(DB.kids.filter(k=>k.st==='dang'&&wk11(k.id)).map(k=>[k.id,k.n]),h.kid)}</select></div>`:''}</div>`;
  const gr=h.mode==='gv'&&grOf(h.gv);
- const mineL=l=>h.mode==='gv'?l.gv===h.gv:h.mode==='room'?l.room===h.room:h.mode==='kid'?l.hs===h.kid:true;
+ const mineL=l=>h.mode==='gv'?l.gv===h.gv:h.mode==='kid'?l.hs===h.kid:true;
  const canAdd=isLead()&&h.mode==='gv'&&!!h.gv&&!isGrStaff(h.gv),sr=slotRows(days,mineL),
-  rows=sr.length?sr.map(s=>`<tr><th class="nw">${slotLb(s)}</th>${days.map((d,i)=>lhCell(h,d,i+1,s)).join('')}</tr>`).join(''):`<tr><td colspan="7" class="empty">${h.mode==='gv'?(gr?'Giáo viên này phụ trách lớp bán trú nên không có ca 1-1.':isGV()?'Bạn chưa có buổi 1-1 cố định nào.':'Giáo viên này chưa có buổi 1-1 nào.'):h.mode==='room'?'Phòng này chưa có buổi 1-1 nào.':h.mode==='kid'?'Bé này chưa có buổi 1-1 nào.':'Chưa có buổi 1-1 nào.'}${canAdd?' Bấm “+ Thêm buổi 1-1” để thêm.':''}</td></tr>`;
+  rows=sr.length?sr.map(s=>`<tr><th class="nw">${slotLb(s)}</th>${days.map((d,i)=>lhCell(h,d,i+1,s)).join('')}</tr>`).join(''):`<tr><td colspan="7" class="empty">${h.mode==='gv'?(gr?'Giáo viên này phụ trách lớp bán trú nên không có ca 1-1.':isGV()?'Bạn chưa có buổi 1-1 cố định nào.':'Giáo viên này chưa có buổi 1-1 nào.'):h.mode==='kid'?'Bé này chưa có buổi 1-1 nào.':'Chưa có buổi 1-1 nào.'}${canAdd?' Bấm “+ Thêm buổi 1-1” để thêm.':''}</td></tr>`;
  return`<div class="card">${ctl}<div class="acts" style="justify-content:space-between;margin-bottom:10px"><div class="acts"><button class="btn s" data-a="lhwk" data-v="-7">Tuần trước</button><button class="btn s" data-a="lhwk" data-v="0">Tuần này</button><button class="btn s" data-a="lhwk" data-v="7">Tuần sau</button></div><span class="acts">${canAdd?'<button class="btn s p" type="button" data-a="lsadd" data-v="1|">+ Thêm buổi 1-1</button>':''}<b>${vd(days[0])} đến ${vd(days[5])}</b></span></div>
  ${gr?`<p class="note sm" style="margin-bottom:10px">${esc(sn(h.gv))} phụ trách ${esc(gr.n)} từ thứ Hai đến thứ Sáu nên không có ca 1-1 các ngày này.</p>`:''}
  <div class="tw"><table class="wkt"><thead><tr><th></th>${days.map(d=>`<th>${DAYN[dow(d)]}<br><span class="mu">${vdm(d)}</span>${isClosed(d)?'<br>'+tg('Nghỉ','in'):''}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>
  <p class="sm mu" style="margin-top:8px">Chỉ hiện các khung giờ đang có giáo viên dạy 1-1. Ô vàng là buổi học bù, ô đỏ nhạt là buổi nghỉ. ${canAdd?'Bấm “+ Thêm buổi 1-1” để thêm ca ở giờ mới, hoặc rê chuột vào ô trống rồi bấm dấu cộng để thêm cùng giờ vào ngày khác.':''}</p></div>`}
 function lhCell(h,d,w,s){if(isClosed(d))return`<td class="cell off"><span class="sm mu">${esc(holOf(d).n)}</span></td>`;const ls=lichAt(w,s,d);
- if(h.mode==='all')return`<td class="cell"><span class="tag ${ls.length>=ROOMS.length?'er':ls.length?'in':'gy'}">${ls.length}/${ROOMS.length}</span></td>`;
- const mine=ls.filter(l=>h.mode==='gv'?l.gv===h.gv:h.mode==='room'?l.room===h.room:l.hs===h.kid),off=h.mode==='gv'&&onLeave(h.gv,d);
- const it=l=>{const k=kidBy(l.hs),c=DB.att[d+'|'+l.id+'|'+l.hs],sub=h.mode==='gv'?l.room:h.mode==='room'?given(sn(l.gv)):given(sn(l.gv))+' · '+l.room;
-  return`<button class="ls ${l.type==='bu'?'bu':''} ${c&&c!=='cm'?'x':''}" data-a="lsopen" data-v="${l.id}|${d}">${esc(h.mode==='kid'?'Buổi 1-1':given(k?k.n:'?'))}<small>${esc(sub)}${l.type==='bu'?' · bù':''}${c&&c!=='cm'?' · '+AC[c]:''}</small></button>`};
+ if(h.mode==='all')return`<td class="cell"><span class="tag ${ls.length?'in':'gy'}">${ls.length}</span></td>`;
+ const mine=ls.filter(l=>h.mode==='gv'?l.gv===h.gv:l.hs===h.kid),off=h.mode==='gv'&&onLeave(h.gv,d);
+ const it=l=>{const k=kidBy(l.hs),c=DB.att[d+'|'+l.id+'|'+l.hs],sub=[h.mode==='gv'?'':given(sn(l.gv)),l.type==='bu'?'bù':'',c&&c!=='cm'?AC[c]:''].filter(Boolean).join(' · ');
+  return`<button class="ls ${l.type==='bu'?'bu':''} ${c&&c!=='cm'?'x':''}" data-a="lsopen" data-v="${l.id}|${d}">${esc(h.mode==='kid'?'Buổi 1-1':given(k?k.n:'?'))}${sub?`<small>${esc(sub)}</small>`:''}</button>`};
  const add=isLead()&&h.mode==='gv'&&!off&&!mine.length&&!isGrStaff(h.gv)&&w>=1?`<button class="ls add" data-a="lsadd" data-v="${w}|${s}" aria-label="Thêm buổi">+</button>`:'';
  return`<td class="cell ${off?'off':''}">${off?'<span class="sm mu">Nghỉ phép</span>':mine.map(it).join('')+add}</td>`}
 /* --- thêm, sửa, xóa buổi cố định --- */
 ACT.lsadd=v=>{const [day,slot]=v.split('|');S.modal={t:'ls',id:'',day:+day,slot,err:''}};
 ACT.lsopen=v=>{const [id,d]=v.split('|'),l=DB.lich.find(x=>x.id===id);if(!l)return;S.modal={t:'ls',id,day:l.day,slot:l.slot,date:d,err:''}};
 MODALS.ls=()=>{const m=S.modal,l=m.id?DB.lich.find(x=>x.id===m.id):null;
- if(l&&l.type==='bu'){const k=kidBy(l.hs);return mdl('Buổi học bù',`<p><b>${esc(k?k.n:'')}</b> học bù ngày ${vd(l.date)}, ${slotLb(l.slot)}, ${esc(l.room)}, giáo viên ${esc(sn(l.gv))}.</p><div class="acts" style="margin-top:12px"><button class="btn" data-a="nav" data-v="hb">Mở mục Học bù</button></div>`)}
+ if(l&&l.type==='bu'){const k=kidBy(l.hs);return mdl('Buổi học bù',`<p><b>${esc(k?k.n:'')}</b> học bù ngày ${vd(l.date)}, ${slotLb(l.slot)}, giáo viên ${esc(sn(l.gv))}.</p><div class="acts" style="margin-top:12px"><button class="btn" data-a="nav" data-v="hb">Mở mục Học bù</button></div>`)}
  const gv=l?l.gv:S.lh.gv,editable=isLead(),kid=l?kidBy(l.hs):null;
- if(l&&!editable){return mdl('Buổi 1-1',`<p><b>${esc(kid?kid.n:'')}</b><br>${DAYN[l.day]}, ${slotLb(l.slot)}, ${esc(l.room)}</p>`)}
+ if(l&&!editable){return mdl('Buổi 1-1',`<p><b>${esc(kid?kid.n:'')}</b><br>${DAYN[l.day]}, ${slotLb(l.slot)}</p>`)}
  /* bé của giáo viên này, bé chưa phân công, rồi các bé đang có giáo viên khác (một bé có nhiều giáo viên: thêm giáo viên này vào dạy chung) */
  const rk=k=>kHas(k,gv)?0:!kTs(k).length?1:2,ks=DB.kids.filter(k=>k.st==='dang').sort((a,b)=>rk(a)-rk(b)||a.n.localeCompare(b.n,'vi'));
- return mdl(l?'Sửa buổi 1-1 cố định':'Thêm buổi 1-1 cố định',`<form id="lsf" class="f"><p class="mu sm">Giáo viên: <b>${esc(sn(gv))}</b></p><div class="f2"><div><label for="ls-k">Bé</label><select id="ls-k" name="hs" ${l?'disabled':''}>${opts(ks.map(k=>[k.id,k.n+(kHas(k,gv)?'':!kTs(k).length?' (chưa phân công)':' (đang do '+kGiven(k)+' dạy, thêm giáo viên này)')]),l?l.hs:'')}</select></div><div><label for="ls-d">Thứ</label><select id="ls-d" name="day">${opts([1,2,3,4,5,6].map(i=>[i,DAYN[i]]),m.day)}</select></div><div><label for="ls-s">Giờ bắt đầu</label>${slotInput('ls-s',m.slot)}<small class="mu">Ca ${SLOT_MIN} phút, tự tính giờ kết thúc. Chọn giờ gợi ý hoặc nhập giờ khác.</small></div><div><label for="ls-r">Phòng</label><select id="ls-r" name="room"><option value="">Tự chọn phòng trống</option>${opts(ROOMS.map(r=>[r,r]),l?l.room:'')}</select></div></div><div class="err" role="alert">${esc(m.err)}</div>
+ return mdl(l?'Sửa buổi 1-1 cố định':'Thêm buổi 1-1 cố định',`<form id="lsf" class="f"><p class="mu sm">Giáo viên: <b>${esc(sn(gv))}</b></p><div class="f2"><div><label for="ls-k">Bé</label><select id="ls-k" name="hs" ${l?'disabled':''}>${opts(ks.map(k=>[k.id,k.n+(kHas(k,gv)?'':!kTs(k).length?' (chưa phân công)':' (đang do '+kGiven(k)+' dạy, thêm giáo viên này)')]),l?l.hs:'')}</select></div><div><label for="ls-d">Thứ</label><select id="ls-d" name="day">${opts([1,2,3,4,5,6].map(i=>[i,DAYN[i]]),m.day)}</select></div><div><label for="ls-s">Giờ bắt đầu</label>${slotInput('ls-s',m.slot)}<small class="mu">Ca ${SLOT_MIN} phút, tự tính giờ kết thúc. Chọn giờ gợi ý hoặc nhập giờ khác.</small></div></div><div class="err" role="alert">${esc(m.err)}</div>
  <div class="acts" style="justify-content:space-between"><span>${l?`<button class="btn no" type="button" data-a="lsdel" data-v="${l.id}">Xóa buổi này</button>`:''}</span><span class="acts"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu</button></span></div></form>`)};
 FORM.lsf=f=>{const m=S.modal,e=f.elements,old=m.id?DB.lich.find(x=>x.id===m.id):null,gv=old?old.gv:S.lh.gv,hs=old?old.hs:e.hs.value;
  if(!hs){m.err='Hãy chọn bé';return}
  const slot=String(e.slot.value||'').slice(0,5);m.day=+e.day.value;m.slot=slot;
  if(!slotValid(slot)){m.err=slotMsg+'.';return}
- const day=+e.day.value,room=e.room.value||ROOMS.find(r=>!conflict({id:old?old.id:'',day,slot,gv,hs,room:r}))||'',x={id:old?old.id:'l'+uid(),type:'11',day,slot,gv,hs,room},
-  c=room?conflict(x):(conflict(Object.assign({},x,{room:''}))||'Không còn phòng trống');   /* hết phòng vì giáo viên hoặc bé đã bận thì báo đúng lý do */
- if(c){m.err=c+' (ca '+slotLb(slot)+'). Hãy chọn thứ, giờ hoặc phòng khác.';return}
+ const day=+e.day.value,x={id:old?old.id:'l'+uid(),type:'11',day,slot,gv,hs},c=conflict(x);
+ if(c){m.err=c+' (ca '+slotLb(slot)+'). Hãy chọn thứ hoặc giờ khác.';return}
  if(old)Object.assign(old,x);else DB.lich.push(x);
  const k=kidBy(hs);if(!kHas(k,gv))kSet(k,kTs(k).concat(gv));k.m11=wk11(hs);S.modal=null;toast('Đã lưu buổi học')};
 ACT.lsdel=v=>{const l=DB.lich.find(x=>x.id===v),k=l&&kidBy(l.hs);if(!l)return;ask('Xóa buổi 1-1 cố định '+DAYN[l.day]+' '+slotLb(l.slot)+' của bé '+(k?k.n:'')+'? Các lần điểm danh trước đây vẫn được giữ.',()=>{DB.lich=DB.lich.filter(x=>x.id!==v);if(k)k.m11=wk11(k.id);toast('Đã xóa buổi học')},'Xóa buổi')};
@@ -2394,7 +2389,7 @@ const tkRowHead=r=>`<th class="nw">${r.s}–${r.e}</th><td class="tkn"><b>${esc(
 /* bảng của một lớp: mỗi ô có tên bé đang học 1-1 vào giờ đó */
 function tkbClass(g,ks){const rows=tkbRows(g.id),byId={};ks.forEach(k=>{byId[k.id]=k});
  const ss=DB.lich.filter(l=>l.type==='11'&&byId[l.hs]&&btHas(byId[l.hs],l.day)).sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0);
- const chip=l=>`<span class="kc" title="${esc(sn(l.gv)+' · '+l.room+' · '+slotLb(l.slot))}">${esc(given(byId[l.hs].n))} <small>${l.slot}</small></span>`;
+ const chip=l=>`<span class="kc" title="${esc(sn(l.gv)+' · '+slotLb(l.slot))}">${esc(given(byId[l.hs].n))} <small>${l.slot}</small></span>`;
  const head=`<tr><th>Giờ</th><th>Hoạt động</th>${DAY_ALL.map(w=>`<th>${DAYN[w]}<br><small class="mu">${ks.filter(k=>btHas(k,w)).length} bé</small></th>`).join('')}</tr>`;
  const body=rows.map(r=>`<tr>${tkRowHead(r)}${DAY_ALL.map(w=>{const t=(r.d&&r.d[w])||'',c=ss.filter(l=>l.day===w&&rowAt(rows,l)===r);return`<td class="cell ${grOpen(g,w)?'':'off'}">${t?`<div class="tkc">${esc(t)}</div>`:''}${c.length?`<div class="tko"><small class="mu">Học 1-1:</small> ${c.map(chip).join('')}</div>`:''}</td>`}).join('')}</tr>`).join('');
  const out=ss.filter(l=>!rowAt(rows,l)),sl=[...new Set(out.map(l=>l.slot))].sort();
@@ -2403,7 +2398,7 @@ function tkbClass(g,ks){const rows=tkbRows(g.id),byId={};ks.forEach(k=>{byId[k.i
 /* bảng tuần của một bé: thời khóa biểu lớp ghép với các ca 1-1 của riêng bé */
 function kidWeek(k){const bd=btOf(k),g=bd.length?grBy(k.gr):null,ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0);
  if(!ls.length&&!g)return'<p class="empty">Bé chưa có lịch học cố định.</p>';
- const chip=l=>`<div class="ls st"><b>1-1 · ${slotLb(l.slot)}</b><small>${esc(given(sn(l.gv)))} · ${esc(l.room)}</small></div>`;
+ const chip=l=>`<div class="ls st"><b>1-1 · ${slotLb(l.slot)}</b><small>${esc(given(sn(l.gv)))}</small></div>`;
  const rows=g?tkbRows(g.id):[];
  if(!rows.length){   /* chưa có thời khóa biểu lớp: bảng theo ca như trước */
   const slots=[...new Set(ls.map(l=>l.slot))].sort(),bt=g?`<tr><th class="nw">${BTLB}</th><td class="tkn"><b>Bán trú ${esc(g.n)}</b></td>${DAY_ALL.map(w=>`<td class="cell">${bd.includes(w)?'<div class="ls st bt"><b>Bán trú</b><small>'+esc(g.n)+'</small></div>':''}</td>`).join('')}</tr>`:'';
@@ -2456,7 +2451,7 @@ function lhParent(){const ks=myKids().filter(k=>k.st==='dang');
  const k=kidBy(h.kid),g=btOf(k).length?grBy(k.gr):null,ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.id);
  const days=[];for(let i=0;i<14;i++){const d=addD(TODAY,i);if(!isW(d))continue;const xs=sched(k,d.slice(0,7)).filter(x=>x.d===d).sort((a,b)=>a.slot<b.slot?-1:1);if(xs.length)days.push({d,xs})}
  const line=(d,x)=>{const l=x.kind==='bt'?null:DB.lich.find(y=>y.id===x.sid),c=DB.att[d+'|'+x.sid+'|'+k.id];
-  const what=x.kind==='bt'?'Bán trú '+esc(g?g.n:'')+' · '+BTLB:(x.kind==='bu'?'Học bù ':'Can thiệp 1-1 ')+slotLb(x.slot)+(l?' · '+esc(given(sn(l.gv)))+' · '+esc(l.room):'');
+  const what=x.kind==='bt'?'Bán trú '+esc(g?g.n:'')+' · '+BTLB:(x.kind==='bu'?'Học bù ':'Can thiệp 1-1 ')+slotLb(x.slot)+(l?' · '+esc(given(sn(l.gv))):'');
   return`<div class="rw"><span>${what}</span>${c?tg(AC[c],c==='cm'?'ok':c==='kp'?'er':c==='p'?'wa':'in'):''}</div>`};
  return head('Lịch học của bé','Giờ học 1-1 và giờ bán trú của bé trong tuần')+(ks.length>1?tabsH(ks.map(x=>[x.id,given(x.n)]),h.kid,'lhk'):'')
  +`<div class="grid"><div class="card kpi"><div class="mu sm">Học 1-1</div><div class="big">${ls.length} buổi</div><div class="sm mu">mỗi tuần${ls.length?', '+esc(kTs(k).length?kGiven(k):given(mainGV(k))):''}</div></div><div class="card kpi"><div class="mu sm">Bán trú</div><div class="big">${g?esc(g.n):'Không'}</div><div class="sm mu">${g?BTLB+', '+esc(dayTx(btOf(k))):'Bé chưa đăng ký bán trú'}</div></div></div>`
@@ -2576,7 +2571,7 @@ function ddRoll(){const t=S.dd,d=t.date,can=canEditAtt(d);
  const kp=`<div class="grid">${kpi('Lượt học',tot,'trong ngày')}${kpi('Đã điểm danh',rec+'/'+tot,tot?Math.round(rec*100/tot)+'%':'',rec<tot?'er':'ok')}${kpi('Có mặt',cm,rec?Math.round(cm*100/rec)+'% số đã ghi':'')}${kpi('Nghỉ',rec-cm,'P, KP, TT/GV nghỉ, nhập viện')}</div>`;
  if(!ds.length)return ctl+`<div class="card"><p class="empty">${dow(d)===0?'Chủ nhật trung tâm nghỉ.':isClosed(d)?'Trung tâm nghỉ ngày này: '+esc(holOf(d).n)+'. Ngày nghỉ không tính học phí và không cần điểm danh.':'Không có buổi học nào phù hợp trong ngày này.'}</p></div>`;
  const hint=`<p class="note sm" style="margin-bottom:12px"><b>Cách ghi P và KP:</b> Nghỉ P khi phụ huynh báo trong nhóm chung trước 7g sáng cùng ngày với ca sáng, trước 12g với ca chiều và tối (bán trú: báo trước 1 ngày hoặc trước 7g sáng). Báo sau mốc này hoặc không báo thì ghi KP. Bấm lại vào trạng thái đang chọn để xóa.</p>`;
- const t1=one.length?`<div class="card"><h2>Can thiệp 1-1 và học bù</h2>`+tbl(['Ca','Bé','Giáo viên','Phòng','Trạng thái','Ghi chú'],one.map(s=>{const k=s.kids[0];return`<tr><td class="nw">${slotLb(s.slot)}${s.kind==='bu'?'<br>'+tg('Học bù','y'):''}${s.inc?'<br>'+tg('1-1 của bán trú','in'):''}</td><td><b>${esc(k.n)}</b></td><td>${esc(given(sn(s.gv)))}</td><td class="nw">${esc(s.room)}</td><td>${stb(d,s,k,can)}</td><td>${feeNote(d,s,k)} ${mkBtn(d,s,k)}</td></tr>`}).join(''))+`</div>`:'';
+ const t1=one.length?`<div class="card"><h2>Can thiệp 1-1 và học bù</h2>`+tbl(['Ca','Bé','Giáo viên','Trạng thái','Ghi chú'],one.map(s=>{const k=s.kids[0];return`<tr><td class="nw">${slotLb(s.slot)}${s.kind==='bu'?'<br>'+tg('Học bù','y'):''}${s.inc?'<br>'+tg('1-1 của bán trú','in'):''}</td><td><b>${esc(k.n)}</b></td><td>${esc(given(sn(s.gv)))}</td><td>${stb(d,s,k,can)}</td><td>${feeNote(d,s,k)} ${mkBtn(d,s,k)}</td></tr>`}).join(''))+`</div>`:'';
  const t2=grp.map(s=>`<div class="card"><div class="top"><div><h2>${esc(s.label)}</h2><p class="mu sm">Giáo viên ${esc(s.ts.map(sn).join(', ')||'Chưa phân công')} · ${s.kids.length} trẻ</p></div><button class="btn s" data-a="attall" data-v="${d}|${s.sid}" ${can?'':'disabled'}>Ghi mọi trẻ có mặt</button></div>`+tbl(['Bé','Trạng thái','Ghi chú'],s.kids.map(k=>`<tr><td><b>${esc(k.n)}</b></td><td>${stb(d,s,k,can)}</td><td>${feeNote(d,s,k)}</td></tr>`).join(''))+`</div>`).join('');
  return ctl+kp+hint+t1+t2}
 /* --- sửa nhanh một ô trong bảng chấm công --- */
@@ -2687,7 +2682,7 @@ ACT.mkopen=v=>{S.modal={t:'mkd',id:v}};
 function mkGV(r){const l=DB.lich.find(x=>x.id===r.from.sid);return(l&&l.gv)||(kidBy(r.hs)||{}).gv||(pool11()[0]||{}).id||''}
 MODALS.mkd=()=>{const r=DB.mk.find(x=>x.id===S.modal.id);if(!r||!canKid(r.hs)){S.modal=null;return''}
  const open=r.s==='dk'||r.s==='tt',staff=!isPH();
- const props=r.props.map(p=>`<div class="rw"><span><b>${DAYN[dow(p.d)]} ${vd(p.d)}</b> · ${slotLb(p.slot)} · ${esc(p.room)} · ${esc(sn(p.gv))}</span>${r.s==='tt'&&(isPH()||isLead())?`<button class="btn s p" data-a="mkpick" data-v="${r.id}|${p.id}">${isPH()?'Chọn giờ này':'Xác nhận thay phụ huynh'}</button>`:r.pick===p.id?tg('Đã chọn','ok'):''}</div>`).join('');
+ const props=r.props.map(p=>`<div class="rw"><span><b>${DAYN[dow(p.d)]} ${vd(p.d)}</b> · ${slotLb(p.slot)} · ${esc(sn(p.gv))}</span>${r.s==='tt'&&(isPH()||isLead())?`<button class="btn s p" data-a="mkpick" data-v="${r.id}|${p.id}">${isPH()?'Chọn giờ này':'Xác nhận thay phụ huynh'}</button>`:r.pick===p.id?tg('Đã chọn','ok'):''}</div>`).join('');
  return mdl('Học bù của bé '+kn(r.hs),`<p class="mu sm" style="margin-bottom:8px">Buổi nghỉ gốc: ${mkOrigin(r)}</p>${r.s==='huy'?tg(MKS.huy[0],'gy'):mkSteps(r)}
  <h3 style="margin-top:14px">Giờ đề xuất</h3>${props||'<p class="empty">Chưa có giờ đề xuất.</p>'}
  ${r.s==='dk'&&staff?`<div style="margin-top:10px"><button class="btn p" data-a="mkprop" data-v="${r.id}">Đề xuất giờ học bù</button></div>`:''}
@@ -2695,7 +2690,7 @@ MODALS.mkd=()=>{const r=DB.mk.find(x=>x.id===S.modal.id);if(!r||!canKid(r.hs)){S
  ${open||r.s==='xn'?`<div class="acts" style="margin-top:14px;justify-content:flex-end"><button class="btn no" data-a="mkno" data-v="${r.id}">Không học bù</button></div>${feeTx('<p class="sm mu" style="margin-top:6px">Chọn “Không học bù” thì phí nghỉ được tính theo quy định, không còn được miễn vì học bù.</p>')}`:''}`)};
 ACT.mkno=v=>{const r=DB.mk.find(x=>x.id===v);if(!r)return;ask('Đóng yêu cầu học bù này?'+feeTx(' Phí nghỉ sẽ được tính theo quy định.'),()=>{DB.lich=DB.lich.filter(x=>x.mk!==v);r.s='huy';r.pick=null;r.log.push({at:TODAY,by:isPH()?'ph':'gv',tx:'Không học bù'});S.modal=null;toast('Đã đóng yêu cầu học bù')},'Đóng yêu cầu')};
 ACT.mkpick=v=>{const [id,pid]=v.split('|'),r=DB.mk.find(x=>x.id===id),p=r&&r.props.find(x=>x.id===pid);if(!p)return false;
- const x={id:'lb'+uid(),type:'bu',date:p.d,slot:p.slot,gv:p.gv,hs:r.hs,room:p.room,mk:r.id},c=conflict(x);
+ const x={id:'lb'+uid(),type:'bu',date:p.d,slot:p.slot,gv:p.gv,hs:r.hs,mk:r.id},c=conflict(x);
  if(c){toast('Giờ này không còn trống: '+c);r.props=r.props.filter(y=>y.id!==pid);return}
  DB.lich=DB.lich.filter(l=>l.mk!==r.id);DB.lich.push(x);r.pick=pid;r.s='xn';r.log.push({at:TODAY,by:isPH()?'ph':'tt',tx:isPH()?'Phụ huynh đồng ý lịch bù':'Trung tâm xác nhận thay phụ huynh'});toast('Đã xác nhận lịch học bù')};
 /* --- đề xuất giờ --- */
@@ -2703,10 +2698,10 @@ ACT.mkprop=v=>{const r=DB.mk.find(x=>x.id===v);if(!r)return false;S.modal={t:'mk
 CHG.mkpgv=v=>{S.modal.gv=v};
 MODALS.mkp=()=>{const m=S.modal,r=DB.mk.find(x=>x.id===m.id),from=addD(TODAY>r.from.d?TODAY:r.from.d,1),fs=freeSlots(m.gv,r.hs,from,8);
  return mdl('Đề xuất giờ học bù cho '+kn(r.hs),`<form id="mkpf" class="f"><div><label for="mp-g">Giáo viên dạy bù</label><select id="mp-g" data-c="mkpgv">${opts(pool11().map(s=>[s.id,tName(s)]),m.gv)}</select></div>
- <fieldset style="border:1px solid var(--bd);border-radius:10px;padding:10px"><legend class="sm mu">Khung giờ còn trống (chọn tối đa 3)</legend>${fs.length?fs.map((s,i)=>`<label class="chk" style="padding:4px 0"><input type="checkbox" name="s" value="${s.date}|${s.slot}|${s.room}"> ${DAYN[dow(s.date)]} ${vd(s.date)} · ${slotLb(s.slot)} · ${s.room}</label>`).join(''):'<p class="empty">Giáo viên không còn khung giờ trống trong 4 tuần tới.</p>'}</fieldset>
+ <fieldset style="border:1px solid var(--bd);border-radius:10px;padding:10px"><legend class="sm mu">Khung giờ còn trống (chọn tối đa 3)</legend>${fs.length?fs.map((s,i)=>`<label class="chk" style="padding:4px 0"><input type="checkbox" name="s" value="${s.date}|${s.slot}"> ${DAYN[dow(s.date)]} ${vd(s.date)} · ${slotLb(s.slot)}</label>`).join(''):'<p class="empty">Giáo viên không còn khung giờ trống trong 4 tuần tới.</p>'}</fieldset>
  <div class="err" role="alert">${esc(m.err||'')}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit" ${fs.length?'':'disabled'}>Gửi đề xuất cho phụ huynh</button></div></form>`)};
 FORM.mkpf=f=>{const ch=Array.from(f.querySelectorAll('input[name=s]:checked')).map(x=>x.value);if(!ch.length||ch.length>3){S.modal.err='Hãy chọn từ 1 đến 3 khung giờ';return}
- const r=DB.mk.find(x=>x.id===S.modal.id);r.props=ch.map((v,i)=>{const [d,slot,room]=v.split('|');return{id:'p'+i,d,slot,gv:S.modal.gv,room,by:'gv'}});r.s='tt';r.log.push({at:TODAY,by:isLead()?'tt':'gv',tx:'Đề xuất '+ch.length+' khung giờ học bù'});S.modal=null;toast('Đã gửi đề xuất cho phụ huynh')};
+ const r=DB.mk.find(x=>x.id===S.modal.id);r.props=ch.map((v,i)=>{const [d,slot]=v.split('|');return{id:'p'+i,d,slot,gv:S.modal.gv,by:'gv'}});r.s='tt';r.log.push({at:TODAY,by:isLead()?'tt':'gv',tx:'Đề xuất '+ch.length+' khung giờ học bù'});S.modal=null;toast('Đã gửi đề xuất cho phụ huynh')};
 /* ===== 9. Học phí ===== */
 const paidM=(h,m)=>DB.lg.filter(e=>e.hs===h&&e.kind==='thu'&&e.m===m).reduce((s,e)=>s+e.amt,0);
 const ledgerRows=h=>{let b=0;return DB.lg.filter(e=>e.hs===h).sort((a,c)=>a.date===c.date?(a.id<c.id?-1:1):a.date<c.date?-1:1).map(e=>{b+=LGK[e.kind][2]*e.amt;return{e,b}})};

@@ -21,7 +21,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   await page.selectOption('#hf-gv', 'nv01');
   await ev(() => { const f = document.querySelector('#hsff'); f.elements.lt_ng.checked = true; f.elements.lq_ng.value = 2; f.elements.lt_nc.checked = true; f.elements.lq_nc.value = 1; });
   const T = await ev(() => {
-    const fr = (w, s) => ROOMS.some(r => !conflict({ day: w, slot: s, gv: 'nv01', hs: 'hsX', room: r }));
+    const fr = (w, s) => !conflict({ day: w, slot: s, gv: 'nv01', hs: 'hsX' });
     const ok2 = SLOTS.filter(s => [1, 3].every(w => fr(w, s)));
     return { a: ok2[0], b: ok2.find(s => Math.abs(tmin(s) - tmin(ok2[0])) >= SLOT_MIN) };
   });
@@ -48,7 +48,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   await page.click('#hsff button[type=submit]'); await W(100);
   ok('2 ca vận động–giác quan trong một ngày nhưng đăng ký 1 giờ/ngày: báo lỗi, không lưu', /vượt số giờ đăng ký/.test(await toastTx()) && !(await ev(() => DB.kids.some(k => k.n === 'Bé Vượt Giờ'))), await toastTx());
   // ca cũ chưa có loại vẫn tính theo giá chung
-  const legacy = await ev(() => { const k = DB.kids.find(x => x.n === 'Bé Loại Một'); const id = 'lgc' + Date.now(); DB.lich.push({ id, type: '11', day: 5, slot: '09:00', gv: 'nv01', hs: k.id, room: 'Phòng 1' }); return { fee: feeSlot(k, id), gen: DB.cfg.p11 }; });
+  const legacy = await ev(() => { const k = DB.kids.find(x => x.n === 'Bé Loại Một'); const id = 'lgc' + Date.now(); DB.lich.push({ id, type: '11', day: 5, slot: '09:00', gv: 'nv01', hs: k.id }); return { fee: feeSlot(k, id), gen: DB.cfg.p11 }; });
   ok('ca cũ chưa có loại vẫn tính theo giá chung của cài đặt', legacy.fee === legacy.gen, legacy);
   await page.setViewportSize({ width: 390, height: 800 }); await W(120);
   const ov = await ev(() => { const m = document.querySelector('.mdc'); return m ? m.scrollWidth - m.clientWidth : 0; });

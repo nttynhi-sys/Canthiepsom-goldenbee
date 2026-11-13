@@ -27,7 +27,7 @@ async function login(page,e,p){await page.waitForSelector('#login');await page.f
  const P=await page.evaluate(()=>{const gvs=pool11().map(s=>s.id);
   for(const k of DB.kids.filter(x=>x.st==='dang'&&DB.lich.filter(l=>l.type==='11'&&l.hs===x.id).length>=2)){
    const ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.id).sort((a,b)=>a.day-b.day||(a.slot<b.slot?-1:1)),g1=kTs(k)[0]||ls[0].gv;
-   const g2=gvs.find(g=>g!==g1&&ls.slice(0,2).every(l=>ROOMS.some(r=>!conflict({id:l.id,day:l.day,slot:l.slot,gv:g,hs:l.hs,room:r}))));
+   const g2=gvs.find(g=>g!==g1&&ls.slice(0,2).every(l=>!conflict({id:l.id,day:l.day,slot:l.slot,gv:g,hs:l.hs })));
    if(g2)return{id:k.id,g1,g2,l0:ls[0].id,l1:ls[1].id,n:ls.length,old0:ls[0].gv,old1:ls[1].gv}}
   return null});
  ok('có bé mẫu với từ 2 ca 1-1 và giáo viên thứ hai rảnh để thử',!!P,P);

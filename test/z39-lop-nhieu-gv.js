@@ -57,7 +57,7 @@ const SP = '/tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scra
 
   /* ---------- E. ba giáo viên cùng bị chặn xếp 1-1 ngày bán trú; không còn xếp 1-1 trong danh sách ---------- */
   const E = await ev(() => {
-    const c = id => conflict({ day: 1, slot: '10:00', gv: id, hs: 'zzz', room: 'P1' });
+    const c = id => conflict({ day: 1, slot: '10:00', gv: id, hs: 'zzz' });
     return { c1: c('nvt1'), c2: c('nvt2'), c3: c('nvt3'), c4: c('nvt4'), pool: pool11().map(s => s.id).filter(i => i.startsWith('nvt')), isg: ['nvt1', 'nvt2', 'nvt3'].every(isGrStaff) };
   });
   ok('cả 3 giáo viên bán trú đều bị chặn xếp ca 1-1 các ngày bán trú', [E.c1, E.c2, E.c3].every(x => /bán trú/.test(x)) && E.c4 === '' && E.isg, E);

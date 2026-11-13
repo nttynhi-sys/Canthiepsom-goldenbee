@@ -70,7 +70,7 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  ok('parent cannot see other kids',await ev(()=>DB.kids.filter(k=>canKid(k.id)).every(k=>k.pe===U.pe)));
  // makeup cross-role
  const kid=info.k[0];
- await ev(k=>{if(!mkCands(k).length){const l={id:'lt1',type:'11',day:1,slot:'18:55',gv:(kidBy(k).gv||'nv04'),hs:k,room:'Phòng 8'};DB.lich.push(l);let x=addD(WD,-3);while(dow(x)!==1)x=addD(x,-1);DB.att[x+'|'+l.id+'|'+k]='kp'}render()},kid);   /* ca 1-1 tính riêng (không nằm trong gói bán trú) */
+ await ev(k=>{if(!mkCands(k).length){const l={id:'lt1',type:'11',day:1,slot:'18:55',gv:(kidBy(k).gv||'nv04'),hs:k};DB.lich.push(l);let x=addD(WD,-3);while(dow(x)!==1)x=addD(x,-1);DB.att[x+'|'+l.id+'|'+k]='kp'}render()},kid);   /* ca 1-1 tính riêng (không nằm trong gói bán trú) */
  await nav('hb');await page.click('[data-a="mknew"]');await page.waitForSelector('#mknf');
  const mk0=await ev(()=>DB.mk.length);await page.click('#mknf button[type=submit]');await W(80);
  ok('parent registers makeup',(await ev(()=>DB.mk.length))===mk0+1&&(await ev(()=>DB.mk[DB.mk.length-1].by))==='ph');

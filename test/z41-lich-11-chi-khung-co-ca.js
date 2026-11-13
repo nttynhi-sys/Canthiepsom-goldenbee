@@ -8,7 +8,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  const ev=(f,a)=>page.evaluate(f,a);
  const W=ms=>page.waitForTimeout(ms||80);
  /* mở lưới tuần với bộ lọc cho trước và trả về các dòng giờ, số nút ca, nút thêm */
- const view=async(mode,key)=>{await ev(([mode,key])=>{go('lh');render();S.lh.tab='wk';S.lh.mode=mode;if(mode==='gv')S.lh.gv=key;if(mode==='room')S.lh.room=key;if(mode==='kid')S.lh.kid=key;S.lh.wk=monOf(WD);render()},[mode,key]);await W(120);
+ const view=async(mode,key)=>{await ev(([mode,key])=>{go('lh');render();S.lh.tab='wk';S.lh.mode=mode;if(mode==='gv')S.lh.gv=key;if(mode==='kid')S.lh.kid=key;S.lh.wk=monOf(WD);render()},[mode,key]);await W(120);
   return ev(()=>({th:[...document.querySelectorAll('#main table.wkt tbody th')].map(t=>t.innerText.replace(/\s+/g,' ').trim()),
    rowsNoBtn:[...document.querySelectorAll('#main table.wkt tbody tr')].filter(r=>r.querySelector('th')&&!r.querySelector('button.ls:not(.add), .tag')).length,
    add:document.querySelectorAll('#main [data-a="lsadd"][data-v="1|"]').length,addTx:(document.querySelector('#main [data-a="lsadd"][data-v="1|"]')||{}).textContent||'',
@@ -23,16 +23,16 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  let w=await want(`l=>l.gv==='${T}'`);
  ok('xem theo giáo viên: các dòng giờ đúng bằng các khung giờ giáo viên đó đang dạy',JSON.stringify(v.th.map(t=>t.replace(/ .*$/,'')))===JSON.stringify(w)&&v.th.length>=1,{th:v.th,w});
  const sys=await ev(()=>SLOTS.map(s=>slotLb(s)));
- const lessonSlots=await ev(T=>[...new Set(DB.lich.filter(l=>l.type==='11'&&l.gv===T).map(l=>slotLb(l.slot)))],T);
+ /* khung giờ giáo viên đang dạy: ca 1-1 cố định cộng buổi học bù trong tuần đang xem (lưới tuần vẽ cả hai) */
+ const lessonSlots=await ev(T=>{const wk=[0,1,2,3,4,5].map(i=>addD(monOf(WD),i));return[...new Set(DB.lich.filter(l=>l.gv===T&&(l.type==='11'||wk.includes(l.date))).map(l=>slotLb(l.slot)))]},T);
  ok('không còn dòng giờ của hệ thống nếu giáo viên không dạy giờ đó, và dòng nào cũng có ít nhất một ca',v.th.every(t=>lessonSlots.includes(t))&&v.rowsNoBtn===0&&sys.some(s=>!lessonSlots.includes(s)),{th:v.th,rowsNoBtn:v.rowsNoBtn});
  ok('không còn nhãn "giờ riêng" trên các dòng giờ',!v.th.some(t=>/giờ riêng/.test(t))&&!/giờ riêng/.test(v.txt),v.th);
  ok('quản lý xem theo giáo viên: có nút "+ Thêm buổi 1-1"',v.add===1&&/\+ Thêm buổi 1-1/.test(v.addTx),v);
  ok('ghi chú dưới bảng nói rõ chỉ hiện khung giờ đang dạy',/Chỉ hiện các khung giờ đang có giáo viên dạy 1-1/.test(v.txt));
 
- /* 2. xem theo phòng, theo bé, tổng hợp: cũng chỉ các khung giờ có ca, không có nút thêm */
- const R=await ev(()=>ROOMS.find(r=>DB.lich.some(l=>l.type==='11'&&l.room===r))),K=await ev(()=>DB.kids.find(k=>k.st==='dang'&&wk11(k.id)>=2).id);
- v=await view('room',R);w=await want(`l=>l.room==='${R}'`);
- ok('xem theo phòng: chỉ các khung giờ phòng đó có ca',JSON.stringify(v.th.map(t=>t.replace(/ .*$/,'')))===JSON.stringify(w)&&v.th.length>=1&&v.add===0,{th:v.th,w});
+ /* 2. xem theo bé, tổng hợp: cũng chỉ các khung giờ có ca, không có nút thêm; không còn chế độ xem theo phòng */
+ const K=await ev(()=>DB.kids.find(k=>k.st==='dang'&&wk11(k.id)>=2).id);
+ ok('ô "Xem theo" không còn lựa chọn Phòng',await ev(()=>{const o=[...document.querySelectorAll('#lhm option')];return o.length>=3&&!o.some(x=>x.value==='room'||/Phòng/.test(x.textContent))}));
  v=await view('kid',K);w=await want(`l=>l.hs==='${K}'`);
  ok('xem theo từng bé: chỉ các khung giờ của bé đó, không có nút thêm',JSON.stringify(v.th.map(t=>t.replace(/ .*$/,'')))===JSON.stringify(w)&&v.th.length>=1&&v.add===0,{th:v.th,w});
  v=await view('all','');w=await want('l=>true');
@@ -50,7 +50,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  const m=await ev(()=>({slot:document.querySelector('#ls-s').value,day:document.querySelector('#ls-d').value,kid:document.querySelector('#ls-k').value,kids:document.querySelectorAll('#ls-k option').length}));
  ok('nút thêm mở hộp thoại với ô giờ để trống (người dùng tự nhập giờ thật), mặc định thứ Hai',m.slot===''&&m.day==='1'&&m.kids>=1,m);
  const free=await ev(([T,kid])=>{for(let h=7;h<=19;h++)for(const mm of [0,5,10,15,20,25,30,35,40,45,50,55]){const t=String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');
-   if(slotValid(t)&&!SLOTS.includes(t)&&ROOMS.some(r=>!conflict({day:1,slot:t,gv:T,hs:kid,room:r})))return t}return''},[T,m.kid]);
+   if(slotValid(t)&&!SLOTS.includes(t)&&!conflict({day:1,slot:t,gv:T,hs:kid }))return t}return''},[T,m.kid]);
  ok('tìm được giờ riêng còn trống để thử',/^\d\d:\d\d$/.test(free),free);
  await page.fill('#ls-s',free);await page.click('#lsf button[type=submit]');await W(150);
  const added=await ev(([T,t])=>DB.lich.some(l=>l.gv===T&&l.day===1&&l.slot===t&&l.type==='11'),[T,free]);

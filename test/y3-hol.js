@@ -31,7 +31,7 @@ const main=page=>page.evaluate(()=>document.querySelector('#main').innerText);
   const ds=mDates(m),wed=ds.filter(d=>dow(d)===3),thu=ds.filter(d=>dow(d)===4),sun=ds.find(d=>dow(d)===0);
   const k={id:'y3a',n:'Bé Thử Y3',g:'M',dob:'2021-01-01',sd:'2026-01-01',st:'dang',nd:'Ngôn ngữ',bt:true,gr:'G1',btd:[3,4],pr:'Mẹ',pn:'PH Thử',pp:'0900000001',pe:'',m11:0,gv:null,dx:[]};
   DB.kids.push(k);DB.lich=DB.lich.filter(l=>l.hs!=='y3a');
-  DB.lich.push({id:'ya1',type:'11',day:3,slot:'08:05',gv:'nv10',hs:'y3a',room:'Phòng 1'},{id:'ya2',type:'11',day:3,slot:'09:45',gv:'nv10',hs:'y3a',room:'Phòng 2'},{id:'ya3',type:'11',day:4,slot:'08:05',gv:'nv10',hs:'y3a',room:'Phòng 3'});
+  DB.lich.push({id:'ya1',type:'11',day:3,slot:'08:05',gv:'nv10',hs:'y3a'},{id:'ya2',type:'11',day:3,slot:'09:45',gv:'nv10',hs:'y3a'},{id:'ya3',type:'11',day:4,slot:'08:05',gv:'nv10',hs:'y3a'});
   const base=invoice(k,m),exp=(wed.length+thu.length)*DB.cfg.pbtDay+wed.length*DB.cfg.p11;
   DB.hol=[{id:'t1',d:wed[1],n:'Nghỉ thử thứ Tư',k:'tt'}];
   const afterWed=invoice(k,m);
@@ -52,7 +52,7 @@ const main=page=>page.evaluate(()=>document.querySelector('#main').innerText);
   const hd=DB.hol.find(h=>h.id==='t1').d,w=dow(hd);
   const k=kidBy('y3a'),xs=sched(k,m).filter(x=>x.d===hd).length;
   const dl=dayList(hd).length;
-  const cf=conflict({id:'zz',type:'bu',date:hd,slot:'14:00',gv:'nv10',hs:'y3a',room:'Phòng 1'});
+  const cf=conflict({id:'zz',type:'bu',date:hd,slot:'14:00',gv:'nv10',hs:'y3a'});
   const fs=freeSlots('nv10','y3a',addD(hd,-2),14).some(s=>s.date===hd);
   const st=tsSt('nv10',hd);
   return{hd,w,xs,dl,cf,fs,st}},M);
@@ -127,7 +127,7 @@ const main=page=>page.evaluate(()=>document.querySelector('#main').innerText);
   DB.hol=[];const pm=sm(CM,-1),nm=CM;
   const k=kidBy('y3a');k.btd=[3];k.bt=true;k.gr='G1';
   DB.lich=DB.lich.filter(l=>l.hs!=='y3a');
-  DB.lich.push({id:'yb1',type:'11',day:2,slot:'08:05',gv:'nv10',hs:'y3a',room:'Phòng 1'});   /* 1-1 thứ Ba */
+  DB.lich.push({id:'yb1',type:'11',day:2,slot:'08:05',gv:'nv10',hs:'y3a'});   /* 1-1 thứ Ba */
   const d=mDates(pm).filter(x=>dow(x)===2&&x<WD)[0];DB.att[d+'|yb1|y3a']='p';   /* nghỉ có phép: hoàn 70% */
   const r=settle(k,pm),f0=feeBreak(k,nm);
   postSettle(k,pm);const f1=feeBreak(k,nm);

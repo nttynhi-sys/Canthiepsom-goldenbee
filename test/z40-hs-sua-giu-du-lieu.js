@@ -20,7 +20,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
 
  /* khung giờ trống cho một giáo viên thử */
  const gvs=await ev(()=>pool11().map(s=>s.id)),G=gvs[0];
- const FREE=await ev(g=>{const fr=(w,s)=>ROOMS.some(r=>!conflict({day:w,slot:s,gv:g,hs:'hsX',room:r})),rs=[...SLOTS].reverse(),pick=(w,ex)=>rs.find(s=>!ex.includes(s)&&ex.every(e=>Math.abs(tmin(s)-tmin(e))>=SLOT_MIN)&&fr(w,s));
+ const FREE=await ev(g=>{const fr=(w,s)=>!conflict({day:w,slot:s,gv:g,hs:'hsX' }),rs=[...SLOTS].reverse(),pick=(w,ex)=>rs.find(s=>!ex.includes(s)&&ex.every(e=>Math.abs(tmin(s)-tmin(e))>=SLOT_MIN)&&fr(w,s));
   const A=pick(1,[]),C=pick(2,[A]),D=pick(2,[A,C]),E=pick(2,[A,C,D]),F=pick(5,[A,C,D,E]),H=pick(3,[A,C,D,E,F]);return{A,C,D,E,F,H}},G);
  ok('tìm được các khung giờ trống cho giáo viên thử',Object.values(FREE).every(Boolean),FREE);
 
@@ -51,15 +51,15 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
 
  /* 3. lưu mà không đổi gì: các buổi giữ nguyên từng trường */
  await submit();
- ok('lưu không đổi gì: các buổi 1-1 giữ nguyên (cùng mã, giờ, phòng, giáo viên)',JSON.stringify(await snap(id))===JSON.stringify(orig),{a:await snap(id),b:orig});
+ ok('lưu không đổi gì: các buổi 1-1 giữ nguyên (cùng mã, giờ, giáo viên)',JSON.stringify(await snap(id))===JSON.stringify(orig),{a:await snap(id),b:orig});
  ok('lưu không đổi gì: không báo sửa hay bỏ buổi',!/sửa|bỏ/.test(await toastTx())&&/Đã lưu hồ sơ/.test(await toastTx()),await toastTx());
 
  /* 4. chỉ đổi giờ của ca T3: sửa đúng buổi đó, hai ca kia không đổi */
  await openEdit(id);
  await ev(D=>{const r=document.querySelectorAll('#s11 .s11r')[1];r.querySelector('[name=s11tm]').value=D},FREE.D);
  await submit();
- const a4=await ev(id=>DB.lich.filter(l=>l.type==='11'&&l.hs===id).sort((a,b)=>a.day-b.day).map(l=>({id:l.id,day:l.day,slot:l.slot,room:l.room,gv:l.gv,lt:l.lt})),id);
- ok('đổi giờ một ca: đúng buổi đó đổi sang giờ mới, giữ nguyên mã, giáo viên',a4.length===3&&a4[1].id===L[1]&&a4[1].slot===FREE.D&&a4[1].gv===G&&!!a4[1].room,a4);
+ const a4=await ev(id=>DB.lich.filter(l=>l.type==='11'&&l.hs===id).sort((a,b)=>a.day-b.day).map(l=>({id:l.id,day:l.day,slot:l.slot,gv:l.gv,lt:l.lt})),id);
+ ok('đổi giờ một ca: đúng buổi đó đổi sang giờ mới, giữ nguyên mã, giáo viên',a4.length===3&&a4[1].id===L[1]&&a4[1].slot===FREE.D&&a4[1].gv===G,a4);
  {const s4=await snap(id);ok('đổi giờ một ca: hai ca còn lại không đổi',s4[0]===orig[0]&&s4[2]===orig[2],{s4,orig})}
  ok('đổi giờ một ca: báo "sửa 1 buổi"',/sửa 1 buổi/.test(await toastTx()),await toastTx());
 
@@ -98,7 +98,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  ok('thêm ca mới khi sửa: có thêm đúng 1 buổi, đúng giáo viên và loại, các ca cũ vẫn còn',a7.n===3&&a7.new&&a7.new.gv===G&&a7.new.lt==='ng',a7);
 
  /* 8. đổi sang giờ trùng với buổi khác của giáo viên: không lưu gì, hoàn tác cả việc xóa ca khác trong cùng lần lưu */
- await ev(([E,G])=>{const o=DB.kids.find(k=>k.n!=='Bé Thử Sửa Hồ Sơ');DB.lich.push({id:'lcf1',type:'11',day:1,slot:E,gv:G,hs:o.id,room:ROOMS[ROOMS.length-1],lt:null})},[FREE.E,G]);
+ await ev(([E,G])=>{const o=DB.kids.find(k=>k.n!=='Bé Thử Sửa Hồ Sơ');DB.lich.push({id:'lcf1',type:'11',day:1,slot:E,gv:G,hs:o.id,lt:null})},[FREE.E,G]);
  const before8=await snap(id);
  await openEdit(id);
  await ev(()=>{document.querySelectorAll('#s11 .s11r')[0].querySelector('[data-a="s11del"]').click()});   /* bỏ ca đầu */
@@ -110,8 +110,8 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
 
  /* 9. ca cũ chưa gắn loại: hiện "Chưa chọn loại", lưu lại không tự gán loại và không bị chặn */
  await ev(([id,G])=>{const x=DB.lich.find(l=>l.hs===id&&l.type==='11'&&l.day===2);if(x)DB.lich=DB.lich.filter(l=>l.id!==x.id)},[id,G]);
- const FREE2=await ev(([g,id])=>{const fr=(w,s)=>ROOMS.some(r=>!conflict({day:w,slot:s,gv:g,hs:id,room:r}));return[...SLOTS].reverse().find(s=>fr(4,s))},[G,id]);
- await ev(([id,G,s])=>{DB.lich.push({id:'lold1',type:'11',day:4,slot:s,gv:G,hs:id,room:ROOMS[0]});kidBy(id).m11=wk11(id)},[id,G,FREE2]);
+ const FREE2=await ev(([g,id])=>{const fr=(w,s)=>!conflict({day:w,slot:s,gv:g,hs:id });return[...SLOTS].reverse().find(s=>fr(4,s))},[G,id]);
+ await ev(([id,G,s])=>{DB.lich.push({id:'lold1',type:'11',day:4,slot:s,gv:G,hs:id});kidBy(id).m11=wk11(id)},[id,G,FREE2]);
  await openEdit(id);
  const old9=await ev(()=>{const r=document.querySelector('#s11 .s11r[data-lid="lold1"]'),s=r&&r.querySelector('[name=s11lt]');return r?{lt:s.value,first:s.options[0].textContent}:null});
  ok('ca cũ chưa có loại: dòng hiện "Chưa chọn loại" thay vì tự chọn một loại',old9&&old9.lt===''&&/Chưa chọn loại/.test(old9.first),old9);
@@ -128,7 +128,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
 
  /* 11. ca do người khác vừa thêm lúc đang sửa không bị mất */
  await openEdit(id);
- await ev(([id,G])=>{DB.lich.push({id:'lnew1',type:'11',day:6,slot:'09:00',gv:G,hs:id,room:'',lt:null})},[id,G]);
+ await ev(([id,G])=>{DB.lich.push({id:'lnew1',type:'11',day:6,slot:'09:00',gv:G,hs:id,lt:null})},[id,G]);
  await submit();
  ok('ca thêm vào lúc đang sửa (chưa hiện trong biểu mẫu) không bị xóa khi lưu',await ev(()=>DB.lich.some(l=>l.id==='lnew1')));
  await ev(()=>{DB.lich=DB.lich.filter(l=>l.id!=='lnew1');S.modal=null;render()});

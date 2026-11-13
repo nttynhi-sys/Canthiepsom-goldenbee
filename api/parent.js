@@ -169,7 +169,6 @@ async function lichConflict(x) {
   const same = ls.map(r => r.data).filter(l => l.id !== x.id && l.slot && slotOver(l.slot, x.slot) && ((l.type === 'bu' && l.date === x.date) || (l.type === '11' && +l.day === w)));
   if (same.some(l => l.gv === x.gv)) return 'Giáo viên đã có buổi khác ở khung giờ này';
   if (same.some(l => l.hs === x.hs)) return 'Trẻ đã có buổi khác ở khung giờ này';
-  if (x.room && same.some(l => l.room === x.room)) return 'Phòng đã được dùng ở khung giờ này';
   return '';
 }
 
@@ -193,7 +192,7 @@ async function put(me, b) {
       if (!SAFE_ID.test(r.id) || !isMine(d) || d.type !== 'bu' || typeof d.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d.date) || !slotOk(d.slot)) throw deny('Giờ học bù không hợp lệ.');
       const o = old.lich.get(r.id);
       if (o && (!isMine(o) || o.type !== 'bu')) throw deny();
-      if (!o || o.date !== d.date || o.slot !== d.slot || o.gv !== d.gv || o.room !== d.room) {
+      if (!o || o.date !== d.date || o.slot !== d.slot || o.gv !== d.gv) {
         const m = await lichConflict(Object.assign({}, d, { id: r.id }));
         if (m) throw deny('Giờ này không còn trống: ' + m);
       }
