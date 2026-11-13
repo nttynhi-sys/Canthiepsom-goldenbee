@@ -1,0 +1,722 @@
+[
+ {
+  "num": 1,
+  "phase": "Tiền ngôn ngữ",
+  "group": "I. HIỆN DIỆN – CHÚ Ý – TIẾP NHẬN CƠ BẢN",
+  "name": "Quay lại khi nghe gọi tên",
+  "content": "Trong lúc bé đang chơi tự do trong phòng, khi cô gọi tên bé 1–2 lần, bé quay đầu hoặc quay mắt về phía cô, đạt 5/8 cơ hội; cô hỗ trợ bằng cách tăng âm lượng – đứng gần hơn – gọi kèm gõ nhẹ lên bàn hoặc vật dụng ở 2–3 cơ hội đầu, sau đó giảm dần để bé tự phản hồi khi nghe gọi tên.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 2
+ },
+ {
+  "num": 2,
+  "phase": "Tiền ngôn ngữ",
+  "group": "I. HIỆN DIỆN – CHÚ Ý – TIẾP NHẬN CƠ BẢN",
+  "name": "Nhìn mắt khi muốn giao tiếp",
+  "content": "Trong hoạt động chơi 1–1 kéo dài 10 phút (ví dụ: lăn bóng, bong bóng), khi bé muốn lấy đồ hoặc nhờ cô hỗ trợ, bé chủ động nhìn mắt cô trước khi với tay hoặc kéo tay cô, đạt 6/10 cơ hội; cô hỗ trợ bằng cách nhắc nhẹ “nhìn cô nè”, chạm mờ hoặc giữ tay bé lại 1 giây ở buổi đầu, sau đó giảm dần gợi ý.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 2
+ },
+ {
+  "num": 3,
+  "phase": "Tiền ngôn ngữ",
+  "group": "I. HIỆN DIỆN – CHÚ Ý – TIẾP NHẬN CƠ BẢN",
+  "name": "Cười hoặc đáp nét mặt khi cô tương tác",
+  "content": "Trong các trò chơi tạo cảm xúc (ú òa, làm mặt vui, tạo âm thanh buồn cười), khi cô mời gọi bằng nét mặt – giọng nói – chuyển động, bé đáp lại bằng cười, nhìn, ánh mắt vui hoặc nét mặt thay đổi phù hợp, đạt 4/6 cơ hội, không cần chạm tay hỗ trợ; cô chỉ duy trì nét mặt rõ ràng và nhịp chậm để bé dễ bắt tín hiệu.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 2
+ },
+ {
+  "num": 4,
+  "phase": "Tiền ngôn ngữ",
+  "group": "I. HIỆN DIỆN – CHÚ Ý – TIẾP NHẬN CƠ BẢN",
+  "name": "Tiến lại gần khi cô dừng chơi",
+  "content": "Trong trò chơi hấp dẫn (ví dụ: thổi bong bóng, lăn bóng, bật/ tắt đèn), khi cô dừng hoạt động 2–3 giây và chờ, bé tự tiến lại gần cô hoặc chạm nhẹ vào cô để yêu cầu tiếp tục, đạt 5/8 cơ hội; ở các tình huống đầu, cô hỗ trợ bằng ánh mắt chờ đợi, sau đó không dùng lời nhắc ở nửa số tình huống cuối để bé tự khởi xướng.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 2
+ },
+ {
+  "num": 5,
+  "phase": "Tiền ngôn ngữ",
+  "group": "I. HIỆN DIỆN – CHÚ Ý – TIẾP NHẬN CƠ BẢN",
+  "name": "Tìm lại cô khi cô im lặng 2–3 giây",
+  "content": "Trong khi chơi 1–1, khi cô ngừng nói và giữ im lặng 2–3 giây, bé tìm lại cô bằng cách nhìn mặt, lại gần hoặc chạm tay cô, thể hiện duy trì tương tác, đạt 4/6 cơ hội; cô hỗ trợ ban đầu bằng ánh mắt gợi gọi nhẹ, rồi giảm dần gợi ý để tăng chủ động của bé.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 2
+ },
+ {
+  "num": 6,
+  "phase": "Tiền ngôn ngữ",
+  "group": "II. DUY TRÌ CHÚ Ý – SẴN SÀNG TƯƠNG TÁC",
+  "name": "Duy trì tham gia 1–2 phút trong một hoạt động",
+  "content": "Trong 10 phút qua một trò chơi đơn giản (gõ trống/ lăn bóng/ xe chạy/ thổi bong bóng), bé duy trì tham gia liên tục 1–2 phút mà không bỏ đi, đạt 3 lần/buổi; cô hỗ trợ bằng cách đổi cách chơi trong cùng một hoạt động (đổi tốc độ, đổi vị trí, thêm âm thanh) để tăng hứng thú và giữ chú ý.",
+  "crit": "đạt 3 lần/buổi",
+  "page": 3
+ },
+ {
+  "num": 7,
+  "phase": "Tiền ngôn ngữ",
+  "group": "II. DUY TRÌ CHÚ Ý – SẴN SÀNG TƯƠNG TÁC",
+  "name": "Tham gia ú òa 2 lượt liên tục",
+  "content": "Trong trò ú òa kéo dài 3–5 phút, khi cô thực hiện chuỗi: che mặt → mở ra → mời gọi, bé chờ – nhìn – đáp lại – tiếp tục thêm một lượt nữa, hoàn thành 2 lượt liên tục đạt 6/10 cơ hội; cô hỗ trợ bằng giọng nói chậm – rõ, kéo dài nhịp “ú… òa” ở 1–2 lần đầu để bé nắm quy trình.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 3
+ },
+ {
+  "num": 8,
+  "phase": "Tiền ngôn ngữ",
+  "group": "II. DUY TRÌ CHÚ Ý – SẴN SÀNG TƯƠNG TÁC",
+  "name": "Nhìn theo hướng cô chỉ",
+  "content": "Trong hoạt động khám phá đồ vật trong phòng, khi cô chỉ tay và nói “nhìn kìa”, bé quay mắt theo đúng hướng chỉ để tìm vật, đạt 6/10 cơ hội; cô hỗ trợ bằng mô hình hóa chỉ tay kết hợp ánh mắt hướng cùng chiều chỉ tay ở các cơ hội đầu trước khi giảm dần gợi ý.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 3
+ },
+ {
+  "num": 9,
+  "phase": "Tiền ngôn ngữ",
+  "group": "III. CHÚ Ý CHUNG – CHỈ TAY – CHIA SẺ",
+  "name": "Chia sẻ chú ý 3 điểm (đồ – cô – đồ)",
+  "content": "Trong hoạt động khám phá sự kiện thú vị (đèn nhấp nháy/ đồ chơi phát sáng) kéo dài 3–5 phút, khi cô thu hút sự chú ý vào đồ vật bằng lời nói và ánh mắt, bé thực hiện chuỗi chia sẻ chú ý 3 điểm bằng cách nhìn đồ → nhìn cô → nhìn lại đồ, thể hiện khả năng chia sẻ sự quan tâm chung, đạt 4/6 cơ hội; cô hỗ trợ mô hình hóa nhẹ ở 1–2 cơ hội đầu (cô nhìn đồ rồi nhìn bé với nét mặt phấn khích), sau đó giảm dần để bé tự thực hiện.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 4
+ },
+ {
+  "num": 10,
+  "phase": "Tiền ngôn ngữ",
+  "group": "III. CHÚ Ý CHUNG – CHỈ TAY – CHIA SẺ",
+  "name": "Chỉ tay để yêu cầu 1 trong 2 lựa chọn",
+  "content": "Trong hoạt động đưa ra hai lựa chọn đồ chơi/đồ ăn (ví dụ: bóng – xe, bánh – sữa) kéo dài 3–5 phút, khi cô cầm hai món trước mặt bé và hỏi “con muốn bóng hay xe?”, bé chủ động dùng ngón tay chỉ đúng món mình muốn, kèm ánh mắt hướng về món hoặc nhìn cô, đạt 6/10 cơ hội; cô hỗ trợ bằng mô hình hóa 2–3 cơ hội đầu (cô nói chậm: “con chỉ” và làm mẫu chỉ tay), sau đó giảm dần hỗ trợ.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 4
+ },
+ {
+  "num": 11,
+  "phase": "Tiền ngôn ngữ",
+  "group": "III. CHÚ Ý CHUNG – CHỈ TAY – CHIA SẺ",
+  "name": "Giơ tay xin khi muốn nhận đồ",
+  "content": "Trong hoạt động trao – nhận đồ chơi hoặc đồ ăn, khi cô cầm món bé muốn và dừng lại chờ 2–3 giây, bé giơ tay xin rõ ràng (đưa bàn tay hoặc cánh tay về phía cô) thay vì nhảy lên, với tay hoặc kéo tay cô, đạt 5/8 cơ hội; cô hỗ trợ bằng cách nâng nhẹ tay bé hoặc nhắc lời nhẹ (“giơ tay xin nè”) ở vài cơ hội đầu, sau đó giảm dần gợi ý.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 4
+ },
+ {
+  "num": 12,
+  "phase": "Tiền ngôn ngữ",
+  "group": "III. CHÚ Ý CHUNG – CHỈ TAY – CHIA SẺ",
+  "name": "Chỉ tay để chia sẻ / khoe sự vật thú vị",
+  "content": "Trong lúc chơi hoặc khám phá môi trường xung quanh, khi bé nhìn thấy sự kiện/đồ vật thú vị (xe chạy ngang, bong bóng nổ,…), bé chủ động chỉ tay về phía sự vật và quay nhìn cô để chia sẻ thông tin, đạt 5/8 cơ hội; cô hỗ trợ nhắc nhẹ ở cơ hội đầu (“con nhìn cô nè… chỉ cô xem con thấy gì đó?”) rồi giảm dần để khuyến khích bé tự khởi xướng giao tiếp chia sẻ.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 4
+ },
+ {
+  "num": 13,
+  "phase": "Tiền ngôn ngữ",
+  "group": "IV. LƯỢT – CHỜ – GIAO TIẾP HAI CHIỀU",
+  "name": "Chờ lượt và đưa bóng lại cho cô",
+  "content": "Trong hoạt động lăn bóng qua lại 1–1 kéo dài 3–5 phút, khi cô lăn bóng cho bé và dừng lại chờ ở lượt tiếp theo, bé giữ bóng trong 1–2 giây, nhìn cô hoặc chờ hiệu lệnh, rồi lăn bóng lại đúng lượt, đạt 4/6 cơ hội; cô hỗ trợ bằng lời nhắc nhẹ (“tới lượt con nè”, “chờ chút… rồi lăn cho cô”) và chạm nhẹ cổ tay ở 1–2 cơ hội đầu, sau đó giảm dần hỗ trợ để bé tự kiểm soát lượt.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 5
+ },
+ {
+  "num": 14,
+  "phase": "Tiền ngôn ngữ",
+  "group": "IV. LƯỢT – CHỜ – GIAO TIẾP HAI CHIỀU",
+  "name": "Dẫn cô đến đúng đồ mình muốn",
+  "content": "Trong bối cảnh có nhiều đồ chơi bày ra (3–5 lựa chọn), khi bé muốn một món cụ thể nhưng ở xa tầm với, bé cầm tay cô và dẫn đến đúng vị trí có món bé muốn, dừng lại và thể hiện mục tiêu rõ ràng qua ánh mắt/chỉ tay, thay vì kéo tay cô đi lung tung hoặc khóc, đạt 5/8 cơ hội; cô hỗ trợ bằng gợi ý lời ở 2 cơ hội đầu (“con dắt cô tới chỗ con muốn nhé… dẫn cô đi nè”), rồi giảm dần để bé tự chủ động.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 5
+ },
+ {
+  "num": 15,
+  "phase": "Tiền ngôn ngữ",
+  "group": "IV. LƯỢT – CHỜ – GIAO TIẾP HAI CHIỀU",
+  "name": "Đưa đồ cho cô để nhờ giúp đỡ",
+  "content": "Trong hoạt động chơi 1–1 hoặc sinh hoạt thường ngày, khi gặp đồ chơi/vật dụng khó mở, khó thao tác (nắp hộp, nút bấm, hộp khoá), bé tự đưa đồ cho cô để nhờ giúp đỡ thay vì ném bỏ, la khóc hoặc bứt rứt, đạt 6/8 cơ hội; cô hỗ trợ bằng cách gợi nhẹ 1 lần đầu (“con đưa cô mở nè”) để mô hình hóa hành vi tìm kiếm hỗ trợ, sau đó giảm dần gợi ý để bé tự khởi xướng.",
+  "crit": "đạt 6/8 cơ hội",
+  "page": 5
+ },
+ {
+  "num": 16,
+  "phase": "Tiền ngôn ngữ",
+  "group": "V. NGÔN NGỮ HIỂU CƠ BẢN",
+  "name": "Hiểu “lại đây” trong bối cảnh quen thuộc",
+  "content": "Trong sinh hoạt quen thuộc hoặc giờ chơi 1–1, khi cô đứng cách bé 1–2 mét và gọi “lại đây với cô” kèm ánh mắt hướng về bé, bé chủ động bước tới gần cô trong vòng 3 giây, đạt 5/8 cơ hội; cô hỗ trợ bằng cách vẫy tay – cười gợi gọi – nghiêng người về phía bé ở 1–2 cơ hội đầu, sau đó giảm dần để bé tự đáp ứng.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 6
+ },
+ {
+  "num": 17,
+  "phase": "Tiền ngôn ngữ",
+  "group": "V. NGÔN NGỮ HIỂU CƠ BẢN",
+  "name": "Hiểu “cho cô” và “giữ lại”",
+  "content": "Trong hoạt động chuyền đồ qua lại 3–5 phút, khi cô đưa tay ra và nói “cho cô”, bé đưa đồ vào tay cô; khi cô nói “con giữ”, bé giữ lại đồ đang cầm thay vì đưa, đạt 5/8 cơ hội; cô hỗ trợ nhẹ bằng ánh mắt, gật đầu và làm mẫu 1 lần đầu tiên để phân biệt rõ hai yêu cầu, sau đó giảm gợi ý.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 6
+ },
+ {
+  "num": 18,
+  "phase": "Tiền ngôn ngữ",
+  "group": "V. NGÔN NGỮ HIỂU CƠ BẢN",
+  "name": "Hiểu và dừng lại khi nghe “không / dừng lại”",
+  "content": "Trong các tình huống bé đang có hành vi quá mức (ném đồ, đập mạnh, chạy lao đi), khi cô dùng giọng dứt khoát nói “không” hoặc “dừng lại”, bé giảm hoặc dừng hành vi, đạt 4/6 cơ hội; cô hỗ trợ bằng cách chạm nhẹ vai/ tay, chặn trước khu vực nguy hiểm hoặc dùng ánh mắt nghiêm túc ở 1–2 cơ hội đầu.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 6
+ },
+ {
+  "num": 19,
+  "phase": "Tiền ngôn ngữ",
+  "group": "V. NGÔN NGỮ HIỂU CƠ BẢN",
+  "name": "Làm theo yêu cầu 1 bước với đồ vật (lấy/ đưa)",
+  "content": "Trong giờ chơi 1–1 với 3–4 đồ vật quen thuộc (bóng, xe, sách, lục lạc), khi cô đưa yêu cầu 1 bước như “lấy bóng”, “đưa sách cho cô”, bé thực hiện đúng hành động, đạt 6/10 cơ hội; cô hỗ trợ bằng chỉ tay – đưa mắt gợi hướng ở những cơ hội đầu rồi giảm dần để bé phản ứng độc lập.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 6
+ },
+ {
+  "num": 20,
+  "phase": "Tiền ngôn ngữ",
+  "group": "V. NGÔN NGỮ HIỂU CƠ BẢN",
+  "name": "Hiểu một số từ chỉ hành động quen thuộc",
+  "content": "Trong giờ chơi vận động hoặc sinh hoạt thường ngày, khi cô yêu cầu “ngồi xuống”, “đứng lên”, “vỗ tay”, “nhảy”, bé thực hiện đúng hành động tương ứng, đạt 5/8 cơ hội; cô hỗ trợ bằng làm mẫu chậm rãi và nhấn mạnh động từ ở 1–2 cơ hội đầu rồi giảm dần.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 6
+ },
+ {
+  "num": 21,
+  "phase": "Tiền ngôn ngữ",
+  "group": "V. NGÔN NGỮ HIỂU CƠ BẢN",
+  "name": "Chỉ đúng đồ vật quen thuộc khi nghe tên",
+  "content": "Trong 10 phút, qua hoạt động nhìn tranh hoặc khi chơi với 3–4 đồ vật quen thuộc (bóng, xe, dép, ly), khi cô hỏi “bóng đâu?”, “xe đâu?”, bé chỉ đúng đồ vật được yêu cầu, đạt 6/10 cơ hội; cô hỗ trợ bằng cách hướng ánh mắt về đồ gợi ý, chỉ tay mờ hoặc nhấn âm đầu của từ trong các cơ hội đầu.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 6
+ },
+ {
+  "num": 22,
+  "phase": "Tiền ngôn ngữ",
+  "group": "V. NGÔN NGỮ HIỂU CƠ BẢN",
+  "name": "Chỉ tên 3 bộ phận cơ thể trên chính mình",
+  "content": "Trong 10 phút, qua hoạt động hát về cơ thể hoặc giờ chơi tương tác, khi cô yêu cầu “chỉ mắt”, “chỉ mũi”, “chỉ miệng”, bé dùng tay chạm đúng bộ phận trên cơ thể mình, đạt 5/8 cơ hội; cô hỗ trợ bằng mô hình hóa trên mặt cô (chỉ vào mắt/ mũi/ miệng của mình) ở 1–2 cơ hội đầu rồi giảm dần.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 6
+ },
+ {
+  "num": 23,
+  "phase": "Tiền ngôn ngữ",
+  "group": "VI. NHẬN BIẾT – PHÂN LOẠI – HỎI ĐÁP",
+  "name": "Phân biệt 2 nhóm đơn giản (con vật – đồ ăn)",
+  "content": "Trong hoạt động phân loại tranh kéo dài 3–5 phút, với 2 rổ phân loại (một rổ “con vật”, một rổ “đồ ăn”), khi cô đưa từng tranh và yêu cầu “con bỏ vào rổ con vật”, “cho vào rổ đồ ăn”, bé đặt đúng tranh vào nhóm tương ứng, đạt 4/6 cơ hội; cô hỗ trợ bằng làm mẫu từng lượt ở 1–2 cơ hội đầu (chỉ vào rổ và nói rõ từ khóa), sau đó giảm dần gợi ý để bé tự phân loại.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 7
+ },
+ {
+  "num": 24,
+  "phase": "Tiền ngôn ngữ",
+  "group": "VI. NHẬN BIẾT – PHÂN LOẠI – HỎI ĐÁP",
+  "name": "Trả lời “cái gì đây?” bằng chỉ tay",
+  "content": "Trong hoạt động xem tranh hoặc đồ vật quen thuộc (4–6 món), khi cô hỏi “cái gì đây?” hoặc “bóng đâu?” bé chỉ đúng hình/đồ vật được nêu, kết hợp nhìn đồ rồi nhìn cô, đạt 6/10 cơ hội; cô hỗ trợ bằng cách nhấn mạnh tên gọi, đưa mắt gợi hướng hoặc làm mẫu chỉ tay ở 1–2 cơ hội đầu trước khi giảm dần gợi ý.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 7
+ },
+ {
+  "num": 25,
+  "phase": "Tiền ngôn ngữ",
+  "group": "VI. NHẬN BIẾT – PHÂN LOẠI – HỎI ĐÁP",
+  "name": "Gật hoặc lắc đầu để thể hiện đồng ý – không đồng ý",
+  "content": "Trong các tình huống lựa chọn tự nhiên hoặc khi cô hỏi “con muốn nữa không?”, “con có thích cái này không?”, bé gật đầu khi đồng ý và lắc đầu khi từ chối đúng với ngữ cảnh, đạt 4/6 cơ hội; cô hỗ trợ ban đầu bằng (gật/lắc đầu) và nhấn mạnh ngữ điệu để bé bắt chước, rồi giảm dần để bé tự biểu đạt lựa chọn.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 7
+ },
+ {
+  "num": 26,
+  "phase": "Tiền ngôn ngữ",
+  "group": "VII. BẮT CHƯỚC – TIỀN LỜI NÓI",
+  "name": "Bắt chước cử chỉ đơn giản",
+  "content": "Trong hoạt động bắt chước vận động kéo dài 3–5 phút, khi cô làm các cử chỉ đơn (vỗ tay, xua tay, chạm đầu, đưa tay lên cao), bé bắt chước lại, đạt 6/10 cơ hội; cô hỗ trợ bằng cách phóng đại cử chỉ, làm chậm và đặt bé đối diện để dễ quan sát trong 1–2 cơ hội đầu, sau đó giảm gợi ý.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 7
+ },
+ {
+  "num": 27,
+  "phase": "Tiền ngôn ngữ",
+  "group": "VII. BẮT CHƯỚC – TIỀN LỜI NÓI",
+  "name": "Bắt chước hành động 1 bước",
+  "content": "Trong giờ chơi song song với đồ chơi (xe, trống, khối, ly), khi cô thực hiện hành động 1 bước như đẩy xe, gõ trống, bỏ khối vào ly, bé bắt chước hành động tương tự bằng đồ của mình, đạt 6/10 cơ hội; cô hỗ trợ bằng làm mẫu trực tiếp và chạm mờ tay ở cơ hội đầu, sau đó giảm dần hỗ trợ để bé tự thực hiện.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 7
+ },
+ {
+  "num": 28,
+  "phase": "Tiền ngôn ngữ",
+  "group": "VII. BẮT CHƯỚC – TIỀN LỜI NÓI",
+  "name": "Bắt chước âm đơn (a, pa, ba, ma…)",
+  "content": "Trong hoạt động chơi giả vờ với ống nói (điện thoại) dài 3–5 phút, khi cô phát âm chậm – rõ các âm đơn (pa, ba, ma, a, ô, a lô…), bé phát âm gần giống, đạt 6/10 cơ hội; cô hỗ trợ bằng cách mở khẩu hình rõ, nhấn nhẹ âm đầu, hoặc dùng gương ở 1–2 cơ hội đầu rồi giảm gợi ý.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 7
+ },
+ {
+  "num": 29,
+  "phase": "Tiền ngôn ngữ",
+  "group": "VIII. KHỞI XƯỚNG GIAO TIẾP – GIỮ NHỊP TƯƠNG TÁC",
+  "name": "Tạo âm để gọi cô khi muốn tiếp tục",
+  "content": "Trong bất kỳ trò chơi qua lại nào (lăn bóng, bật/tắt đèn, thổi bong bóng), khi cô dừng chơi và quay đi 2–3 giây, bé tạo âm như “a”, “ơ”, “ê” để thu hút cô và yêu cầu tiếp tục thay vì kéo tay hay im lặng, đạt 5/8 cơ hội; cô hỗ trợ ở cơ hội đầu bằng gợi ý nhẹ (“con gọi cô đi”) rồi giảm dần để bé tự khởi xướng giao tiếp.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 8
+ },
+ {
+  "num": 30,
+  "phase": "Tiền ngôn ngữ",
+  "group": "VIII. KHỞI XƯỚNG GIAO TIẾP – GIỮ NHỊP TƯƠNG TÁC",
+  "name": "Giữ giao tiếp qua 3 lượt liên tục trong một trò chơi",
+  "content": "Trong trò chơi qua lại (lăn bóng, bật/tắt đèn, chuyền đồ) kéo dài 3–5 phút, bé duy trì chuỗi tương tác 3 lượt liên tiếp theo trình tự: bé → cô → bé → cô → bé, thể hiện sự chủ động tham gia và chờ đợi đúng lượt, đạt 6/10 cơ hội; cô hỗ trợ bằng ánh mắt, nhấn nhịp hoặc nhắc nhẹ ở lượt đầu (“tới lượt con nè”), rồi giảm dần hỗ trợ để bé giữ nhịp tương tác độc lập.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 8
+ },
+ {
+  "num": 31,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "I. KHỞI XƯỚNG BẰNG LỜI – NHU CẦU CƠ BẢN",
+  "name": "Nói từ đơn để yêu cầu",
+  "content": "Trong hoạt động chơi 1–1 kéo dài 10 phút (lăn bóng, bong bóng), khi cô tạm dừng trò chơi, bé tự nói 1 từ đơn chức năng như “nữa”, “bóng”, “cho” để yêu cầu tiếp tục, đạt 7/10 cơ hội, cô làm mẫu lời 2–3 cơ hội đầu (nói chậm – rõ – nhấn từ khóa) và nhìn chờ; sau đó giảm dần gợi ý để bé chủ động yêu cầu bằng lời thay vì kéo tay.",
+  "crit": "đạt 7/10 cơ hội",
+  "page": 9
+ },
+ {
+  "num": 32,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "I. KHỞI XƯỚNG BẰNG LỜI – NHU CẦU CƠ BẢN",
+  "name": "Tự dùng từ đơn để lựa chọn khi không được hỏi",
+  "content": "Trong hoạt động lựa chọn 2 đồ chơi hoặc 2 món ăn kéo dài 5–7 phút, khi cô cầm hai món và chờ 2–3 giây không hỏi gì, bé tự nói 1 từ đơn để bày tỏ lựa chọn (“bóng”, “xe”, “nước”, “bánh”), đạt 6/10 cơ hội. Ở 2 cơ hội đầu, cô làm mẫu nhẹ bằng cách nhìn món và nói chậm “bóng… xe…”, sau đó không hỏi câu (“con muốn gì?”) mà chỉ chờ, để bé chủ động khởi xướng bằng lời thay vì chỉ tay hoặc im lặng.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 9
+ },
+ {
+  "num": 33,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "II. GỌI TÊN – NHẬN BIẾT ĐỒ VẬT – HOẠT ĐỘNG",
+  "name": "Gọi tên 5 đồ vật quen thuộc",
+  "content": "Trong hoạt động xem tranh hoặc chơi với 6 đồ vật thật (bóng, xe, dép, búp bê, nước, bánh) kéo dài 10 phút, khi cô hỏi “cái gì đây?”, bé gọi đúng 5/6 đồ vật, đạt 5/6 cơ hội; cô làm mẫu chậm – rõ ở lần đầu mỗi đồ, sau đó giảm dần hỗ trợ để bé tự gọi.",
+  "crit": "đạt 5/6 cơ hội",
+  "page": 9
+ },
+ {
+  "num": 34,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "II. GỌI TÊN – NHẬN BIẾT ĐỒ VẬT – HOẠT ĐỘNG",
+  "name": "Nói tên 3 hoạt động quen thuộc",
+  "content": "Trong sinh hoạt thật (ăn, ngủ, tắm) hoặc khi xem tranh minh họa, khi cô hỏi “con đang làm gì?”, bé nói 1 từ mô tả hoạt động (ăn, uống, đi, ngủ) đúng ngữ cảnh, đạt 4/6 cơ hội; cô làm mẫu 1–2 phiên đầu và gợi mở bằng hành động/nét mặt, sau đó giảm gợi ý.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 9
+ },
+ {
+  "num": 35,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "II. GỌI TÊN – NHẬN BIẾT ĐỒ VẬT – HOẠT ĐỘNG",
+  "name": "Gọi tên ba/mẹ đúng ngữ cảnh",
+  "content": "Trong hoạt động xem ảnh gia đình kéo dài 5 phút hoặc khi cô hỏi “đây là ai?”, bé gọi đúng “ba/mẹ” phù hợp bối cảnh, đạt 4/6 cơ hội; cô làm mẫu bằng cách chỉ hình + nói mẫu ở giai đoạn đầu, sau đó giảm dần hỗ trợ.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 9
+ },
+ {
+  "num": 36,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "II. GỌI TÊN – NHẬN BIẾT ĐỒ VẬT – HOẠT ĐỘNG",
+  "name": "Gọi tên 3 món ăn hoặc đồ chơi yêu thích",
+  "content": "Trong giờ ăn hoặc giờ chơi, khi cô hỏi “con muốn cái gì?”, bé gọi đúng 3 món yêu thích (nước, bánh, bóng, xe…) trong 2–3 giây, đạt 4/6 cơ hội; cô nhắc âm đầu hoặc đưa gần món ở 1–2 cơ hội đầu, sau đó giảm hỗ trợ để bé tự gọi.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 9
+ },
+ {
+  "num": 37,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "II. GỌI TÊN – NHẬN BIẾT ĐỒ VẬT – HOẠT ĐỘNG",
+  "name": "Gọi tên 4/8 hình trong tranh",
+  "content": "Trong hoạt động xem 8 tranh (gà, vịt, chó, mèo, heo, ngựa…) kéo dài 10 phút, khi cô hỏi “con gì đây?”, bé gọi đúng ít nhất 4/8 hình, đạt yêu cầu; cô làm mẫu giọng chậm – rõ – nhấn từ khóa ở cơ hội đầu, sau đó giảm gợi ý hoàn toàn.",
+  "crit": "gọi đúng ít nhất 4/8 hình",
+  "page": 10
+ },
+ {
+  "num": 38,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "III. BẮT CHƯỚC TỪ – ÂM – LỜI NÓI",
+  "name": "Bắt chước từ đơn mới",
+  "content": "Trong 10 phút chơi búp bê hoặc hoạt động tương tác lời nói, khi cô nói mẫu từ đơn mới (bé, ăn, bánh, uống, mở…), bé bắt chước gần đúng, đạt 6/10 cơ hội; nếu bé không phản hồi, cô nhắc lại 1 lần và chờ 2 giây, sau đó giảm nhắc ở các cơ hội sau.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 10
+ },
+ {
+  "num": 39,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "III. BẮT CHƯỚC TỪ – ÂM – LỜI NÓI",
+  "name": "Bắt chước âm đầu/âm cuối trong từ đơn",
+  "content": "Trong 5 phút luyện âm có nhấn mạnh cấu trúc từ, khi cô nhấn âm đầu hoặc âm cuối (b-óng, b-a-nh), bé bắt chước gần đúng, đạt 6/10 cơ hội; cô phóng đại khẩu hình – nói chậm – tách âm ở các cơ hội đầu, sau đó giảm hỗ trợ.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 10
+ },
+ {
+  "num": 40,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "IV. SỬ DỤNG LỜI CHỨC NĂNG – YÊU CẦU / TỪ CHỐI / NHỜ GIÚP",
+  "name": "Nói từ đơn để nhờ cô giúp đỡ (“mở”, “lấy”, “đưa”)",
+  "content": "Trong tình huống đồ chơi bị kẹt hoặc vật dụng cần hỗ trợ, bé nói 1 từ đơn chức năng (“mở”, “lấy”, “đưa”) thay vì khóc hoặc kéo tay, đạt 5/8 cơ hội; cô làm mẫu lời 2 cơ hội đầu, sau đó chờ 1–2 giây để bé tự nói trước khi hỗ trợ.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 10
+ },
+ {
+  "num": 41,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "IV. SỬ DỤNG LỜI CHỨC NĂNG – YÊU CẦU / TỪ CHỐI / NHỜ GIÚP",
+  "name": "Bé dùng từ đơn để “xin thêm thông tin”",
+  "content": "Trong hoạt động chơi 1–1 hoặc sinh hoạt quen thuộc kéo dài 5–7 phút, khi cô đưa yêu cầu nhưng nói nhỏ hoặc nói không rõ ràng (có chủ ý), bé chủ động nói 1 từ đơn như “hả?”, “gì?”, để yêu cầu cô lặp lại thông tin, đạt 4/6 cơ hội. Ở 1–2 cơ hội đầu, cô làm mẫu nhẹ bằng cách tự nói “hả?” khi cố ý không nghe rõ, sau đó giảm hỗ trợ để bé tự dùng lời hỏi lại, thay vì im lặng, đoán bừa hoặc bỏ đi.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 10
+ },
+ {
+  "num": 42,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "IV. SỬ DỤNG LỜI CHỨC NĂNG – YÊU CẦU / TỪ CHỐI / NHỜ GIÚP",
+  "name": "Từ chối bằng cử chỉ + lời (“không”)",
+  "content": "Trong các tình huống đưa lựa chọn không mong muốn, bé lắc đầu + nói “không” để thể hiện từ chối, đạt 4/6 cơ hội; cô làm mẫu ngữ điệu + lắc đầu ở buổi đầu, sau đó giảm dần để bé tự biểu đạt.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 10
+ },
+ {
+  "num": 43,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "V. MÔ TẢ – TÍNH CHẤT – VỊ TRÍ – TỪ NHẬN THỨC ĐƠN GIẢN",
+  "name": "Dùng từ mô tả tính chất (to, nhỏ,…)",
+  "content": "Trong hoạt động phân biệt đồ vật hoặc cảm nhận món ăn kéo dài 5–7 phút, khi cô đưa ra 2 lựa chọn đối lập (bóng to – bóng nhỏ), bé nói được 1 từ mô tả đơn giản (“to”, “nhỏ”) phù hợp với vật cô chỉ, đạt 3/5 cơ hội; cô nhắc âm đầu – làm mẫu chậm – nhấn mạnh sự đối lập ở 1–2 cơ hội đầu, sau đó giảm dần gợi ý để bé tự nói.",
+  "crit": "đạt 3/5 cơ hội",
+  "page": 10
+ },
+ {
+  "num": 44,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "V. MÔ TẢ – TÍNH CHẤT – VỊ TRÍ – TỪ NHẬN THỨC ĐƠN GIẢN",
+  "name": "Dùng từ chỉ vị trí đơn giản (“đây/kia”)",
+  "content": "Trong hoạt động lựa chọn đồ vật kéo dài 5 phút, khi cô hỏi “cái nào con muốn?” và đưa ra 2 vật khác nhau, bé nói “đây/kia” đồng thời hướng tới món mình muốn, đạt 5/8 cơ hội; cô hỗ trợ bằng cách hướng tay bé – nhấn nhịp từ ở 2 cơ hội đầu, sau đó ngừng gợi tay, chỉ giữ ánh mắt chờ bé tự đáp.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 11
+ },
+ {
+  "num": 45,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "V. MÔ TẢ – TÍNH CHẤT – VỊ TRÍ – TỪ NHẬN THỨC ĐƠN GIẢN",
+  "name": "Dùng từ đơn để mô tả cảm xúc",
+  "content": "Trong các tình huống chơi hoặc sinh hoạt kéo dài 5–7 phút, khi cô tạo ngữ cảnh cảm xúc đơn giản (vui – buồn – sợ – đau) bằng nét mặt, giọng điệu hoặc sự kiện nhỏ (búp bê té, đồ chơi kẹt), bé nói 1 từ đơn mô tả cảm xúc (“vui”, “buồn”, “đau”, “sợ”), đạt 4/6 cơ hội. Ở 1–2 cơ hội đầu, cô mô hình hóa bằng cách chỉ nét mặt và nói mẫu chậm (“buồn nè”, “ui đau”), sau đó giảm dần hỗ trợ để bé tự dùng lời mô tả trạng thái cảm xúc, thay vì chỉ nhìn hoặc phản ứng hành vi.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 11
+ },
+ {
+  "num": 46,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VI. YÊU CẦU BẰNG LỜI (MỞ RỘNG) – DIỄN ĐẠT MONG MUỐN",
+  "name": "Yêu cầu đồ vật bằng lời thay vì kéo tay",
+  "content": "Trong hoạt động chọn đồ chơi kéo dài 8–10 phút, khi bé muốn lấy món ở xa, bé nói 1 từ yêu cầu (“bóng”, “xe”) thay vì kéo tay cô, đạt 6/10 cơ hội; cô mô hình hóa từ đơn – chỉ vào đồ ở 2 cơ hội đầu, sau đó giảm gợi ý để bé tự yêu cầu bằng lời.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 11
+ },
+ {
+  "num": 47,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VI. YÊU CẦU BẰNG LỜI (MỞ RỘNG) – DIỄN ĐẠT MONG MUỐN",
+  "name": "Yêu cầu hành động bằng lời (đẩy, mở, bật)",
+  "content": "Trong trò chơi vận động – nguyên nhân kết quả (đẩy xe, bật bong bóng, mở nắp) kéo dài 10 phút, khi muốn cô thực hiện hành động, bé dùng từ đơn (“đẩy”, “bật”, “mở”) thay vì kéo tay, đạt 5/8 cơ hội; cô nhắc lời nhẹ – mô hình hóa hành động kèm từ khóa ở 1–2 cơ hội đầu, sau đó giảm gợi ý để bé tự nói.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 11
+ },
+ {
+  "num": 48,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VI. YÊU CẦU BẰNG LỜI (MỞ RỘNG) – DIỄN ĐẠT MONG MUỐN",
+  "name": "Bình luận bằng 1 từ khi chơi",
+  "content": "Trong hoạt động quan sát sự kiện thú vị (xe chạy, bóng nổ) kéo dài 5 phút, khi sự kiện xảy ra, bé chủ động nói 1 từ bình luận (“bóng!”, “xe!”, “ô!”), đạt 5/8 cơ hội; cô gợi mở bằng ánh mắt – nhấn nhịp sự kiện ở cơ hội đầu, sau đó không nhắc, để bé tự khởi xướng bình luận.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 11
+ },
+ {
+  "num": 49,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VII. CHIA SẺ XÃ HỘI BẰNG LỜI",
+  "name": "Chia sẻ bằng chỉ + lời",
+  "content": "Trong hoạt động khám phá môi trường xung quanh kéo dài 8 phút, khi bé thấy vật hoặc sự kiện thú vị, bé chỉ tay + nói 1 từ để chia sẻ với cô, đạt 4/8 cơ hội; cô mô hình hóa nhẹ động tác chỉ + lời ở 1–2 cơ hội đầu, sau đó giảm hỗ trợ để bé tự chia sẻ.",
+  "crit": "đạt 4/8 cơ hội",
+  "page": 11
+ },
+ {
+  "num": 50,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VIII. NGÔN NGỮ HIỂU – GIAI ĐOẠN CAO HƠN",
+  "name": "Làm theo yêu cầu 2 bước liên tiếp có liên quan",
+  "content": "Trong giờ chơi 1–1 kéo dài 10 phút, khi cô đưa chỉ dẫn 2 bước liên quan (“lấy bóng rồi đưa cho cô”, “nhặt xe rồi bỏ vào hộp”), bé thực hiện đủ 2 bước đúng thứ tự, đạt 4/6 cơ hội; cô nhắc lại chậm – chỉ tay vào từng vật ở 1 cơ hội đầu, sau đó giảm gợi ý để bé tự hoàn thành chuỗi hành động.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 12
+ },
+ {
+  "num": 51,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VIII. NGÔN NGỮ HIỂU – GIAI ĐOẠN CAO HƠN",
+  "name": "Hiểu từ chỉ vị trí (trên, trong, dưới)",
+  "content": "Trong hoạt động giấu – tìm đồ chơi kéo dài 7 phút, khi cô yêu cầu “đặt xe trên bàn”, “bỏ bóng vào hộp”, “nhặt gấu dưới ghế”, bé làm đúng vị trí, đạt 5/8 cơ hội; cô mô hình hóa vị trí 1–2 lần đầu, sau đó giảm gợi ý để bé tự xử lý vị trí.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 12
+ },
+ {
+  "num": 52,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VIII. NGÔN NGỮ HIỂU – GIAI ĐOẠN CAO HƠN",
+  "name": "Hiểu tính chất đơn giản (to–nhỏ, nhanh–chậm)",
+  "content": "Trong trò chơi “tìm đồ đúng” kéo dài 5–7 phút, khi cô yêu cầu “lấy quả bóng to”, “chọn chiếc xe nhỏ”, “cho xe chạy chậm thôi”, bé chọn đúng hoặc thực hiện đúng đặc điểm, đạt 4/6 cơ hội; cô minh họa đối lập bằng 2 đồ vật ở 1 cơ hội đầu, sau đó giảm hỗ trợ.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 12
+ },
+ {
+  "num": 53,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VIII. NGÔN NGỮ HIỂU – GIAI ĐOẠN CAO HƠN",
+  "name": "Hiểu câu hỏi “cái gì đây?” với 2 lựa chọn lời",
+  "content": "Trong hoạt động xem tranh kéo dài 5 phút, khi cô hỏi “cái gì đây? là xe hay bóng?”, bé nhìn – chỉ hoặc nói đúng lựa chọn, đạt 7/10 cơ hội; cô nhấn mạnh từ khóa ở 1 cơ hội đầu, sau đó giảm gợi ý.",
+  "crit": "đạt 7/10 cơ hội",
+  "page": 12
+ },
+ {
+  "num": 54,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VIII. NGÔN NGỮ HIỂU – GIAI ĐOẠN CAO HƠN",
+  "name": "Hiểu câu hỏi “ở đâu?” và tìm đúng vị trí",
+  "content": "Trong hoạt động tìm đồ trong phòng kéo dài 7 phút, khi cô hỏi “ô tô ở đâu?”, “con mèo ở đâu?”, bé quay nhìn – chỉ tay hoặc đến đúng vị trí, đạt 6/10 cơ hội; cô di chuyển lại gần vùng đồ – gợi “con nhìn kỹ nè” ở 1 cơ hội đầu, sau đó giảm hỗ trợ.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 12
+ },
+ {
+  "num": 55,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VIII. NGÔN NGỮ HIỂU – GIAI ĐOẠN CAO HƠN",
+  "name": "Hiểu câu hỏi “ai?” với nhân vật quen thuộc",
+  "content": "Trong hoạt động xem sách tranh gia đình kéo dài 7 phút, khi cô hỏi “ai đây?”, “ai đang ăn?”, bé chỉ hoặc nói đúng tên nhân vật, đạt 5/8 cơ hội; cô nhấn trọng âm từ “ai” – lặp lại chậm ở 1 cơ hội đầu, sau đó giảm gợi ý.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 12
+ },
+ {
+  "num": 56,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VIII. NGÔN NGỮ HIỂU – GIAI ĐOẠN CAO HƠN",
+  "name": "Phân biệt hai lựa chọn trong câu hỏi “muốn A hay B?”",
+  "content": "Trong giờ ăn hoặc giờ chơi kéo dài 7 phút, khi cô hỏi “con muốn bánh hay sữa?”, “con chơi bóng hay xe?”, bé chỉ hoặc nói lựa chọn đúng theo nhu cầu, đạt 5/8 cơ hội; cô đưa đồ lại gần – làm rõ từng lựa chọn ở 1 cơ hội đầu, sau đó giảm hỗ trợ.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 12
+ },
+ {
+  "num": 57,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VIII. NGÔN NGỮ HIỂU – GIAI ĐOẠN CAO HƠN",
+  "name": "Hiểu câu phủ định đơn giản",
+  "content": "Trong hoạt động lựa chọn đồ vật kéo dài 5 phút, khi cô nói “không phải cái này, lấy cái kia”, bé bỏ lựa chọn sai và chuyển sang lựa chọn đúng, đạt 4/6 cơ hội; cô kết hợp nét mặt – gật/lắc đầu ở 1 cơ hội đầu, sau đó giảm gợi ý.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 13
+ },
+ {
+  "num": 58,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VIII. NGÔN NGỮ HIỂU – GIAI ĐOẠN CAO HƠN",
+  "name": "Hiểu câu chứa 2 thông tin đơn giản",
+  "content": "Trong giờ chơi với 2–3 món đồ kéo dài 8 phút, khi cô nói “lấy xe màu đỏ”, “đặt gấu vào hộp màu xanh”, bé thực hiện đúng cả đối tượng và đặc điểm, đạt 4/6 cơ hội; cô nhắc lại chậm – chỉ vào từng đặc điểm ở 1 cơ hội đầu, sau đó giảm hỗ trợ.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 13
+ },
+ {
+  "num": 59,
+  "phase": "Giai đoạn tập nói từ đơn",
+  "group": "VIII. NGÔN NGỮ HIỂU – GIAI ĐOẠN CAO HƠN",
+  "name": "Hiểu và làm theo yêu cầu trong bối cảnh sinh hoạt",
+  "content": "Trong sinh hoạt thường ngày (ăn – tắm – thay đồ), khi cô đưa yêu cầu đơn giản như “đem ly vào bếp”, “bỏ áo bẩn vào rổ”, bé thực hiện đúng, đạt 5/8 cơ hội; cô chỉ tay + nhắc ngắn gọn ở 1 cơ hội đầu, sau đó giảm dần gợi ý.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 13
+ },
+ {
+  "num": 60,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Ghép 2 từ để yêu cầu",
+  "content": "Trong hoạt động chơi 1–1 kéo dài 8–10 phút (lăn bóng, thổi bong bóng, bật/tắt đèn), khi muốn tiếp tục hoạt động, bé chủ động nói cụm 2 từ để yêu cầu như “bóng nữa”, “cô mở”, “con thổi”, thay vì chỉ kéo tay hoặc phát âm đơn lẻ, đạt 6/10 cơ hội; cô hỗ trợ làm mẫu cụm từ ở 2–3 cơ hội đầu (nói chậm – nhấn nhịp – chỉ tay vào đồ), sau đó giảm dần gợi ý để bé tự nói.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 14
+ },
+ {
+  "num": 61,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Ghép 3 từ đơn giản",
+  "content": "Trong giờ chơi hoặc sinh hoạt thường ngày (ăn, uống, lấy đồ) kéo dài 5–7 phút, khi cô tạo tình huống yêu cầu diễn đạt (ví dụ: đưa hai lựa chọn, dừng hoạt động, mở hộp), bé nói câu 3 từ đơn giản như “con muốn bóng”, “mẹ bế con”, “con lấy xe”, đạt 5/8 cơ hội; cô hỗ trợ bằng cách nhắc âm đầu, nhấn nhịp từng từ (“con – muốn – bóng”) hoặc làm mẫu chậm ở 1 cơ hội đầu rồi giảm dần.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 14
+ },
+ {
+  "num": 62,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Trả lời “đang làm gì?” bằng câu 2–3 từ",
+  "content": "Trong hoạt động xem tranh hành động hoặc quan sát người/đồ chơi thật kéo dài 5–7 phút, khi cô hỏi “đang làm gì vậy?” hoặc “bé này làm gì?”, bé trả lời bằng cụm 2–3 từ mô tả hành động + đối tượng, ví dụ: “ăn bánh”, “uống nước”, “đẩy xe”, đạt 6/10 cơ hội. Ở 1–2 cơ hội đầu, cô làm mẫu chậm – rõ (“ăn… bánh… nè”), sau đó giảm dần gợi ý để bé tự diễn đạt hành động bằng câu ngắn.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 14
+ },
+ {
+  "num": 63,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Trả lời “con muốn gì?” bằng câu ngắn",
+  "content": "Trong hoạt động lựa chọn đồ ăn/đồ chơi hoặc khi cô dừng trò chơi và hỏi “con muốn gì?”, bé trả lời bằng cụm từ hoặc câu ngắn có động từ + đối tượng như “con muốn uống”, “con muốn bánh”, “con lấy xe”, đạt 5/8 cơ hội; cô hỗ trợ bằng cách đưa lựa chọn lại gần, nhấn mạnh từ khóa (“muốn gì nè?”), hoặc mẫu nhẹ khi bé chậm phản hồi.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 14
+ },
+ {
+  "num": 64,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Mô tả bằng 2 từ (tính chất + danh từ)",
+  "content": "Trong hoạt động nhìn tranh hoặc quan sát đồ vật thật (bóng, áo, xe, nước) kéo dài 5 phút, khi cô hỏi “cái này sao nè?”, “quả bóng như thế nào?”, bé mô tả bằng 2 từ gồm tính chất + danh từ, như “bóng to”, “áo đỏ”, “xe nhanh”, đạt 5/8 cơ hội; cô hỗ trợ bằng cách nhấn mạnh tính chất (“to… nhỏ… đỏ… nhanh…”) và làm mẫu 1 lần đầu rồi giảm dần để bé tự diễn đạt.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 14
+ },
+ {
+  "num": 65,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Gọi tên 10 đồ vật và ghép thành cụm từ",
+  "content": "Trong hoạt động xem tranh hoặc chơi với bộ 12 đồ vật quen thuộc (bóng, xe, dép, gấu, ly, bánh…), khi cô hỏi “cái gì đây?”, bé gọi tên đúng 10/12 đồ vật và ghép được thành cụm từ đơn giản như “xe to”, “bánh ngon”, “ly nước”, đạt yêu cầu khi cô làm mẫu 1–2 lần đầu (ví dụ: “xe… to…”), sau đó giảm dần hỗ trợ và để bé tự nói.",
+  "crit": "gọi tên đúng 10/12 đồ vật",
+  "page": 14
+ },
+ {
+  "num": 66,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Nói tên 5 hành động trong tranh hoặc khi chơi",
+  "content": "Trong hoạt động xem tranh hành động hoặc quan sát người/đồ chơi thực hiện hành động (ăn, chạy, nhảy, ngủ, uống) kéo dài 5–7 phút, khi cô hỏi “bé đang làm gì?”, “con này làm gì?”, bé nói đúng 5 hành động (“ăn”, “chạy”, “nhảy”, “ngủ”, “uống”) và ghép được thành cụm 2 từ như “bé chạy”, “mẹ ngủ”, đạt 4/6 cơ hội; cô hỗ trợ câu mẫu (“bé chạy nè”) và nhấn mạnh động từ ở 1–2 cơ hội đầu rồi giảm dần gợi ý.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 15
+ },
+ {
+  "num": 67,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Dùng sở hữu “của con/của cô” trong câu",
+  "content": "Trong hoạt động phân loại và trả đồ cá nhân (đồ của bé và đồ của cô) kéo dài 5–7 phút, khi cô chỉ vào một vật và hỏi “cái này của ai?”, bé trả lời bằng cụm từ có sở hữu “của con” hoặc “của cô” đúng ngữ cảnh (ví dụ: “của con”, “của cô”) đạt 4/6 cơ hội, có hỗ trợ câu mẫu ở 1–2 cơ hội đầu (cô nói chậm, nhấn mạnh từ “của con/của cô” và chỉ vào người tương ứng), sau đó giảm dần gợi ý.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 15
+ },
+ {
+  "num": 68,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Dùng tính từ trong câu ngắn",
+  "content": "Trong hoạt động mô tả đồ vật hoặc tranh (ví dụ: bóng to/nhỏ, áo dài/ngắn, nước nóng/lạnh) kéo dài 5–7 phút, khi cô hỏi “quả bóng này sao nè?”, “nước này thế nào?”, bé trả lời bằng câu ngắn có tính từ như “xe nhanh quá”, “nước nóng”, “bóng to”, đạt 4/6 cơ hội, có hỗ trợ gợi ý bằng cách nhấn mạnh tính chất (to/nhỏ, nóng/lạnh, nhanh/chậm) ở 2 cơ hội đầu rồi giảm dần.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 15
+ },
+ {
+  "num": 69,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Dùng giới từ đơn giản (trên, trong, dưới) trong câu",
+  "content": "Trong hoạt động tìm và mô tả vị trí đồ chơi (xe, bóng, gấu) đặt ở trên bàn, trong hộp, dưới ghế, khi cô hỏi “xe ở đâu?”, “bóng ở đâu?”, bé trả lời bằng câu ngắn có giới từ như “trên bàn”, “trong hộp”, “dưới ghế” đúng với vị trí thực tế, đạt 4/6 cơ hội, có hỗ trợ gợi ý bằng chỉ tay và làm mẫu câu ở 1–2 cơ hội đầu rồi giảm dần.",
+  "crit": "đạt 4/6 cơ hội",
+  "page": 15
+ },
+ {
+  "num": 70,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Yêu cầu đồ bằng câu",
+  "content": "Trong hoạt động lựa chọn đồ chơi/đồ ăn quen thuộc, khi bé muốn một món ở xa tầm với, bé dùng câu ngắn 2–3 từ để yêu cầu, ví dụ: “lấy xe con”, “cho con bóng”, “mở cửa cô”, thay vì chỉ kéo tay hoặc than khóc, đạt 6/10 cơ hội, có hỗ trợ câu mẫu rõ ràng ở vài cơ hội đầu (cô nói “con nói: cho con bóng”) và giảm dần gợi ý.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 15
+ },
+ {
+  "num": 71,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Yêu cầu giúp đỡ bằng câu ngắn",
+  "content": "Trong sinh hoạt thường ngày hoặc khi chơi đồ chơi khó mở (hộp, nắp chai, nút bấm), khi gặp khó khăn, bé nói câu ngắn để nhờ hỗ trợ, ví dụ: “giúp con với”, “cô mở nắp”, “mẹ giúp con”, đạt 5/8 cơ hội, có hỗ trợ gợi ý bằng câu hỏi mở (“con muốn cô làm gì?”, “con nói cô giúp con với”) và làm mẫu 1–2 lần đầu rồi giảm dần.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 15
+ },
+ {
+  "num": 72,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Bình luận bằng câu ngắn trong lúc chơi",
+  "content": "Trong lúc chơi hoặc xem sự kiện thú vị (xe chạy nhanh, bong bóng nổ, đồ chơi rơi), khi sự kiện vừa xảy ra, bé chủ động nói câu ngắn để bình luận, ví dụ: “xe chạy nhanh”, “bóng bể rồi”, “đổ nước kìa”, đạt 4/8 cơ hội, có hỗ trợ bằng cách cô làm mẫu bình luận một vài lần đầu với giọng điệu nhấn mạnh rồi chờ bé tự nói ở các lượt sau.",
+  "crit": "đạt 4/8 cơ hội",
+  "page": 16
+ },
+ {
+  "num": 73,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Bắt chước câu mẫu 3 từ",
+  "content": "Trong hoạt động luyện nói bắt chước kéo dài 5–7 phút, khi cô nói câu mẫu 3 từ đơn giản gắn với hành động/đồ vật quen thuộc (ví dụ: “con lấy bóng”, “mẹ bế con”, “con ăn cơm”), bé bắt chước lại gần đúng câu trong vòng 2–3 giây, đạt 5/8 cơ hội, có hỗ trợ lặp lại câu mẫu chậm – rõ một lần nữa nếu bé chưa phản ứng, sau đó giảm dần số lần nhắc.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 16
+ },
+ {
+  "num": 74,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Tự đặt câu hỏi “cái gì?”",
+  "content": "Trong hoạt động xem tranh sách hoặc khám phá đồ chơi mới kéo dài 5–10 phút, khi bé thấy đồ vật/sự kiện lạ, bé chủ động nhìn cô và đặt câu hỏi “cái gì đây?” (hoặc “cái gì vậy?”) để thể hiện nhu cầu tìm hiểu, đạt 3/6 cơ hội, có hỗ trợ mô hình hóa ở giai đoạn đầu (cô tự nói “cái gì đây nhỉ?” mỗi khi gặp đồ mới) rồi giảm dần để khuyến khích bé tự hỏi.",
+  "crit": "đạt 3/6 cơ hội",
+  "page": 16
+ },
+ {
+  "num": 75,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Hiểu và trả lời câu hỏi “đâu?” bằng câu ngắn",
+  "content": "Trong hoạt động tìm đồ vật/nhân vật trong phòng hoặc trong tranh, khi cô hỏi “con mèo đâu?”, “cái xe đâu?”, “bóng ở đâu?”, bé trả lời bằng câu ngắn nêu vị trí, ví dụ: “trong hộp”, “trên ghế”, “dưới bàn”, đạt 7/10 cơ hội, có hỗ trợ ban đầu bằng cách chỉ tay gợi hướng, nhấn mạnh từ “đâu” trong câu hỏi rồi giảm dần gợi ý.",
+  "crit": "đạt 7/10 cơ hội",
+  "page": 16
+ },
+ {
+  "num": 76,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Hiểu và trả lời “ai?” bằng câu ngắn",
+  "content": "Trong hoạt động xem tranh gia đình hoặc chơi đóng vai với búp bê/nhân vật, khi cô hỏi “ai ăn đây?”, “ai đang ngủ?”, “ai đây?”, bé trả lời bằng câu ngắn gồm đại từ/ danh xưng + động từ, ví dụ: “bé ăn”, “mẹ ngủ”, “ba ôm con”, đạt 6/10 cơ hội, có hỗ trợ mô hình hóa câu mẫu ở 1–2 cơ hội đầu (cô nhấn mạnh từ “ai” và chủ động trả lời mẫu) rồi giảm dần.",
+  "crit": "đạt 6/10 cơ hội",
+  "page": 16
+ },
+ {
+  "num": 77,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Trả lời câu hỏi “cái gì?” bằng câu 2–3 từ",
+  "content": "Trong hoạt động nhìn tranh, chỉ đồ vật hoặc xem sách, khi cô hỏi “cái gì đây?”, bé trả lời bằng câu 2–3 từ mô tả bao gồm danh từ + đặc điểm, ví dụ: “con mèo đen”, “xe màu đỏ”, “bánh tròn nè”, đạt 7/10 cơ hội, có hỗ trợ gợi ý bằng cách nhấn nhịp từng từ (“xe… màu… đỏ”) ở vài cơ hội đầu rồi giảm dần.",
+  "crit": "đạt 7/10 cơ hội",
+  "page": 16
+ },
+ {
+  "num": 78,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Trả lời câu hỏi “ở đâu?” bằng câu 2–3 từ",
+  "content": "Trong trò chơi tìm đồ, khi cô hỏi “ô tô ở đâu?”, “búp bê ở đâu?”, “quyển sách ở đâu?”, bé trả lời bằng câu 2–3 từ gồm giới từ + danh từ, ví dụ: “trên bàn”, “dưới ghế”, “trong hộp”, đạt 5/8 cơ hội, có hỗ trợ ban đầu bằng chỉ tay, nhấn mạnh giới từ (“trên…”, “trong…”, “dưới…”) rồi giảm dần hỗ trợ.",
+  "crit": "đạt 5/8 cơ hội",
+  "page": 17
+ },
+ {
+  "num": 79,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Đối thoại 2–3 lượt bằng câu ngắn",
+  "content": "Trong hoạt động chơi 1–1 hoặc trò chuyện ngắn 5–7 phút, khi cô bắt đầu đối thoại bằng câu hỏi/nhận xét đơn giản (ví dụ: “con đang làm gì đó?”, “xe làm sao vậy?”, “con muốn gì?”), bé trả lời bằng câu ngắn rồi tiếp tục đáp lại thêm 1–2 lượt nữa (tổng cộng 2–3 lượt qua lại: cô – bé – cô – bé) với nội dung phù hợp ngữ cảnh, đạt 3 lần/buổi, có hỗ trợ gợi ý nhẹ bằng câu hỏi mở và nhắc lại từ khóa nếu bé bị ngắt mạch.",
+  "crit": "đạt 3 lần/buổi",
+  "page": 17
+ },
+ {
+  "num": 80,
+  "phase": "Giai đoạn diễn đạt câu",
+  "group": "(không chia nhóm kỹ năng trong file)",
+  "name": "Chủ động đặt câu hỏi “đâu?” hoặc “ai?” trong bối cảnh thực",
+  "content": "Trong hoạt động chơi 1–1 hoặc xem tranh sự kiện kéo dài 5–7 phút, khi có vật/nhân vật biến mất, bị che khuất, hoặc cô tạo tình huống thay đổi (giấu bóng sau hộp, búp bê đi chỗ khác), bé chủ động đặt câu hỏi bằng câu ngắn như “ở đâu rồi?”, “ai đây?”, “ai mất rồi?”, thể hiện nhu cầu tìm kiếm thông tin, đạt 3/6 cơ hội; cô có hỗ trợ ở 1–2 cơ hội đầu bằng cách tự hỏi to (“bóng đâu rồi ta?”), nhấn từ khóa, rồi giảm dần để bé tự khởi xướng câu hỏi.",
+  "crit": "đạt 3/6 cơ hội",
+  "page": 17
+ }
+]

@@ -1,4 +1,4 @@
-/* Z9: Ngân hàng mục tiêu "Ngôn ngữ trị liệu" (313 mục, 0–6 tuổi) và các lĩnh vực mới trong bộ lọc */
+/* Z9: Ngân hàng mục tiêu "Ngôn ngữ trị liệu" (463 mục: 313 mục 0–6 tuổi, 70 mục Nói lắp, 80 mục tiêu thông minh) và các lĩnh vực mới trong bộ lọc */
 const {open,login}=require('./h.js');
 let fails=0,passes=0;
 const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log('FAIL',n,x===undefined?'':JSON.stringify(x).slice(0,600))}};
@@ -9,10 +9,10 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  await login(page,'ql');
 
  const d=await ev(()=>{const nl=LIBI.filter(i=>i.s==='nl');
-  const ages=[...new Set(nl.map(i=>i.a))];
+  const ages=[...new Set(nl.map(i=>i.a).filter(Boolean))];
   return{n:nl.length,heads:new Set(nl.map(i=>i.hi)).size,ids:new Set(LIBI.map(i=>i.id)).size===LIBI.length,
    keys:Object.keys(LSRC),name:LSRC.nl&&LSRC.nl.n,ages,
-   badM:nl.filter(i=>![0,1,2,3,4,5,6,7].includes(i.m)).length,
+   badM:nl.filter(i=>![0,1,2,3,4,5,6,7].includes(i.m)&&!(/^TM-/.test(i.c)&&i.m===-1)).length,
    noText:nl.filter(i=>!i.n||!i.t||!i.k||!i.o).length,
    domOk:nl.every(i=>DM[i.d]),
    doms:LDOM.map(x=>x.id),
@@ -20,8 +20,8 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
    perDom:Object.fromEntries(LDOM.map(x=>[x.id,nl.filter(i=>i.d===x.id).length])),
    ex:nl[0]?{id:nl[0].id,n:nl[0].n,t:nl[0].t,a:nl[0].a,m:nl[0].m,ex:nl[0].ex,rf:nl[0].rf}:null,
    chips:LCHIPS.map(c=>c.id)}});
- ok('383 mục Ngôn ngữ trị liệu (313 + 70 tô vàng), mã mục không trùng',d.n===383&&d.ids,d.n);
- ok('279 nhóm kỹ năng thành 279 tiêu đề',d.heads===279,d.heads);
+ ok('463 mục Ngôn ngữ trị liệu (313 + 70 tô vàng + 80 mục tiêu thông minh), mã mục không trùng',d.n===463&&d.ids,d.n);
+ ok('296 tiêu đề nhóm kỹ năng (279 + 17 của lô mục tiêu thông minh)',d.heads===296,d.heads);
  ok('đặt tên "Ngôn ngữ trị liệu" và đứng trước mục "Trung tâm tự thêm"',d.name==='Ngôn ngữ trị liệu'&&d.keys.indexOf('si')===d.keys.indexOf('cu')-1,d.keys);
  ok('nhãn độ tuổi gồm 8 nhóm của bảng gốc và 3 nhóm lô mới (6–12, 12–18, từ 18 tuổi)',d.ages.length===11&&['0–6 tháng','6–12 tháng','12–18 tháng','18–24 tháng','2–3 tuổi','3–4 tuổi','4–5 tuổi','5–6 tuổi','6–12 tuổi','12–18 tuổi','≥ 18 tuổi'].every(a=>d.ages.includes(a)),d.ages);
  ok('mốc lọc độ tuổi nằm trong 0–7 (0–4 như các chương trình khác, 5–7 thêm cho lô mới); mọi mục có nội dung, hành vi, khóa tìm',d.badM===0&&d.noText===0&&d.domOk,{badM:d.badM,noText:d.noText});
@@ -34,7 +34,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  await page.click('.nav button:has-text("Ngân hàng mục tiêu")');await W(150);
  const cnt=()=>ev(()=>{const e=document.querySelector('.acts .sm b');return e?e.textContent:null});
  await ev(()=>{Object.assign(S.hs.lib,{dom:'',src:'nl',head:'',age:'',q:''});S.pg.lib=1;render()});await W(150);
- ok('lọc bộ Ngôn ngữ trị liệu: 383 mục phù hợp',(await cnt())==='383',await cnt());
+ ok('lọc bộ Ngôn ngữ trị liệu: 463 mục phù hợp',(await cnt())==='463',await cnt());
  const opt=await ev(()=>[...document.querySelectorAll('#lf-s option, select[data-c="lfsrc"] option')].map(o=>o.textContent.trim()));
  ok('danh sách bộ công cụ có "Ngôn ngữ trị liệu"',opt.some(t=>t.indexOf('Ngôn ngữ trị liệu')===0),opt);
  const chips=await ev(()=>[...document.querySelectorAll('[data-a="lfdom"]')].map(c=>c.textContent.trim()));
