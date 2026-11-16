@@ -26,7 +26,7 @@ function gtTree(kid){
  const recs={},seen={};
  sessOf(kid,'','9999-12-31',true).forEach(s=>s.it.forEach(it=>{const p=gtItemPlan(kid,it,byG);if(!p)return;
   (seen[p.id]=seen[p.id]||{})[it.g]=1;if(!trN(it.tr))return;const sc=recSc(it);if(sc==null)return;
-  const o=recs[p.id]=recs[p.id]||{};(o[it.g]=o[it.g]||[]).push({d:s.date,g:it.g,sup:it.sup,tr:it.tr,sc})}));
+  const o=recs[p.id]=recs[p.id]||{};(o[it.g]=o[it.g]||[]).push({d:s.date,g:it.g,sup:it.sup,tr:it.tr,sc,sg:it.sg||''})}));
  const goalsOf=p=>Object.keys(seen[p.id]||{}).map(g=>Object.assign({g},gtState((recs[p.id]||{})[g]||[]))).sort((a,b)=>(b.last?b.last.d:'')<(a.last?a.last.d:'')?-1:1);
  const alive=n=>n.p.s!=='tam';
  const shorts=ps.map(p=>{const gs=goalsOf(p),dn=gs.filter(x=>x.st==='dat').length,any=gs.some(x=>x.n);
@@ -40,7 +40,7 @@ function gtTree(kid){
 /* ---------------- Cổng phụ huynh và báo cáo: chữ lớn, màu và biểu tượng cho từng trạng thái ---------------- */
 const gtLast=x=>x.last?`Buổi gần nhất: đúng <b>${trOk(x.last.tr)}/${trN(x.last.tr)}</b> lượt · ${esc(SUP[x.last.sup].p.toLowerCase())}`:'Chưa luyện';
 function gtGoals(n,m){const gs=n.gs;if(!gs.length)return'';
- return`<ul class="gtg">${gs.map(x=>`<li class="s-${x.st}"><span class="gt-ic" aria-hidden="true">${GTS[x.st][1]}</span><div><span class="gt-k">Mục tiêu buổi</span><span class="gtg-n">${esc(gName(x.g))}</span><span class="gtg-s">${gtChip(x.st)} ${gtLast(x)}</span>${x.rs.length>1?`<span class="gtg-h">Các buổi gần đây: ${x.rs.slice(-5).map(r=>trOk(r.tr)+'/'+trN(r.tr)).join(' → ')}</span>`:''}${m==='pdf'?'':gxHtml(goalOf(x.g),'p')}</div></li>`).join('')}</ul>`}
+ return`<ul class="gtg">${gs.map(x=>`<li class="s-${x.st}"><span class="gt-ic" aria-hidden="true">${GTS[x.st][1]}</span><div><span class="gt-k">Mục tiêu buổi</span><span class="gtg-n">${esc(gName(x.g))}</span><span class="gtg-s">${gtChip(x.st)} ${gtLast(x)}</span>${x.last&&x.last.sg?`<span class="gtg-h"><b>Mục tiêu buổi (SMART):</b> ${esc(x.last.sg)}</span>`:''}${x.rs.length>1?`<span class="gtg-h">Các buổi gần đây: ${x.rs.slice(-5).map(r=>trOk(r.tr)+'/'+trN(r.tr)).join(' → ')}</span>`:''}${m==='pdf'?'':gxHtml(goalOf(x.g),'p')}</div></li>`).join('')}</ul>`}
 function gtShort(s,par,m){return`<div class="gts s-${s.st}"><div class="gts-h"><span class="gt-ic" aria-hidden="true">${GTS[s.st][1]}</span><div class="gts-t"><span class="gt-k">Mục tiêu ngắn hạn</span><b>${esc(gName(s.p.g))}</b></div>${gtChip(s.st)}</div>
  <div class="gt-pb">${gtBar(s.pct,s.st)}<b>${s.pct}%</b></div>${s.total?`<p class="gt-sub">${s.dn}/${s.total} mục tiêu buổi đã đạt</p>`:'<p class="gt-sub">Chưa có mục tiêu buổi nào được ghi.</p>'}${gxHtml(goalOf(s.p.g),m==='pdf'?'pdf':'p',{open:1})}${gtGoals(s,m)}</div>`}
 function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=='tam'),O=T.orph.filter(s=>s.p.s!=='tam'),m=o.pdf?'pdf':'p';

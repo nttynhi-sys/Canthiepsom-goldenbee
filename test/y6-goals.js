@@ -136,6 +136,8 @@ const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,
  ok('không còn chữ nhỏ dưới 14px trong thẻ mục tiêu',await ev2(()=>[...document.querySelectorAll('.gt-card *')].filter(e=>e.children.length===0&&(e.textContent||'').trim()&&e.closest('.gt-card')).every(e=>parseFloat(getComputedStyle(e).fontSize)>=12.9)));
  await p2.screenshot({path:SP+'y6-parent-desktop.png',fullPage:false});
  await ev2(()=>{document.querySelector('.gt-card').scrollIntoView()});await p2.screenshot({path:SP+'y6-parent-card.png'});
+ const SM=await ev2(()=>{const k=myKids()[0];DB.sess.filter(x=>x.k===k.id).forEach(x=>x.it.forEach(i=>{i.sg='SMART thử nghiệm: bé chỉ đúng 6/10 hình.'}));render();return{txt:document.querySelector('#main').innerText}});
+ ok('phụ huynh thấy nội dung mục tiêu buổi theo SMART',/Mục tiêu buổi \(SMART\):.*SMART thử nghiệm/.test(SM.txt),SM.txt.slice(0,200));
  /* mục tiêu tạm dừng không hiện cho phụ huynh */
  const PZ=await ev2(()=>{const k=myKids()[0],p=kidPlans(k.id,'dang').find(x=>x.h==='n');p.s='tam';S.cp.tab='tb';render();const n=gName(p.g),hit=document.querySelector('#main').innerText.includes(n);p.s='dang';render();return{hit}});
  ok('mục tiêu đang tạm dừng không hiện ở cổng phụ huynh',PZ.hit===false,PZ);
