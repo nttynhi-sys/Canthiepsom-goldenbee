@@ -1,0 +1,28 @@
+# Chỉ dành cho công cụ tìm kiếm dùng ripgrep (Grep, Glob, rg). KHÔNG ảnh hưởng git, build, test hay triển khai.
+# Cần tìm trong tệp bị loại: chỉ rõ đường dẫn tệp đó, hoặc dùng rg --no-ignore.
+
+# Tệp sinh ra từ src/build/p*.js bằng build-web.sh: sửa nguồn, không sửa các tệp này
+/index.html
+/src/build/all.js
+/src/build/page-test.html
+
+# Tệp dữ liệu rất lớn, dòng rất dài (logo, ngân hàng mục tiêu)
+/src/build/p01-logo.js
+/src/build/p03b-lib.js
+/src/build/p03f-nl.js
+/src/build/p03g-sd.js
+/src/build/p03h-adhd.js
+/src/build/p03i-si.js
+/src/build/*.bak
+
+# Tệp cũ không được build, test hay triển khai tham chiếu
+/src/build/chk.js
+/src/build/chk2.js
+/src/build/page.html
+/src/build/backup-old.html
+/trung-tam-tri-lieu.html
+
+# Dữ liệu gốc, bản chụp kiểm thử, thư viện bên thứ ba
+/tools/*.json
+/test/mig/
+/vendor/
