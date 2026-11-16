@@ -52,10 +52,15 @@ const grOpen=(g,w)=>w>=1&&w<=5||(w===6&&DB.kids.some(k=>k.gr===g.id&&k.st==='dan
 /* --- Ngày nghỉ lễ / Trung tâm cho nghỉ: Trung tâm đặt trước, học phí trả trước tính theo lịch đã trừ các ngày này --- */
 const holOf=d=>(DB.hol||[]).find(h=>h.d===d)||null;
 const isClosed=d=>!!holOf(d);
+/* Ngày có lịch dạy: T2–T7 như cũ; Chủ nhật chỉ khi có ca 1-1 hằng tuần (day:0) hoặc buổi học bù đúng ngày đó. isW giữ nguyên nghĩa "ngày làm việc" (ngày công, chấm công, nghỉ phép): Chủ nhật vẫn không phải ngày công. */
+const sunHas=d=>dow(d)===0&&DB.lich.some(l=>(l.type==='11'&&l.day===0)||(l.type==='bu'&&l.date===d));
+const isSch=d=>isW(d)||sunHas(d);
+/* giáo viên có ca 1-1 hằng tuần vào Chủ nhật */
+const sunTeacher=id=>DB.lich.some(l=>l.gv===id&&l.type==='11'&&l.day===0);
 const HOLK={le:'Nghỉ lễ',tt:'Trung tâm cho nghỉ'};
 const holIn=m=>(DB.hol||[]).filter(h=>h.d.slice(0,7)===m&&dow(h.d)!==0).sort((a,b)=>a.d<b.d?-1:1);
 function sched(k,m){const out=[],ls=DB.lich.filter(l=>l.hs===k.id),bd=btOf(k);
- for(const d of mDates(m)){const w=dow(d);if(!w||isClosed(d))continue;
+ for(const d of mDates(m)){const w=dow(d);if(isClosed(d))continue;
   const day=ls.filter(l=>l.type==='11'&&l.day===w).sort((x,y)=>x.slot<y.slot?-1:x.slot>y.slot?1:0),inBt=bd.includes(w);
   day.forEach((l,i)=>out.push({d,sid:l.id,kind:'11',slot:l.slot,inc:inBt&&i===0}));
   ls.forEach(l=>{if(l.type==='bu'&&l.date===d)out.push({d,sid:l.id,kind:'bu',slot:l.slot})});
@@ -116,7 +121,7 @@ function conflict(x){const w=x.date?dow(x.date):x.day;
  if(x.date&&DB.lr.some(l=>l.st===x.gv&&l.s==='duyet'&&l.f<=x.date&&x.date<=l.t))return 'Giáo viên có đơn nghỉ đã duyệt vào ngày này';
  return ''}
 function freeSlots(gv,hs,from,n){const out=[];let d=from;
- for(let i=0;i<28&&out.length<n;i++,d=addD(d,1)){if(!isW(d)||isClosed(d))continue;let c=0;
+ for(let i=0;i<28&&out.length<n;i++,d=addD(d,1)){if(!(isW(d)||(dow(d)===0&&sunTeacher(gv)))||isClosed(d))continue;let c=0;
   for(const s of SLOTS){if(c>=2)break;if(!conflict({date:d,slot:s,gv,hs})){out.push({date:d,slot:s});c++}}}
  return out}
 function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))return out;
@@ -154,6 +159,10 @@ function payroll(s,m){
   /* ca 1-1 tính theo điểm danh của bé trong ca đó */
   mine.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===d)){const c=DB.att[d+'|'+l.id+'|'+l.hs];
    if(c&&ss[c]!=null){ss[c]++;if(l.type==='bu'&&c==='cm')ss.bu++}else if(!c&&worked)ss.none++}})}
+ /* Chủ nhật: không tính ngày công, không chấm công, không nghỉ phép; chỉ các ca 1-1 và học bù dạy vào Chủ nhật được tính theo ca (lương cố định tháng không tính thêm vì bySess=0). */
+ for(const d of mDates(m)){if(dow(d)!==0||d>=WD)continue;
+  mine.forEach(l=>{if((l.type==='11'&&l.day===0)||(l.type==='bu'&&l.date===d)){const c=DB.att[d+'|'+l.id+'|'+l.hs];
+   if(c&&ss[c]!=null){ss[c]++;if(l.type==='bu'&&c==='cm')ss.bu++}else if(!c)ss.none++}})}
  const teach=ss.cm,units=ss.cm*pc.cm+ss.kp*pc.kp+ss.p*pc.p+ss.tt*pc.tt+ss.bv*pc.bv;
  const byDay=f.mode==='buoi'?0:(f.base||0)*Math.min(cong,cfg.cc)/cfg.cc,bySess=f.mode==='thang'?0:units/100*(f.rate||0),byBt=btd*(f.rateBt||0),allow=f.allow||0,bonus=DB.bon[s.id+'|'+m]||0,pen=late*(f.latePen||0),bh=(f.base||0)*(f.bh||0)/100;
  const vpen=vioSum(s.id,m);   /* trừ lương do vi phạm nội quy: chỉ tính các lần Trưởng Trung tâm đã duyệt */

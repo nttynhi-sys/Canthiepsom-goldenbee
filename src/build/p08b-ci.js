@@ -107,7 +107,7 @@ ACT.sesave=()=>{const m=S.modal,k=kidBy(m.k);if(!k||!canKid(k.id))return false;
 
 /* ---------- Trang tổng hợp "Buổi can thiệp" ---------- */
 CHG.bidate=v=>{if(v)S.hs.bi.date=v};CHG.bigv=v=>{S.hs.bi.gv=v;S.pg.bi=1};INP.biq=v=>{S.hs.bi.q=v;S.pg.bi=1};
-ACT.biday=v=>{let d=addD(S.hs.bi.date,+v);if(!isW(d))d=addD(d,+v);S.hs.bi.date=d};
+ACT.biday=v=>{let d=addD(S.hs.bi.date,+v);if(!isSch(d))d=addD(d,+v);S.hs.bi.date=d};
 function hsBi(){const b=S.hs.bi,date=b.date,q=b.q.toLowerCase();
  const ds=dayList(date).filter(s=>s.kind!=='bt').filter(s=>isLead()?(!b.gv||s.gv===b.gv):s.gv===U.id);
  const ofDay=k=>DB.sess.filter(s=>s.k===k.id&&s.date===date);
@@ -117,7 +117,7 @@ function hsBi(){const b=S.hs.bi,date=b.date,q=b.q.toLowerCase();
  const recent=DB.sess.filter(s=>canKid(s.k)&&(!q||kn(s.k).toLowerCase().includes(q))).sort((a,c)=>a.date<c.date?1:a.date>c.date?-1:0),pgd=pg('bi',recent,8);
  return`<div class="grid">${kpi('Lượt 1-1 trong ngày',ds.length,DAYN[dow(date)]+', '+vd(date))}${kpi('Đã ghi buổi',nDone,'có kết quả','ok')}${kpi('Kế hoạch',nPlan,'chưa ghi kết quả')}${kpi('Chưa ghi',nNone,'cần ghi',nNone&&date<=TODAY?'er':'')}</div>
  <div class="card"><div class="f2"><div><label for="bi-d">Ngày</label><input id="bi-d" type="date" data-c="bidate" value="${date}"></div>${isLead()?`<div><label for="bi-g">Giáo viên</label><select id="bi-g" data-c="bigv"><option value="">Tất cả</option>${opts(DB.staff.filter(isTeacher).map(s=>[s.id,tName(s)]),b.gv)}</select></div>`:''}<div style="display:flex;align-items:end;gap:6px"><button class="btn s" data-a="biday" data-v="-1">Ngày trước</button><button class="btn s" data-a="biday" data-v="1">Ngày sau</button></div></div></div>
- <div class="card"><h2>Buổi 1-1 và học bù ngày ${vd(date)}</h2>`+(rows||`<p class="empty">${dow(date)===0?'Chủ nhật trung tâm nghỉ.':'Không có buổi 1-1 nào trong ngày này.'}</p>`)+`<p class="sm mu" style="margin-top:8px">Bé bán trú được ghi buổi trong hồ sơ từng bé: mở hồ sơ, vào tab Buổi can thiệp.</p></div>
+ <div class="card"><h2>Buổi 1-1 và học bù ngày ${vd(date)}</h2>`+(rows||`<p class="empty">${dow(date)===0?'Chủ nhật không có buổi 1-1 hay học bù nào.':'Không có buổi 1-1 nào trong ngày này.'}</p>`)+`<p class="sm mu" style="margin-top:8px">Bé bán trú được ghi buổi trong hồ sơ từng bé: mở hồ sơ, vào tab Buổi can thiệp.</p></div>
  <div class="card"><div class="top" style="margin-bottom:10px"><h2 style="margin:0">Các buổi can thiệp gần đây</h2><div style="min-width:220px"><label for="bi-q" class="sm">Tìm theo tên bé</label><input id="bi-q" data-i="biq" value="${esc(b.q)}"></div></div>`+(pgd.rows.map(s=>sessCard(s,true)).join('')||'<p class="empty">Chưa có buổi nào.</p>')+pgd.html+`</div>`}
 
 /* ---------- Ngân hàng mục tiêu: bộ lọc dùng chung cho tra cứu và chọn mục tiêu ---------- */

@@ -54,7 +54,7 @@ const SP='/tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratc
  /* ---------- C. nút ngày 1-1: bấm ngày thì thêm ca ---------- */
  const C0=await ev(()=>({lb:[...document.querySelectorAll('#s11d label.bpk.day')].map(x=>x.textContent.trim()),checked:[...document.querySelectorAll('#s11d input')].map(c=>c.checked),n:document.querySelectorAll('#s11 .s11r').length,
   quick:[...document.querySelectorAll('#hth-11 [data-a="s11days"]')].map(x=>x.textContent.trim())}));
- ok('1-1 có 6 nút ngày T2–T7 và 3 nút nhanh (T2–T6, T2–T7, Bỏ chọn); chưa chọn ngày nào, chưa có ca',JSON.stringify(C0.lb)===JSON.stringify(['T2','T3','T4','T5','T6','T7'])&&C0.checked.every(x=>!x)&&C0.n===0&&JSON.stringify(C0.quick)===JSON.stringify(['T2–T6','T2–T7','Bỏ chọn']),C0);
+ ok('1-1 có 7 nút ngày T2–T7 và CN (CN ở cuối) và 3 nút nhanh (T2–T6, T2–T7, Bỏ chọn); chưa chọn ngày nào, chưa có ca',JSON.stringify(C0.lb)===JSON.stringify(['T2','T3','T4','T5','T6','T7','CN'])&&C0.checked.every(x=>!x)&&C0.n===0&&JSON.stringify(C0.quick)===JSON.stringify(['T2–T6','T2–T7','Bỏ chọn']),C0);
  await ev(()=>{const f=document.querySelector('#hsff');f.elements['lt_gq'].checked=true;f.elements['lq_gq'].value=1});
  await day11(1);await W(30);
  let R=await rows();
@@ -63,7 +63,7 @@ const SP='/tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratc
  await day11(3);await day11(5);await W(30);
  R=await rows();
  ok('bấm tiếp T4, T6: thêm ca, giờ lấy theo ca đầu đã nhập (17:30), sắp theo thứ',R.length===3&&JSON.stringify(R.map(r=>r.d))===JSON.stringify([1,3,5])&&R.every(r=>r.tm==='17:30'&&r.lt==='gq'),R);
- ok('3 nút T2, T4, T6 sáng, các nút còn lại tắt',JSON.stringify(await btn11())===JSON.stringify([true,false,true,false,true,false]),await btn11());
+ ok('3 nút T2, T4, T6 sáng, các nút còn lại tắt',JSON.stringify(await btn11())===JSON.stringify([true,false,true,false,true,false,false]),await btn11());
  await day11(3);await W(30);
  R=await rows();
  ok('bấm lại T4: bỏ ca của ngày đó, nút tắt',R.length===2&&!R.some(r=>r.d===3)&&(await btn11())[2]===false,R);
@@ -74,16 +74,16 @@ const SP='/tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratc
  ok('đổi giờ riêng ca T6 (18:20), bấm thêm T3: các ca cũ giữ nguyên giờ riêng',JSON.stringify(R.map(r=>[r.d,r.tm]))===JSON.stringify([[1,'17:30'],[2,'17:30'],[5,'18:20']]),R);
  /* đổi ngày bằng danh sách chọn thì nút tự đổi theo */
  await ev(()=>{const s=document.querySelectorAll('#s11 .s11r')[1].querySelector('[name=s11day]');s.value='4';s.dispatchEvent(new Event('change',{bubbles:true}))});
- ok('đổi ngày của một ca (T3 thành T5) bằng danh sách: nút ngày tự cập nhật',JSON.stringify(await btn11())===JSON.stringify([true,false,false,true,true,false]),await btn11());
+ ok('đổi ngày của một ca (T3 thành T5) bằng danh sách: nút ngày tự cập nhật',JSON.stringify(await btn11())===JSON.stringify([true,false,false,true,true,false,false]),await btn11());
  /* xóa ca thì nút tắt */
  await page.click('#s11 .s11r:nth-child(2) [data-a="s11del"]');await W(30);
- ok('bấm Xóa ca: nút ngày của ca đó tắt',JSON.stringify(await btn11())===JSON.stringify([true,false,false,false,true,false])&&(await rows()).length===2,await btn11());
+ ok('bấm Xóa ca: nút ngày của ca đó tắt',JSON.stringify(await btn11())===JSON.stringify([true,false,false,false,true,false,false])&&(await rows()).length===2,await btn11());
  /* nút nhanh */
  await page.click('#hth-11 [data-a="s11days"][data-v="1,2,3,4,5"]');await W(30);
  R=await rows();
  ok('nút nhanh T2–T6: đủ 5 ca, ca đã có giữ nguyên giờ riêng',R.length===5&&JSON.stringify(R.map(r=>r.d))===JSON.stringify([1,2,3,4,5])&&R.find(r=>r.d===5).tm==='18:20'&&R.find(r=>r.d===1).tm==='17:30',R);
  await page.click('#hth-11 [data-a="s11days"][data-v="1,2,3,4,5,6"]');await W(30);
- ok('nút nhanh T2–T7: thêm T7, 6 ca',(await rows()).length===6&&(await btn11()).every(Boolean),await rows());
+ ok('nút nhanh T2–T7: thêm T7, 6 ca, không tự chọn Chủ nhật',(await rows()).length===6&&(await btn11()).slice(0,6).every(Boolean)&&(await btn11())[6]===false,await rows());
  await page.click('#hth-11 [data-a="s11days"][data-v=""]');await W(30);
  ok('nút Bỏ chọn: xóa hết ca, tắt hết nút',(await rows()).length===0&&(await btn11()).every(x=>!x));
  /* + Thêm ca: ngày còn trống kế tiếp; hết ngày thì cho thêm cùng ngày */
@@ -115,7 +115,7 @@ const SP='/tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratc
  /* ---------- E. sửa hồ sơ: ngày bán trú tích sẵn; nút 1-1 để thêm ca mới, không đụng ca cũ ---------- */
  await ev(()=>{S.modal=null;render();const k=DB.kids.find(x=>x.n==='Bé Thử Nút Ngày');ACT.hsedit(k.id);render()});await page.waitForSelector('#hsff');
  const E=await ev(()=>{const f=document.querySelector('#hsff');return{bd:[1,2,3,4,5,6].filter(w=>f.elements['bd'+w].checked),btns:[...document.querySelectorAll('#s11d input')].map(c=>c.checked),rows:document.querySelectorAll('#s11 .s11r').length,note:(document.querySelector('#hth-11 .note')||{}).textContent||'',btOn:f.elements.hbt.checked,h11On:f.elements.h11.checked}});
- ok('sửa hồ sơ: hai nút hình thức sáng sẵn, nút ngày bán trú T2, T4 sáng, nút ngày 1-1 sáng đúng các ngày đã lưu (T3, T5) và 2 dòng ca hiện sẵn',E.btOn&&E.h11On&&JSON.stringify(E.bd)===JSON.stringify([1,3])&&JSON.stringify(E.btns)===JSON.stringify([false,true,false,true,false,false])&&E.rows===2&&/2 ca 1-1/.test(E.note),E);
+ ok('sửa hồ sơ: hai nút hình thức sáng sẵn, nút ngày bán trú T2, T4 sáng, nút ngày 1-1 sáng đúng các ngày đã lưu (T3, T5) và 2 dòng ca hiện sẵn',E.btOn&&E.h11On&&JSON.stringify(E.bd)===JSON.stringify([1,3])&&JSON.stringify(E.btns)===JSON.stringify([false,true,false,true,false,false,false])&&E.rows===2&&/2 ca 1-1/.test(E.note),E);
  const nb=await ev(()=>DB.lich.filter(l=>l.type==='11').length);
  await page.click('#hsff button[type=submit]');await W(100);
  const nb2=await ev(()=>DB.lich.filter(l=>l.type==='11').length);

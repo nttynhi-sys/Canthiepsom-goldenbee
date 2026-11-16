@@ -28,6 +28,7 @@
 
 ## Thực đơn, giờ 1-1 và ngày nghỉ
 - **Thực đơn bán trú** nhập từ thứ Hai đến thứ Bảy (6 ngày); sao chép tuần có cả thứ Bảy, Chủ nhật chuyển sang thứ Hai.
+- **Lịch Chủ nhật**: chỉ ca 1-1 và học bù xếp được vào Chủ nhật (cột Chủ nhật ở Lịch học, nút CN ở hồ sơ bé). Học phí mỗi ca tính như ngày thường; lương theo ca tính cho giáo viên dạy, lương cố định không tính thêm công và không chấm công Chủ nhật. Bán trú, thực đơn, ngày nghỉ lễ vẫn T2–T7. Không đổi lược đồ, dữ liệu đã nhập giữ nguyên.
 - **Giờ 1-1 chọn tự do** như giờ bán trú: gõ giờ bắt đầu bất kỳ trong khung 07:15 đến 20:00 (ca cuối bắt đầu muộn nhất 19:10), mỗi ca 50 phút, giờ kết thúc tự tính. Trùng giáo viên hoặc bé kiểm tra theo khoảng giờ chồng nhau (hai ca cách nhau dưới 50 phút là trùng). Hệ thống không quản lý phòng học (giáo viên không dạy cố định phòng) nên không giới hạn số ca cùng giờ. Quy tắc này chạy cả ở trình duyệt và ở `api/parent.js` (phụ huynh đăng ký học bù).
 - **Ngày nghỉ lễ, Trung tâm cho nghỉ** (`hol`, mục Lịch học → Ngày nghỉ): đặt trước để lên học phí đầu tháng. Ngày nghỉ không tính học phí bán trú, ca 1-1 và không cần điểm danh. Học phí tháng sau của phụ huynh = học phí tháng sau trừ phí dư của tháng trước; bé ngưng đột ngột thì phí dư không hoàn ("Dư không hoàn"). Trưởng Trung tâm, Quản lý, Văn phòng sửa được; giáo viên chỉ đọc. Hóa đơn đã lập không tự đổi khi thêm ngày nghỉ sau đó.
 
