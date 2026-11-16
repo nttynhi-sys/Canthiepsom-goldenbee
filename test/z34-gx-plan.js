@@ -12,7 +12,7 @@ const SETUP=()=>{const k=myKids()[0]||DB.kids.find(x=>x.st==='dang');
  const ab=LIBI.find(x=>x.s==='ab'&&x.d==='nd');
  DB.plans=DB.plans.filter(p=>p.k!==k.id);DB.sess=DB.sess.filter(s=>s.k!==k.id);
  const P=(id,g,h,up)=>DB.plans.push(Object.assign({id,k:k.id,g,h,s:'dang',from:addD(TODAY,-30),due:addD(TODAY,200),by:'x'},up?{up}:{}));
- P('L1',si.id,'d');P('S1',ad.id,'n','L1');P('S2',sd.id,'n','L1');P('S3',ab.id,'n');
+ P('L1',si.id,'n');P('S1',ad.id,'n');P('S2',sd.id,'n');P('S3',ab.id,'n');
  DB.sess.push({id:'t1',k:k.id,date:addD(TODAY,-3),by:'x',st:'xong',dom:['cgq'],it:[{g:ad.id,sup:'I',tr:'VVVVVVVVVV',pl:'S1'}],note:'',home:''});
  return{kid:k.id,si:si.id,ad:ad.id,sd:sd.id,ab:ab.id}};
 
@@ -46,9 +46,9 @@ const SETUP=()=>{const k=myKids()[0]||DB.kids.find(x=>x.st==='dang');
 
  /* ---------- B. nhân viên: tab Kế hoạch mục tiêu ---------- */
  const ids=await ev(SETUP);
- await ev(id=>{S.modal={t:'hs',id,tab:'kh'};render()},ids.kid);await page.waitForSelector('.gt-b');
+ await ev(id=>{S.modal={t:'hs',id,tab:'kh'};render()},ids.kid);await page.waitForSelector('.pl');
  const B=await ev(ids=>{const rows=[...document.querySelectorAll('.pl')].map(r=>({name:r.querySelector('.pl-m>b').innerText,gx:!!r.querySelector('details.gx'),open:!!r.querySelector('details.gx[open]'),txt:(r.querySelector('details.gx')||{innerText:''}).innerText}));
-  return{rows,n:document.querySelectorAll('.pl details.gx').length,all:document.querySelector('.gt-b').closest('div').innerText}},ids);
+  return{rows,n:document.querySelectorAll('.pl details.gx').length,all:document.querySelector('.pl').closest('div').innerText}},ids);
  /* so khớp theo tên thật */
  const names=await ev(ids=>({si:gName(ids.si),ad:gName(ids.ad),sd:gName(ids.sd),ab:gName(ids.ab)}),ids);
  const row=n=>B.rows.find(r=>r.name===names[n]);
@@ -71,14 +71,14 @@ const SETUP=()=>{const k=myKids()[0]||DB.kids.find(x=>x.st==='dang');
  const ids2=await ev2(SETUP);
  await ev2(id=>{S.cp={tab:'tb',kid:id,m:WD.slice(0,7)};render()},ids2.kid);await p2.waitForSelector('.gtp');
  const C=await ev2(ids=>{const q=s=>[...document.querySelectorAll(s)],t=e=>e.innerText;
-  const lg=q('.gtp.nb')[0],shorts=q('.gts');
+  const shorts=q('.gts'),lg=shorts.find(s=>s.querySelector(':scope > details.gx[open]'));
   return{longGx:!!(lg&&lg.querySelector(':scope > details.gx[open]')),longTxt:lg?t(lg.querySelector(':scope > details.gx')||lg):'',
    shortGx:shorts.filter(s=>s.querySelector(':scope > details.gx[open]')).length,shorts:shorts.length,
    sessGx:q('.gtg li details.gx').length,sessOpen:q('.gtg li details.gx[open]').length,
    all:document.querySelector('#main').innerText,fs:parseFloat(getComputedStyle(document.querySelector('.gtp details.gx')).fontSize),
    html:document.querySelector('#main').innerHTML}},ids2);
- ok('phụ huynh: mục tiêu dài hạn (Điều hòa cảm giác) hiện khối vấn đề, bài tập mở sẵn',C.longGx&&/Vấn đề: .+/.test(C.longTxt)&&/Bài tập \(\d+\)/.test(C.longTxt),C.longTxt);
- ok('phụ huynh: mục tiêu ngắn hạn của ADHD và Tích hợp giác quan có khối riêng, mục ngắn hạn ABLLS thì không',C.shortGx===2&&C.shorts>=3,[C.shortGx,C.shorts]);
+ ok('phụ huynh: mục tiêu ngắn hạn Điều hòa cảm giác (trước là dài hạn) hiện khối vấn đề, bài tập mở sẵn',C.longGx&&/Vấn đề: .+/.test(C.longTxt)&&/Bài tập \(\d+\)/.test(C.longTxt),C.longTxt);
+ ok('phụ huynh: mục tiêu ngắn hạn của ADHD và Tích hợp giác quan có khối riêng, mục ngắn hạn ABLLS thì không',C.shortGx===3&&C.shorts>=4,[C.shortGx,C.shorts]);
  ok('phụ huynh: mục tiêu buổi (trong lần luyện) có khối gập sẵn, không mở',C.sessGx>=1&&C.sessOpen===0,[C.sessGx,C.sessOpen]);
  ok('phụ huynh: chữ trong khối ≥ 16px',C.fs>=16,C.fs);
  ok('phụ huynh: không lộ ghi chú lâm sàng, lưu ý an toàn, chữ "đề xuất" hay "OT duyệt"',!/Ghi chú lâm sàng|Lưu ý|đề xuất|OT duyệt|bác sĩ đánh giá/i.test(C.all),(C.all.match(/.{30}(Ghi chú lâm sàng|Lưu ý|đề xuất|OT duyệt|bác sĩ đánh giá).{30}/i)||[])[0]);

@@ -24,8 +24,6 @@ const {open,login}=require('./h.js');
  await page.click('[data-a="lfdom"][data-v="nh"]');await page.waitForTimeout(60);await pick(2);
  await page.click('[data-a="lfdom"][data-v="xh"]');await page.waitForTimeout(60);await pick(1);
  log('count after 2 domains',await page.$eval('#bk-cnt',e=>e.textContent),'| sel',await page.evaluate(()=>S.bk.sel.map(x=>x).join(',')));
- // chuyển dài hạn
- await page.selectOption('#bk-hz','d');
  await page.screenshot({path:'shots/g5-bank-sel.png'});
  await page.click('[data-a="bkok"]');await page.waitForTimeout(80);
  log('toast',await toast());

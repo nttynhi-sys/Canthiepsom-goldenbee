@@ -1,4 +1,4 @@
-/* Yêu cầu 6: mục tiêu buổi ⇒ mục tiêu ngắn hạn ⇒ mục tiêu dài hạn; báo cáo phụ huynh trực quan, chữ lớn */
+/* Mục tiêu buổi ⇒ mục tiêu ngắn hạn (đã bỏ tầng dài hạn), nội dung SMART, mức hỗ trợ; báo cáo phụ huynh trực quan, chữ lớn */
 const {open,login}=require('./h.js');
 let fails=0,passes=0;
 const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log('FAIL',n,x===undefined?'':JSON.stringify(x).slice(0,700))}};
@@ -11,121 +11,112 @@ const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,
  const ev=(f,a)=>page.evaluate(f,a);
  const W=ms=>page.waitForTimeout(ms||80);
 
- /* ---------- A. dữ liệu mẫu có đủ ba tầng ---------- */
+ /* ---------- A. dữ liệu mẫu: chỉ còn hai tầng (mục tiêu buổi ⇒ mục tiêu ngắn hạn) ---------- */
  await login(page,'tt');
- const A=await ev(()=>{const r={kids:0,shorts:0,badUp:0,orph:0,items:0,itemsPl:0,badPl:0,badPct:0,longsWithCh:0,longs:0};
-  DB.kids.filter(k=>k.st==='dang').forEach(k=>{const ps=kidPlans(k.id);if(!ps.length)return;r.kids++;
-   ps.filter(p=>p.h==='n').forEach(p=>{r.shorts++;if(p.up){const l=planBy(p.up);if(!l||l.k!==k.id||l.h!=='d')r.badUp++}else r.orph++});
-   DB.sess.filter(s=>s.k===k.id).forEach(s=>s.it.forEach(i=>{r.items++;if(i.pl){r.itemsPl++;const p=planBy(i.pl);if(!p||p.k!==k.id||p.h!=='n')r.badPl++}}));
-   const T=gtTree(k.id);if(T.longs.length+0>=0&&[...T.longs,...T.shorts].some(n=>!(n.pct>=0&&n.pct<=100)))r.badPct++;
-   r.longs+=T.longs.length;r.longsWithCh+=T.longs.filter(n=>n.ch.length).length;
-   if(T.orph.length+T.longs.reduce((a,n)=>a+n.ch.length,0)!==T.shorts.length)r.badPct+=100});
+ const A=await ev(()=>{const r={kids:0,shorts:0,orph:0,items:0,itemsPl:0,badPl:0,badPct:0,longs:0};
+  DB.kids.filter(k=>k.st==='dang').forEach(k=>{const ps=kidPlans(k.id);if(!ps.length)return;r.kids++;r.shorts+=ps.length;
+   DB.sess.filter(s=>s.k===k.id).forEach(s=>s.it.forEach(i=>{r.items++;if(i.pl){r.itemsPl++;const p=planBy(i.pl);if(!p||p.k!==k.id)r.badPl++}}));
+   const T=gtTree(k.id);if(T.shorts.some(n=>!(n.pct>=0&&n.pct<=100)))r.badPct++;
+   r.longs+=T.longs.length;if(T.orph.length!==T.shorts.length||T.shorts.length!==ps.length)r.badPct+=100});
   return r});
- ok('dữ liệu mẫu: mọi mục tiêu ngắn hạn đều gắn vào một mục tiêu dài hạn hợp lệ',A.shorts>0&&A.badUp===0,A);
+ ok('dữ liệu mẫu: không còn tầng dài hạn, mọi kế hoạch hiện như mục tiêu ngắn hạn',A.shorts>0&&A.longs===0&&A.badPct===0,A);
  ok('dữ liệu mẫu: dòng mục tiêu trong buổi gắn vào mục tiêu ngắn hạn của chính bé đó',A.items>0&&A.itemsPl>0&&A.badPl===0,A);
- ok('cây dựng đúng: mọi ngắn hạn nằm đúng một chỗ, phần trăm trong 0 đến 100',A.badPct===0&&A.longs>0&&A.longsWithCh>0,A);
 
- /* ---------- B. số liệu cuộn lên từ buổi ⇒ ngắn hạn ⇒ dài hạn ---------- */
+ /* ---------- B. số liệu cuộn lên từ mục tiêu buổi ⇒ mục tiêu ngắn hạn ---------- */
  const K=await ev(()=>{const k=DB.kids.find(x=>x.st==='dang');
   const G=LIBI.filter(x=>x.d==='nd'&&x.s==='ab').slice(0,8).map(x=>x.id);
   DB.plans=DB.plans.filter(p=>p.k!==k.id);DB.sess=DB.sess.filter(s=>s.k!==k.id);
-  const P=(id,g,h,up)=>DB.plans.push(Object.assign({id,k:k.id,g,h,s:'dang',from:addD(TODAY,-60),due:addD(TODAY,200),by:'x'},up?{up}:{}));
-  P('L1',G[0],'d');P('S1',G[1],'n','L1');P('S2',G[2],'n','L1');P('S3',G[3],'n');
+  const P=(id,g)=>DB.plans.push({id,k:k.id,g,h:'n',s:'dang',from:addD(TODAY,-60),due:addD(TODAY,200),by:'x'});
+  P('S1',G[1]);P('S2',G[2]);P('S3',G[3]);
   let n=0;const S=(d,g,sup,tr,pl)=>DB.sess.push({id:'t'+(++n),k:k.id,date:addD(TODAY,-d),by:'x',st:'xong',dom:['nd'],it:[Object.assign({g,sup,tr},pl?{pl}:{})],note:'',home:''});
-  S(20,G[1],'I','VVVVVVVVVV','S1');S(19,G[1],'I','VVVVVVVVVV','S1');S(18,G[1],'I','VVVVVVVVVV','S1');       /* ba buổi độc lập 100% ⇒ đạt */
-  S(10,G[4],'GP','VVVVVVVVVV','S1');S(9,G[4],'GP','VVVVVVVVVV','S1');                                         /* mục tiêu buổi thứ hai: 65 điểm ⇒ đang tiến bộ */
-  S(8,G[2],'MP','VVVVVVVVVV','S2');S(7,G[2],'GP','VVVVVVVVVV','S2');                                          /* 57,5 điểm ⇒ cần luyện thêm */
+  S(20,G[1],'I','VVVVVVVVVV','S1');S(19,G[1],'I','VVVVVVVVVV','S1');S(18,G[1],'I','VVVVVVVVVV','S1');
+  S(10,G[4],'GP','VVVVVVVVVV','S1');S(9,G[4],'GP','VVVVVVVVVV','S1');
+  S(8,G[2],'MP','VVVVVVVVVV','S2');S(7,G[2],'GP','VVVVVVVVVV','S2');
   return{id:k.id,G}});
- const B=await ev(id=>{const T=gtTree(id),f=x=>T.shorts.find(s=>s.p.id===x),l=T.longs[0];
-  return{nL:T.longs.length,orph:T.orph.map(s=>s.p.id),s1:{st:f('S1').st,pct:f('S1').pct,total:f('S1').total,dn:f('S1').dn,ready:f('S1').ready},s2:{st:f('S2').st,pct:f('S2').pct},s3:{st:f('S3').st,pct:f('S3').pct},
-   l1:{ch:l.ch.map(s=>s.p.id).sort(),st:l.st,pct:l.pct,dn:l.dn,total:l.total}}},K.id);
- ok('một mục tiêu dài hạn, ngắn hạn S1 và S2 thuộc nó, S3 chưa gắn',B.nL===1&&B.l1.ch.join()==='S1,S2'&&B.orph.join()==='S3',B);
+ const B=await ev(id=>{const T=gtTree(id),f=x=>T.shorts.find(s=>s.p.id===x);
+  return{nL:T.longs.length,orph:T.orph.map(s=>s.p.id).sort(),s1:{st:f('S1').st,pct:f('S1').pct,total:f('S1').total,dn:f('S1').dn,ready:f('S1').ready},s2:{st:f('S2').st,pct:f('S2').pct},s3:{st:f('S3').st,pct:f('S3').pct}}},K.id);
+ ok('không có mục tiêu dài hạn; S1, S2, S3 đều là mục tiêu ngắn hạn',B.nL===0&&B.orph.join()==='S1,S2,S3',B);
  ok('S1 có 2 mục tiêu buổi, 1 đã đạt, trạng thái đang tiến bộ, 83%',B.s1.total===2&&B.s1.dn===1&&B.s1.st==='tien'&&B.s1.pct===83&&!B.s1.ready,B.s1);
  ok('S2 cần luyện thêm (58%), S3 sắp luyện (0%)',B.s2.st==='luyen'&&B.s2.pct===58&&B.s3.st==='moi'&&B.s3.pct===0,[B.s2,B.s3]);
- ok('mục tiêu dài hạn là trung bình các ngắn hạn con (71%), đang tiến bộ, chưa có con nào đạt',B.l1.pct===71&&B.l1.st==='tien'&&B.l1.dn===0&&B.l1.total===2,B.l1);
- /* thêm 3 buổi độc lập cho mục tiêu buổi còn lại của S1 ⇒ S1 gần đạt (chờ xác nhận), rồi xác nhận đạt */
  const B2=await ev(id=>{const G=LIBI.filter(x=>x.d==='nd'&&x.s==='ab').slice(0,8).map(x=>x.id);
   [3,2,1].forEach((d,i)=>DB.sess.push({id:'u'+i,k:id,date:addD(TODAY,-d),by:'x',st:'xong',dom:['nd'],it:[{g:G[4],sup:'I',tr:'VVVVVVVVVV',pl:'S1'}],note:'',home:''}));
   const a=gtTree(id).shorts.find(s=>s.p.id==='S1');const r1={st:a.st,ready:a.ready,pct:a.pct};
-  ACT.plok('S1');const T=gtTree(id),s=T.shorts.find(x=>x.p.id==='S1'),l=T.longs[0];
-  return{r1,after:{st:s.st,pct:s.pct},l:{dn:l.dn,total:l.total,pct:l.pct}}},K.id);
+  ACT.plok('S1');const s=gtTree(id).shorts.find(x=>x.p.id==='S1');
+  return{r1,after:{st:s.st,pct:s.pct}}},K.id);
  ok('mọi mục tiêu buổi của S1 đã đạt ⇒ "Gần đạt" và đủ điều kiện, chưa tự đạt',B2.r1.st==='gan'&&B2.r1.ready&&B2.r1.pct===100,B2.r1);
- ok('nhân viên bấm đạt ⇒ S1 "Đã đạt" 100%, mục tiêu dài hạn đếm 1/2 con đã đạt',B2.after.st==='dat'&&B2.after.pct===100&&B2.l.dn===1&&B2.l.total===2&&B2.l.pct===79,B2);
+ ok('nhân viên bấm đạt ⇒ S1 "Đã đạt" 100%',B2.after.st==='dat'&&B2.after.pct===100,B2);
 
- /* ---------- C. nhân viên: cây trong tab Kế hoạch mục tiêu ---------- */
- await ev(id=>{S.modal={t:'hs',id,tab:'kh'};render()},K.id);await page.waitForSelector('.gt-b');
- const C=await ev(()=>({blocks:document.querySelectorAll('.gt-b').length,text:document.querySelector('#modal, .mdc, .modal')?.innerText||document.body.innerText,sel:[...document.querySelectorAll('.gt-up select')].map(s=>s.id)}));
- ok('tab Kế hoạch mục tiêu: có khối mục tiêu dài hạn, ngắn hạn con và nhóm chưa gắn',C.blocks===1&&/Mục tiêu dài hạn/.test(C.text)&&/chưa gắn mục tiêu dài hạn/i.test(C.text)&&/Mục tiêu buổi/.test(C.text),C.text.slice(0,300));
- await page.screenshot({path:SP+'y6-staff-plan.png'});
- await page.selectOption('#gu-S3','L1');await W();
- ok('chọn "Thuộc mục tiêu dài hạn" cho S3 ⇒ lưu up và S3 chuyển vào mục tiêu dài hạn',await ev(()=>planBy('S3').up==='L1'&&gtTree(DB.plans.find(p=>p.id==='S3').k).orph.length===0));
- await page.selectOption('#gu-S3','');await W();
- ok('chọn lại "Chưa gắn" ⇒ bỏ up',await ev(()=>planBy('S3').up===undefined&&gtTree(planBy('S3').k).orph.length===1));
- await page.click('[data-a="plauto"]');await W();
- ok('"Tự gắn theo lĩnh vực" gắn ngắn hạn cùng lĩnh vực vào mục tiêu dài hạn',await ev(()=>planBy('S3').up==='L1'));
- /* chuyển hạn và bỏ mục tiêu dài hạn không để lại tham chiếu treo */
- const D=await ev(()=>{ACT.plhz('L1');const a=DB.plans.filter(p=>p.up==='L1').length;ACT.plhz('L1');return{afterToShort:a,backLong:planBy('L1').h}});
- ok('chuyển mục tiêu dài hạn sang ngắn hạn thì gỡ mọi up trỏ tới nó',D.afterToShort===0&&D.backLong==='d',D);
- await ev(()=>{DB.plans.filter(p=>['S1','S2','S3'].includes(p.id)).forEach(p=>p.up='L1');S.modal={t:'hs',id:planBy('L1').k,tab:'kh'};render()});
- await page.click('[data-a="pkopenu"][data-v="L1"]');await page.waitForSelector('#gp-up');
- ok('"Thêm mục tiêu ngắn hạn" trong khối dài hạn mở bộ chọn đã đặt sẵn mục tiêu dài hạn',await ev(()=>S.modal.t==='gp'&&S.modal.up==='L1'&&S.modal.hz==='n'&&document.querySelector('#gp-up').value==='L1'&&!document.querySelector('#gp-up').disabled));
- await page.selectOption('#gp-hz','d');await W(40);
- ok('chọn loại Dài hạn thì ô "Thuộc mục tiêu dài hạn" bị khóa',await ev(()=>document.querySelector('#gp-up').disabled));
- await page.selectOption('#gp-hz','n');
- const newG=await ev(()=>{const g=LIBI.filter(x=>x.d==='nd'&&x.s==='ab')[10].id;S.modal.sel=[g];return g});
+ /* ---------- C. nhân viên: tab Kế hoạch mục tiêu chỉ còn mục tiêu ngắn hạn, có ô SMART ---------- */
+ await ev(id=>{S.modal={t:'hs',id,tab:'kh'};render()},K.id);await page.waitForSelector('textarea[data-c="plsm"]');
+ const C=await ev(()=>({text:document.body.innerText,sm:document.querySelectorAll('textarea[data-c="plsm"]').length,hz:!!document.querySelector('[data-a="plhz"],[data-a="plauto"],.gt-up')}));
+ ok('tab Kế hoạch mục tiêu: không còn chữ "dài hạn", không còn nút chuyển hạn hay ô gắn dài hạn',!/dài hạn/i.test(C.text)&&!C.hz&&/Mục tiêu ngắn hạn/.test(C.text),C.text.slice(0,300));
+ ok('mỗi mục tiêu ngắn hạn đang mở có ô nhập mục tiêu buổi theo SMART',C.sm>=2,C.sm);
+ await page.fill('#sm-S1','Trong buổi này, bé gọi tên đúng 5/10 đồ vật khi cô chỉ tranh.');await page.dispatchEvent('#sm-S1','change');await W();
+ ok('nhập SMART ở kế hoạch: lưu vào p.sm',await ev(()=>/5\/10 đồ vật/.test(planBy('S1').sm||'')));
+ await page.fill('#sm-S1','');await page.dispatchEvent('#sm-S1','change');await W();
+ ok('xóa trắng ô SMART: bỏ trường sm',await ev(()=>planBy('S1').sm===undefined));
+ await ev(()=>{planBy('S2').sm='Bé nhìn cô khi gọi tên 8/10 lượt trong 1 buổi.'});
+ await ev(()=>{ACT.pldel('S3');render()});await page.click('[data-a="askyes"]');await W();
+ ok('bỏ mục tiêu: không còn S3',await ev(()=>!planBy('S3')));
+ await ev(id=>{DB.plans.push({id:'S3',k:id,g:LIBI.filter(x=>x.d==='nd'&&x.s==='ab')[3].id,h:'n',s:'dang',from:addD(TODAY,-60),due:addD(TODAY,200),by:'x'});S.modal=null;render()},K.id);
+
+ /* ---------- D. bộ chọn từ ngân hàng: không còn loại dài hạn; SMART đi theo mục tiêu ---------- */
+ await ev(id=>{S.modal=null;ACT.pkopen(id);render()},K.id);await page.waitForSelector('#gp-sm');
+ ok('bộ chọn cho kế hoạch: không còn ô loại mục tiêu / thuộc dài hạn, có ô SMART',await ev(()=>!document.querySelector('#gp-hz')&&!document.querySelector('#gp-up')&&!!document.querySelector('#gp-sm')));
+ const newG=await ev(()=>{const g=LIBI.filter(x=>x.d==='nd'&&x.s==='ab')[10].id;S.modal.sel=[g];S.modal.sm='Bé chỉ đúng 4/5 hình khi nghe tên.';return g});
  await ev(()=>{ACT.gpok();render()});
- ok('thêm từ bộ chọn: mục tiêu ngắn hạn mới thuộc mục tiêu dài hạn đã chọn',await ev(g=>{const p=DB.plans.find(x=>x.g===g);return !!p&&p.h==='n'&&p.up==='L1'},newG));
- await ev(()=>{DB.plans=DB.plans.filter(p=>['L1','S1','S2','S3'].includes(p.id));S.modal={t:'hs',id:planBy('L1').k,tab:'kh'};render()});
- const AK=await ev(()=>{ACT.pldel('L1');render();return{t:S.modal.t,msg:S.modal.msg}});
- ok('bỏ mục tiêu dài hạn: hộp xác nhận nhắc số ngắn hạn sẽ chuyển sang nhóm chưa gắn',AK.t==='ask'&&/3 mục tiêu ngắn hạn thuộc mục tiêu này sẽ chuyển sang nhóm chưa gắn/.test(AK.msg),AK);
- await page.click('[data-a="askyes"]');await W();
- ok('bỏ mục tiêu dài hạn ⇒ ngắn hạn con thành chưa gắn, không còn up treo',await ev(()=>!planBy('L1')&&DB.plans.every(p=>!p.up)&&gtTree(DB.plans[0].k).orph.length===3));
- /* dựng lại để thử form buổi */
- await ev(id=>{DB.plans.push({id:'L1',k:id,g:LIBI.filter(x=>x.d==='nd'&&x.s==='ab')[0].id,h:'d',s:'dang',from:addD(TODAY,-60),due:addD(TODAY,200),by:'x'});planBy('S1').up='L1';planBy('S2').up='L1';S.modal=null;render()},K.id);
+ ok('thêm từ bộ chọn: mục tiêu ngắn hạn mới mang nội dung SMART',await ev(g=>{const p=DB.plans.find(x=>x.g===g);return !!p&&p.h==='n'&&!p.up&&p.sm==='Bé chỉ đúng 4/5 hình khi nghe tên.'},newG));
+ /* mục tiêu tự viết */
+ const TG=await ev(id=>{S.modal={t:'tg'};render();const f=document.querySelector('#tgf');
+  return{lv:[...f.elements.lv.options].map(o=>o.value),sm:!!f.elements.sm}},K.id);
+ ok('form tự viết mục tiêu: chỉ còn ngắn hạn và buổi trị liệu, có ô SMART',TG.lv.join()==='n,buoi'&&TG.sm,TG);
+ await ev(id=>{const f=document.querySelector('#tgf');f.elements.k.value=id;f.elements.lv.value='n';f.elements.n.value='Trẻ gọi tên bạn khi bạn chào';f.elements.sm.value='Trong 10 lượt, bé gọi tên bạn đúng 6 lượt.';FORM.tgf(f)},K.id);
+ ok('tự viết mục tiêu ngắn hạn: vào kế hoạch của bé kèm SMART',await ev(()=>{const t=DB.tg[DB.tg.length-1],p=DB.plans.find(x=>x.g==='tg:'+t.id);return !!p&&p.h==='n'&&/6 lượt/.test(p.sm||'')}));
+ await ev(id=>{DB.plans=DB.plans.filter(p=>['S1','S2','S3'].includes(p.id));S.modal=null;render()},K.id);
 
- /* ---------- D. form ghi buổi: chọn mục tiêu ngắn hạn cho từng dòng ---------- */
+ /* ---------- E. form ghi buổi: nội dung SMART cho từng mục tiêu buổi, mức hỗ trợ mới ---------- */
  await ev(id=>{ACT.senew(id);render()},K.id);await page.waitForSelector('.si-pl');
- const Dn=await ev(()=>({n:document.querySelectorAll('.si-pl').length,opts:[...document.querySelector('.si-pl').options].map(o=>o.textContent),chain:[...document.querySelectorAll('.gt-ch')].map(e=>e.innerText),pls:S.modal.it.map(i=>i.pl)}));
- ok('form buổi: mỗi dòng mục tiêu có ô chọn mục tiêu ngắn hạn, mặc định gắn đúng kế hoạch',Dn.n>=1&&Dn.opts.length>=3&&Dn.pls.every(x=>x),Dn);
- ok('form buổi: dưới ô chọn hiện chuỗi ngắn hạn ⇒ dài hạn',Dn.chain.some(t=>/Mục tiêu ngắn hạn/.test(t)&&/Mục tiêu dài hạn/.test(t)),Dn.chain);
- await page.selectOption('.si-pl >> nth=0','S2');await W();
- await ev(()=>{S.modal.it[0].tr='VVVVVVVVVV'});
+ const Dn=await ev(()=>({n:document.querySelectorAll('.si-pl').length,sg:[...document.querySelectorAll('textarea[data-c="sesg"]')].map(t=>t.value),sups:[...document.querySelector('.seg').querySelectorAll('.sg')].map(b=>b.textContent.trim()),chain:[...document.querySelectorAll('.gt-ch')].map(e=>e.innerText),text:document.body.innerText}));
+ ok('form buổi: mỗi dòng có ô SMART; dòng của S2 được điền sẵn từ kế hoạch',Dn.n>=1&&Dn.sg.length===Dn.n&&Dn.sg.some(x=>/8\/10 lượt/.test(x)),Dn);
+ ok('form buổi: không còn nhắc mục tiêu dài hạn',!/dài hạn/i.test(Dn.text)&&Dn.chain.every(t=>!/dài hạn/i.test(t)),Dn.chain);
+ ok('mức hỗ trợ xếp FP, PP, MP, GP, Gợi nhắc bằng lời, Gợi nhắc hình ảnh, TG trễ, Ind',Dn.sups.join('|')==='FP|PP|MP|GP|Gợi nhắc bằng lời|Gợi nhắc hình ảnh|TG trễ|Ind',Dn.sups);
+ await page.fill('textarea[data-c="sesg"] >> nth=0','Trong buổi, bé nhìn cô 8/10 lượt khi được gọi tên.');await page.dispatchEvent('textarea[data-c="sesg"] >> nth=0','change');
+ await ev(()=>{S.modal.it[0].tr='VVVVVVVVVV';S.modal.it[0].sup='VP'});
  await page.click('[data-a="sesave"]');await W();
- const sv=await ev(id=>{const s=DB.sess.filter(x=>x.k===id&&!/^[tu]\d+$/.test(x.id)).pop();return{pl:s.it.map(i=>i.pl),st:s.st,n:s.it.length}},K.id);
- ok('lưu buổi: dòng đầu mang pl = S2 (mục tiêu ngắn hạn đã chọn)',sv.pl[0]==='S2'&&sv.st==='xong',sv);
- /* chọn từ ngân hàng ở chế độ tự chọn: cùng lĩnh vực thì gắn vào ngắn hạn sẵn có, khác lĩnh vực thì tạo ngắn hạn mới */
+ const sv=await ev(id=>{const s=DB.sess.filter(x=>x.k===id&&!/^[tu]\d+$/.test(x.id)).pop();return{sg:s.it[0].sg,sup:s.it[0].sup,pl:s.it[0].pl,st:s.st}},K.id);
+ ok('lưu buổi: giữ nội dung SMART, mức "Gợi nhắc bằng lời" và gắn mục tiêu ngắn hạn',/8\/10 lượt/.test(sv.sg||'')&&sv.sup==='VP'&&sv.pl&&sv.st==='xong',sv);
+ const rs=await ev(id=>{const k=id;return{sc:recSc({tr:'VVVVVVVVVV',sup:'VP'}),vs:recSc({tr:'VVVVVVVVVV',sup:'VS'}),gp:recSc({tr:'VVVVVVVVVV',sup:'GP'}),td:recSc({tr:'VVVVVVVVVV',sup:'TD'}),band:[bandOf('VP'),bandOf('VS')]}},K.id);
+ ok('điểm: GP 65 < Gợi nhắc bằng lời 72 < hình ảnh 78 < TG trễ 85; cả hai thuộc nhóm "Cần gợi ý"',rs.gp===65&&rs.sc===72&&rs.vs===78&&rs.td===85&&rs.band.join()==='1,1',rs);
+ await ev(()=>{S.modal=null;render()});
  const Pk=await ev(id=>{const before=DB.plans.length;ACT.senew(id);render();
   const gn=LIBI.filter(x=>x.d==='nd'&&x.s==='ab')[14].id,gc=LIBI.filter(x=>x.d==='cy'&&x.s==='ab')[3].id;
-  ACT.sepick('');S.modal.sel=[gn,gc];const m=S.modal;ACT.gpok();render();
-  const it=S.modal.it.filter(i=>i.g===gn||i.g===gc),pn=planBy(it.find(i=>i.g===gn).pl),pc=planBy(it.find(i=>i.g===gc).pl);
-  return{added:DB.plans.length-before,nd:{h:pn&&pn.h,dom:pn&&gDom(pn.g)},cy:{h:pc&&pc.h,own:pc&&pc.g===gc,up:pc&&pc.up||''},mode:m.pl}},K.id);
- ok('bộ chọn cho buổi (tự chọn): cùng lĩnh vực gắn vào ngắn hạn sẵn có, khác lĩnh vực tạo ngắn hạn mới',Pk.added===1&&Pk.nd.h==='n'&&Pk.nd.dom==='nd'&&Pk.cy.h==='n'&&Pk.cy.own,Pk);
+  ACT.sepick('');S.modal.sel=[gn,gc];ACT.gpok();render();
+  const it=S.modal.it.filter(i=>i.g===gn||i.g===gc);return{added:DB.plans.length-before,hs:it.map(i=>planBy(i.pl)&&planBy(i.pl).h)}},K.id);
+ ok('bộ chọn cho buổi (tự chọn): tạo mục tiêu ngắn hạn cho lĩnh vực chưa có',Pk.added>=1&&Pk.hs.every(h=>h==='n'),Pk);
  await ev(()=>{ACT.seclose();render()});
 
- /* ---------- E. tương thích dữ liệu cũ: chưa có up, pl ---------- */
- const E=await ev(()=>{const r={err:'',orph:0,shorts:0,linked:0,items:0};
-  try{DB.plans.forEach(p=>delete p.up);DB.sess.forEach(s=>s.it.forEach(i=>delete i.pl));
-   DB.kids.filter(k=>k.st==='dang').forEach(k=>{const T=gtTree(k.id);r.orph+=T.orph.length;r.shorts+=T.shorts.length;
-    T.shorts.forEach(s=>{r.items+=s.gs.length});r.linked+=T.shorts.filter(s=>s.gs.length).length});
-   S.modal={t:'hs',id:DB.kids.find(k=>kidPlans(k.id).length).id,tab:'kh'};render();
-   progView(DB.kids[0],{parent:true})}catch(e){r.err=e.message}
+ /* ---------- E1. tương thích dữ liệu cũ: kế hoạch h:'d', up, chưa có pl ---------- */
+ const E=await ev(()=>{const r={err:'',orph:0,shorts:0,old:0};
+  try{const p0=DB.plans[0];p0.h='d';p0.up='zzz';DB.sess.forEach(s=>s.it.forEach(i=>delete i.pl));
+   DB.kids.filter(k=>k.st==='dang').forEach(k=>{const T=gtTree(k.id);r.orph+=T.orph.length;r.shorts+=T.shorts.length;r.old+=T.shorts.filter(s=>s.p.h==='d').length});
+   S.modal={t:'hs',id:p0.k,tab:'kh'};render();progView(DB.kids[0],{parent:true})}catch(e){r.err=e.message}
   return r});
- ok('dữ liệu cũ (không up, pl): không lỗi, ngắn hạn thành nhóm chưa gắn, dòng buổi vẫn gắn theo mục tiêu trùng',E.err===''&&E.orph===E.shorts&&E.linked>0,E);
+ ok('dữ liệu cũ (h:"d", up lạ, không pl): không lỗi, kế hoạch dài hạn cũ hiện như mục tiêu ngắn hạn',E.err===''&&E.orph===E.shorts&&E.old>=1,E);
  await ev(()=>{S.modal=null;render()});
 
- /* ---------- E2. điện thoại 390px: các màn hình nhân viên mới không tràn ngang ---------- */
+ /* ---------- E2. điện thoại 390px ---------- */
  await page.setViewportSize({width:390,height:844});
  const ovf=()=>ev(()=>[...document.querySelectorAll('#app *, .mdl *')].filter(e=>{const r=e.getBoundingClientRect();return r.width>0&&r.right>innerWidth+1&&!e.closest('.tw,.side,.tabs,.sheet')&&getComputedStyle(e).position!=='fixed'}).slice(0,4).map(e=>e.tagName+'.'+String(e.className).slice(0,20)+' r='+Math.round(e.getBoundingClientRect().right)));
- await ev(id=>{S.modal=null;DB.plans.push({id:'L9',k:id,g:LIBI.filter(x=>x.d==='cy'&&x.s==='ab')[20].id,h:'d',s:'dang',from:TODAY,due:addD(TODAY,200),by:'x'});S.modal={t:'hs',id,tab:'kh'};render()},K.id);await W(120);
- ok('điện thoại: tab Kế hoạch mục tiêu (cây) không tràn ngang',(await ovf()).length===0,await ovf());
+ await ev(id=>{S.modal={t:'hs',id,tab:'kh'};render()},K.id);await W(120);
+ ok('điện thoại: tab Kế hoạch mục tiêu không tràn ngang',(await ovf()).length===0,await ovf());
  await ev(id=>{ACT.senew(id);render()},K.id);await W(120);
- ok('điện thoại: form ghi buổi (có ô mục tiêu ngắn hạn) không tràn ngang',(await ovf()).length===0,await ovf());
+ ok('điện thoại: form ghi buổi (8 mức hỗ trợ, ô SMART) không tràn ngang',(await ovf()).length===0,await ovf());
  await ev(()=>{ACT.sepick('');render()});await W(120);
  ok('điện thoại: bộ chọn mục tiêu cho buổi không tràn ngang',(await ovf()).length===0,await ovf());
  await ev(id=>{S.modal=null;S.modal={t:'hs',id,tab:'kh'};render();ACT.pkopen(id);render()},K.id);await W(120);
- ok('điện thoại: bộ chọn mục tiêu cho kế hoạch (ô Thuộc mục tiêu dài hạn) không tràn ngang',(await ovf()).length===0,await ovf());
- await ev(id=>{S.modal=null;go('mt');S.bk={kid:id,hz:'n',up:'',sel:[]};render()},K.id);await W(120);
- ok('điện thoại: ngân hàng mục tiêu đã chọn bé (ô Thuộc mục tiêu dài hạn) không tràn ngang',(await ovf()).length===0,await ovf());
+ ok('điện thoại: bộ chọn mục tiêu cho kế hoạch (ô SMART) không tràn ngang',(await ovf()).length===0,await ovf());
+ await ev(id=>{S.modal=null;go('mt');S.bk={kid:id,sel:[]};render()},K.id);await W(120);
+ ok('điện thoại: ngân hàng mục tiêu đã chọn bé không tràn ngang',(await ovf()).length===0,await ovf());
  await page.setViewportSize({width:1366,height:900});await ev(()=>{S.modal=null;render()});
 
  /* ---------- F. cổng phụ huynh: chữ lớn, dễ nhìn ---------- */
@@ -138,8 +129,8 @@ const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,
    chips:[...new Set([...document.querySelectorAll('.gt-chip')].map(e=>e.innerText.replace(/^\S\s*/,'').trim()))],
    bars:document.querySelectorAll('.gt-bar[role="img"]').length,pc:fs('.gt-pb b'),
    txt:document.querySelector('#main').innerText,first:(q('.card h2')||{}).innerText}});
- ok('phụ huynh: tab Tiến bộ mở đầu bằng thẻ "Mục tiêu của bé" với mục tiêu dài hạn, ngắn hạn, mục tiêu buổi',F.long>=1&&F.shorts>=1&&F.goals>=1&&/Mục tiêu của bé: bé đã đạt chưa\?/.test(F.txt),F);
- ok('chữ lớn: tên mục tiêu dài hạn ≥ 21px, ngắn hạn ≥ 18px, mục tiêu buổi ≥ 16px, ghi chú ≥ 15px, phần trăm ≥ 19px',F.t>=21&&F.sh>=18&&F.gn>=16&&F.sub>=15&&F.pc>=19&&F.chipBig>=16&&F.sumN>=30,F);
+ ok('phụ huynh: tab Tiến bộ mở đầu bằng thẻ "Mục tiêu của bé" với mục tiêu ngắn hạn, mục tiêu buổi',F.long>=1&&F.shorts>=1&&F.goals>=1&&/Mục tiêu của bé: bé đã đạt chưa\?/.test(F.txt),F);
+ ok('chữ lớn: ngắn hạn ≥ 18px, mục tiêu buổi ≥ 16px, ghi chú ≥ 15px, phần trăm ≥ 19px',F.sh>=18&&F.gn>=16&&F.sub>=15&&F.pc>=19&&F.sumN>=30,F);
  ok('trạng thái viết bằng chữ tiếng Việt kèm biểu tượng (không chỉ màu), có chú giải cách tính đạt',F.chips.every(c=>['Đã đạt','Gần đạt','Đang tiến bộ','Cần luyện thêm','Sắp luyện'].includes(c))&&F.chips.length>=2&&/8\/10 lượt trở lên trong 3 buổi liên tiếp/.test(F.txt)&&F.bars>=F.long,F.chips);
  ok('thanh tiến độ có mô tả đọc được cho trình đọc màn hình',await ev2(()=>[...document.querySelectorAll('.gt-bar')].every(e=>/\d+%$/.test(e.getAttribute('aria-label')||''))));
  ok('không còn chữ nhỏ dưới 14px trong thẻ mục tiêu',await ev2(()=>[...document.querySelectorAll('.gt-card *')].filter(e=>e.children.length===0&&(e.textContent||'').trim()&&e.closest('.gt-card')).every(e=>parseFloat(getComputedStyle(e).fontSize)>=12.9)));
