@@ -35,6 +35,12 @@ const LTM=Object.fromEntries(LT.map(x=>[x.c,x]));
 const ltFee=x=>{const v=DB.cfg&&DB.cfg['lt_'+x.c];return v==null?x.f:v};
 /* Giá riêng từng bé (money_records, collection kpr, khóa = mã bé, {mã loại: giá}): đứng trước giá chung của loại. Không có thì dùng giá chung. */
 const kidLt=(k,c)=>{const o=(DB.kpr||{})[k.id];return o&&o[c]!=null?o[c]:null};
+/* Giá bán trú 1 ngày riêng của bé: cùng kho kpr, khóa 'bt' (không trùng mã loại 1-1). Là giá trọn gói một ngày, đã gồm một ca 1-1 trong gói;
+   phần ca 1-1 trong gói vẫn theo thông số chung pbtDay11 (xem feeOf), nên chênh lệch nằm ở phần phí bán trú. Không có thì dùng giá chung pbtDay. */
+const kidBtOwn=k=>{const o=(DB.kpr||{})[k.id],v=o&&o.bt;return typeof v==='number'&&isFinite(v)&&v>=0?v:null};
+const kidBt=k=>{const v=kidBtOwn(k);return v!=null?v:(DB.cfg.pbtDay||0)};
+/* bé có đặt giá riêng nào không (giá bán trú hoặc giá một loại 1-1) */
+const hasKpr=k=>{const o=(DB.kpr||{})[k.id];return !!o&&(kidBtOwn(k)!=null||LT.some(x=>o[x.c]!=null))};
 const feeSlot=(k,sid)=>{const l=DB.lich.find(x=>x.id===sid);if(l&&l.lt&&LTM[l.lt]){const p=kidLt(k,l.lt);return p!=null?p:ltFee(LTM[l.lt])}return fee11(k)};
 /* --- Thời khóa biểu bán trú và giờ 1-1 --- */
 const tmin=t=>{const [h,m]=String(t).split(':').map(Number);return h*60+m};
@@ -68,13 +74,13 @@ function sched(k,m){const out=[],ls=DB.lich.filter(l=>l.hs===k.id),bd=btOf(k);
  return out}
 /* Học phí tháng = số ca 1-1 tính riêng × giá ca + số ngày bán trú × giá ngày bán trú (gồm sẵn 1 ca 1-1 mỗi ngày) */
 function invoice(k,m){if(k.st!=='dang'||k.sd.slice(0,7)>m)return 0;const xs=sched(k,m);
- return xs.filter(x=>x.kind==='11'&&!x.inc).reduce((a,x)=>a+feeSlot(k,x.sid),0)+xs.filter(x=>x.kind==='bt').length*(DB.cfg.pbtDay||0)}
+ return xs.filter(x=>x.kind==='11'&&!x.inc).reduce((a,x)=>a+feeSlot(k,x.sid),0)+xs.filter(x=>x.kind==='bt').length*kidBt(k)}
 const makeupFor=(h,d,s)=>DB.mk.find(r=>r.hs===h&&r.from.d===d&&r.from.sid===s&&(r.s==='xn'||r.s==='xong'));
 const CL={cm:'x',p:'P',kp:'K',tt:'N',bv:'V'};
 /* Nhập viện có giấy, ngày bán trú: phí bán trú (không gồm ca 1-1) hoàn bvRefund% (mặc định 50%), riêng phí ca 1-1 trong ngày hoàn bvRefund11% (mặc định 100%) */
 const bv11=R=>{const v=R&&R.bvRefund11;return v==null||v===''||isNaN(+v)?100:Math.max(0,Math.min(100,+v))};
 function feeOf(k,kind,d,sid,code,m){
- const R=DB.cfg.rule,f=feeSlot(k,sid),dAll=DB.cfg.pbtDay||0,dCN=Math.min(DB.cfg.pbtDay11||0,dAll);
+ const R=DB.cfg.rule,f=feeSlot(k,sid),dAll=kidBt(k),dCN=Math.min(DB.cfg.pbtDay11||0,dAll);
  let rf=0,ls=0,note='';
  if(kind==='11'){const mk=makeupFor(k.id,d,sid);
   if(code==='p'){if(mk)note='Đã thỏa thuận học bù nên không tính phí nghỉ';else{rf=f*(100-R.pLoss)/100;ls=f*R.pLoss/100;note='Có phép: mất '+R.pLoss+'% phí buổi, hoàn '+(100-R.pLoss)+'% trừ vào học phí tháng sau'}}
