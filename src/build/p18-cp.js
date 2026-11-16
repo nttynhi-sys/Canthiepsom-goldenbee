@@ -1,7 +1,7 @@
 /* ===== 13. Cổng phụ huynh ===== */
 VIEWS.cp=()=>isPH()?cpParent():cpLead();
 ACT.cpkid=v=>{S.cp.kid=v};ACT.cptab=v=>{S.cp.tab=v};ACT.cpm=v=>{S.cp.m=sm(S.cp.m,+v)};
-function upcoming(k,n){const out=[];for(let i=0;i<10&&out.length<n;i++){const d=addD(TODAY,i);if(!isW(d))continue;sched(k,d.slice(0,7)).filter(x=>x.d===d).forEach(x=>out.push(x))}return out}
+function upcoming(k,n){const out=[];for(let i=0;i<10&&out.length<n;i++){const d=addD(TODAY,i);if(!isSch(d))continue;sched(k,d.slice(0,7)).filter(x=>x.d===d).forEach(x=>out.push(x))}return out}
 function cpParent(){const ks=myKids();
  if(!ks.length)return head('Cổng phụ huynh','')+'<div class="card"><p class="empty">Tài khoản này chưa gắn với bé nào. Hãy liên hệ Trung tâm.</p></div>';
  const c=S.cp=Object.assign({tab:'tq',kid:ks[0].id,m:WD.slice(0,7)},S.cp);if(!ks.some(k=>k.id===c.kid))c.kid=ks[0].id;const k=kidBy(c.kid);

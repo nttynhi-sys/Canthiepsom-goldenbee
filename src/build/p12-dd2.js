@@ -11,7 +11,7 @@ function sheetRows(){const t=S.dd,m=t.m;if(t.fl==='ref'&&!canMoney())t.fl='';con
 ACT.ddm=v=>{S.dd.m=sm(S.dd.m,+v);S.pg.ddsh=1};
 ACT.ddclr=()=>{S.dd.kid='';S.pg.ddsh=1};
 INP.ddq=v=>{S.dd.q=v;S.pg.ddsh=1};CHG.ddpr=v=>{S.dd.pr=v;S.pg.ddsh=1};CHG.ddfl=v=>{S.dd.fl=v;S.pg.ddsh=1};
-const cellH=(k,r,d)=>{if(dow(d)===0)return'<td class="dc sun"></td>';if(isClosed(d))return`<td class="dc"><i class="sc sc-L" title="${esc(holOf(d).n)}">L</i></td>`;const c=r.cells[d];
+const cellH=(k,r,d)=>{if(dow(d)===0&&!r.cells[d])return'<td class="dc sun"></td>';if(isClosed(d))return`<td class="dc"><i class="sc sc-L" title="${esc(holOf(d).n)}">L</i></td>`;const c=r.cells[d];
  return`<td class="dc">${c?`<button class="dcell" data-a="scopen" data-v="${k.id}|${d}" title="${vd(d)}">${c.map(x=>`<i class="sc sc-${symCls(x)}">${x}</i>`).join('')}</button>`:''}</td>`};
 function ddSheet(){const t=S.dd,m=t.m,ds=mDates(m),rows=sheetRows(),L=canMoney(),p=pg('ddsh',rows,20);
  const T=rows.reduce((a,x)=>({inv:a.inv+x.inv,lost:a.lost+x.r.lost,ref:a.ref+x.r.refund,none:a.none+x.r.none,cm:a.cm+x.r.cm,ab:a.ab+x.r.p+x.r.kp+x.r.tt+x.r.bv}),{inv:0,lost:0,ref:0,none:0,cm:0,ab:0});

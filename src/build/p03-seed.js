@@ -7,6 +7,8 @@ const SLOTS=(()=>{const a=[],o=DAY_OPEN.split(':').map(Number),c=DAY_CLOSE.split
 const BT={s:'07:30',e:'17:00'},BTLB=BT.s+'–'+BT.e,BTN=['Ong non','Ong mật'];
 /* Ngày học bán trú theo từng bé: mặc định thứ Hai đến thứ Sáu; bé học cả thứ Bảy có k.btd gồm 6. Mỗi ngày bán trú gồm 1 ca 1-1 (50 phút) nằm trong phí bán trú. */
 const DAY_BT=[1,2,3,4,5],DAY_ALL=[1,2,3,4,5,6];
+/* Ca 1-1 và học bù còn được xếp vào Chủ nhật (day:0). DAY_11 chỉ dùng cho nút chọn ngày 1-1; bán trú, thời khóa biểu lớp, thực đơn và ngày nghỉ lễ vẫn chỉ T2–T7 (DAY_ALL, DAY_BT). */
+const DAY_11=[1,2,3,4,5,6,0];
 const btOf=k=>k&&k.bt&&k.gr?(Array.isArray(k.btd)&&k.btd.length?k.btd.filter(w=>w>=1&&w<=6):DAY_BT):[];
 const btHas=(k,w)=>btOf(k).includes(w);
 const dayTx=a=>{const s=a.slice().sort((x,y)=>x-y);if(s.join()==='1,2,3,4,5')return'T2–T6';if(s.join()==='1,2,3,4,5,6')return'T2–T7';return s.map(w=>DAYS[w]).join(', ')};
