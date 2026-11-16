@@ -234,16 +234,30 @@ function hsSchedule(k){const lead=isLead(),m=S.modal,bd=btOf(k),g=grBy(k.gr),$$=
    <div class="acts" style="justify-content:flex-end"><button class="btn p" type="submit">Thêm các buổi</button></div></form>`:'')+`</div>`;
  const tt=`<div class="card"><h2>Thời khóa biểu của ${esc(given(k.n))}</h2>${kidWeek(k)}</div>`;
  return bt+one+kprCard(k)+tt}
-/* Giá riêng của bé theo loại 1-1: chỉ Trưởng TT và Văn phòng thấy và sửa (là dữ liệu tiền). Bỏ trống = giá chung. Khi bỏ hết vẫn ghi {} (không xóa dòng) để máy phụ huynh đồng bộ gia tăng nhận được thay đổi. */
-function kprCard(k){if(!canMoney())return'';const o=(DB.kpr||{})[k.id]||{},has=LT.some(x=>o[x.c]!=null);
- return`<div class="card"><h2>Giá riêng của bé</h2><p class="sm mu">Bỏ trống thì tính theo giá chung của loại (Nhân sự → Cài đặt). Giá riêng chỉ áp dụng cho ca 1-1 đã chọn đúng loại đó, tính từ nay; hóa đơn đã lập không tự đổi. Ca cũ chưa chọn loại thì tính theo giá chung 1 buổi 1-1.</p>
- <form id="kprf" class="f"><div class="f2">${LT.map(x=>`<div><label for="kp-${x.c}">${esc(x.n)}</label><input id="kp-${x.c}" name="kp_${x.c}" type="number" min="0" step="any" value="${o[x.c]!=null?esc(o[x.c]):''}" placeholder="${fnum(ltFee(x))} (giá chung)"></div>`).join('')}</div>
- <div class="acts" style="justify-content:flex-end">${has?`<button class="btn" type="button" data-a="kprclr" data-v="${k.id}">Bỏ hết giá riêng</button>`:''}<button class="btn p" type="submit">Lưu giá riêng</button></div></form></div>`}
+/* Giá riêng của bé: chỉ Trưởng TT và Văn phòng thấy và sửa (là dữ liệu tiền, collection kpr của money_records, khóa = mã bé). Gồm giá bán trú 1 ngày (khóa bt) và giá một buổi theo từng loại 1-1 (khóa = mã loại); bỏ trống = giá chung.
+   Khi bỏ hết vẫn ghi {} (không xóa dòng) để máy phụ huynh đồng bộ gia tăng nhận được thay đổi. Một form dùng chung cho thẻ trong hồ sơ bé và hộp "Giá riêng" ở trang Học phí: cả hai gửi FORM.kprf, mã bé lấy từ S.modal.id. */
+const KPR_HELP='Ô để trống thì tính theo giá chung (Nhân sự → Cài đặt). Giá bán trú riêng là giá trọn gói 1 ngày, đã gồm một ca 1-1 trong ngày: phần ca 1-1 trong gói vẫn theo thông số chung nên chênh lệch nằm ở phí bán trú, và hoàn phí khi nghỉ tính theo giá riêng này. Giá 1-1 riêng chỉ áp dụng cho ca đã chọn đúng loại đó; ca cũ chưa chọn loại tính theo giá chung 1 buổi 1-1. Giá riêng có hiệu lực từ lần tính tiếp theo, hóa đơn đã lập không tự đổi.';
+function kprNow(k){const own=kidBtOwn(k);return`<p class="sm" style="margin-bottom:8px">Bán trú đang tính: <b>${fmt(kidBt(k))}</b> mỗi ngày ${own!=null?'(giá riêng của bé; giá chung '+fmt(DB.cfg.pbtDay||0)+')':'(giá chung)'}.</p>`}
+function kprForm(k){const o=(DB.kpr||{})[k.id]||{},own=kidBtOwn(k);
+ return`<form id="kprf" class="f"><div class="f2"><div><label for="kp-bt">Bán trú: học phí 1 ngày (₫)</label><input id="kp-bt" name="kp_bt" type="number" min="0" step="any" value="${own!=null?esc(own):''}" placeholder="${fnum(DB.cfg.pbtDay||0)} (giá chung)"></div></div>
+ <p class="sm mu" style="margin:4px 0 8px">Ca 1-1 tính riêng, giá mỗi buổi theo loại:</p>
+ <div class="f2">${LT.map(x=>`<div><label for="kp-${x.c}">${esc(x.n)}</label><input id="kp-${x.c}" name="kp_${x.c}" type="number" min="0" step="any" value="${o[x.c]!=null?esc(o[x.c]):''}" placeholder="${fnum(ltFee(x))} (giá chung)"></div>`).join('')}</div>
+ <div class="acts" style="justify-content:flex-end">${hasKpr(k)?`<button class="btn" type="button" data-a="kprclr" data-v="${k.id}">Bỏ hết giá riêng</button>`:''}<button class="btn p" type="submit">Lưu giá riêng</button></div></form>`}
+function kprCard(k){if(!canMoney())return'';
+ return`<div class="card"><h2>Giá riêng của bé</h2>${kprNow(k)}<p class="sm mu" style="margin-bottom:10px">${KPR_HELP}</p>${kprForm(k)}</div>`}
+/* nút "Giá riêng" ở Học phí → Công nợ học sinh (Văn phòng không có mục Học sinh nên chỉ vào được từ đây) */
+ACT.kpropen=v=>{if(!canMoney())return false;S.modal={t:'kpr',id:v}};
+MODALS.kpr=()=>{const id=S.modal.id,k=kidBy(id);if(!k||!canMoney()||!canKid(id)){S.modal=null;return''}
+ const nm=sm(CM,1),f=feeBreak(k,nm),mix=[f.bt?f.bt+' ngày bán trú':'',f.s11?f.s11+' buổi 1-1 tính riêng':''].filter(Boolean).join(', ');
+ return mdl('Giá riêng · '+k.n,kprNow(k)+`<p class="sm" style="margin-bottom:8px">Học phí ${mLow(nm)} theo lịch hiện tại: <b>${fmt(f.gross)}</b>${mix?' ('+mix+')':''}.</p><p class="sm mu" style="margin-bottom:10px">${KPR_HELP}</p>`+kprForm(k),1)};
 FORM.kprf=f=>{if(!canMoney())return false;const k=kidBy(S.modal.id);if(!k)return false;const o={};
- LT.forEach(x=>{const v=f.elements['kp_'+x.c].value.trim();if(v!==''){const n=+v;if(isFinite(n))o[x.c]=Math.max(0,n)}});
+ const num=v=>{v=String(v).trim();if(v==='')return null;const n=+v;return isFinite(n)?Math.max(0,n):null};
+ const bt=f.elements.kp_bt?num(f.elements.kp_bt.value):null;if(bt!=null)o.bt=bt;
+ LT.forEach(x=>{const n=num(f.elements['kp_'+x.c].value);if(n!=null)o[x.c]=n});
  if(!DB.kpr)DB.kpr={};if(Object.keys(o).length||DB.kpr[k.id])DB.kpr[k.id]=o;
+ if(S.modal.t==='kpr')S.modal=null;
  toast(Object.keys(o).length?'Đã lưu giá riêng của '+given(k.n):'Không có giá riêng: '+given(k.n)+' tính theo giá chung')};
-ACT.kprclr=v=>{const k=kidBy(v);if(!k||!canMoney())return false;ask('Bỏ hết giá riêng của '+given(k.n)+'? Các ca 1-1 sẽ tính theo giá chung của từng loại.',()=>{if(!DB.kpr)DB.kpr={};DB.kpr[v]={};toast('Đã bỏ giá riêng')},'Bỏ')};
+ACT.kprclr=v=>{const k=kidBy(v);if(!k||!canMoney())return false;ask('Bỏ hết giá riêng của '+given(k.n)+'? Học phí bán trú và các ca 1-1 sẽ tính theo giá chung.',()=>{if(!DB.kpr)DB.kpr={};DB.kpr[v]={};toast('Đã bỏ giá riêng')},'Bỏ')};
 FORM.btf=f=>{if(!isLead())return false;const k=kidBy(S.modal.id),bt=f.elements.bt.value==='1',bd=daysOf(f,'bd');
  if(bt&&!bd.length){toast('Hãy chọn ít nhất một ngày bán trú');return false}
  k.bt=bt;if(bt){k.gr=f.elements.gr.value||grByAge(k.dob);k.btd=bd}else{k.gr='';delete k.btd}
