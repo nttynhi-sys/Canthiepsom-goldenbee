@@ -1,6 +1,6 @@
 # Tiến độ Golden Bee
 
-Cập nhật 16/11/2026, `main` = `154babd`. Quy tắc, nghiệp vụ và danh sách bài thử theo từng tính năng: `CLAUDE.md` mục 10 (không chép lại ở đây). Sau mỗi nhóm chức năng hoàn chỉnh: sửa dòng liên quan, thêm một dòng vào mục 10 của tệp này.
+Cập nhật 16/11/2026 (mã ứng dụng cuối: `154babd`). Quy tắc, nghiệp vụ và danh sách bài thử theo từng tính năng: `CLAUDE.md` mục 10 (không chép lại ở đây). Sau mỗi nhóm chức năng hoàn chỉnh: sửa dòng liên quan, thêm một dòng vào mục 10 của tệp này.
 
 ## 1. Kiến trúc
 - HTML/JS thuần: `src/build/p*.js` + `c3.css`, ghép bằng `bash src/build/build-web.sh` thành `index.html` (cùng `all.js`, `page-test.html`; đều sinh ra, không sửa tay).
@@ -26,8 +26,7 @@ Cập nhật 16/11/2026, `main` = `154babd`. Quy tắc, nghiệp vụ và danh s
 - Vận hành: thực đơn, học bù, điểm danh, thông báo, thống kê, báo cáo chuyên môn.
 
 ## 4. Đang phát triển
-- Không có chức năng nào. Cả 45 nhánh còn lại trên GitHub đã gộp hết vào `main` (kiểm tra 16/11/2026).
-- Nhánh `chore/toi-uu-context`: chỉ tài liệu và cấu hình tìm kiếm, không đổi ứng dụng.
+- Không có chức năng nào. Cả 46 nhánh trên GitHub (trừ `main`) đã gộp hết vào `main` (kiểm tra 16/11/2026).
 
 ## 5. Chưa triển khai (README, "Giới hạn đã biết", ghi rõ là chưa có)
 - Quên mật khẩu; giới hạn số lần đăng nhập sai ngoài mức mặc định của Supabase.
@@ -38,7 +37,6 @@ Cập nhật 16/11/2026, `main` = `154babd`. Quy tắc, nghiệp vụ và danh s
 ## 6. Lỗi đang tồn tại (xác nhận 16/11/2026 trên `154babd`)
 - `test/z25-sd-bank.js`: 6 đạt, 1 lỗi ở kiểm tra "bộ Rối loạn cảm giác – Tích hợp giác quan có trong danh sách (Cu vẫn cuối)". Chưa tìm nguyên nhân.
 - `test/n2.js`: dừng ở dòng 49 với `Cannot read properties of undefined (reading 'click')`. Lỗi từ trước.
-- Lệch tài liệu: README còn ghi chưa bật "Leaked password protection", nhưng `get_advisors` loại security hiện trả về rỗng. Cần chủ dự án xác nhận rồi sửa README.
 
 ## 7. Database và migration
 - Lược đồ `supabase/schema.sql`; chính sách chuẩn `supabase/policies-v3.sql` (chạy lại an toàn).
@@ -53,11 +51,11 @@ Cập nhật 16/11/2026, `main` = `154babd`. Quy tắc, nghiệp vụ và danh s
 - Không có phòng học; Chủ nhật không phải ngày công. Nhánh riêng, xem Preview, chủ dự án xác nhận mới lên Production.
 
 ## 9. Công việc tiếp theo
-- Chờ chủ dự án quyết: tách `CLAUDE.md` mục 10 thành tệp theo chủ đề trong `docs/`, thu gọn README, gỡ tệp thừa (`chk.js`, `chk2.js`, `page.html`, `trung-tam-tri-lieu.html`), dọn 45 nhánh đã gộp.
+- Chờ chủ dự án quyết: tách `CLAUDE.md` mục 10 thành tệp theo chủ đề trong `docs/`, thu gọn README, gỡ tệp thừa (`chk.js`, `chk2.js`, `page.html`, `trung-tam-tri-lieu.html`), dọn 46 nhánh đã gộp.
 - Chủ dự án trên Supabase: các việc ở README, "Gói Supabase, sao lưu và phục hồi".
 - Kỹ thuật: tìm nguyên nhân `z25-sd-bank` và `n2.js`. Chưa có yêu cầu tính năng nào đang chờ.
 
 ## 10. Nhật ký
-- 16/11 nhánh `chore/toi-uu-context`: thêm `.ignore`, tệp này; `.vercelignore` loại `docs/`, `.ignore`.
+- 16/11 gộp `chore/toi-uu-context`: thêm `.ignore`, tệp này; `.vercelignore` loại `docs/`, `.ignore`. Leaked password protection đã bật (chủ dự án xác nhận), advisors security rỗng.
 - 16/11 `154babd` giá bán trú riêng, nút Giá riêng ở Học phí. `b101570` lịch Chủ nhật.
 - 13/11 `5dcefff` bỏ phòng học. 12/11 `bbaeba1` Fulltime/Partime; `4095043` lưới 1-1 chỉ hiện khung giờ có ca.
