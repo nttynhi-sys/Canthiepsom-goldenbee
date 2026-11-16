@@ -56,16 +56,24 @@ function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=
  const card=n=>`<article class="gtp nb s-${n.st}"><div class="gtp-h"><div><span class="gt-k">Mục tiêu dài hạn</span><h3 class="gtp-t">${esc(gName(n.p.g))}</h3></div>${gtChip(n.st,1)}</div>
   <div class="gt-pb">${gtBar(n.pct,n.st)}<b>${n.pct}%</b></div><p class="gt-sub">${n.total?n.dn+'/'+n.total+' mục tiêu con đã đạt':'Chưa có mục tiêu ngắn hạn.'}</p>
   ${gxHtml(goalOf(n.p.g),m==='pdf'?'pdf':'p',{open:1})}${n.ch.filter(s=>s.p.s!=='tam').map(s=>gtShort(s,1,m)).join('')}${n.gs.length?`<div class="gts"><div class="gts-h"><div class="gts-t"><span class="gt-k">Luyện trực tiếp</span></div></div>${gtGoals(n,m)}</div>`:''}</article>`;
- return sum+lg+L.map(card).join('')+(O.length?`<article class="gtp nb"><div class="gtp-h"><div><span class="gt-k">Mục tiêu ngắn hạn</span></div></div>${O.map(s=>gtShort(s,1,m)).join('')}</article>`:'')}
+ return sum+lg+L.map(card).join('')+gtByDom(O).map(g=>`<article class="gtp nb"><div class="gtp-h"><div><span class="gt-k">Lĩnh vực</span><h3 class="gtp-t">${esc(g.n)}</h3></div></div>${g.list.map(s=>gtShort(s,1,m)).join('')}</article>`).join('')}
+
+/* nhóm các nút mục tiêu ngắn hạn theo lĩnh vực: [{d, n:'1. tên', list}] theo thứ tự lĩnh vực trong LDOM */
+function gtByDom(shorts){const m={};shorts.forEach(s=>{const d=gDom(s.p.g)||'';(m[d]=m[d]||[]).push(s)});
+ const ids=LDOM.map(x=>x.id).filter(d=>m[d]).concat(Object.keys(m).filter(d=>!LDOM.some(x=>x.id===d)));
+ return ids.map((d,i)=>({d,n:(i+1)+'. '+(DM[d]?DM[d].n:'Khác'),list:m[d]}))}
+const gtDays=p=>Math.max(0,Math.round((new Date(p.dt||TODAY)-new Date(p.from))/864e5));
 
 /* ---------------- Phía nhân viên: cây trong tab Kế hoạch mục tiêu ---------------- */
 function gtKidsStaff(n){if(!n.gs.length)return'';
  return`<ul class="gt-ks">${n.gs.map(x=>`<li>${gtChip(x.st)} <span class="gt-gn">${esc(gName(x.g))}</span> <span class="sm mu">${x.n?x.n+' buổi · '+gtLast(x).replace(/<\/?b>/g,''):'chưa luyện'}</span></li>`).join('')}</ul>`}
 function gtShortStaff(s){return planRow(s.p)+`<div class="gt-x">${s.total?`<div class="sm"><b>Mục tiêu buổi</b> · ${s.dn}/${s.total} đã đạt · ${s.pct}%</div>`+gtKidsStaff(s):'<div class="sm mu">Chưa có mục tiêu buổi. Khi ghi buổi can thiệp, chọn mục tiêu ngắn hạn này cho từng dòng mục tiêu.</div>'}</div>`}
+function gtTable(shorts){return gtByDom(shorts).map(g=>`<h3 class="dm-h">${esc(g.n)}</h3><div class="dm-t"><div class="dm-th"><span>STT</span><span>Mục tiêu ngắn hạn ⇒ mục tiêu buổi trị liệu</span><span>Kết quả</span></div>`
+  +g.list.map((s,i)=>`<div class="dm-r"><div class="dm-n">${i+1}</div><div class="dm-m">${gtShortStaff(s)}<div class="sm mu dm-d">Đã học ${gtDays(s.p)} ngày</div></div><div class="dm-k">${gtChip(s.st)}<b>${s.pct}%</b></div></div>`).join('')+'</div>').join('')}
 function gtStaff(k){const T=gtTree(k.id),open=T.shorts.filter(s=>s.p.s!=='dat'),done=T.shorts.filter(s=>s.p.s==='dat');
- let h=`<h3 style="margin-top:12px">Mục tiêu ngắn hạn <span class="mu sm">· ${HZ.n[1]} · ${open.length} mục tiêu</span></h3><p class="sm mu" style="margin:0 0 8px">Chọn mục tiêu từ ngân hàng mục tiêu hoặc tự viết mục tiêu khác. Mỗi mục tiêu ngắn hạn gồm các mục tiêu buổi trị liệu (các dòng mục tiêu trong buổi can thiệp); có thể ghi thêm nội dung theo SMART cho mục tiêu buổi.</p>`;
- h+=open.length?open.map(gtShortStaff).join(''):'<p class="mu sm" style="margin:0 0 8px">Chưa có mục tiêu ngắn hạn. Bấm “Chọn mục tiêu từ ngân hàng”.</p>';
- if(done.length)h+=`<h3 style="margin-top:14px">Đã đạt <span class="mu sm">· ${done.length} mục tiêu</span></h3>`+done.sort((a,b)=>(b.p.dt||'')<(a.p.dt||'')?-1:1).map(gtShortStaff).join('');
+ let h=`<h3 style="margin-top:12px">Mục tiêu ngắn hạn <span class="mu sm">· ${HZ.n[1]} · ${open.length} mục tiêu</span></h3><p class="sm mu" style="margin:0 0 8px">Mục tiêu xếp theo lĩnh vực. Chọn mục tiêu từ ngân hàng mục tiêu hoặc tự viết mục tiêu khác. Mỗi mục tiêu ngắn hạn gồm các mục tiêu buổi trị liệu (các dòng mục tiêu trong buổi can thiệp); có thể ghi thêm nội dung theo SMART cho mục tiêu buổi.</p>`;
+ h+=open.length?gtTable(open):'<p class="mu sm" style="margin:0 0 8px">Chưa có mục tiêu ngắn hạn. Bấm “Chọn mục tiêu từ ngân hàng”.</p>';
+ if(done.length)h+=`<h3 style="margin-top:18px">Đã đạt <span class="mu sm">· ${done.length} mục tiêu</span></h3>`+gtTable(done.sort((a,b)=>(b.p.dt||'')<(a.p.dt||'')?-1:1));
  return{html:h,T}}
 
 /* ---------------- Thao tác ---------------- */

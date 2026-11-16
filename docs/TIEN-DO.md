@@ -56,6 +56,8 @@ Cập nhật 16/11/2026 (mã ứng dụng cuối: `154babd`). Quy tắc, nghiệ
 - Kỹ thuật: tìm nguyên nhân `z25-sd-bank` và `n2.js`. Chưa có yêu cầu tính năng nào đang chờ.
 
 ## 10. Nhật ký
+- 16/11 form ghi buổi phân tầng: Lĩnh vực ⇒ Mục tiêu ngắn hạn (chọn từ kế hoạch, lấy từ ngân hàng) ⇒ nhiều mục tiêu buổi trị liệu do giáo viên tự viết theo SMART; mỗi dòng không lặp lại tên mục tiêu (`seGroups`, `seItem` ở `p08b-ci.js`). Xem buổi và thẻ buổi lấy SMART làm nội dung chính. Không đổi database.
+- 16/11 kế hoạch mục tiêu xếp theo lĩnh vực ("1. Ngôn ngữ hiểu", "2. …") dạng bảng STT / Mục tiêu ngắn hạn ⇒ mục tiêu buổi / Kết quả, ở tab Kế hoạch mục tiêu (`gtTable`, `gtByDom` ở `p25-tree.js`) và cổng phụ huynh. Không đổi database.
 - 16/11 bỏ tầng Mục tiêu dài hạn (chỉ còn buổi ⇒ ngắn hạn), thêm ô SMART cho mục tiêu buổi (`plans[].sm`, `it[].sg`); mức hỗ trợ mới VP, VS và thứ tự FP, PP, MP, GP, VP, VS, TD, Ind; tải nhiều tệp có danh sách và "Chọn thêm tệp". Phụ huynh thấy SMART của buổi gần nhất ở từng mục tiêu buổi (`gtGoals`). Form ghi buổi nhóm theo mục tiêu ngắn hạn (ô chọn ở đầu nhóm), mỗi nhóm có nhiều mục tiêu buổi trị liệu kèm SMART riêng (`seGroups`, `ACT.sesub`, `CHG.segpl`). Không đổi database. `y6-goals`, `z34-gx-plan` cập nhật theo mô hình mới, thêm `z50-tai-nhieu-tep`.
 - 16/11 gộp `chore/toi-uu-context`: thêm `.ignore`, tệp này; `.vercelignore` loại `docs/`, `.ignore`. Leaked password protection đã bật (chủ dự án xác nhận), advisors security rỗng.
 - 16/11 `154babd` giá bán trú riêng, nút Giá riêng ở Học phí. `b101570` lịch Chủ nhật.

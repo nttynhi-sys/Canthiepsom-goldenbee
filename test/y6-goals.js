@@ -51,6 +51,8 @@ const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,
  const C=await ev(()=>({text:document.body.innerText,sm:document.querySelectorAll('textarea[data-c="plsm"]').length,hz:!!document.querySelector('[data-a="plhz"],[data-a="plauto"],.gt-up')}));
  ok('tab Kế hoạch mục tiêu: không còn chữ "dài hạn", không còn nút chuyển hạn hay ô gắn dài hạn',!/dài hạn/i.test(C.text)&&!C.hz&&/Mục tiêu ngắn hạn/.test(C.text),C.text.slice(0,300));
  ok('mỗi mục tiêu ngắn hạn đang mở có ô nhập mục tiêu buổi theo SMART',C.sm>=2,C.sm);
+ const DMT=await ev(()=>({h:[...document.querySelectorAll('.dm-h')].map(e=>e.innerText),th:document.querySelectorAll('.dm-th').length,rows:document.querySelectorAll('.dm-r').length,stt:[...document.querySelectorAll('.dm-n')].map(e=>e.innerText)}));
+ ok('kế hoạch xếp theo lĩnh vực: tiêu đề "1. …", bảng STT / Mục tiêu / Kết quả, mỗi hàng một mục tiêu ngắn hạn',DMT.h.length>=1&&/^1\. /.test(DMT.h[0])&&DMT.th===DMT.h.length&&DMT.rows>=3&&DMT.stt[0]==='1',DMT);
  await page.fill('#sm-S1','Trong buổi này, bé gọi tên đúng 5/10 đồ vật khi cô chỉ tranh.');await page.dispatchEvent('#sm-S1','change');await W();
  ok('nhập SMART ở kế hoạch: lưu vào p.sm',await ev(()=>/5\/10 đồ vật/.test(planBy('S1').sm||'')));
  await page.fill('#sm-S1','');await page.dispatchEvent('#sm-S1','change');await W();
