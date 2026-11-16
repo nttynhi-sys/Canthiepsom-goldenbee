@@ -46,7 +46,7 @@ function seedProg(D){
    const act=(plansOf[k.id]||[]).filter(p=>p.s==='dang'&&p.from<=sl.d);if(!act.length)return;
    act.sort((a,b)=>(sk[a.id].last<sk[b.id].last?-1:sk[a.id].last>sk[b.id].last?1:R()-.5));
    const pick=act.slice(0,Math.min(act.length,RI(3,4))),it=[],doms=[];
-   pick.forEach(p=>{const s=sk[p.id],z=cl(s.z+(R()-.5)*.07,0,1),B=[.16,.30,.46,.62,.78,1.001],ix=B.findIndex(b=>z<b),sup=SUPK[5-ix],lo=ix?B[ix-1]:0,u=(z-lo)/(B[ix]-lo),po=sup==='I'?.58+.42*u:.32+.55*u,n=P([10,10,10,10,10,8,5]);
+   pick.forEach(p=>{const s=sk[p.id],z=cl(s.z+(R()-.5)*.07,0,1),B=[.16,.30,.46,.62,.78,1.001],ix=B.findIndex(b=>z<b),sup=['I','TD','GP','MP','PP','FP'][5-ix],lo=ix?B[ix-1]:0,u=(z-lo)/(B[ix]-lo),po=sup==='I'?.58+.42*u:.32+.55*u,n=P([10,10,10,10,10,8,5]);
     let tr='';for(let i=0;i<10;i++)tr+=i<n?(R()<po?'V':'X'):'.';
     it.push(p.h==='n'?{g:p.g,sup,tr,pl:p.id}:{g:p.g,sup,tr});const dm=gDom(p.g);if(!doms.includes(dm))doms.push(dm);
     s.last=sl.d;s.z=Math.min(1.02,s.z+s.r*k.sp*(.5+R()));

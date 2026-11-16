@@ -10,7 +10,7 @@ const {open,login}=require('./h.js');
  const pid=await page.evaluate(k=>DB.plans.find(p=>p.k===k&&p.s==='dang').id,kid);
  log('plan',pid,'before',(await st()).split(' ').filter(x=>x.startsWith(pid+':')).join());
  const act=async(a)=>{await page.evaluate(([a,v])=>{ACT[a](v);render()},[a,pid]);await page.waitForTimeout(40);return (await st()).split(' ').filter(x=>x.startsWith(pid+':')).join()||'(gone)'};
- log('pltam ->',await act('pltam'));log('plre ->',await act('plre'));log('plhz ->',await act('plhz'));log('plhz again ->',await act('plhz'));log('plok ->',await act('plok'),await toast());log('plre ->',await act('plre'));
+ log('pltam ->',await act('pltam'));log('plre ->',await act('plre'));log('plok ->',await act('plok'),await toast());log('plre ->',await act('plre'));
  // click path through real buttons in UI: check each plan row exposes buttons
  const btns=await page.$$eval('.mdc .pl',rows=>rows.map(r=>[...r.querySelectorAll('[data-a]')].map(x=>x.dataset.a).join('/')));log('row buttons sample',JSON.stringify(btns.slice(0,4)));
  // plan delete with cancel -> back to hs modal on the same tab

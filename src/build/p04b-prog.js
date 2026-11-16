@@ -1,15 +1,19 @@
 /* ===== Mục tiêu, mức hỗ trợ và số liệu tiến bộ ===== */
 /* Mức hỗ trợ theo mẫu ghi dữ liệu của Trung tâm: Ind, Thời gian trễ, GP, MP, PP, FP (w: hệ số độc lập, giả định của hệ thống) */
-const SUPK=['I','TD','GP','MP','PP','FP'];
+/* SUPK: thứ tự nút bấm khi ghi buổi (hỗ trợ nhiều → ít). SUPR: thứ tự theo độ độc lập (Ind trước), dùng cho biểu đồ và màu */
+const SUPK=['FP','PP','MP','GP','VP','VS','TD','I'];
+const SUPR=['I','TD','VS','VP','GP','MP','PP','FP'];
 const SUP={
  I:{n:'Độc lập',a:'Ind',w:100,p:'Tự làm',h:'Bé tự thực hiện, không cần nhắc'},
  TD:{n:'Thời gian trễ',a:'TG trễ',w:85,p:'Chờ vài giây rồi tự làm',h:'Chờ vài giây để bé tự thực hiện'},
+ VS:{n:'Gợi nhắc hình ảnh',a:'Gợi nhắc hình ảnh',w:78,p:'Cô gợi nhắc bằng hình ảnh',h:'Dùng tranh, thẻ hình, lịch hình để nhắc bé'},
+ VP:{n:'Gợi nhắc bằng lời',a:'Gợi nhắc bằng lời',w:72,p:'Cô nhắc bằng lời',h:'Nhắc bằng lời nói để bé tự thực hiện'},
  GP:{n:'Gợi ý cử chỉ',a:'GP',w:65,p:'Cô gợi ý bằng cử chỉ',h:'Hỗ trợ cử chỉ: chỉ tay, ra hiệu'},
  MP:{n:'Làm mẫu',a:'MP',w:50,p:'Cô làm mẫu cho bé',h:'Giáo viên làm mẫu để bé làm theo'},
  PP:{n:'Hỗ trợ thể chất một phần',a:'PP',w:30,p:'Cô đỡ tay một phần',h:'Đỡ tay hoặc dẫn dắt một phần động tác'},
  FP:{n:'Hỗ trợ thể chất toàn phần',a:'FP',w:15,p:'Cô cầm tay làm cùng',h:'Cầm tay bé làm cùng toàn bộ động tác'}};
-const BANDS=[{n:'Tự làm',s:['I','TD']},{n:'Cần gợi ý',s:['GP','MP']},{n:'Cần cầm tay hỗ trợ',s:['PP','FP']}];
-const bandOf=s=>s==='I'||s==='TD'?0:s==='GP'||s==='MP'?1:2;
+const BANDS=[{n:'Tự làm',s:['I','TD']},{n:'Cần gợi ý',s:['VS','VP','GP','MP']},{n:'Cần cầm tay hỗ trợ',s:['PP','FP']}];
+const bandOf=s=>s==='I'||s==='TD'?0:s==='VS'||s==='VP'||s==='GP'||s==='MP'?1:2;
 const PST={dang:['Đang luyện',''],dat:['Đã đạt','ok'],tam:['Tạm dừng','gy']};
 const HZ={n:['Ngắn hạn','1–3 tháng',90],d:['Dài hạn','6–12 tháng',270]};
 const HOMETIP={
@@ -95,7 +99,7 @@ function progData(kid,from,to){
  const wk={};rs.forEach(r=>{const w=wkStart(r.d);(wk[w]=wk[w]||[]).push(r.sc)});
  const weeks=Object.keys(wk).sort().map(w=>({w,sc:Math.round(avg(wk[w])),n:wk[w].length}));
  const span=(pd(to)-pd(from))/864e5,unit=span>45?'m':'w',key=d=>unit==='m'?d.slice(0,7):wkStart(d),st={};
- rs.forEach(r=>{const k=key(r.d),o=st[k]=st[k]||{k,c:{I:0,TD:0,GP:0,MP:0,PP:0,FP:0},t:0};o.c[r.sup]++;o.t++});
+ rs.forEach(r=>{const k=key(r.d),o=st[k]=st[k]||{k,c:{I:0,TD:0,VS:0,VP:0,GP:0,MP:0,PP:0,FP:0},t:0};o.c[r.sup]++;o.t++});
  const stack=Object.values(st).sort((a,b)=>a.k<b.k?-1:1);
  const dat=DB.plans.filter(p=>p.k===kid&&p.s==='dat'&&p.dt&&p.dt>=from&&p.dt<=to);
  return{from,to,ss:ss.length,recs:rs.length,goals,doms,weeks,stack,unit,dat,
