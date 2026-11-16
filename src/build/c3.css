@@ -314,3 +314,10 @@ body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit
 /* lưới lịch 1-1: nút + của ô trống chỉ hiện khi rê chuột / chọn bằng bàn phím (màn hình cảm ứng vẫn hiện mờ) cho khỏi rối mắt */
 @media (hover:hover){.wkt .cell .ls.add{opacity:0}.wkt .cell:hover .ls.add,.wkt .cell .ls.add:focus-visible{opacity:1}}
 @media (hover:none){.wkt .cell .ls.add{opacity:.55}}
+.dm-h{font-size:19px;margin:18px 0 8px}
+.dm-t{border:1px solid var(--bd);border-radius:14px;overflow:hidden;background:var(--card);margin-bottom:6px}
+.dm-th,.dm-r{display:grid;grid-template-columns:44px minmax(0,1fr) 120px;gap:8px 12px;padding:10px 14px;align-items:start}
+.dm-th{background:rgba(127,127,127,.1);font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--mu)}
+.dm-r{border-top:1px solid var(--bd)}.dm-r .pl{padding:0;border:0}.dm-n{font-weight:600;padding-top:2px}
+.dm-d{text-transform:uppercase;letter-spacing:.04em;margin-top:6px}.dm-k{display:flex;flex-direction:column;gap:4px;align-items:flex-start}.dm-k b{font-size:17px}
+@media (max-width:640px){.dm-th,.dm-r{grid-template-columns:30px minmax(0,1fr)}.dm-th span:last-child{display:none}.dm-k{grid-column:2;flex-direction:row;align-items:center;gap:8px}}
