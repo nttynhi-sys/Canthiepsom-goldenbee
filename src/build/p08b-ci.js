@@ -69,6 +69,10 @@ CHG.sef=(v,t)=>{S.modal[t.dataset.f]=v;return false};
 CHG.sein=(v,t)=>{S.modal.it[+t.dataset.v].nt=v;return false};
 CHG.sepl=(v,t)=>{const it=S.modal.it[+t.dataset.v],p=v?planBy(v):null;it.pl=v;if(p&&p.sm&&!(it.sg||'').trim())it.sg=p.sm};
 CHG.sesg=(v,t)=>{S.modal.it[+t.dataset.v].sg=v;return false};
+/* đổi mục tiêu ngắn hạn của cả nhóm (nhiều mục tiêu buổi cùng thuộc một mục tiêu ngắn hạn) */
+CHG.segpl=(v,t)=>{const old=t.dataset.v,p=v?planBy(v):null;S.modal.it.forEach(it=>{if((it.pl||'')===old){it.pl=v;if(p&&p.sm&&!(it.sg||'').trim())it.sg=p.sm}})};
+/* thêm một mục tiêu buổi trị liệu nữa (cùng mục tiêu ngắn hạn, cùng mục tiêu trong ngân hàng) vào sau dòng x */
+ACT.sesub=v=>{const m=S.modal,x=+v,i=m.it[x];if(!i)return false;m.it.splice(x+1,0,{g:i.g,sup:i.sup,tr:TR0,nt:'',sg:'',pl:i.pl||''})};
 ACT.sedom=v=>{const m=S.modal;m.dom=m.dom.includes(v)?m.dom.filter(x=>x!==v):m.dom.concat(v)};
 ACT.seadd=v=>{seAddTo(S.modal,[v])};
 ACT.serm=v=>{S.modal.it.splice(+v,1)};
@@ -77,24 +81,30 @@ ACT.setr=v=>{const [x,p]=v.split('|').map(Number),it=S.modal.it[x],c=it.tr[p];it
 ACT.setrc=v=>{S.modal.it[+v].tr=TR0};
 ACT.sepick=v=>{const m=S.modal;S.modal={t:'gp',mode:'ses',k:m.k,back:m,f:{dom:v||'',src:'',head:'',age:'',q:''},sel:[],hz:'n',pl:'auto'};S.pg.gp=1};
 const sePlOpts=(k,cur)=>[['','— Chưa gắn mục tiêu ngắn hạn —']].concat(kidPlans(k).filter(p=>p.s!=='dat'||p.id===cur).map(p=>[p.id,gName(p.g)]));
-function sePlChain(pl){const p=pl?planBy(pl):null;if(!p)return'<div class="sm mu gt-ch">Chưa gắn: dòng này vẫn tính vào biểu đồ tiến bộ nhưng chưa nằm trong cây mục tiêu.</div>';
- return`<div class="sm gt-ch">⇒ Mục tiêu ngắn hạn: <b>${esc(gName(p.g))}</b></div>`}
-function seItem(i,x){const g=goalOf(i.g),n=trN(i.tr);
- return`<div class="si"><div class="si-h"><div><b>${esc(g?g.n:'(mục tiêu đã xóa)')}</b><div class="sm mu">${g?esc(g.t)+' · '+esc(gSrc(g)):''}</div></div><button class="btn s no" data-a="serm" data-v="${x}" aria-label="Bỏ mục tiêu này khỏi buổi">Bỏ</button></div>
- ${g?gxHtml(g,'s',{open:1}):''}<div class="si-l">Thuộc mục tiêu ngắn hạn <span class="mu">· mục tiêu buổi thuộc mục tiêu ngắn hạn</span></div><select class="si-pl" data-c="sepl" data-v="${x}" aria-label="Thuộc mục tiêu ngắn hạn">${opts(sePlOpts(S.modal.k,i.pl||''),i.pl||'')}</select>${sePlChain(i.pl)}
+function seItem(i,x,n){const g=goalOf(i.g),tn=trN(i.tr);
+ return`<div class="si"><div class="si-h"><div><span class="gt-k">Mục tiêu buổi trị liệu ${n}</span><b>${esc(g?g.n:'(mục tiêu đã xóa)')}</b><div class="sm mu">${g?esc(g.t)+' · '+esc(gSrc(g)):''}</div></div><button class="btn s no" data-a="serm" data-v="${x}" aria-label="Bỏ mục tiêu buổi này">Bỏ</button></div>
+ ${g?gxHtml(g,'s',{open:n===1?1:0}):''}
  <div class="si-l">Nội dung mục tiêu buổi trị liệu (SMART) <span class="mu">· không bắt buộc</span></div><textarea class="si-sg" rows="2" maxlength="400" data-c="sesg" data-v="${x}" placeholder="Cụ thể, đo lường được, khả thi, phù hợp, có thời hạn. Ví dụ: Trong buổi này, bé gọi tên đúng 5/10 đồ vật khi cô chỉ tranh." aria-label="Nội dung mục tiêu buổi trị liệu (SMART)" style="width:100%">${esc(i.sg||'')}</textarea>
  <div class="si-l">Mức hỗ trợ</div><div class="seg" role="group" aria-label="Mức hỗ trợ">${SUPK.map(s=>`<button type="button" class="sg sp-${s} ${i.sup===s?'on':''}" data-a="sesup" data-v="${x}|${s}" aria-pressed="${i.sup===s}" title="${esc(SUP[s].n+': '+SUP[s].h)}">${esc(SUP[s].a)}</button>`).join('')}</div>
  <div class="si-l">Kết quả 10 lượt <span class="mu">· chạm một lần: đúng, hai lần: sai, ba lần: bỏ trống</span></div>
  <div class="trb" role="group" aria-label="Kết quả từng lượt">${i.tr.split('').map((c,p)=>`<button type="button" class="tb tb-${c==='V'?'v':c==='X'?'x':'o'}" data-a="setr" data-v="${x}|${p}" aria-label="Lượt ${p+1}: ${c==='V'?'đúng':c==='X'?'sai':'chưa làm'}">${c==='V'?'✓':c==='X'?'✗':p+1}</button>`).join('')}</div>
- <div class="si-f"><span class="sm">${n?`<b>${trOk(i.tr)}/${n}</b> đúng · <b>${trPct(i.tr)}%</b> · ${esc(SUP[i.sup].p)}`:'<span class="mu">Chưa ghi kết quả</span>'}</span>${n?`<button class="btn s" data-a="setrc" data-v="${x}">Xóa kết quả</button>`:''}</div>
+ <div class="si-f"><span class="sm">${tn?`<b>${trOk(i.tr)}/${tn}</b> đúng · <b>${trPct(i.tr)}%</b> · ${esc(SUP[i.sup].p)}`:'<span class="mu">Chưa ghi kết quả</span>'}</span>${tn?`<button class="btn s" data-a="setrc" data-v="${x}">Xóa kết quả</button>`:''}</div>
  <input class="sm" placeholder="Ghi chú riêng cho mục tiêu này (không bắt buộc)" value="${esc(i.nt||'')}" data-c="sein" data-v="${x}" aria-label="Ghi chú mục tiêu"></div>`}
+/* nhóm theo mục tiêu ngắn hạn: ô chọn mục tiêu ngắn hạn ở đầu nhóm, bên dưới là nhiều mục tiêu buổi trị liệu */
+function seGroups(m){const keys=[];m.it.forEach(i=>{const k=i.pl||'';if(!keys.includes(k))keys.push(k)});
+ return keys.map(k=>{const p=k?planBy(k):null,ix=m.it.map((i,x)=>(i.pl||'')===k?x:-1).filter(x=>x>=0);
+  return`<section class="se-grp" style="border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin:10px 0"><span class="gt-k">Mục tiêu ngắn hạn</span>
+  <select class="si-pl" data-c="segpl" data-v="${esc(k)}" aria-label="Mục tiêu ngắn hạn" style="width:100%;font-weight:600">${opts(sePlOpts(m.k,k),k)}</select>
+  ${p?(p.sm?`<div class="sm mu" style="margin-top:4px">Mục tiêu buổi gợi ý trong kế hoạch: ${esc(p.sm)}</div>`:''):'<div class="sm mu" style="margin-top:4px">Chưa gắn: các dòng này vẫn tính vào biểu đồ tiến bộ nhưng chưa nằm trong mục tiêu ngắn hạn nào.</div>'}
+  <h4 class="sm" style="margin:10px 0 0">Các mục tiêu buổi trị liệu (${ix.length})</h4>${ix.map((x,n)=>seItem(m.it[x],x,n+1)).join('')}
+  <div class="acts" style="margin-top:8px"><button class="btn s p" type="button" data-a="sesub" data-v="${ix[ix.length-1]}">+ Thêm mục tiêu buổi trị liệu (SMART) cho mục tiêu ngắn hạn này</button></div></section>`}).join('')}
 MODALS.se=()=>{const m=S.modal,k=kidBy(m.k);if(!k||!canKid(k.id)){S.modal=null;return''}
  const free=kidPlans(k.id,'dang').filter(p=>!m.it.some(i=>i.g===p.g)),sug=(m.dom.length?free.filter(p=>m.dom.includes(gDom(p.g))):free).slice(0,6),hasRes=m.it.some(i=>trN(i.tr));
  return mdl((m.id?'Sửa buổi can thiệp':'Ghi buổi can thiệp')+' · '+k.n,
  `<p class="mu sm" style="margin-bottom:10px">${age(k.dob)} · ${esc(k.nd)}. Chọn lĩnh vực và mục tiêu của buổi, rồi ghi mức hỗ trợ và kết quả từng lượt. Nếu chưa dạy, lưu như kế hoạch buổi và ghi kết quả sau.</p>
  <div class="f2"><div><label for="se-d">Ngày</label><input id="se-d" type="date" value="${m.date}" max="${addD(TODAY,30)}" data-c="sef" data-f="date"></div><div><label for="se-by">Giáo viên</label>${isLead()?`<select id="se-by" data-c="sef" data-f="by">${opts(DB.staff.filter(isTeacher).map(s=>[s.id,tName(s)]),m.by)}</select>`:`<input id="se-by" value="${esc(sn(m.by))}" disabled>`}</div></div>
  <div style="margin-top:12px"><span class="lb">Lĩnh vực cần can thiệp trong buổi</span><div class="chips">${LDOM.map(d=>`<button type="button" class="chip ${m.dom.includes(d.id)?'on':''}" data-a="sedom" data-v="${d.id}" aria-pressed="${m.dom.includes(d.id)}" title="${esc(d.d)}">${esc(d.s)}</button>`).join('')}</div></div>
- <h3 style="margin-top:14px">Mục tiêu của buổi (${m.it.length})</h3>${m.it.map(seItem).join('')||'<p class="mu sm">Chưa chọn mục tiêu. Chọn từ kế hoạch của bé hoặc từ ngân hàng mục tiêu.</p>'}
+ <h3 style="margin-top:14px">Mục tiêu của buổi (${m.it.length})</h3>${m.it.length?seGroups(m):'<p class="mu sm">Chưa chọn mục tiêu. Chọn từ kế hoạch của bé hoặc từ ngân hàng mục tiêu.</p>'}
  <div class="acts" style="margin:10px 0">${sug.map(p=>`<button class="btn s" data-a="seadd" data-v="${p.g}" title="${esc(gName(p.g))}">+ ${esc(trunc(gName(p.g),42))}</button>`).join('')}${m.dom.map(d=>`<button class="btn s p" data-a="sepick" data-v="${d}">Chọn mục tiêu ${esc(DM[d].s)}</button>`).join('')}<button class="btn s ${m.dom.length?'':'p'}" data-a="sepick" data-v="">${m.dom.length?'Chọn từ toàn bộ ngân hàng mục tiêu':'Chọn từ ngân hàng mục tiêu'}</button></div>
  <div class="f2"><div><label for="se-n">Nhận xét chung về buổi</label><textarea id="se-n" rows="3" data-c="sef" data-f="note">${esc(m.note)}</textarea></div><div><label for="se-h">Gợi ý luyện tập tại nhà</label><textarea id="se-h" rows="3" data-c="sef" data-f="home">${esc(m.home)}</textarea></div></div>
  <div class="gp-f" style="justify-content:flex-end"><button class="btn" data-a="seclose">Hủy</button><button class="btn p" data-a="sesave">${hasRes?'Lưu buổi can thiệp':'Lưu kế hoạch buổi'}</button></div>`,1)};

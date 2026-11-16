@@ -56,7 +56,7 @@ Cập nhật 16/11/2026 (mã ứng dụng cuối: `154babd`). Quy tắc, nghiệ
 - Kỹ thuật: tìm nguyên nhân `z25-sd-bank` và `n2.js`. Chưa có yêu cầu tính năng nào đang chờ.
 
 ## 10. Nhật ký
-- 16/11 bỏ tầng Mục tiêu dài hạn (chỉ còn buổi ⇒ ngắn hạn), thêm ô SMART cho mục tiêu buổi (`plans[].sm`, `it[].sg`); mức hỗ trợ mới VP, VS và thứ tự FP, PP, MP, GP, VP, VS, TD, Ind; tải nhiều tệp có danh sách và "Chọn thêm tệp". Phụ huynh thấy SMART của buổi gần nhất ở từng mục tiêu buổi (`gtGoals`). Không đổi database. `y6-goals`, `z34-gx-plan` cập nhật theo mô hình mới, thêm `z50-tai-nhieu-tep`.
+- 16/11 bỏ tầng Mục tiêu dài hạn (chỉ còn buổi ⇒ ngắn hạn), thêm ô SMART cho mục tiêu buổi (`plans[].sm`, `it[].sg`); mức hỗ trợ mới VP, VS và thứ tự FP, PP, MP, GP, VP, VS, TD, Ind; tải nhiều tệp có danh sách và "Chọn thêm tệp". Phụ huynh thấy SMART của buổi gần nhất ở từng mục tiêu buổi (`gtGoals`). Form ghi buổi nhóm theo mục tiêu ngắn hạn (ô chọn ở đầu nhóm), mỗi nhóm có nhiều mục tiêu buổi trị liệu kèm SMART riêng (`seGroups`, `ACT.sesub`, `CHG.segpl`). Không đổi database. `y6-goals`, `z34-gx-plan` cập nhật theo mô hình mới, thêm `z50-tai-nhieu-tep`.
 - 16/11 gộp `chore/toi-uu-context`: thêm `.ignore`, tệp này; `.vercelignore` loại `docs/`, `.ignore`. Leaked password protection đã bật (chủ dự án xác nhận), advisors security rỗng.
 - 16/11 `154babd` giá bán trú riêng, nút Giá riêng ở Học phí. `b101570` lịch Chủ nhật.
 - 13/11 `5dcefff` bỏ phòng học. 12/11 `bbaeba1` Fulltime/Partime; `4095043` lưới 1-1 chỉ hiện khung giờ có ca.

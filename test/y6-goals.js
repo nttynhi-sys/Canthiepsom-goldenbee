@@ -80,11 +80,21 @@ const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,
  ok('form buổi: mỗi dòng có ô SMART; dòng của S2 được điền sẵn từ kế hoạch',Dn.n>=1&&Dn.sg.length===Dn.n&&Dn.sg.some(x=>/8\/10 lượt/.test(x)),Dn);
  ok('form buổi: không còn nhắc mục tiêu dài hạn',!/dài hạn/i.test(Dn.text)&&Dn.chain.every(t=>!/dài hạn/i.test(t)),Dn.chain);
  ok('mức hỗ trợ xếp FP, PP, MP, GP, Gợi nhắc bằng lời, Gợi nhắc hình ảnh, TG trễ, Ind',Dn.sups.join('|')==='FP|PP|MP|GP|Gợi nhắc bằng lời|Gợi nhắc hình ảnh|TG trễ|Ind',Dn.sups);
+ /* một mục tiêu ngắn hạn gồm nhiều mục tiêu buổi trị liệu; ô chọn mục tiêu ngắn hạn ở đầu nhóm */
+ const GR=await ev(()=>{const g=document.querySelector('.se-grp');return{grps:document.querySelectorAll('.se-grp').length,selFirst:!!g&&g.firstElementChild.classList.contains('gt-k')&&g.querySelector('select.si-pl')===g.querySelector('select'),rows:g.querySelectorAll('.si').length}});
+ ok('form buổi: mỗi mục tiêu ngắn hạn là một nhóm, ô chọn mục tiêu ngắn hạn nằm đầu nhóm',GR.grps>=1&&GR.selFirst&&GR.rows>=1,GR);
+ await page.click('[data-a="sesub"] >> nth=0');await W();
+ const GR2=await ev(()=>({rows:document.querySelector('.se-grp').querySelectorAll('.si').length,sg:[...document.querySelector('.se-grp').querySelectorAll('textarea[data-c="sesg"]')].map(t=>t.value),n:S.modal.it.length}));
+ ok('bấm "+ Thêm mục tiêu buổi trị liệu": nhóm có thêm một dòng SMART trống cùng mục tiêu ngắn hạn',GR2.rows===GR.rows+1&&GR2.sg[GR2.sg.length-1]==='',GR2);
+ await page.fill('.se-grp:first-of-type textarea[data-c="sesg"] >> nth=1','Trong buổi, bé chọn đúng 4/5 thẻ hình.');await page.dispatchEvent('.se-grp:first-of-type textarea[data-c="sesg"] >> nth=1','change');
+ await ev(()=>{S.modal.it.forEach(i=>{i.tr='VVVVVVVVVV'})});
  await page.fill('textarea[data-c="sesg"] >> nth=0','Trong buổi, bé nhìn cô 8/10 lượt khi được gọi tên.');await page.dispatchEvent('textarea[data-c="sesg"] >> nth=0','change');
  await ev(()=>{S.modal.it[0].tr='VVVVVVVVVV';S.modal.it[0].sup='VP'});
+ const nIt=await ev(()=>S.modal.it.length);
  await page.click('[data-a="sesave"]');await W();
- const sv=await ev(id=>{const s=DB.sess.filter(x=>x.k===id&&!/^[tu]\d+$/.test(x.id)).pop();return{sg:s.it[0].sg,sup:s.it[0].sup,pl:s.it[0].pl,st:s.st}},K.id);
+ const sv=await ev(id=>{const s=DB.sess.filter(x=>x.k===id&&!/^[tu]\d+$/.test(x.id)).pop();return{sg:s.it[0].sg,sg2:s.it.map(i=>i.sg),sup:s.it[0].sup,pl:s.it[0].pl,st:s.st,n:s.it.length}},K.id);
  ok('lưu buổi: giữ nội dung SMART, mức "Gợi nhắc bằng lời" và gắn mục tiêu ngắn hạn',/8\/10 lượt/.test(sv.sg||'')&&sv.sup==='VP'&&sv.pl&&sv.st==='xong',sv);
+ ok('lưu buổi: một mục tiêu ngắn hạn giữ nhiều mục tiêu buổi (SMART) khác nhau',sv.n===nIt&&sv.sg2.some(x=>/4\/5 thẻ hình/.test(x||'')),sv);
  const rs=await ev(id=>{const k=id;return{sc:recSc({tr:'VVVVVVVVVV',sup:'VP'}),vs:recSc({tr:'VVVVVVVVVV',sup:'VS'}),gp:recSc({tr:'VVVVVVVVVV',sup:'GP'}),td:recSc({tr:'VVVVVVVVVV',sup:'TD'}),band:[bandOf('VP'),bandOf('VS')]}},K.id);
  ok('điểm: GP 65 < Gợi nhắc bằng lời 72 < hình ảnh 78 < TG trễ 85; cả hai thuộc nhóm "Cần gợi ý"',rs.gp===65&&rs.sc===72&&rs.vs===78&&rs.td===85&&rs.band.join()==='1,1',rs);
  await ev(()=>{S.modal=null;render()});
