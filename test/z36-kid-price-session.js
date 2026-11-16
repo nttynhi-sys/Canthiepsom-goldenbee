@@ -89,7 +89,8 @@ const SP='/tmp/claude-0/-home-claude/efd1cc77-c428-5628-a76e-f62e732d0ec8/scratc
   return{k:k.id,si:si.id,ad:ad.id,sd:sd.id,ab:ab.id,nBl:si.bl.length}});
  await ev(id=>{ACT.senew(id)},G.k);await page.waitForSelector('.si, #modal, .modal',{timeout:3000}).catch(()=>{});
  await ev(g=>{[g.si,g.ad,g.sd,g.ab].forEach(id=>ACT.seadd(id));render()},G);await page.waitForSelector('.si');
- const E=await ev(g=>{const items=[...document.querySelectorAll('.si')].map(e=>({t:e.querySelector('.si-h b').innerText,gx:!!e.querySelector('details.gx[open]'),txt:(e.querySelector('details.gx')||{innerText:''}).innerText,ctl:!!e.querySelector('.trb')&&!!e.querySelector('.seg')}));
+ const E=await ev(g=>{const items=[...document.querySelectorAll('.si')].map(e=>{const gp=e.closest('.se-grp'),sl=gp.querySelector('select.si-pl'),own=e.querySelector('.si-h b'),d=e.querySelector('details.gx')||(sl.value?gp.querySelector(':scope > details.gx'):null);
+  return{t:own?own.innerText:sl.options[sl.selectedIndex].textContent,gx:!!(d&&d.open),txt:(d||{innerText:''}).innerText,ctl:!!e.querySelector('.trb')&&!!e.querySelector('.seg')}});
   return{items,names:{si:gName(g.si),ad:gName(g.ad),sd:gName(g.sd),ab:gName(g.ab)},ovf:document.documentElement.scrollWidth<=window.innerWidth+1}},G);
  const it=n=>E.items.find(i=>i.t===E.names[n]);
  ok('Ghi buổi: mục của ba bộ hiện khối "Vấn đề, mục tiêu và bài tập" mở sẵn; mục ABLLS thì không',it('si')&&it('ad')&&it('sd')&&it('ab')&&it('si').gx&&it('ad').gx&&it('sd').gx&&!it('ab').gx,E.items.map(i=>[i.t.slice(0,25),i.gx]));

@@ -93,6 +93,9 @@ const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,
  await page.fill('textarea[data-c="sesg"] >> nth=0','Trong buổi, bé nhìn cô 8/10 lượt khi được gọi tên.');await page.dispatchEvent('textarea[data-c="sesg"] >> nth=0','change');
  await ev(()=>{S.modal.it[0].tr='VVVVVVVVVV';S.modal.it[0].sup='VP'});
  const nIt=await ev(()=>S.modal.it.length);
+ /* chạm ô số N = N lượt đúng trên 10 */
+ const TR=await ev(()=>{const r={};S.modal.it[0].tr=TR0;ACT.setr('0|1');r.two=S.modal.it[0].tr;r.p2=trPct(r.two);ACT.setr('0|4');r.five=S.modal.it[0].tr;r.p5=trPct(r.five);ACT.setr('0|4');r.clr=S.modal.it[0].tr;ACT.setr('0|-1');r.zero=S.modal.it[0].tr;S.modal.it[0].tr='VVVVVVVVVV';return r});
+ ok('chạm ô 2 = 20%, ô 5 = 50%, chạm lại ô đó xóa kết quả, ô 0 = 0 lượt đúng',TR.two==='VVXXXXXXXX'&&TR.p2===20&&TR.five==='VVVVVXXXXX'&&TR.p5===50&&TR.clr==='..........'&&TR.zero==='XXXXXXXXXX',TR);
  await page.click('[data-a="sesave"]');await W();
  const sv=await ev(id=>{const s=DB.sess.filter(x=>x.k===id&&!/^[tu]\d+$/.test(x.id)).pop();return{sg:s.it[0].sg,sg2:s.it.map(i=>i.sg),sup:s.it[0].sup,pl:s.it[0].pl,st:s.st,n:s.it.length}},K.id);
  ok('lưu buổi: giữ nội dung SMART, mức "Gợi nhắc bằng lời" và gắn mục tiêu ngắn hạn',/8\/10 lượt/.test(sv.sg||'')&&sv.sup==='VP'&&sv.pl&&sv.st==='xong',sv);
