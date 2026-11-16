@@ -132,7 +132,7 @@
 - Sao lưu hằng ngày chỉ chứa **cơ sở dữ liệu** (bảng `records`, `money_records`, `profiles`...). **Không chứa tệp** trong Storage (bucket `gb-media`): ảnh, video, tài liệu lỡ xóa thì không khôi phục được từ bản sao lưu, nên bản gốc quan trọng phải giữ ở nơi khác.
 - Phục hồi: Supabase → Database → Backups → chọn bản → Restore. Thao tác này ghi đè dữ liệu hiện tại, chỉ làm khi chủ dự án xác nhận. Khôi phục theo từng thời điểm (PITR) là dịch vụ trả phí thêm, chưa bật.
 - Việc chỉ chủ dự án làm được ở bảng điều khiển (không làm được qua kết nối của Claude):
-  1. Authentication → bật "Leaked password protection" (chặn mật khẩu đã lộ).
+  1. Authentication → "Leaked password protection" (chặn mật khẩu đã lộ): đã bật, chủ dự án xác nhận 16/11/2026; `get_advisors` loại security trả về rỗng.
   2. Storage → Settings → nâng "Global file size limit" lên ít nhất 500 MB.
   3. Database → Backups: ngày hôm sau khi nâng gói, kiểm tra đã có bản sao lưu đầu tiên.
   4. Giữ "Spend Cap" bật để không phát sinh chi phí ngoài gói.
@@ -140,7 +140,6 @@
   6. Thanh toán bằng thẻ tín dụng, hóa đơn tính bằng USD; hóa đơn quá hạn có thể khiến dự án bị tạm dừng và hạ về gói Free.
 
 ## Giới hạn đã biết
-- Chưa bật "Leaked password protection" của Supabase Auth. Dự án đã ở gói Pro nên bật được, nhưng chỉ bật ở bảng điều khiển Supabase → Authentication (chủ dự án làm; xem mục "Gói Supabase, sao lưu và phục hồi"). Sau khi bật, chạy lại `get_advisors` loại security để xác nhận cảnh báo đã hết.
 - Tài khoản Trưởng Trung tâm đầu tiên tạo trong Supabase (Authentication) kèm một dòng `tt` trong bảng `profiles`. Các tài khoản khác cấp trong app: Nhân sự → mở hồ sơ → Tài khoản đăng nhập.
 - Chưa có "quên mật khẩu": Trưởng Trung tâm đặt lại mật khẩu cho nhân viên và phụ huynh (phụ huynh chỉ có số điện thoại cũng không nhận được thư đặt lại).
 - Chưa có giới hạn số lần đăng nhập sai ngoài giới hạn mặc định của Supabase.

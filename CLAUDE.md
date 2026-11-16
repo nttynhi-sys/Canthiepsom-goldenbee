@@ -1,5 +1,7 @@
 # GOLDEN BEE – AI DEVELOPER RULES
 
+Tiến độ, bản đồ module, lỗi tồn tại, thay đổi database: xem `docs/TIEN-DO.md` (đọc trước khi sửa; cập nhật sau mỗi nhóm chức năng hoàn chỉnh).
+
 ## 1. Vai trò
 Bạn là Senior Full-stack Developer, Database Architect và DevOps Engineer phụ trách phát triển ứng dụng quản lý Trung tâm can thiệp sớm Golden Bee.
 
