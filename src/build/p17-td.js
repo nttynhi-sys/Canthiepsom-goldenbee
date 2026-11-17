@@ -7,7 +7,8 @@
    - Chế độ ?demo: ảnh thu nhỏ lưu trong trình duyệt; video và tài liệu chỉ giữ trong phiên (không có kho thật). */
 const MEDIA_MB=500,MEDIA_MAX=MEDIA_MB*1024*1024,MEDIA_BUCKET='gb-media',DCAT=['Giáo án','Biểu mẫu','Hồ sơ trẻ','Hướng dẫn phụ huynh','Khác'];
 const MEDIA_CT={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',m4v:'video/x-m4v','3gp':'video/3gpp','3g2':'video/3gpp2',mkv:'video/x-matroska',avi:'video/x-msvideo',mpg:'video/mpeg',mpeg:'video/mpeg',wmv:'video/x-ms-wmv',pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',ppt:'application/vnd.ms-powerpoint',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',csv:'text/csv',txt:'text/plain',md:'text/markdown'};
-const MEDIA_ACC={av:'image/*,video/*,.jpg,.jpeg,.png,.webp,.gif,.mp4,.m4v,.webm,.mov,.3gp,.3g2,.mkv,.avi,.mpg,.mpeg,.wmv',vid:'video/*,.mp4,.m4v,.mov,.3gp,.3g2,.webm,.mkv,.avi,.mpg,.mpeg,.wmv',doc:'.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,image/*'};
+/* av chỉ dùng image/*,video/*: điện thoại mở thư viện ảnh và chọn nhiều ảnh, video một lượt (thêm đuôi tệp thì iPhone chuyển sang trình duyệt tệp); định dạng không hỗ trợ vẫn bị chặn ở medKindOf */
+const MEDIA_ACC={av:'image/*,video/*',vid:'video/*,.mp4,.m4v,.mov,.3gp,.3g2,.webm,.mkv,.avi,.mpg,.mpeg,.wmv',doc:'.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,image/*'};
 const MEDM=['upm','mview','mtag'],PIX='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 const mb=n=>(n/1048576).toFixed(1)+' MB';
 const MED={u:{},q:new Set(),gone:new Set(),fail:{},retry:{},mem:{},t:0};
@@ -189,7 +190,7 @@ const upBtn=l=>`<button class="btn p" type="submit" ${S.up&&S.up.busy?'disabled'
 MODALS.upm=()=>{const m=S.modal,doc=m.kind==='doc',vid=m.only==='vid',F=Object.assign({d:WD,t:'',n:'',cat:'Giáo án',gr:'',sh:1,ks:m.k?[m.k]:[]},S.up&&S.up.form||{});
  const ks=myKids().filter(k=>k.st==='dang').sort((a,b)=>a.n<b.n?-1:1),gs=(isLead()||isVP()?DB.groups:myGroups());
  return mdl(doc?'Tải tài liệu lên':vid?'Tải video lên':'Tải ảnh, video lên',`<form id="upmf" class="f"><div><label for="um-f">${doc?'Tệp tài liệu (PDF, Word, Excel, PowerPoint, CSV, văn bản; tối đa '+MEDIA_MB+' MB mỗi tệp)':vid?'Video (MP4, MOV, M4V, 3GP, WebM, MKV, AVI, MPEG, WMV; tối đa '+MEDIA_MB+' MB mỗi tệp)':'Ảnh hoặc video (JPG, PNG, WebP, GIF, MP4, MOV, 3GP, WebM, MKV, AVI…; tối đa '+MEDIA_MB+' MB mỗi tệp)'}</label><input id="um-f" name="f" type="file" multiple accept="${MEDIA_ACC[doc?'doc':vid?'vid':'av']}" required data-c="umf">
- <div class="acts" style="margin-top:6px;align-items:center"><button class="btn s" type="button" data-a="umadd">+ Chọn thêm tệp</button><span class="sm mu">Chọn nhiều tệp một lần (giữ Ctrl hoặc Shift, hoặc chạm nhiều tệp trên điện thoại); bấm “Chọn thêm tệp” để thêm tiếp mà không mất các tệp đã chọn.</span></div>
+ <div class="acts" style="margin-top:6px;align-items:center"><button class="btn s" type="button" data-a="umadd">+ Chọn thêm tệp</button><span class="sm mu">Chọn nhiều tệp một lần (giữ Ctrl hoặc Cmd, hoặc Shift; trên điện thoại chạm nhiều ảnh), hoặc kéo thả tệp vào cửa sổ này. Bấm “Chọn thêm tệp” để thêm tiếp mà không mất các tệp đã chọn.</span></div>
  <input id="um-f2" type="file" multiple hidden accept="${MEDIA_ACC[doc?'doc':vid?'vid':'av']}" data-c="umf2"><div id="um-list" class="sm" aria-live="polite"></div></div>
  <div class="f2"><div><label for="um-d">${doc?'Ngày':'Ngày chụp, quay'}</label><input id="um-d" name="d" type="date" value="${esc(F.d)}" max="${TODAY}" required></div>
  ${doc?`<div><label for="um-c">Loại tài liệu</label><select id="um-c" name="cat">${opts(DCAT.map(x=>[x,x]),F.cat)}</select></div>`:`<div><label for="um-g">Hoạt động chung của lớp bán trú</label><select id="um-g" name="gr"><option value="">Không (ảnh riêng của bé)</option>${opts(gs.map(g=>[g.id,g.n]),F.gr)}</select></div>`}</div>
@@ -205,9 +206,13 @@ function umShow(){const f=$q('#um-f'),o=$q('#um-list');if(!f||!o)return;const a=
  o.innerHTML=a.length?`<b>${a.length} tệp đã chọn</b> · ${(a.reduce((n,x)=>n+x.size,0)/1048576).toFixed(1)} MB<ul style="margin:4px 0 0 18px;padding:0">${a.slice(0,8).map(x=>`<li>${esc(x.name)} <span class="mu">(${(x.size/1048576).toFixed(1)} MB)</span></li>`).join('')}${a.length>8?`<li class="mu">và ${a.length-8} tệp khác</li>`:''}</ul>`:''}
 ACT.umadd=()=>{const g=$q('#um-f2');if(g)g.click();return false};
 CHG.umf=()=>{umShow();return false};
-CHG.umf2=(v,t)=>{const f=$q('#um-f');if(!f||!t.files||!t.files.length)return false;
- try{const dt=new DataTransfer(),seen=new Set(),add=x=>{const k=x.name+'|'+x.size+'|'+x.lastModified;if(!seen.has(k)){seen.add(k);dt.items.add(x)}};[...f.files].forEach(add);[...t.files].forEach(add);f.files=dt.files}catch(e){}
- t.value='';umShow();return false};
+function umMerge(list){const f=$q('#um-f');if(!f||!list||!list.length)return false;
+ try{const dt=new DataTransfer(),seen=new Set(),add=x=>{const k=x.name+'|'+x.size+'|'+x.lastModified;if(!seen.has(k)){seen.add(k);dt.items.add(x)}};[...f.files].forEach(add);[...list].forEach(add);f.files=dt.files}catch(e){}
+ umShow();return false}
+CHG.umf2=(v,t)=>{const l=t.files?[...t.files]:[];umMerge(l);t.value='';return false};
+/* kéo thả nhiều tệp từ máy vào cửa sổ tải lên */
+document.addEventListener('dragover',e=>{if(e.target.closest&&e.target.closest('#upmf')){e.preventDefault()}});
+document.addEventListener('drop',e=>{const f=e.target.closest&&e.target.closest('#upmf');if(!f||!e.dataTransfer||!e.dataTransfer.files.length)return;e.preventDefault();umMerge(e.dataTransfer.files)});
 /* thu nhỏ ảnh trước khi tải (nhanh hơn, tiết kiệm dung lượng); lỗi thì dùng ảnh gốc */
 async function medScale(file,max,q,force){
  if(typeof createImageBitmap!=='function')return null;
@@ -246,9 +251,9 @@ FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
   if(doc&&k.kind==='vid')return fail('“'+file.name+'” là video; hãy dùng nút “Tải ảnh, video lên”.')
   if(!doc&&k.kind==='doc')return fail('“'+file.name+'” là tài liệu; hãy dùng mục Hồ sơ, giáo án.')
   jobs.push({file,k})}
- S.up.busy=true;BUSY++;S.up.msg='Đang tải 1/'+jobs.length+'...';
- (async()=>{let ok=0;
-  try{for(let i=0;i<jobs.length;i++){const {file,k}=jobs[i];S.up.msg='Đang tải '+(i+1)+'/'+jobs.length+'...';render();
+ S.up.busy=true;BUSY++;S.up.msg='Đang tải 0/'+jobs.length+'...';
+ (async()=>{let ok=0,done=0;const bad=[];
+  const one=async({file,k})=>{
     const id=uid(),rec={id,kind:k.kind,t:(jobs.length===1&&form.t)||file.name.replace(/\.[^.]+$/,'').slice(0,120),ct:k.ct,sz:file.size,d:form.d,by:U.id,bn:U.name,at:new Date().toISOString(),ks:kids.slice(),gr:form.gr,sh:form.sh,n:form.n};
     if(doc)rec.cat=form.cat;
     if(CLOUDMODE){let blob=file,ct=k.ct,ext=k.ext;
@@ -256,9 +261,13 @@ FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
      const path='m/'+id+'.'+ext;await medStore(path,blob,ct);rec.p=path;rec.ct=ct;rec.sz=blob.size}
     else{MED.mem[id]=URL.createObjectURL(file);rec.mem=1;
      if(k.kind==='img'&&k.ct!=='image/gif'){const th=await medScale(file,480,.6,1);if(th&&th.size<400000){rec.u=await blobUrl(th);rec.mem=0}}}
-    medList().push(rec);ok++}
-   S.modal=S.modal.back||null;toast('Đã tải lên '+ok+' tệp'+(!doc&&!kids.length?'. Giáo viên vào tab “Hoạt động chung” để chọn bé.':''))}
-  catch(x){S.up.err=(ok?'Đã tải lên '+ok+' tệp đầu. ':'')+'Tệp “'+jobs[ok].file.name+'” chưa tải được: '+(x&&x.message||'lỗi không rõ')+(ok?' Hãy chọn lại các tệp còn lại.':'')}
+    medList().push(rec);ok++};
+  /* tải song song tối đa 3 tệp một lúc; tệp lỗi không làm dừng các tệp còn lại */
+  const q=jobs.slice(),worker=async()=>{while(q.length){const j=q.shift();try{await one(j)}catch(x){bad.push(j.file.name+': '+(x&&x.message||'lỗi không rõ'))}done++;S.up.msg='Đang tải '+Math.min(done+1,jobs.length)+'/'+jobs.length+'...';render()}};
+  try{S.up.msg='Đang tải 1/'+jobs.length+'...';render();await Promise.all([worker(),worker(),worker()]);
+   if(bad.length){S.up.err=(ok?'Đã tải lên '+ok+' tệp. ':'')+'Chưa tải được '+bad.length+' tệp: '+bad.slice(0,3).join('; ')+(bad.length>3?'…':'')+(ok?' Hãy chọn lại các tệp chưa tải.':'')}
+   else{S.modal=S.modal.back||null;toast('Đã tải lên '+ok+' tệp'+(!doc&&!kids.length?'. Giáo viên vào tab “Hoạt động chung” để chọn bé.':''))}}
+  catch(x){S.up.err='Lỗi khi tải lên: '+(x&&x.message||'lỗi không rõ')}
   finally{S.up.busy=false;BUSY--;render()}})();
  return false};
 

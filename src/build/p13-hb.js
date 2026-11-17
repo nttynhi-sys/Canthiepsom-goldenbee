@@ -49,6 +49,26 @@ CHG.mkpgv=v=>{S.modal.gv=v};
 MODALS.mkp=()=>{const m=S.modal,r=DB.mk.find(x=>x.id===m.id),from=addD(TODAY>r.from.d?TODAY:r.from.d,1),fs=freeSlots(m.gv,r.hs,from,8);
  return mdl('Đề xuất giờ học bù cho '+kn(r.hs),`<form id="mkpf" class="f"><div><label for="mp-g">Giáo viên dạy bù</label><select id="mp-g" data-c="mkpgv">${opts(pool11().map(s=>[s.id,tName(s)]),m.gv)}</select></div>
  <fieldset style="border:1px solid var(--bd);border-radius:10px;padding:10px"><legend class="sm mu">Khung giờ còn trống (chọn tối đa 3)</legend>${fs.length?fs.map((s,i)=>`<label class="chk" style="padding:4px 0"><input type="checkbox" name="s" value="${s.date}|${s.slot}"> ${DAYN[dow(s.date)]} ${vd(s.date)} · ${slotLb(s.slot)}</label>`).join(''):'<p class="empty">Giáo viên không còn khung giờ trống trong 4 tuần tới.</p>'}</fieldset>
- <div class="err" role="alert">${esc(m.err||'')}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit" ${fs.length?'':'disabled'}>Gửi đề xuất cho phụ huynh</button></div></form>`)};
-FORM.mkpf=f=>{const ch=Array.from(f.querySelectorAll('input[name=s]:checked')).map(x=>x.value);if(!ch.length||ch.length>3){S.modal.err='Hãy chọn từ 1 đến 3 khung giờ';return}
- const r=DB.mk.find(x=>x.id===S.modal.id);r.props=ch.map((v,i)=>{const [d,slot]=v.split('|');return{id:'p'+i,d,slot,gv:S.modal.gv,by:'gv'}});r.s='tt';r.log.push({at:TODAY,by:isLead()?'tt':'gv',tx:'Đề xuất '+ch.length+' khung giờ học bù'});S.modal=null;toast('Đã gửi đề xuất cho phụ huynh')};
+ <fieldset style="border:1px solid var(--bd);border-radius:10px;padding:10px"><legend class="sm mu">Hoặc tự nhập ngày, giờ học bù (giờ bắt đầu từ ${DAY_OPEN} đến ${SLOT_LAST}, mỗi ca ${SLOT_MIN} phút)</legend>
+  ${[0,1,2].map(i=>{const x=(m.man||[])[i]||{};return`<div class="f2 mk-man" style="margin-bottom:6px"><div><label class="sm" for="mk-md${i}">Ngày ${i+1}</label><input id="mk-md${i}" name="md" type="date" min="${TODAY}" value="${esc(x.d||'')}"></div><div><label class="sm" for="mk-mt${i}">Giờ bắt đầu</label><input id="mk-mt${i}" name="mt" type="time" step="60" list="mkdl" value="${esc(x.t||'')}"></div></div>`}).join('')}<datalist id="mkdl">${SLOTS.map(t=>`<option value="${t}"></option>`).join('')}</datalist>
+  <p class="sm mu" style="margin:4px 0 0">Tổng số khung giờ chọn và tự nhập tối đa 3. Giáo viên, bé hoặc ngày nghỉ bị trùng thì hệ thống báo ngay.</p></fieldset>
+ <div class="err" role="alert">${esc(m.err||'')}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button>${isLead()?'<button class="btn" type="button" data-a="mkdirect" title="Dùng khi phụ huynh đã đồng ý giờ này">Xếp lịch luôn (1 khung giờ)</button>':''}<button class="btn p" type="submit">Gửi đề xuất cho phụ huynh</button></div></form>`)};
+/* gom khung giờ đã tick và các dòng tự nhập; kiểm tra giờ hợp lệ, ngày không ở quá khứ, không trùng lịch */
+function mkpCollect(f,m){const r=DB.mk.find(x=>x.id===m.id),out=Array.from(f.querySelectorAll('input[name=s]:checked')).map(x=>{const [d,slot]=x.value.split('|');return{d,slot}});
+ m.man=Array.from(f.querySelectorAll('.mk-man')).map(e=>({d:e.querySelector('[name=md]').value,t:e.querySelector('[name=mt]').value}));
+ for(const x of m.man){if(!x.d&&!x.t)continue;
+  if(!x.d||!x.t)return{err:'Mỗi dòng tự nhập cần đủ cả ngày và giờ.'};
+  if(x.d<TODAY)return{err:'Ngày học bù không được ở quá khứ.'};
+  if(!slotValid(x.t))return{err:slotMsg+'.'};
+  out.push({d:x.d,slot:x.t})}
+ const seen=new Set(),list=out.filter(x=>{const k=x.d+'|'+x.slot;if(seen.has(k))return false;seen.add(k);return true});
+ for(const x of list){const c=conflict({date:x.d,slot:x.slot,gv:m.gv,hs:r.hs});if(c)return{err:DAYN[dow(x.d)]+' '+vd(x.d)+' '+x.slot+': '+c}}
+ return{list}}
+FORM.mkpf=f=>{const m=S.modal,c=mkpCollect(f,m);if(c.err){m.err=c.err;return}if(!c.list.length||c.list.length>3){m.err='Hãy chọn hoặc nhập từ 1 đến 3 khung giờ';return}
+ const r=DB.mk.find(x=>x.id===m.id);r.props=c.list.map((x,i)=>({id:'p'+i,d:x.d,slot:x.slot,gv:m.gv,by:'gv'}));r.s='tt';r.log.push({at:TODAY,by:isLead()?'tt':'gv',tx:'Đề xuất '+c.list.length+' khung giờ học bù'});S.modal=null;toast('Đã gửi đề xuất cho phụ huynh')};
+/* Trung tâm xếp luôn một khung giờ (phụ huynh đã đồng ý): tạo lịch học bù và chuyển sang "Đã xác nhận" */
+ACT.mkdirect=()=>{const f=$q('#mkpf'),m=S.modal;if(!f||!isLead()||!m||m.t!=='mkp')return false;const c=mkpCollect(f,m);
+ if(c.err){m.err=c.err;return}if(c.list.length!==1){m.err='Để xếp lịch luôn, hãy chọn hoặc nhập đúng 1 khung giờ.';return}
+ const r=DB.mk.find(x=>x.id===m.id),p=c.list[0],x={id:'lb'+uid(),type:'bu',date:p.d,slot:p.slot,gv:m.gv,hs:r.hs,mk:r.id};
+ DB.lich=DB.lich.filter(l=>l.mk!==r.id);DB.lich.push(x);r.props=[{id:'p0',d:p.d,slot:p.slot,gv:m.gv,by:'tt'}];r.pick='p0';r.s='xn';
+ r.log.push({at:TODAY,by:'tt',tx:'Trung tâm xếp lịch học bù theo thỏa thuận với phụ huynh'});S.modal=null;toast('Đã xếp lịch học bù')};

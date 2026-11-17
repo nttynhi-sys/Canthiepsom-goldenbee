@@ -12,9 +12,14 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  ok('hiện danh sách 2 tệp đã chọn',/2 tệp đã chọn/.test(await page.textContent('#um-list')));
  await page.setInputFiles('#um-f2',[{name:'c.mp4',mimeType:'video/mp4',buffer:Buffer.from('0000')}]);
  ok('"Chọn thêm tệp" cộng dồn: 3 tệp, ô chính giữ đủ',/3 tệp đã chọn/.test(await page.textContent('#um-list'))&&await page.evaluate(()=>document.querySelector('#um-f').files.length)===3);
+ /* kéo thả thêm 2 tệp vào cửa sổ */
+ await page.evaluate(()=>{const dt=new DataTransfer();dt.items.add(new File(['x'],'k1.png',{type:'image/png',lastModified:1}));dt.items.add(new File(['yy'],'k2.png',{type:'image/png',lastModified:2}));
+  document.querySelector('#upmf').dispatchEvent(new DragEvent('drop',{dataTransfer:dt,bubbles:true,cancelable:true}))});
+ ok('kéo thả 2 tệp: cộng dồn thành 5 tệp',/5 tệp đã chọn/.test(await page.textContent('#um-list'))&&await page.evaluate(()=>document.querySelector('#um-f').files.length)===5,await page.textContent('#um-list'));
+ ok('ô chọn ảnh, video chỉ dùng image/*,video/* (điện thoại mở thư viện ảnh, chọn nhiều)',await page.getAttribute('#um-f','accept')==='image/*,video/*');
  await page.evaluate(()=>{document.querySelector('input[name=kid]').checked=true});
  await page.click('#upmf button[type=submit]');await page.waitForTimeout(1500);
- ok('tải lên đủ 3 tệp một lần',await page.evaluate(()=>medList().length)-n0===3);
+ ok('tải lên đủ 5 tệp một lần',await page.evaluate(()=>medList().length)-n0===5);
  await page.setViewportSize({width:390,height:844});
  await page.evaluate(()=>{S.modal=null;ACT.upm('av|');render()});await page.waitForSelector('#upmf');
  ok('điện thoại 390px: cửa sổ tải lên không tràn ngang',await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
