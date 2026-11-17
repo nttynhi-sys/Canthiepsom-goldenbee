@@ -117,7 +117,7 @@ const J=JSON.stringify;
  const V=await evV(()=>{const id=document.querySelector('#main [data-a="kpropen"]').dataset.v;ACT.kpropen(id);render();const f=document.querySelector('#kprf');
   f.elements.kp_bt.value='360000';f.requestSubmit();return{id,bt:DB.kpr[id]&&DB.kpr[id].bt,canMoney:canMoney(),hasHs:!!document.querySelector('.nav [data-v="hs"]')}});
  errs.push(...RV.errs);await RV.b.close();
- ok('Văn phòng (có quyền tiền, không có mục Học sinh trong menu) mở và lưu được giá riêng ngay từ trang Học phí',V.canMoney&&V.bt===360000&&!V.hasHs,V);
+ ok('Văn phòng (có quyền tiền; mục Học sinh chỉ có danh sách để xóa hồ sơ) mở và lưu được giá riêng ngay từ trang Học phí',V.canMoney&&V.bt===360000,V);
  for(const role of ['ql','gv','ph']){
   const RR=await open();await login(RR.page,role);
   const X=await RR.page.evaluate(()=>{const k=DB.kids[0],before=JSON.stringify(DB.kpr),r=ACT.kpropen(k.id),m1=S.modal&&S.modal.t,h=String(VIEWS.hp());

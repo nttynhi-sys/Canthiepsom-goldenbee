@@ -1528,13 +1528,13 @@ const PW='123456';
 const ACCESS={
  ql:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','mt','bc','td','cp','tb','tk'],
  tt:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','hp','tl','mt','bc','td','cp','tb','tk'],
- vp:['dash','tn','cc','vi','dd','hp','tl','td','tb','tk'],
+ vp:['dash','hs','tn','cc','vi','dd','hp','tl','td','tb','tk'],
  gv:['dash','hs','lh','tn','cc','vi','dd','hb','tl','mt','bc','td','tb'],
  ph:['cp','lh','tn','hb','hp','tb']};
 const NAV=[['dash','Dashboard','Tổng quan'],['ns','Nhân sự','Con người'],['hs','Học sinh'],['pc','Phân công'],['lh','Lịch học','Vận hành'],['tn','Thực đơn bán trú'],['cc','Chấm công'],['vi','Vi phạm nội quy'],['dd','Điểm danh'],['hb','Học bù'],['hp','Học phí','Tài chính'],['tl','Tiền lương'],['mt','Ngân hàng mục tiêu','Chuyên môn'],['bc','Báo cáo chuyên môn'],['td','Ảnh, video và tài liệu'],['cp','Cổng phụ huynh','Phụ huynh'],['tb','Thông báo'],['tk','Thống kê','Báo cáo']];
 const VLAB={gv:{hs:'Học sinh của tôi',lh:'Lịch dạy của tôi',cc:'Chấm công của tôi',vi:'Vi phạm của tôi',dd:'Điểm danh',tl:'Phiếu lương của tôi',bc:'Báo cáo của tôi',td:'Ảnh, video và tài liệu'},ph:{cp:'Cổng phụ huynh',hp:'Học phí',lh:'Lịch học của bé',tn:'Thực đơn bán trú'},vp:{cc:'Chấm công nhân sự',dd:'Ngày học và phép'}};
 /* tiêu đề nhóm riêng cho từng vai trò (khi nhóm gốc không hiện ra với vai trò đó) */
-const NAVG={vp:{tn:'Vận hành',tb:'Liên lạc'},ph:{cp:'Tổng quan',lh:'Lịch học',tb:'Liên lạc'}};
+const NAVG={vp:{hs:'Con người',tn:'Vận hành',tb:'Liên lạc'},ph:{cp:'Tổng quan',lh:'Lịch học',tb:'Liên lạc'}};
 const vlab=v=>((VLAB[U&&U.role]||{})[v])||NAV.find(n=>n[0]===v)[1];
 const isQL=()=>!!U&&U.role==='ql',isTT=()=>!!U&&U.role==='tt',isVP=()=>!!U&&U.role==='vp',isLead=()=>!!U&&(U.role==='ql'||U.role==='tt'),isGV=()=>!!U&&U.role==='gv',isPH=()=>!!U&&U.role==='ph';
 /* Người được phân giao dạy trẻ (1-1, bán trú, học bù): Giáo viên (gv) và Quản lý (ql). Trưởng Trung tâm, Văn phòng và hành chính không nằm trong danh sách phân giao. Quản lý vẫn giữ quyền Quản lý của mình, chỉ thêm việc được chọn làm người dạy. */
@@ -1548,7 +1548,8 @@ const activeTeachers=()=>DB.staff.filter(s=>s.st==='dang'&&(s.role==='gv'||(s.ro
    canCfg: chỉ Trưởng Trung tâm đổi thông số tiền, mức lương và vai trò nhân sự.
    seesAll: thấy mọi học sinh và mọi nhân sự (Quản lý, Trưởng Trung tâm, Văn phòng).
    noFee/feeTx: Quản lý và Giáo viên không thấy chữ nào về phí; feeTx ẩn câu nhắc đến phí với hai vai trò này. */
-const canMoney=()=>isTT()||isVP(),canCfg=()=>isTT(),seesAll=()=>isLead()||isVP(),noFee=()=>isQL()||isGV(),feeTx=t=>noFee()?'':t;
+/* xóa hồ sơ bé: Trưởng Trung tâm, Quản lý, Văn phòng (hành chính) */
+const canDelKid=()=>isLead()||isVP(),canMoney=()=>isTT()||isVP(),canCfg=()=>isTT(),seesAll=()=>isLead()||isVP(),noFee=()=>isQL()||isGV(),feeTx=t=>noFee()?'':t;
 /* hồ sơ nhân sự Quản lý, Trưởng Trung tâm và Văn phòng chỉ Trưởng Trung tâm sửa (Quản lý chỉ sửa được hồ sơ của chính mình) */
 const lockAcc=s=>!isTT()&&!!s&&(s.role==='tt'||s.role==='vp'||(s.role==='ql'&&(!U||s.id!==U.id)));
 const myGroups=()=>isGV()?DB.groups.filter(g=>grHas(g,U.id)):[];
@@ -1819,7 +1820,7 @@ const mainGV=k=>kTs(k).length?kNames(k):(grBy(k.gr)?grNames(grBy(k.gr)):'Chưa p
 const grByAge=dob=>mo(dob)<72?'G1':'G2'; /* Ong non: dưới 6 tuổi, Ong mật: từ 6 tuổi (chỉ là gợi ý, chọn lớp tay được) */
 const hsInit=()=>S.hs=Object.assign({tab:'ds',q:'',st:'dang',pr:'',gv:'',dx:'',lib:{dom:'',src:'',head:'',age:'',q:''},bi:{date:WD,gv:'',q:''}},S.hs);
 VIEWS.hs=()=>{const h=hsInit();
- const tabs=[['ds',isGV()?'Học sinh của tôi':'Danh sách học sinh'],['bi','Buổi can thiệp'],['mt','Ngân hàng mục tiêu']];
+ const tabs=isVP()?[['ds','Danh sách học sinh']]:[['ds',isGV()?'Học sinh của tôi':'Danh sách học sinh'],['bi','Buổi can thiệp'],['mt','Ngân hàng mục tiêu']];   /* Văn phòng chỉ vào danh sách để xem thông tin và xóa hồ sơ, không xem hồ sơ chuyên môn */
  if(!tabs.some(t=>t[0]===h.tab))h.tab='ds';
  return head(isGV()?'Học sinh của tôi':'Học sinh',myKids().filter(k=>k.st==='dang').length+' trẻ đang học',isLead()&&h.tab==='ds'?(kidRenumPlan().length?'<button class="btn" data-a="krenopen">Sắp xếp lại mã</button> ':'')+'<button class="btn p" data-a="hsnew">Thêm học sinh</button>':h.tab==='mt'&&isLead()?'<button class="btn p" data-a="cgnew">Thêm mục tiêu của Trung tâm</button>':'')+tabsH(tabs,h.tab,'hstab')+(h.tab==='ds'?hsList():h.tab==='bi'?hsBi():hsLib())};
 ACT.hstab=v=>{S.hs.tab=v};
@@ -1830,7 +1831,7 @@ function hsList(){const h=S.hs,q=h.q.toLowerCase();
  const all=myKids().filter(k=>(!h.st||k.st===h.st)&&(!h.pr||(h.pr==='11'?wk11(k.id)>0:k.bt))&&(!h.gv||kHas(k,h.gv)||grHas(grBy(k.gr),h.gv))&&(!h.dx||dxOf(k).includes(h.dx))&&(!q||(k.n+' '+kcode(k)+' '+k.id+' '+k.pn+' '+k.pp+' '+dxNames(k).join(' ')).toLowerCase().includes(q))),p=pg('hs',all,15);
  const dxUsed=DXG.map(g=>[g.t,g.a.filter(x=>DB.kids.some(k=>dxOf(k).includes(x[0])))]).filter(g=>g[1].length);
  return`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="hsq">Tìm theo tên bé, mã, phụ huynh hoặc chẩn đoán</label><input id="hsq" data-i="hsq" value="${esc(h.q)}"></div><div><label for="hs1">Trạng thái</label><select id="hs1" data-c="hsf1"><option value="">Tất cả</option>${opts(Object.entries(KST),h.st)}</select></div><div><label for="hs2">Chương trình</label><select id="hs2" data-c="hsf2"><option value="">Tất cả</option>${opts([['11','Có can thiệp 1-1'],['bt','Có bán trú']],h.pr)}</select></div><div><label for="hs4">Chẩn đoán</label><select id="hs4" data-c="hsf4"><option value="">Tất cả</option>${dxUsed.map(g=>`<optgroup label="${esc(g[0])}">${opts(g[1].map(x=>[x[0],dxShort(x[0])]),h.dx)}</optgroup>`).join('')}</select></div>${isLead()?`<div><label for="hs3">Giáo viên</label><select id="hs3" data-c="hsf3"><option value="">Tất cả</option>${opts(DB.staff.filter(isTeacher).map(s=>[s.id,tName(s)]),h.gv)}</select></div>`:''}</div>`
- +tbl(['Mã','Họ tên','Tuổi','Nhu cầu, chẩn đoán','Chương trình','Giáo viên','Phụ huynh','Trạng thái'],p.rows.map(k=>`<tr class="k" data-a="hsopen" data-v="${k.id}"><td class="nw"><b>${esc(kcode(k))}</b></td><td><b>${esc(k.n)}</b></td><td class="nw">${age(k.dob)}</td><td>${esc(k.nd)}<br><span class="sm">${dxCell(k)}</span></td><td>${esc(progOf(k))}</td><td>${esc(mainGV(k))}</td><td>${esc(k.pr)} ${esc(given(k.pn))}<br><span class="sm mu">${esc(k.pp)}</span></td><td>${tg(KST[k.st],k.st==='dang'?'ok':k.st==='bl'?'wa':'gy')}</td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+`</div>`}
+ +tbl(['Mã','Họ tên','Tuổi','Nhu cầu, chẩn đoán','Chương trình','Giáo viên','Phụ huynh','Trạng thái',''],p.rows.map(k=>`<tr class="k" data-a="hsopen" data-v="${k.id}"><td class="nw"><b>${esc(kcode(k))}</b></td><td><b>${esc(k.n)}</b></td><td class="nw">${age(k.dob)}</td><td>${esc(k.nd)}<br><span class="sm">${dxCell(k)}</span></td><td>${esc(progOf(k))}</td><td>${esc(mainGV(k))}</td><td>${esc(k.pr)} ${esc(given(k.pn))}<br><span class="sm mu">${esc(k.pp)}</span></td><td>${tg(KST[k.st],k.st==='dang'?'ok':k.st==='bl'?'wa':'gy')}</td><td class="nw">${canDelKid()?`<button class="btn s no" data-a="hsdelk" data-v="${esc(k.id)}" aria-label="Xóa hồ sơ bé ${esc(k.n)}">Xóa</button>`:''}</td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+`</div>`}
 /* --- sắp xếp lại mã học sinh: sau khi xóa hồ sơ, số thứ tự trong mã (HS01, HS02...) có thể đứt quãng; dồn lại cho liên tục, xem trước từng bé trước khi lưu --- */
 MODALS.kren=()=>{if(!isLead()){S.modal=null;return''}const pl=kidRenumPlan();if(!pl.length){S.modal=null;return''}
  return mdl('Sắp xếp lại mã học sinh','<p>Mã học sinh đang đứt quãng do đã xóa hồ sơ. Bấm “Sắp xếp lại” để mã đi liên tục từ HS01, giữ nguyên thứ tự hiện có. Chỉ mã hiển thị đổi; buổi học, kế hoạch, điểm danh, học phí và tài khoản phụ huynh của bé không bị ảnh hưởng.</p>'
@@ -1841,12 +1842,12 @@ ACT.krenyes=()=>{if(!isLead())return false;const n=kidRenumber();S.modal=null;to
 ACT.hsopen=v=>{S.modal={t:'hs',id:v,tab:'tt'}};
 ACT.hstab2=v=>{S.modal.tab=v};
 MODALS.hs=()=>{const m=S.modal,k=kidBy(m.id);if(!k||!canKid(k.id)){S.modal=null;return''}
- const T=[['tt','Thông tin'],['lh','Lịch học'],['kh','Kế hoạch mục tiêu'],['bt','Buổi can thiệp'],['tb','Tiến bộ'],['vd','Ảnh và video'],['td','Hồ sơ, giáo án']];
- let b;switch(m.tab){case'lh':b=hsSchedule(k);break;case'kh':b=hsPlan(k);break;case'bt':b=hsSess(k);break;case'tb':b=progView(k,{staff:true});break;case'vd':b=vidList(k.id);break;case'td':b=docList(k.id);break;default:b=hsInfo(k)}
+ const T=isVP()?[['tt','Thông tin']]:[['tt','Thông tin'],['lh','Lịch học'],['kh','Kế hoạch mục tiêu'],['bt','Buổi can thiệp'],['tb','Tiến bộ'],['vd','Ảnh và video'],['td','Hồ sơ, giáo án']];
+ let b;if(isVP())m.tab='tt';switch(m.tab){case'lh':b=hsSchedule(k);break;case'kh':b=hsPlan(k);break;case'bt':b=hsSess(k);break;case'tb':b=progView(k,{staff:true});break;case'vd':b=vidList(k.id);break;case'td':b=docList(k.id);break;default:b=hsInfo(k)}
  return mdl(k.n+' · '+kcode(k),tabsH(T,m.tab,'hstab2')+b,1)};
 function hsInfo(k){const g=grBy(k.gr),r=(a,b)=>`<div class="rw"><span class="mu">${a}</span><b>${b}</b></div>`;
  return`<div class="two"><div>${r('Giới tính',k.g==='M'?'Nam':'Nữ')}${r('Ngày sinh',vd(k.dob)+' ('+age(k.dob)+')')}${r('Ngày nhập học',vd(k.sd))}${r('Nhu cầu chính',esc(k.nd))}${r('Chẩn đoán',dxOf(k).length||k.dxo?dxNames(k,dxFull).map(x=>`<span style="display:block;text-align:right">${esc(x)}</span>`).join(''):'<span class="mu">Chưa ghi</span>')}${k.dxn?r('Nơi, bác sĩ, ngày chẩn đoán',esc(k.dxn)):''}${r('Trạng thái',tg(KST[k.st],k.st==='dang'?'ok':'gy'))}${r('Chương trình',esc(progOf(k)))}${r('Giáo viên 1-1',kTs(k).length?kTs(k).map(id=>`<span style="display:block;text-align:right">${esc(sn(id))}${kTc(k,id)?` <span class="mu sm">· ${esc(kTc(k,id))}</span>`:''}</span>`).join(''):'Không có')}${r('Giờ 1-1 đăng ký',ltSummary(k))}${r('Nhóm bán trú',g&&k.bt?esc(g.n)+' · '+dayTx(btOf(k)):'Không có')}</div>
- <div>${r('Phụ huynh',esc(k.pr)+' '+esc(k.pn))}${r('Điện thoại',esc(k.pp))}${r('Email cổng phụ huynh',esc(k.pe||'—'))}${canMoney()?r('Công nợ',fmt(balance(k.id))):''}<div class="acts" style="margin-top:12px">${isLead()?`<button class="btn p" data-a="hsedit" data-v="${k.id}">Sửa hồ sơ</button> <button class="btn no" data-a="hsdelk" data-v="${k.id}">Xóa hồ sơ bé</button>`:''}<button class="btn" data-a="ddkid" data-v="${k.id}">Bảng chấm công của bé</button></div></div></div>`}
+ <div>${r('Phụ huynh',esc(k.pr)+' '+esc(k.pn))}${r('Điện thoại',esc(k.pp))}${r('Email cổng phụ huynh',esc(k.pe||'—'))}${canMoney()?r('Công nợ',fmt(balance(k.id))):''}<div class="acts" style="margin-top:12px">${isLead()?`<button class="btn p" data-a="hsedit" data-v="${k.id}">Sửa hồ sơ</button> `:''}${canDelKid()?`<button class="btn no" data-a="hsdelk" data-v="${k.id}">Xóa hồ sơ bé</button> `:''}<button class="btn" data-a="ddkid" data-v="${k.id}">Bảng chấm công của bé</button></div></div></div>`}
 /* --- thêm, sửa hồ sơ --- */
 ACT.hsnew=()=>{S.modal={t:'hsf',id:''}};
 ACT.hsedit=v=>{S.modal={t:'hsf',id:v}};
@@ -2066,7 +2067,7 @@ CHG.lsgv=(v,t)=>{const l=DB.lich.find(x=>x.id===t.dataset.l),k=l&&kidBy(l.hs),ba
 ACT.hslsdel=v=>{const l=DB.lich.find(x=>x.id===v),k=l&&kidBy(l.hs),back=S.modal;if(!l||!k||!isLead())return false;
  ask('Xóa buổi 1-1 '+DAYN[l.day]+' '+slotLb(l.slot)+' của bé '+k.n+'? Các lần điểm danh trước đây vẫn được giữ.',()=>{DB.lich=DB.lich.filter(x=>x.id!==v);k.m11=wk11(k.id);S.modal=Object.assign({},back,{res:null});toast('Đã xóa buổi học')},'Xóa buổi')};
 
-/* --- xóa hồ sơ bé (Trưởng Trung tâm, Quản lý): nhập sai hoặc bé không còn học; bé chỉ nghỉ thì dùng "Ngưng can thiệp" --- */
+/* --- xóa hồ sơ bé (Trưởng Trung tâm, Quản lý, Văn phòng): nhập sai hoặc bé không còn học; bé chỉ nghỉ thì dùng "Ngưng can thiệp" --- */
 function hsDelKid(id){
  if(DB.kpr)delete DB.kpr[id];
  DB.kids=DB.kids.filter(x=>x.id!==id);
@@ -2081,10 +2082,10 @@ function hsDelKid(id){
  Object.keys(DB.set).forEach(x=>{if(x.split('|').includes(id))delete DB.set[x]});
  kidRenumber();   /* dồn số hiển thị của các bé còn lại cho liên tục, không đụng đến khóa k.id */
 }
-ACT.hsdelk=v=>{const k=kidBy(v);if(!k||!isLead()||!canKid(k.id))return false;
+ACT.hsdelk=v=>{const k=kidBy(v);if(!k||!canDelKid()||!canKid(k.id))return false;
  const n=DB.sess.filter(s=>s.k===k.id).length;
  const later=DB.kids.filter(x=>kNo(x)>kNo(k)).length;
- ask('Xóa hồ sơ của bé '+k.n+' ('+kcode(k)+')? Sẽ xóa cả '+n+' buổi can thiệp, kế hoạch, lịch 1-1, điểm danh, báo cáo và học phí của bé. Không hoàn tác được.'+(later?' Mã của '+later+' bé phía sau sẽ được dồn lên cho liên tục.':'')+' Nếu bé chỉ nghỉ, hãy dùng “Ngưng can thiệp” thay vì xóa.',()=>{hsDelKid(k.id);S.modal=null;toast('Đã xóa hồ sơ bé '+k.n);render()},'Xóa hồ sơ');return false};
+ ask('Xóa hồ sơ của bé '+k.n+' ('+kcode(k)+')? Sẽ xóa cả '+n+' buổi can thiệp, kế hoạch, lịch 1-1, điểm danh, báo cáo và học phí của bé. Không hoàn tác được.'+(later?' Mã của '+later+' bé phía sau sẽ được dồn lên cho liên tục.':'')+' Nếu bé chỉ nghỉ, hãy dùng “Ngưng can thiệp” thay vì xóa.',()=>{if(!canDelKid())return;hsDelKid(k.id);S.modal=null;toast('Đã xóa hồ sơ bé '+k.n);render()},'Xóa hồ sơ')};   /* không trả về false: phải vẽ lại để hộp xác nhận hiện lên */
 /* ===== 3b. Can thiệp cá nhân: kế hoạch mục tiêu, buổi can thiệp, ngân hàng mục tiêu ===== */
 const trunc=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
 const domTag=(d,g)=>g&&isPlay(g)?`<span class="tag gy" title="Chơi (thuộc lĩnh vực ${esc(DM[d].n)})">Chơi</span>`:`<span class="tag gy" title="${esc(DM[d].n)}">${esc(DM[d].s)}</span>`;

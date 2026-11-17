@@ -35,6 +35,7 @@ Cập nhật 16/11/2026 (mã ứng dụng cuối: `154babd`). Quy tắc, nghiệ
 - Chặn tuyệt đối chụp màn hình: không làm được trên web, chỉ răn đe.
 
 ## 6. Lỗi đang tồn tại (xác nhận 16/11/2026 trên `154babd`)
+- Cùng lỗi "hộp xác nhận không hiện" như xóa hồ sơ bé (trước khi sửa): `ACT.bcdel` ở `p16-bc.js` (xóa báo cáo, đã xác nhận bằng trình duyệt: bấm thì `S.modal` là `ask` nhưng không vẽ) và, cùng mẫu mã chưa kiểm tra bằng trình duyệt, `ACT.nvdel` ở `p07-hr.js` (xóa hồ sơ nhân sự). Nguyên nhân: `ask(...);return false`. Chưa sửa vì ngoài phạm vi yêu cầu xóa hồ sơ bé.
 - `test/z25-sd-bank.js`: 6 đạt, 1 lỗi ở kiểm tra "bộ Rối loạn cảm giác – Tích hợp giác quan có trong danh sách (Cu vẫn cuối)". Chưa tìm nguyên nhân.
 - `test/n2.js`: dừng ở dòng 49 với `Cannot read properties of undefined (reading 'click')`. Lỗi từ trước.
 
@@ -56,6 +57,7 @@ Cập nhật 16/11/2026 (mã ứng dụng cuối: `154babd`). Quy tắc, nghiệ
 - Kỹ thuật: tìm nguyên nhân `z25-sd-bank` và `n2.js`. Chưa có yêu cầu tính năng nào đang chờ.
 
 ## 10. Nhật ký
+- 17/11 xóa hồ sơ bé: sửa lỗi hộp xác nhận không hiện (`ACT.hsdelk` trả `false`), cho Trưởng Trung tâm, Quản lý, Văn phòng xóa (`canDelKid`), thêm nút Xóa ở danh sách; Văn phòng có mục Học sinh chỉ gồm danh sách và thông tin. Không đổi database. Bài thử `z52-xoa-ho-so-be`, `cloud-xoa-ho-so-be`.
 - 17/11 (1) mục tiêu buổi SMART được lưu lại: buổi mới tự điền các dòng của buổi gần nhất cùng mục tiêu ngắn hạn, kết quả để trống (`seCarry`, `sePush`); (2) một dòng mục tiêu buổi chọn được nhiều mức hỗ trợ (`it.sups`, `it.sup` là mức cần hỗ trợ nhiều nhất); (3) tải ảnh, video: kéo thả, chọn thêm, tải song song 3 tệp, `accept` ảnh/video đơn giản cho điện thoại; (4) Học bù: tự nhập ngày giờ, "Xếp lịch luôn" cho Trung tâm (`mkpCollect`, `ACT.mkdirect`). Không đổi database. Bài thử `z51-hoc-bu-tu-nhap`, `y6-goals`, `z50-tai-nhieu-tep`.
 - 16/11 kết quả 10 lượt: chạm ô số N là bé đúng N lượt (N=2 → 20%, N=5 → 50%), chạm lại ô đó để xóa, ô 0 = không đúng lượt nào (`ACT.setr` ở `p08b-ci.js`); khối bài tập (`gxHtml`) của mục tiêu ngân hàng vẫn mở sẵn ở nhóm và ở dòng chưa gắn mục tiêu ngắn hạn. Không đổi database; dữ liệu cũ (chuỗi V/X/.) đọc như cũ.
 - 16/11 form ghi buổi phân tầng: Lĩnh vực ⇒ Mục tiêu ngắn hạn (chọn từ kế hoạch, lấy từ ngân hàng) ⇒ nhiều mục tiêu buổi trị liệu do giáo viên tự viết theo SMART; mỗi dòng không lặp lại tên mục tiêu (`seGroups`, `seItem` ở `p08b-ci.js`). Xem buổi và thẻ buổi lấy SMART làm nội dung chính. Không đổi database.
