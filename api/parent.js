@@ -102,6 +102,7 @@ async function snapshot(me, since, known) {
     job.push(['records', 'collection=eq.att&' + orList(ids, i => 'id.like.*|' + i) + sf]);
     job.push(['money', 'collection=eq.set&' + orList(ids, i => 'id.like.' + i + '|*') + sm]);
     job.push(['money', 'collection=eq.kpr&id=' + inList(ids) + sm]);   /* giá riêng từng bé: chỉ của bé thuộc tài khoản */
+    job.push(['money', 'collection=eq.dep&id=' + inList(ids) + sm]);   /* phí cọc từng bé: chỉ của bé thuộc tài khoản (số tiền và ngày hoàn) */
     job.push(['money', 'collection=eq.lg&data->>hs=' + inList(ids) + sm]);
     job.push(['records', 'collection=eq.media' + (since ? '' : '&data->>sh=eq.1') + sf]);
   }
