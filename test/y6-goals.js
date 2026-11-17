@@ -91,17 +91,30 @@ const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,
  await page.fill('.se-grp:first-of-type textarea[data-c="sesg"] >> nth=1','Trong buổi, bé chọn đúng 4/5 thẻ hình.');await page.dispatchEvent('.se-grp:first-of-type textarea[data-c="sesg"] >> nth=1','change');
  await ev(()=>{S.modal.it.forEach(i=>{i.tr='VVVVVVVVVV'})});
  await page.fill('textarea[data-c="sesg"] >> nth=0','Trong buổi, bé nhìn cô 8/10 lượt khi được gọi tên.');await page.dispatchEvent('textarea[data-c="sesg"] >> nth=0','change');
- await ev(()=>{S.modal.it[0].tr='VVVVVVVVVV';S.modal.it[0].sup='VP'});
+ /* chọn nhiều mức hỗ trợ: bấm để thêm, bấm lại để bỏ, luôn còn ít nhất một mức; sup = mức cần hỗ trợ nhiều nhất */
+ const SU=await ev(()=>{const it=S.modal.it[0],r={};it.sup='GP';delete it.sups;
+  ACT.sesup('0|VP');r.a1=it.sups.join();r.m1=it.sup;ACT.sesup('0|FP');r.a2=it.sups.join();r.m2=it.sup;ACT.sesup('0|FP');ACT.sesup('0|GP');r.a3=it.sups.join();r.m3=it.sup;ACT.sesup('0|VP');r.a4=it.sups.join();
+  ACT.sesup('0|GP');ACT.sesup('0|VP');r.m4=it.sup;return r});
+ ok('chọn nhiều mức hỗ trợ: thêm, bỏ, giữ ít nhất một mức, mức chính là mức cần hỗ trợ nhiều nhất',SU.a1==='GP,VP'&&SU.m1==='GP'&&SU.a2==='FP,GP,VP'&&SU.m2==='FP'&&SU.a3==='VP'&&SU.m3==='VP'&&SU.a4==='VP'&&SU.m4==='GP',SU);
+ await page.click('.si >> nth=0 >> .seg .sg.sp-VP');await W();
+ ok('form: nhiều nút mức hỗ trợ cùng sáng',await ev(()=>document.querySelectorAll('.si:first-of-type .seg .sg.on, .se-grp .si .seg .sg.on').length>=2));
+ await ev(()=>{S.modal.it[0].tr='VVVVVVVVVV'});
  const nIt=await ev(()=>S.modal.it.length);
  /* chạm ô số N = N lượt đúng trên 10 */
  const TR=await ev(()=>{const r={};S.modal.it[0].tr=TR0;ACT.setr('0|1');r.two=S.modal.it[0].tr;r.p2=trPct(r.two);ACT.setr('0|4');r.five=S.modal.it[0].tr;r.p5=trPct(r.five);ACT.setr('0|4');r.clr=S.modal.it[0].tr;ACT.setr('0|-1');r.zero=S.modal.it[0].tr;S.modal.it[0].tr='VVVVVVVVVV';return r});
  ok('chạm ô 2 = 20%, ô 5 = 50%, chạm lại ô đó xóa kết quả, ô 0 = 0 lượt đúng',TR.two==='VVXXXXXXXX'&&TR.p2===20&&TR.five==='VVVVVXXXXX'&&TR.p5===50&&TR.clr==='..........'&&TR.zero==='XXXXXXXXXX',TR);
  await page.click('[data-a="sesave"]');await W();
- const sv=await ev(id=>{const s=DB.sess.filter(x=>x.k===id&&!/^[tu]\d+$/.test(x.id)).pop();return{sg:s.it[0].sg,sg2:s.it.map(i=>i.sg),sup:s.it[0].sup,pl:s.it[0].pl,st:s.st,n:s.it.length}},K.id);
- ok('lưu buổi: giữ nội dung SMART, mức "Gợi nhắc bằng lời" và gắn mục tiêu ngắn hạn',/8\/10 lượt/.test(sv.sg||'')&&sv.sup==='VP'&&sv.pl&&sv.st==='xong',sv);
+ const sv=await ev(id=>{const s=DB.sess.filter(x=>x.k===id&&!/^[tu]\d+$/.test(x.id)).pop();return{sg:s.it[0].sg,sg2:s.it.map(i=>i.sg),sup:s.it[0].sup,sups:(s.it[0].sups||[]).join(),pl:s.it[0].pl,st:s.st,n:s.it.length}},K.id);
+ ok('lưu buổi: giữ nội dung SMART, hai mức hỗ trợ (GP + Gợi nhắc bằng lời) và gắn mục tiêu ngắn hạn',/8\/10 lượt/.test(sv.sg||'')&&sv.sup==='GP'&&sv.sups==='GP,VP'&&sv.pl&&sv.st==='xong',sv);
  ok('lưu buổi: một mục tiêu ngắn hạn giữ nhiều mục tiêu buổi (SMART) khác nhau',sv.n===nIt&&sv.sg2.some(x=>/4\/5 thẻ hình/.test(x||'')),sv);
  const rs=await ev(id=>{const k=id;return{sc:recSc({tr:'VVVVVVVVVV',sup:'VP'}),vs:recSc({tr:'VVVVVVVVVV',sup:'VS'}),gp:recSc({tr:'VVVVVVVVVV',sup:'GP'}),td:recSc({tr:'VVVVVVVVVV',sup:'TD'}),band:[bandOf('VP'),bandOf('VS')]}},K.id);
  ok('điểm: GP 65 < Gợi nhắc bằng lời 72 < hình ảnh 78 < TG trễ 85; cả hai thuộc nhóm "Cần gợi ý"',rs.gp===65&&rs.sc===72&&rs.vs===78&&rs.td===85&&rs.band.join()==='1,1',rs);
+ /* mục tiêu buổi (SMART) được lưu lại: buổi sau tự điền, không phải nhập lại */
+ const CR=await ev(id=>{const sv0=DB.sess.filter(x=>x.k===id&&!/^[tu]\d+$/.test(x.id)).pop();S.modal=null;ACT.senew(id+'|'+addD(TODAY,1));render();
+  const m=S.modal,want=sv0.it.map(i=>(i.pl||'')+'|'+i.g+'|'+(i.sg||'')),got=m.it.map(i=>(i.pl||'')+'|'+i.g+'|'+(i.sg||''));
+  return{want,got,blank:m.it.every(i=>i.tr==='..........'),sups:m.it.filter(i=>i.sups).map(i=>i.sups.join()),date:m.date}},K.id);
+ ok('buổi mới tự điền lại các mục tiêu buổi (SMART) của buổi trước, kết quả để trống',CR.want.every(x=>CR.got.includes(x))&&CR.blank,CR);
+ ok('buổi mới giữ cả các mức hỗ trợ đã chọn ở buổi trước',CR.sups.includes('GP,VP'),CR);
  await ev(()=>{S.modal=null;render()});
  const Pk=await ev(id=>{const before=DB.plans.length;ACT.senew(id);render();
   const gn=LIBI.filter(x=>x.d==='nd'&&x.s==='ab')[14].id,gc=LIBI.filter(x=>x.d==='cy'&&x.s==='ab')[3].id;

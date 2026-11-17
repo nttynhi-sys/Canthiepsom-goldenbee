@@ -2603,6 +2603,10 @@ ACT.hsdelk=v=>{const k=kidBy(v);if(!k||!isLead()||!canKid(k.id))return false;
 const trunc=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
 const domTag=(d,g)=>g&&isPlay(g)?`<span class="tag gy" title="Chơi (thuộc lĩnh vực ${esc(DM[d].n)})">Chơi</span>`:`<span class="tag gy" title="${esc(DM[d].n)}">${esc(DM[d].s)}</span>`;
 const supTag=s=>`<span class="sp sp-${s}" title="${esc(SUP[s].n+': '+SUP[s].h)}">${esc(SUP[s].n)}</span>`;
+/* Một dòng mục tiêu buổi có thể dùng nhiều mức hỗ trợ cùng lúc (i.sups, theo thứ tự SUPK); i.sup là mức cần hỗ trợ nhiều nhất (hệ số thấp nhất) để điểm và biểu đồ vẫn tính một mức như cũ */
+const supsOf=i=>{const a=(Array.isArray(i.sups)&&i.sups.length?i.sups:[i.sup]).filter(s=>SUP[s]);return SUPK.filter(s=>a.includes(s))};
+const supMain=a=>a.slice().sort((x,y)=>SUP[x].w-SUP[y].w)[0];
+const supTags=i=>supsOf(i).map(supTag).join(' ');
 const strip=tr=>`<span class="trs" role="img" aria-label="${trOk(tr)} lượt đúng trên ${trN(tr)} lượt">${tr.split('').map(c=>`<i class="${c==='V'?'tv':c==='X'?'tx':'to'}"></i>`).join('')}</span>`;
 /* người phụ trách bé: các giáo viên 1-1 của bé (nhiều người, ngang nhau), nếu không có thì mọi giáo viên của lớp bán trú (ngang nhau) */
 const kidGVs=k=>kTs(k).length?kTs(k):grTs(grBy(k.gr));
@@ -2639,14 +2643,14 @@ ACT.plnext=v=>{const [k,g]=v.split('|'),src=DB.plans.find(p=>p.k===k&&p.s==='dat
 function sessCard(s,showKid){const k=kidBy(s.k),pl=s.st==='kh',rs=s.it.filter(i=>trN(i.tr)),pc=rs.length?Math.round(avg(rs.map(recSc))):null;
  return`<div class="sess"><div class="sess-h"><div><b>${DAYS[dow(s.date)]} ${vd(s.date)}</b>${showKid&&k?' · <b>'+esc(k.n)+'</b>':''} <span class="sm mu">· ${esc(given(sn(s.by)))}</span> ${pl?tg('Kế hoạch','y'):tg('Đã ghi','ok')}${pc!=null?' <span class="sm mu">chỉ số tự làm '+pc+'</span>':''}</div><div class="acts"><button class="btn s" data-a="sesview" data-v="${s.id}">Xem</button>${canEditSess(s)?`<button class="btn s ${pl?'p':''}" data-a="seedit" data-v="${s.id}">${pl?'Ghi kết quả':'Sửa'}</button>`:''}</div></div>
  <div class="sess-d">${(s.dom||[]).map(domTag).join(' ')}</div>
- <ul class="sess-i">${s.it.map(i=>`<li><span class="gn">${esc(i.sg?trunc(i.sg,120):gName(i.g))}</span>${i.sg?`<span class="sm mu"> · ${esc(trunc(gName(i.g),60))}</span>`:''} ${supTag(i.sup)} ${trN(i.tr)?strip(i.tr)+' <b>'+trPct(i.tr)+'%</b>':'<span class="sm mu">chưa ghi kết quả</span>'}</li>`).join('')}</ul>
+ <ul class="sess-i">${s.it.map(i=>`<li><span class="gn">${esc(i.sg?trunc(i.sg,120):gName(i.g))}</span>${i.sg?`<span class="sm mu"> · ${esc(trunc(gName(i.g),60))}</span>`:''} ${supTags(i)} ${trN(i.tr)?strip(i.tr)+' <b>'+trPct(i.tr)+'%</b>':'<span class="sm mu">chưa ghi kết quả</span>'}</li>`).join('')}</ul>
  ${s.note?`<p class="sm"><b>Nhận xét:</b> ${esc(s.note)}</p>`:''}${s.home?`<p class="sm"><b>Gợi ý ở nhà:</b> ${esc(s.home)}</p>`:''}</div>`}
 function hsSess(k){const ss=sessOf(k.id,'','9999-12-31',true).reverse();
  return`<div class="acts" style="margin-bottom:12px"><button class="btn p" data-a="senew" data-v="${k.id}">Ghi buổi can thiệp</button><span class="sm mu">${ss.filter(s=>s.st==='xong').length} buổi đã ghi${ss.some(s=>s.st==='kh')?', '+ss.filter(s=>s.st==='kh').length+' buổi kế hoạch':''}</span></div>`+(ss.length?ss.slice(0,10).map(s=>sessCard(s,false)).join(''):'<p class="empty">Chưa có buổi can thiệp nào. Bấm “Ghi buổi can thiệp” để bắt đầu.</p>')+(ss.length>10?'<p class="sm mu">Hiển thị 10 buổi gần nhất.</p>':'')}
 ACT.sesview=v=>{S.modal={t:'sev',id:v,back:S.modal&&S.modal.t==='hs'?S.modal:null}};
 MODALS.sev=()=>{const s=DB.sess.find(x=>x.id===S.modal.id);if(!s||!canKid(s.k)){S.modal=null;return''}const k=kidBy(s.k),pl=s.st==='kh';
  return mdl('Buổi can thiệp · '+k.n,`<p class="mu sm" style="margin-bottom:10px">${DAYN[dow(s.date)]}, ${vd(s.date)} · Giáo viên ${esc(sn(s.by))} · ${pl?'Kế hoạch buổi, chưa ghi kết quả':'Đã ghi kết quả'}</p><div class="sess-d" style="margin-bottom:8px">${(s.dom||[]).map(domTag).join(' ')}</div>`
- +tbl(['Mục tiêu','Mức hỗ trợ','Kết quả','>Đúng','>Chỉ số tự làm'],s.it.map(i=>{const g=goalOf(i.g),sc=recSc(i);return`<tr><td>${i.sg?`<b>${esc(i.sg)}</b><br><span class="sm mu">Mục tiêu ngắn hạn: ${esc(g?g.n:'(mục tiêu đã xóa)')}</span>`:esc(g?g.n:'(mục tiêu đã xóa)')}<br><span class="sm mu">${g?esc(g.t)+' · '+esc(gSrc(g)):''}</span>${i.nt?`<br><span class="sm">Ghi chú: ${esc(i.nt)}</span>`:''}</td><td>${supTag(i.sup)}</td><td>${trN(i.tr)?strip(i.tr):'<span class="sm mu">Chưa ghi</span>'}</td><td class="r nw">${trN(i.tr)?trOk(i.tr)+'/'+trN(i.tr)+' ('+trPct(i.tr)+'%)':'–'}</td><td class="r">${sc==null?'–':sc}</td></tr>`}).join(''))
+ +tbl(['Mục tiêu','Mức hỗ trợ','Kết quả','>Đúng','>Chỉ số tự làm'],s.it.map(i=>{const g=goalOf(i.g),sc=recSc(i);return`<tr><td>${i.sg?`<b>${esc(i.sg)}</b><br><span class="sm mu">Mục tiêu ngắn hạn: ${esc(g?g.n:'(mục tiêu đã xóa)')}</span>`:esc(g?g.n:'(mục tiêu đã xóa)')}<br><span class="sm mu">${g?esc(g.t)+' · '+esc(gSrc(g)):''}</span>${i.nt?`<br><span class="sm">Ghi chú: ${esc(i.nt)}</span>`:''}</td><td>${supTags(i)}</td><td>${trN(i.tr)?strip(i.tr):'<span class="sm mu">Chưa ghi</span>'}</td><td class="r nw">${trN(i.tr)?trOk(i.tr)+'/'+trN(i.tr)+' ('+trPct(i.tr)+'%)':'–'}</td><td class="r">${sc==null?'–':sc}</td></tr>`}).join(''))
  +(s.note?`<p style="margin-top:10px"><b>Nhận xét:</b> ${esc(s.note)}</p>`:'')+(s.home?`<p style="margin-top:6px"><b>Gợi ý luyện tập ở nhà:</b> ${esc(s.home)}</p>`:'')
  +`<div class="acts" style="margin-top:14px;justify-content:flex-end">${S.modal.back?'<button class="btn" data-a="sevback">Quay lại hồ sơ bé</button>':''}${canEditSess(s)?`<button class="btn no" data-a="sedel" data-v="${s.id}">Xóa buổi</button><button class="btn p" data-a="seedit" data-v="${s.id}">${pl?'Ghi kết quả':'Sửa buổi'}</button>`:''}</div>`,1)};
 ACT.sevback=()=>{S.modal=S.modal.back||null};
@@ -2658,11 +2662,21 @@ function seStart(o){const k=kidBy(o.k);if(!k||!canKid(k.id)){toast('Bạn chưa 
  if(ex){S.modal={t:'se',id:ex.id,k:ex.k,date:ex.date,by:ex.by,dom:(ex.dom||[]).slice(),it:ex.it.map(i=>Object.assign({nt:''},i,{pl:sePlOf(ex.k,i)})),note:ex.note||'',home:ex.home||'',back};return}
  const m={t:'se',id:'',k:o.k,date:o.date,by:isGV()?U.id:(kidGV(k)||U.id),dom:[],it:[],note:'',home:'',back};
  const act=kidPlans(o.k,'dang'),pool=act,T=gtTree(o.k);
- pool.sort((a,b)=>(a.h<b.h?1:a.h>b.h?-1:0)||((lastRec(o.k,a.g)||{d:''}).d<(lastRec(o.k,b.g)||{d:''}).d?-1:1)).slice(0,3).forEach(p=>{const nd=T.shorts.find(s=>s.p.id===p.id),op=nd?nd.gs.find(x=>x.st!=='dat'):null;seAddTo(m,[op?op.g:p.g],p.id)});
+ pool.sort((a,b)=>(a.h<b.h?1:a.h>b.h?-1:0)||((lastRec(o.k,a.g)||{d:''}).d<(lastRec(o.k,b.g)||{d:''}).d?-1:1)).slice(0,3).forEach(p=>{const cr=seCarry(o.k,p.id,'',o.date);if(cr.length){cr.forEach(ci=>sePush(m,ci.g,p.id,ci));return}
+  const nd=T.shorts.find(s=>s.p.id===p.id),op=nd?nd.gs.find(x=>x.st!=='dat'):null;seAddTo(m,[op?op.g:p.g],p.id)});
  S.modal=m}
 /* pl: mã kế hoạch ngắn hạn mà dòng mục tiêu này thuộc về; bỏ trống thì lấy theo lần luyện trước hoặc kế hoạch có cùng mục tiêu */
 function sePlOf(k,i){const p=i.pl?planBy(i.pl):null;if(p&&p.k===k)return p.id;const o=kidPlans(k).find(q=>q.g===i.g&&q.s!=='dat')||kidPlans(k).find(q=>q.g===i.g);return o?o.id:''}
-function seAddTo(m,ids,pl){ids.forEach(g=>{if(m.it.some(i=>i.g===g))return;const lr=lastRec(m.k,g),pid=pl!==undefined?pl:sePlOf(m.k,lr?{g,pl:lr.pl}:{g}),pp=pid?planBy(pid):null;m.it.push({g,sup:lr?lr.sup:'GP',tr:TR0,nt:'',sg:pp&&pp.sm||'',pl:pid});const d=gDom(g);if(!m.dom.includes(d))m.dom.push(d)})}
+/* Các dòng mục tiêu buổi (kèm SMART) của buổi gần nhất thuộc mục tiêu ngắn hạn pid: buổi mới tự điền lại, giáo viên không phải nhập lại từng ngày (kết quả 10 lượt để trống) */
+function seCarry(kid,pid,exId,date){const p=pid?planBy(pid):null;if(!p)return[];
+ const ss=DB.sess.filter(s=>s.k===kid&&s.id!==exId&&s.date<=date).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);
+ for(const s of ss){const its=s.it.filter(i=>i.pl===pid||(!i.pl&&i.g===p.g));if(its.length)return its}
+ return[]}
+function sePush(m,g,pid,ci){const pp=pid?planBy(pid):null,lr=lastRec(m.k,g),sgv=((ci&&ci.sg)||(pp&&pp.sm)||'');   /* dòng cũ chưa có SMART thì lấy nội dung gợi ý của kế hoạch */
+ if(m.it.some(i=>i.g===g&&(i.pl||'')===(pid||'')&&(i.sg||'')===sgv))return;
+ const o={g,sup:ci?ci.sup:(lr?lr.sup:'GP'),tr:TR0,nt:'',sg:sgv,pl:pid};if(ci&&ci.sups&&ci.sups.length>1)o.sups=ci.sups.slice();m.it.push(o);const d=gDom(g);if(!m.dom.includes(d))m.dom.push(d)}
+function seAddTo(m,ids,pl){ids.forEach(g=>{if(m.it.some(i=>i.g===g))return;const lr=lastRec(m.k,g),pid=pl!==undefined?pl:sePlOf(m.k,lr?{g,pl:lr.pl}:{g}),cr=seCarry(m.k,pid,m.id,m.date).filter(i=>i.g===g);
+ if(cr.length)cr.forEach(ci=>sePush(m,g,pid,ci));else sePush(m,g,pid,null)})}
 ACT.senew=v=>{const [k,d]=v.split('|');return seStart({k,date:d||(WD<=TODAY?WD:TODAY)})};
 ACT.seedit=v=>{const s=DB.sess.find(x=>x.id===v);if(!s||!canEditSess(s)){toast('Bạn chưa thể sửa buổi này');return false}return seStart({k:s.k,id:s.id,date:s.date})};
 ACT.seclose=()=>{S.modal=S.modal.back||null};
@@ -2677,7 +2691,8 @@ ACT.sesub=v=>{const m=S.modal,x=+v,i=m.it[x];if(!i)return false;m.it.splice(x+1,
 ACT.sedom=v=>{const m=S.modal;m.dom=m.dom.includes(v)?m.dom.filter(x=>x!==v):m.dom.concat(v)};
 ACT.seadd=v=>{seAddTo(S.modal,[v])};
 ACT.serm=v=>{S.modal.it.splice(+v,1)};
-ACT.sesup=v=>{const [x,s]=v.split('|');S.modal.it[+x].sup=s};
+ACT.sesup=v=>{const [x,s]=v.split('|'),it=S.modal.it[+x];let a=supsOf(it);a=a.includes(s)?a.filter(y=>y!==s):a.concat(s);if(!a.length)return false;   /* luôn giữ ít nhất một mức */
+ a=SUPK.filter(y=>a.includes(y));it.sups=a;it.sup=supMain(a)};
 /* chạm ô số N = bé đúng N lượt trên 10 (N dấu ✓, còn lại ✗); chạm lại đúng ô đó thì xóa kết quả; ô 0 = không đúng lượt nào */
 ACT.setr=v=>{const [x,p]=v.split('|').map(Number),it=S.modal.it[x],n=p+1,nw='V'.repeat(n)+'X'.repeat(10-n);it.tr=it.tr===nw?TR0:nw};
 ACT.setrc=v=>{S.modal.it[+v].tr=TR0};
@@ -2687,10 +2702,10 @@ function seItem(i,x,n,p){const g=goalOf(i.g),tn=trN(i.tr),own=!p||p.g!==i.g;
  return`<div class="si"><div class="si-h"><div><span class="gt-k">Mục tiêu buổi trị liệu ${n}</span>${own?`<div class="sm" style="margin-top:2px"><b>${esc(g?g.n:'(mục tiêu đã xóa)')}</b> <span class="mu">· từ ngân hàng mục tiêu${g?' · '+esc(gSrc(g)):''}</span></div>`:''}</div><button class="btn s no" data-a="serm" data-v="${x}" aria-label="Bỏ mục tiêu buổi này">Bỏ</button></div>
  ${own&&g?gxHtml(g,'s',{open:1}):''}
  <label class="si-l" for="sg-${x}" style="display:block"><b>Nội dung mục tiêu buổi (SMART)</b> <span class="mu">· giáo viên tự viết</span></label><textarea id="sg-${x}" class="si-sg" rows="3" maxlength="400" data-c="sesg" data-v="${x}" placeholder="Giáo viên tự viết, theo SMART (cụ thể, đo lường được, khả thi, phù hợp, có thời hạn). Ví dụ: Trong buổi này, bé gọi tên đúng 5/10 đồ vật khi cô chỉ tranh." style="width:100%">${esc(i.sg||'')}</textarea>
- <div class="si-l">Mức hỗ trợ</div><div class="seg" role="group" aria-label="Mức hỗ trợ">${SUPK.map(s=>`<button type="button" class="sg sp-${s} ${i.sup===s?'on':''}" data-a="sesup" data-v="${x}|${s}" aria-pressed="${i.sup===s}" title="${esc(SUP[s].n+': '+SUP[s].h)}">${esc(SUP[s].a)}</button>`).join('')}</div>
+ <div class="si-l">Mức hỗ trợ <span class="mu">· chọn được nhiều mức (bấm lại để bỏ)</span></div><div class="seg" role="group" aria-label="Mức hỗ trợ">${SUPK.map(s=>`<button type="button" class="sg sp-${s} ${supsOf(i).includes(s)?'on':''}" data-a="sesup" data-v="${x}|${s}" aria-pressed="${supsOf(i).includes(s)}" title="${esc(SUP[s].n+': '+SUP[s].h)}">${esc(SUP[s].a)}</button>`).join('')}</div>
  <div class="si-l">Kết quả 10 lượt <span class="mu">· chạm ô số N là bé đúng N lượt (N=2 là 20%, N=5 là 50%); chạm lại ô đó để xóa</span></div>
  <div class="trb" role="group" aria-label="Số lượt đúng trên 10 lượt"><button type="button" class="tb tb-o" data-a="setr" data-v="${x}|-1" aria-label="0 lượt đúng">0</button>${i.tr.split('').map((c,q)=>`<button type="button" class="tb tb-${c==='V'?'v':c==='X'?'x':'o'}" data-a="setr" data-v="${x}|${q}" aria-label="${q+1} lượt đúng trên 10 (${(q+1)*10}%)">${c==='V'?'✓':c==='X'?'✗':q+1}</button>`).join('')}</div>
- <div class="si-f"><span class="sm">${tn?`<b>${trOk(i.tr)}/${tn}</b> đúng · <b>${trPct(i.tr)}%</b> · ${esc(SUP[i.sup].p)}`:'<span class="mu">Chưa ghi kết quả</span>'}</span>${tn?`<button class="btn s" data-a="setrc" data-v="${x}">Xóa kết quả</button>`:''}</div>
+ <div class="si-f"><span class="sm">${tn?`<b>${trOk(i.tr)}/${tn}</b> đúng · <b>${trPct(i.tr)}%</b> · ${esc(supsOf(i).map(q=>SUP[q].p).join(' + '))}`:'<span class="mu">Chưa ghi kết quả</span>'}</span>${tn?`<button class="btn s" data-a="setrc" data-v="${x}">Xóa kết quả</button>`:''}</div>
  <input class="sm" placeholder="Ghi chú riêng (không bắt buộc)" value="${esc(i.nt||'')}" data-c="sein" data-v="${x}" aria-label="Ghi chú"></div>`}
 /* Lĩnh vực ⇒ mục tiêu ngắn hạn (chọn từ kế hoạch, lấy từ ngân hàng mục tiêu) ⇒ nhiều mục tiêu buổi trị liệu do giáo viên viết theo SMART */
 function seGroups(m){const keys=[];m.it.forEach(i=>{const k=i.pl||'';if(!keys.includes(k))keys.push(k)});
@@ -2716,7 +2731,7 @@ MODALS.se=()=>{const m=S.modal,k=kidBy(m.k);if(!k||!canKid(k.id)){S.modal=null;r
 ACT.sesave=()=>{const m=S.modal,k=kidBy(m.k);if(!k||!canKid(k.id))return false;
  if(!m.date){toast('Hãy chọn ngày');return false}
  if(!m.it.length){toast('Hãy chọn ít nhất một mục tiêu cho buổi');return false}
- const it=m.it.map(i=>{const o={g:i.g,sup:i.sup,tr:i.tr};if(i.nt&&i.nt.trim())o.nt=i.nt.trim();if(i.sg&&i.sg.trim())o.sg=i.sg.trim().slice(0,400);const pp=i.pl?planBy(i.pl):null;if(pp&&pp.k===m.k)o.pl=pp.id;return o}),done=it.some(i=>trN(i.tr));
+ const it=m.it.map(i=>{const sa=supsOf(i),o={g:i.g,sup:supMain(sa),tr:i.tr};if(sa.length>1)o.sups=sa;if(i.nt&&i.nt.trim())o.nt=i.nt.trim();if(i.sg&&i.sg.trim())o.sg=i.sg.trim().slice(0,400);const pp=i.pl?planBy(i.pl):null;if(pp&&pp.k===m.k)o.pl=pp.id;return o}),done=it.some(i=>trN(i.tr));
  if(done&&m.date>TODAY){toast('Chưa đến ngày này nên chưa ghi kết quả được');return false}
  const o={k:m.k,date:m.date,by:m.by,st:done?'xong':'kh',dom:[...new Set(m.dom.concat(it.map(i=>gDom(i.g))))],it,note:(m.note||'').trim(),home:(m.home||'').trim()};
  if(m.id)Object.assign(DB.sess.find(s=>s.id===m.id),o);else DB.sess.push(Object.assign({id:'s'+uid()},o));
@@ -3276,9 +3291,29 @@ CHG.mkpgv=v=>{S.modal.gv=v};
 MODALS.mkp=()=>{const m=S.modal,r=DB.mk.find(x=>x.id===m.id),from=addD(TODAY>r.from.d?TODAY:r.from.d,1),fs=freeSlots(m.gv,r.hs,from,8);
  return mdl('Đề xuất giờ học bù cho '+kn(r.hs),`<form id="mkpf" class="f"><div><label for="mp-g">Giáo viên dạy bù</label><select id="mp-g" data-c="mkpgv">${opts(pool11().map(s=>[s.id,tName(s)]),m.gv)}</select></div>
  <fieldset style="border:1px solid var(--bd);border-radius:10px;padding:10px"><legend class="sm mu">Khung giờ còn trống (chọn tối đa 3)</legend>${fs.length?fs.map((s,i)=>`<label class="chk" style="padding:4px 0"><input type="checkbox" name="s" value="${s.date}|${s.slot}"> ${DAYN[dow(s.date)]} ${vd(s.date)} · ${slotLb(s.slot)}</label>`).join(''):'<p class="empty">Giáo viên không còn khung giờ trống trong 4 tuần tới.</p>'}</fieldset>
- <div class="err" role="alert">${esc(m.err||'')}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit" ${fs.length?'':'disabled'}>Gửi đề xuất cho phụ huynh</button></div></form>`)};
-FORM.mkpf=f=>{const ch=Array.from(f.querySelectorAll('input[name=s]:checked')).map(x=>x.value);if(!ch.length||ch.length>3){S.modal.err='Hãy chọn từ 1 đến 3 khung giờ';return}
- const r=DB.mk.find(x=>x.id===S.modal.id);r.props=ch.map((v,i)=>{const [d,slot]=v.split('|');return{id:'p'+i,d,slot,gv:S.modal.gv,by:'gv'}});r.s='tt';r.log.push({at:TODAY,by:isLead()?'tt':'gv',tx:'Đề xuất '+ch.length+' khung giờ học bù'});S.modal=null;toast('Đã gửi đề xuất cho phụ huynh')};
+ <fieldset style="border:1px solid var(--bd);border-radius:10px;padding:10px"><legend class="sm mu">Hoặc tự nhập ngày, giờ học bù (giờ bắt đầu từ ${DAY_OPEN} đến ${SLOT_LAST}, mỗi ca ${SLOT_MIN} phút)</legend>
+  ${[0,1,2].map(i=>{const x=(m.man||[])[i]||{};return`<div class="f2 mk-man" style="margin-bottom:6px"><div><label class="sm" for="mk-md${i}">Ngày ${i+1}</label><input id="mk-md${i}" name="md" type="date" min="${TODAY}" value="${esc(x.d||'')}"></div><div><label class="sm" for="mk-mt${i}">Giờ bắt đầu</label><input id="mk-mt${i}" name="mt" type="time" step="60" list="mkdl" value="${esc(x.t||'')}"></div></div>`}).join('')}<datalist id="mkdl">${SLOTS.map(t=>`<option value="${t}"></option>`).join('')}</datalist>
+  <p class="sm mu" style="margin:4px 0 0">Tổng số khung giờ chọn và tự nhập tối đa 3. Giáo viên, bé hoặc ngày nghỉ bị trùng thì hệ thống báo ngay.</p></fieldset>
+ <div class="err" role="alert">${esc(m.err||'')}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button>${isLead()?'<button class="btn" type="button" data-a="mkdirect" title="Dùng khi phụ huynh đã đồng ý giờ này">Xếp lịch luôn (1 khung giờ)</button>':''}<button class="btn p" type="submit">Gửi đề xuất cho phụ huynh</button></div></form>`)};
+/* gom khung giờ đã tick và các dòng tự nhập; kiểm tra giờ hợp lệ, ngày không ở quá khứ, không trùng lịch */
+function mkpCollect(f,m){const r=DB.mk.find(x=>x.id===m.id),out=Array.from(f.querySelectorAll('input[name=s]:checked')).map(x=>{const [d,slot]=x.value.split('|');return{d,slot}});
+ m.man=Array.from(f.querySelectorAll('.mk-man')).map(e=>({d:e.querySelector('[name=md]').value,t:e.querySelector('[name=mt]').value}));
+ for(const x of m.man){if(!x.d&&!x.t)continue;
+  if(!x.d||!x.t)return{err:'Mỗi dòng tự nhập cần đủ cả ngày và giờ.'};
+  if(x.d<TODAY)return{err:'Ngày học bù không được ở quá khứ.'};
+  if(!slotValid(x.t))return{err:slotMsg+'.'};
+  out.push({d:x.d,slot:x.t})}
+ const seen=new Set(),list=out.filter(x=>{const k=x.d+'|'+x.slot;if(seen.has(k))return false;seen.add(k);return true});
+ for(const x of list){const c=conflict({date:x.d,slot:x.slot,gv:m.gv,hs:r.hs});if(c)return{err:DAYN[dow(x.d)]+' '+vd(x.d)+' '+x.slot+': '+c}}
+ return{list}}
+FORM.mkpf=f=>{const m=S.modal,c=mkpCollect(f,m);if(c.err){m.err=c.err;return}if(!c.list.length||c.list.length>3){m.err='Hãy chọn hoặc nhập từ 1 đến 3 khung giờ';return}
+ const r=DB.mk.find(x=>x.id===m.id);r.props=c.list.map((x,i)=>({id:'p'+i,d:x.d,slot:x.slot,gv:m.gv,by:'gv'}));r.s='tt';r.log.push({at:TODAY,by:isLead()?'tt':'gv',tx:'Đề xuất '+c.list.length+' khung giờ học bù'});S.modal=null;toast('Đã gửi đề xuất cho phụ huynh')};
+/* Trung tâm xếp luôn một khung giờ (phụ huynh đã đồng ý): tạo lịch học bù và chuyển sang "Đã xác nhận" */
+ACT.mkdirect=()=>{const f=$q('#mkpf'),m=S.modal;if(!f||!isLead()||!m||m.t!=='mkp')return false;const c=mkpCollect(f,m);
+ if(c.err){m.err=c.err;return}if(c.list.length!==1){m.err='Để xếp lịch luôn, hãy chọn hoặc nhập đúng 1 khung giờ.';return}
+ const r=DB.mk.find(x=>x.id===m.id),p=c.list[0],x={id:'lb'+uid(),type:'bu',date:p.d,slot:p.slot,gv:m.gv,hs:r.hs,mk:r.id};
+ DB.lich=DB.lich.filter(l=>l.mk!==r.id);DB.lich.push(x);r.props=[{id:'p0',d:p.d,slot:p.slot,gv:m.gv,by:'tt'}];r.pick='p0';r.s='xn';
+ r.log.push({at:TODAY,by:'tt',tx:'Trung tâm xếp lịch học bù theo thỏa thuận với phụ huynh'});S.modal=null;toast('Đã xếp lịch học bù')};
 /* ===== 9. Học phí ===== */
 const paidM=(h,m)=>DB.lg.filter(e=>e.hs===h&&e.kind==='thu'&&e.m===m).reduce((s,e)=>s+e.amt,0);
 const ledgerRows=h=>{let b=0;return DB.lg.filter(e=>e.hs===h).sort((a,c)=>a.date===c.date?(a.id<c.id?-1:1):a.date<c.date?-1:1).map(e=>{b+=LGK[e.kind][2]*e.amt;return{e,b}})};
@@ -3426,7 +3461,8 @@ ACT.bcdel=v=>{const r=DB.rp.find(x=>x.id===v);if(!r||!isLead())return false;
    - Chế độ ?demo: ảnh thu nhỏ lưu trong trình duyệt; video và tài liệu chỉ giữ trong phiên (không có kho thật). */
 const MEDIA_MB=500,MEDIA_MAX=MEDIA_MB*1024*1024,MEDIA_BUCKET='gb-media',DCAT=['Giáo án','Biểu mẫu','Hồ sơ trẻ','Hướng dẫn phụ huynh','Khác'];
 const MEDIA_CT={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',mp4:'video/mp4',webm:'video/webm',mov:'video/quicktime',m4v:'video/x-m4v','3gp':'video/3gpp','3g2':'video/3gpp2',mkv:'video/x-matroska',avi:'video/x-msvideo',mpg:'video/mpeg',mpeg:'video/mpeg',wmv:'video/x-ms-wmv',pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',xls:'application/vnd.ms-excel',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',ppt:'application/vnd.ms-powerpoint',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation',csv:'text/csv',txt:'text/plain',md:'text/markdown'};
-const MEDIA_ACC={av:'image/*,video/*,.jpg,.jpeg,.png,.webp,.gif,.mp4,.m4v,.webm,.mov,.3gp,.3g2,.mkv,.avi,.mpg,.mpeg,.wmv',vid:'video/*,.mp4,.m4v,.mov,.3gp,.3g2,.webm,.mkv,.avi,.mpg,.mpeg,.wmv',doc:'.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,image/*'};
+/* av chỉ dùng image/*,video/*: điện thoại mở thư viện ảnh và chọn nhiều ảnh, video một lượt (thêm đuôi tệp thì iPhone chuyển sang trình duyệt tệp); định dạng không hỗ trợ vẫn bị chặn ở medKindOf */
+const MEDIA_ACC={av:'image/*,video/*',vid:'video/*,.mp4,.m4v,.mov,.3gp,.3g2,.webm,.mkv,.avi,.mpg,.mpeg,.wmv',doc:'.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,.md,image/*'};
 const MEDM=['upm','mview','mtag'],PIX='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 const mb=n=>(n/1048576).toFixed(1)+' MB';
 const MED={u:{},q:new Set(),gone:new Set(),fail:{},retry:{},mem:{},t:0};
@@ -3608,7 +3644,7 @@ const upBtn=l=>`<button class="btn p" type="submit" ${S.up&&S.up.busy?'disabled'
 MODALS.upm=()=>{const m=S.modal,doc=m.kind==='doc',vid=m.only==='vid',F=Object.assign({d:WD,t:'',n:'',cat:'Giáo án',gr:'',sh:1,ks:m.k?[m.k]:[]},S.up&&S.up.form||{});
  const ks=myKids().filter(k=>k.st==='dang').sort((a,b)=>a.n<b.n?-1:1),gs=(isLead()||isVP()?DB.groups:myGroups());
  return mdl(doc?'Tải tài liệu lên':vid?'Tải video lên':'Tải ảnh, video lên',`<form id="upmf" class="f"><div><label for="um-f">${doc?'Tệp tài liệu (PDF, Word, Excel, PowerPoint, CSV, văn bản; tối đa '+MEDIA_MB+' MB mỗi tệp)':vid?'Video (MP4, MOV, M4V, 3GP, WebM, MKV, AVI, MPEG, WMV; tối đa '+MEDIA_MB+' MB mỗi tệp)':'Ảnh hoặc video (JPG, PNG, WebP, GIF, MP4, MOV, 3GP, WebM, MKV, AVI…; tối đa '+MEDIA_MB+' MB mỗi tệp)'}</label><input id="um-f" name="f" type="file" multiple accept="${MEDIA_ACC[doc?'doc':vid?'vid':'av']}" required data-c="umf">
- <div class="acts" style="margin-top:6px;align-items:center"><button class="btn s" type="button" data-a="umadd">+ Chọn thêm tệp</button><span class="sm mu">Chọn nhiều tệp một lần (giữ Ctrl hoặc Shift, hoặc chạm nhiều tệp trên điện thoại); bấm “Chọn thêm tệp” để thêm tiếp mà không mất các tệp đã chọn.</span></div>
+ <div class="acts" style="margin-top:6px;align-items:center"><button class="btn s" type="button" data-a="umadd">+ Chọn thêm tệp</button><span class="sm mu">Chọn nhiều tệp một lần (giữ Ctrl hoặc Cmd, hoặc Shift; trên điện thoại chạm nhiều ảnh), hoặc kéo thả tệp vào cửa sổ này. Bấm “Chọn thêm tệp” để thêm tiếp mà không mất các tệp đã chọn.</span></div>
  <input id="um-f2" type="file" multiple hidden accept="${MEDIA_ACC[doc?'doc':vid?'vid':'av']}" data-c="umf2"><div id="um-list" class="sm" aria-live="polite"></div></div>
  <div class="f2"><div><label for="um-d">${doc?'Ngày':'Ngày chụp, quay'}</label><input id="um-d" name="d" type="date" value="${esc(F.d)}" max="${TODAY}" required></div>
  ${doc?`<div><label for="um-c">Loại tài liệu</label><select id="um-c" name="cat">${opts(DCAT.map(x=>[x,x]),F.cat)}</select></div>`:`<div><label for="um-g">Hoạt động chung của lớp bán trú</label><select id="um-g" name="gr"><option value="">Không (ảnh riêng của bé)</option>${opts(gs.map(g=>[g.id,g.n]),F.gr)}</select></div>`}</div>
@@ -3624,9 +3660,13 @@ function umShow(){const f=$q('#um-f'),o=$q('#um-list');if(!f||!o)return;const a=
  o.innerHTML=a.length?`<b>${a.length} tệp đã chọn</b> · ${(a.reduce((n,x)=>n+x.size,0)/1048576).toFixed(1)} MB<ul style="margin:4px 0 0 18px;padding:0">${a.slice(0,8).map(x=>`<li>${esc(x.name)} <span class="mu">(${(x.size/1048576).toFixed(1)} MB)</span></li>`).join('')}${a.length>8?`<li class="mu">và ${a.length-8} tệp khác</li>`:''}</ul>`:''}
 ACT.umadd=()=>{const g=$q('#um-f2');if(g)g.click();return false};
 CHG.umf=()=>{umShow();return false};
-CHG.umf2=(v,t)=>{const f=$q('#um-f');if(!f||!t.files||!t.files.length)return false;
- try{const dt=new DataTransfer(),seen=new Set(),add=x=>{const k=x.name+'|'+x.size+'|'+x.lastModified;if(!seen.has(k)){seen.add(k);dt.items.add(x)}};[...f.files].forEach(add);[...t.files].forEach(add);f.files=dt.files}catch(e){}
- t.value='';umShow();return false};
+function umMerge(list){const f=$q('#um-f');if(!f||!list||!list.length)return false;
+ try{const dt=new DataTransfer(),seen=new Set(),add=x=>{const k=x.name+'|'+x.size+'|'+x.lastModified;if(!seen.has(k)){seen.add(k);dt.items.add(x)}};[...f.files].forEach(add);[...list].forEach(add);f.files=dt.files}catch(e){}
+ umShow();return false}
+CHG.umf2=(v,t)=>{const l=t.files?[...t.files]:[];umMerge(l);t.value='';return false};
+/* kéo thả nhiều tệp từ máy vào cửa sổ tải lên */
+document.addEventListener('dragover',e=>{if(e.target.closest&&e.target.closest('#upmf')){e.preventDefault()}});
+document.addEventListener('drop',e=>{const f=e.target.closest&&e.target.closest('#upmf');if(!f||!e.dataTransfer||!e.dataTransfer.files.length)return;e.preventDefault();umMerge(e.dataTransfer.files)});
 /* thu nhỏ ảnh trước khi tải (nhanh hơn, tiết kiệm dung lượng); lỗi thì dùng ảnh gốc */
 async function medScale(file,max,q,force){
  if(typeof createImageBitmap!=='function')return null;
@@ -3665,9 +3705,9 @@ FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
   if(doc&&k.kind==='vid')return fail('“'+file.name+'” là video; hãy dùng nút “Tải ảnh, video lên”.')
   if(!doc&&k.kind==='doc')return fail('“'+file.name+'” là tài liệu; hãy dùng mục Hồ sơ, giáo án.')
   jobs.push({file,k})}
- S.up.busy=true;BUSY++;S.up.msg='Đang tải 1/'+jobs.length+'...';
- (async()=>{let ok=0;
-  try{for(let i=0;i<jobs.length;i++){const {file,k}=jobs[i];S.up.msg='Đang tải '+(i+1)+'/'+jobs.length+'...';render();
+ S.up.busy=true;BUSY++;S.up.msg='Đang tải 0/'+jobs.length+'...';
+ (async()=>{let ok=0,done=0;const bad=[];
+  const one=async({file,k})=>{
     const id=uid(),rec={id,kind:k.kind,t:(jobs.length===1&&form.t)||file.name.replace(/\.[^.]+$/,'').slice(0,120),ct:k.ct,sz:file.size,d:form.d,by:U.id,bn:U.name,at:new Date().toISOString(),ks:kids.slice(),gr:form.gr,sh:form.sh,n:form.n};
     if(doc)rec.cat=form.cat;
     if(CLOUDMODE){let blob=file,ct=k.ct,ext=k.ext;
@@ -3675,9 +3715,13 @@ FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
      const path='m/'+id+'.'+ext;await medStore(path,blob,ct);rec.p=path;rec.ct=ct;rec.sz=blob.size}
     else{MED.mem[id]=URL.createObjectURL(file);rec.mem=1;
      if(k.kind==='img'&&k.ct!=='image/gif'){const th=await medScale(file,480,.6,1);if(th&&th.size<400000){rec.u=await blobUrl(th);rec.mem=0}}}
-    medList().push(rec);ok++}
-   S.modal=S.modal.back||null;toast('Đã tải lên '+ok+' tệp'+(!doc&&!kids.length?'. Giáo viên vào tab “Hoạt động chung” để chọn bé.':''))}
-  catch(x){S.up.err=(ok?'Đã tải lên '+ok+' tệp đầu. ':'')+'Tệp “'+jobs[ok].file.name+'” chưa tải được: '+(x&&x.message||'lỗi không rõ')+(ok?' Hãy chọn lại các tệp còn lại.':'')}
+    medList().push(rec);ok++};
+  /* tải song song tối đa 3 tệp một lúc; tệp lỗi không làm dừng các tệp còn lại */
+  const q=jobs.slice(),worker=async()=>{while(q.length){const j=q.shift();try{await one(j)}catch(x){bad.push(j.file.name+': '+(x&&x.message||'lỗi không rõ'))}done++;S.up.msg='Đang tải '+Math.min(done+1,jobs.length)+'/'+jobs.length+'...';render()}};
+  try{S.up.msg='Đang tải 1/'+jobs.length+'...';render();await Promise.all([worker(),worker(),worker()]);
+   if(bad.length){S.up.err=(ok?'Đã tải lên '+ok+' tệp. ':'')+'Chưa tải được '+bad.length+' tệp: '+bad.slice(0,3).join('; ')+(bad.length>3?'…':'')+(ok?' Hãy chọn lại các tệp chưa tải.':'')}
+   else{S.modal=S.modal.back||null;toast('Đã tải lên '+ok+' tệp'+(!doc&&!kids.length?'. Giáo viên vào tab “Hoạt động chung” để chọn bé.':''))}}
+  catch(x){S.up.err='Lỗi khi tải lên: '+(x&&x.message||'lỗi không rõ')}
   finally{S.up.busy=false;BUSY--;render()}})();
  return false};
 

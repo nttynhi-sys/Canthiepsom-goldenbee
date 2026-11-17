@@ -2,6 +2,10 @@
 const trunc=(s,n)=>s.length>n?s.slice(0,n-1)+'…':s;
 const domTag=(d,g)=>g&&isPlay(g)?`<span class="tag gy" title="Chơi (thuộc lĩnh vực ${esc(DM[d].n)})">Chơi</span>`:`<span class="tag gy" title="${esc(DM[d].n)}">${esc(DM[d].s)}</span>`;
 const supTag=s=>`<span class="sp sp-${s}" title="${esc(SUP[s].n+': '+SUP[s].h)}">${esc(SUP[s].n)}</span>`;
+/* Một dòng mục tiêu buổi có thể dùng nhiều mức hỗ trợ cùng lúc (i.sups, theo thứ tự SUPK); i.sup là mức cần hỗ trợ nhiều nhất (hệ số thấp nhất) để điểm và biểu đồ vẫn tính một mức như cũ */
+const supsOf=i=>{const a=(Array.isArray(i.sups)&&i.sups.length?i.sups:[i.sup]).filter(s=>SUP[s]);return SUPK.filter(s=>a.includes(s))};
+const supMain=a=>a.slice().sort((x,y)=>SUP[x].w-SUP[y].w)[0];
+const supTags=i=>supsOf(i).map(supTag).join(' ');
 const strip=tr=>`<span class="trs" role="img" aria-label="${trOk(tr)} lượt đúng trên ${trN(tr)} lượt">${tr.split('').map(c=>`<i class="${c==='V'?'tv':c==='X'?'tx':'to'}"></i>`).join('')}</span>`;
 /* người phụ trách bé: các giáo viên 1-1 của bé (nhiều người, ngang nhau), nếu không có thì mọi giáo viên của lớp bán trú (ngang nhau) */
 const kidGVs=k=>kTs(k).length?kTs(k):grTs(grBy(k.gr));
@@ -38,14 +42,14 @@ ACT.plnext=v=>{const [k,g]=v.split('|'),src=DB.plans.find(p=>p.k===k&&p.s==='dat
 function sessCard(s,showKid){const k=kidBy(s.k),pl=s.st==='kh',rs=s.it.filter(i=>trN(i.tr)),pc=rs.length?Math.round(avg(rs.map(recSc))):null;
  return`<div class="sess"><div class="sess-h"><div><b>${DAYS[dow(s.date)]} ${vd(s.date)}</b>${showKid&&k?' · <b>'+esc(k.n)+'</b>':''} <span class="sm mu">· ${esc(given(sn(s.by)))}</span> ${pl?tg('Kế hoạch','y'):tg('Đã ghi','ok')}${pc!=null?' <span class="sm mu">chỉ số tự làm '+pc+'</span>':''}</div><div class="acts"><button class="btn s" data-a="sesview" data-v="${s.id}">Xem</button>${canEditSess(s)?`<button class="btn s ${pl?'p':''}" data-a="seedit" data-v="${s.id}">${pl?'Ghi kết quả':'Sửa'}</button>`:''}</div></div>
  <div class="sess-d">${(s.dom||[]).map(domTag).join(' ')}</div>
- <ul class="sess-i">${s.it.map(i=>`<li><span class="gn">${esc(i.sg?trunc(i.sg,120):gName(i.g))}</span>${i.sg?`<span class="sm mu"> · ${esc(trunc(gName(i.g),60))}</span>`:''} ${supTag(i.sup)} ${trN(i.tr)?strip(i.tr)+' <b>'+trPct(i.tr)+'%</b>':'<span class="sm mu">chưa ghi kết quả</span>'}</li>`).join('')}</ul>
+ <ul class="sess-i">${s.it.map(i=>`<li><span class="gn">${esc(i.sg?trunc(i.sg,120):gName(i.g))}</span>${i.sg?`<span class="sm mu"> · ${esc(trunc(gName(i.g),60))}</span>`:''} ${supTags(i)} ${trN(i.tr)?strip(i.tr)+' <b>'+trPct(i.tr)+'%</b>':'<span class="sm mu">chưa ghi kết quả</span>'}</li>`).join('')}</ul>
  ${s.note?`<p class="sm"><b>Nhận xét:</b> ${esc(s.note)}</p>`:''}${s.home?`<p class="sm"><b>Gợi ý ở nhà:</b> ${esc(s.home)}</p>`:''}</div>`}
 function hsSess(k){const ss=sessOf(k.id,'','9999-12-31',true).reverse();
  return`<div class="acts" style="margin-bottom:12px"><button class="btn p" data-a="senew" data-v="${k.id}">Ghi buổi can thiệp</button><span class="sm mu">${ss.filter(s=>s.st==='xong').length} buổi đã ghi${ss.some(s=>s.st==='kh')?', '+ss.filter(s=>s.st==='kh').length+' buổi kế hoạch':''}</span></div>`+(ss.length?ss.slice(0,10).map(s=>sessCard(s,false)).join(''):'<p class="empty">Chưa có buổi can thiệp nào. Bấm “Ghi buổi can thiệp” để bắt đầu.</p>')+(ss.length>10?'<p class="sm mu">Hiển thị 10 buổi gần nhất.</p>':'')}
 ACT.sesview=v=>{S.modal={t:'sev',id:v,back:S.modal&&S.modal.t==='hs'?S.modal:null}};
 MODALS.sev=()=>{const s=DB.sess.find(x=>x.id===S.modal.id);if(!s||!canKid(s.k)){S.modal=null;return''}const k=kidBy(s.k),pl=s.st==='kh';
  return mdl('Buổi can thiệp · '+k.n,`<p class="mu sm" style="margin-bottom:10px">${DAYN[dow(s.date)]}, ${vd(s.date)} · Giáo viên ${esc(sn(s.by))} · ${pl?'Kế hoạch buổi, chưa ghi kết quả':'Đã ghi kết quả'}</p><div class="sess-d" style="margin-bottom:8px">${(s.dom||[]).map(domTag).join(' ')}</div>`
- +tbl(['Mục tiêu','Mức hỗ trợ','Kết quả','>Đúng','>Chỉ số tự làm'],s.it.map(i=>{const g=goalOf(i.g),sc=recSc(i);return`<tr><td>${i.sg?`<b>${esc(i.sg)}</b><br><span class="sm mu">Mục tiêu ngắn hạn: ${esc(g?g.n:'(mục tiêu đã xóa)')}</span>`:esc(g?g.n:'(mục tiêu đã xóa)')}<br><span class="sm mu">${g?esc(g.t)+' · '+esc(gSrc(g)):''}</span>${i.nt?`<br><span class="sm">Ghi chú: ${esc(i.nt)}</span>`:''}</td><td>${supTag(i.sup)}</td><td>${trN(i.tr)?strip(i.tr):'<span class="sm mu">Chưa ghi</span>'}</td><td class="r nw">${trN(i.tr)?trOk(i.tr)+'/'+trN(i.tr)+' ('+trPct(i.tr)+'%)':'–'}</td><td class="r">${sc==null?'–':sc}</td></tr>`}).join(''))
+ +tbl(['Mục tiêu','Mức hỗ trợ','Kết quả','>Đúng','>Chỉ số tự làm'],s.it.map(i=>{const g=goalOf(i.g),sc=recSc(i);return`<tr><td>${i.sg?`<b>${esc(i.sg)}</b><br><span class="sm mu">Mục tiêu ngắn hạn: ${esc(g?g.n:'(mục tiêu đã xóa)')}</span>`:esc(g?g.n:'(mục tiêu đã xóa)')}<br><span class="sm mu">${g?esc(g.t)+' · '+esc(gSrc(g)):''}</span>${i.nt?`<br><span class="sm">Ghi chú: ${esc(i.nt)}</span>`:''}</td><td>${supTags(i)}</td><td>${trN(i.tr)?strip(i.tr):'<span class="sm mu">Chưa ghi</span>'}</td><td class="r nw">${trN(i.tr)?trOk(i.tr)+'/'+trN(i.tr)+' ('+trPct(i.tr)+'%)':'–'}</td><td class="r">${sc==null?'–':sc}</td></tr>`}).join(''))
  +(s.note?`<p style="margin-top:10px"><b>Nhận xét:</b> ${esc(s.note)}</p>`:'')+(s.home?`<p style="margin-top:6px"><b>Gợi ý luyện tập ở nhà:</b> ${esc(s.home)}</p>`:'')
  +`<div class="acts" style="margin-top:14px;justify-content:flex-end">${S.modal.back?'<button class="btn" data-a="sevback">Quay lại hồ sơ bé</button>':''}${canEditSess(s)?`<button class="btn no" data-a="sedel" data-v="${s.id}">Xóa buổi</button><button class="btn p" data-a="seedit" data-v="${s.id}">${pl?'Ghi kết quả':'Sửa buổi'}</button>`:''}</div>`,1)};
 ACT.sevback=()=>{S.modal=S.modal.back||null};
@@ -57,11 +61,21 @@ function seStart(o){const k=kidBy(o.k);if(!k||!canKid(k.id)){toast('Bạn chưa 
  if(ex){S.modal={t:'se',id:ex.id,k:ex.k,date:ex.date,by:ex.by,dom:(ex.dom||[]).slice(),it:ex.it.map(i=>Object.assign({nt:''},i,{pl:sePlOf(ex.k,i)})),note:ex.note||'',home:ex.home||'',back};return}
  const m={t:'se',id:'',k:o.k,date:o.date,by:isGV()?U.id:(kidGV(k)||U.id),dom:[],it:[],note:'',home:'',back};
  const act=kidPlans(o.k,'dang'),pool=act,T=gtTree(o.k);
- pool.sort((a,b)=>(a.h<b.h?1:a.h>b.h?-1:0)||((lastRec(o.k,a.g)||{d:''}).d<(lastRec(o.k,b.g)||{d:''}).d?-1:1)).slice(0,3).forEach(p=>{const nd=T.shorts.find(s=>s.p.id===p.id),op=nd?nd.gs.find(x=>x.st!=='dat'):null;seAddTo(m,[op?op.g:p.g],p.id)});
+ pool.sort((a,b)=>(a.h<b.h?1:a.h>b.h?-1:0)||((lastRec(o.k,a.g)||{d:''}).d<(lastRec(o.k,b.g)||{d:''}).d?-1:1)).slice(0,3).forEach(p=>{const cr=seCarry(o.k,p.id,'',o.date);if(cr.length){cr.forEach(ci=>sePush(m,ci.g,p.id,ci));return}
+  const nd=T.shorts.find(s=>s.p.id===p.id),op=nd?nd.gs.find(x=>x.st!=='dat'):null;seAddTo(m,[op?op.g:p.g],p.id)});
  S.modal=m}
 /* pl: mã kế hoạch ngắn hạn mà dòng mục tiêu này thuộc về; bỏ trống thì lấy theo lần luyện trước hoặc kế hoạch có cùng mục tiêu */
 function sePlOf(k,i){const p=i.pl?planBy(i.pl):null;if(p&&p.k===k)return p.id;const o=kidPlans(k).find(q=>q.g===i.g&&q.s!=='dat')||kidPlans(k).find(q=>q.g===i.g);return o?o.id:''}
-function seAddTo(m,ids,pl){ids.forEach(g=>{if(m.it.some(i=>i.g===g))return;const lr=lastRec(m.k,g),pid=pl!==undefined?pl:sePlOf(m.k,lr?{g,pl:lr.pl}:{g}),pp=pid?planBy(pid):null;m.it.push({g,sup:lr?lr.sup:'GP',tr:TR0,nt:'',sg:pp&&pp.sm||'',pl:pid});const d=gDom(g);if(!m.dom.includes(d))m.dom.push(d)})}
+/* Các dòng mục tiêu buổi (kèm SMART) của buổi gần nhất thuộc mục tiêu ngắn hạn pid: buổi mới tự điền lại, giáo viên không phải nhập lại từng ngày (kết quả 10 lượt để trống) */
+function seCarry(kid,pid,exId,date){const p=pid?planBy(pid):null;if(!p)return[];
+ const ss=DB.sess.filter(s=>s.k===kid&&s.id!==exId&&s.date<=date).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:0);
+ for(const s of ss){const its=s.it.filter(i=>i.pl===pid||(!i.pl&&i.g===p.g));if(its.length)return its}
+ return[]}
+function sePush(m,g,pid,ci){const pp=pid?planBy(pid):null,lr=lastRec(m.k,g),sgv=((ci&&ci.sg)||(pp&&pp.sm)||'');   /* dòng cũ chưa có SMART thì lấy nội dung gợi ý của kế hoạch */
+ if(m.it.some(i=>i.g===g&&(i.pl||'')===(pid||'')&&(i.sg||'')===sgv))return;
+ const o={g,sup:ci?ci.sup:(lr?lr.sup:'GP'),tr:TR0,nt:'',sg:sgv,pl:pid};if(ci&&ci.sups&&ci.sups.length>1)o.sups=ci.sups.slice();m.it.push(o);const d=gDom(g);if(!m.dom.includes(d))m.dom.push(d)}
+function seAddTo(m,ids,pl){ids.forEach(g=>{if(m.it.some(i=>i.g===g))return;const lr=lastRec(m.k,g),pid=pl!==undefined?pl:sePlOf(m.k,lr?{g,pl:lr.pl}:{g}),cr=seCarry(m.k,pid,m.id,m.date).filter(i=>i.g===g);
+ if(cr.length)cr.forEach(ci=>sePush(m,g,pid,ci));else sePush(m,g,pid,null)})}
 ACT.senew=v=>{const [k,d]=v.split('|');return seStart({k,date:d||(WD<=TODAY?WD:TODAY)})};
 ACT.seedit=v=>{const s=DB.sess.find(x=>x.id===v);if(!s||!canEditSess(s)){toast('Bạn chưa thể sửa buổi này');return false}return seStart({k:s.k,id:s.id,date:s.date})};
 ACT.seclose=()=>{S.modal=S.modal.back||null};
@@ -76,7 +90,8 @@ ACT.sesub=v=>{const m=S.modal,x=+v,i=m.it[x];if(!i)return false;m.it.splice(x+1,
 ACT.sedom=v=>{const m=S.modal;m.dom=m.dom.includes(v)?m.dom.filter(x=>x!==v):m.dom.concat(v)};
 ACT.seadd=v=>{seAddTo(S.modal,[v])};
 ACT.serm=v=>{S.modal.it.splice(+v,1)};
-ACT.sesup=v=>{const [x,s]=v.split('|');S.modal.it[+x].sup=s};
+ACT.sesup=v=>{const [x,s]=v.split('|'),it=S.modal.it[+x];let a=supsOf(it);a=a.includes(s)?a.filter(y=>y!==s):a.concat(s);if(!a.length)return false;   /* luôn giữ ít nhất một mức */
+ a=SUPK.filter(y=>a.includes(y));it.sups=a;it.sup=supMain(a)};
 /* chạm ô số N = bé đúng N lượt trên 10 (N dấu ✓, còn lại ✗); chạm lại đúng ô đó thì xóa kết quả; ô 0 = không đúng lượt nào */
 ACT.setr=v=>{const [x,p]=v.split('|').map(Number),it=S.modal.it[x],n=p+1,nw='V'.repeat(n)+'X'.repeat(10-n);it.tr=it.tr===nw?TR0:nw};
 ACT.setrc=v=>{S.modal.it[+v].tr=TR0};
@@ -86,10 +101,10 @@ function seItem(i,x,n,p){const g=goalOf(i.g),tn=trN(i.tr),own=!p||p.g!==i.g;
  return`<div class="si"><div class="si-h"><div><span class="gt-k">Mục tiêu buổi trị liệu ${n}</span>${own?`<div class="sm" style="margin-top:2px"><b>${esc(g?g.n:'(mục tiêu đã xóa)')}</b> <span class="mu">· từ ngân hàng mục tiêu${g?' · '+esc(gSrc(g)):''}</span></div>`:''}</div><button class="btn s no" data-a="serm" data-v="${x}" aria-label="Bỏ mục tiêu buổi này">Bỏ</button></div>
  ${own&&g?gxHtml(g,'s',{open:1}):''}
  <label class="si-l" for="sg-${x}" style="display:block"><b>Nội dung mục tiêu buổi (SMART)</b> <span class="mu">· giáo viên tự viết</span></label><textarea id="sg-${x}" class="si-sg" rows="3" maxlength="400" data-c="sesg" data-v="${x}" placeholder="Giáo viên tự viết, theo SMART (cụ thể, đo lường được, khả thi, phù hợp, có thời hạn). Ví dụ: Trong buổi này, bé gọi tên đúng 5/10 đồ vật khi cô chỉ tranh." style="width:100%">${esc(i.sg||'')}</textarea>
- <div class="si-l">Mức hỗ trợ</div><div class="seg" role="group" aria-label="Mức hỗ trợ">${SUPK.map(s=>`<button type="button" class="sg sp-${s} ${i.sup===s?'on':''}" data-a="sesup" data-v="${x}|${s}" aria-pressed="${i.sup===s}" title="${esc(SUP[s].n+': '+SUP[s].h)}">${esc(SUP[s].a)}</button>`).join('')}</div>
+ <div class="si-l">Mức hỗ trợ <span class="mu">· chọn được nhiều mức (bấm lại để bỏ)</span></div><div class="seg" role="group" aria-label="Mức hỗ trợ">${SUPK.map(s=>`<button type="button" class="sg sp-${s} ${supsOf(i).includes(s)?'on':''}" data-a="sesup" data-v="${x}|${s}" aria-pressed="${supsOf(i).includes(s)}" title="${esc(SUP[s].n+': '+SUP[s].h)}">${esc(SUP[s].a)}</button>`).join('')}</div>
  <div class="si-l">Kết quả 10 lượt <span class="mu">· chạm ô số N là bé đúng N lượt (N=2 là 20%, N=5 là 50%); chạm lại ô đó để xóa</span></div>
  <div class="trb" role="group" aria-label="Số lượt đúng trên 10 lượt"><button type="button" class="tb tb-o" data-a="setr" data-v="${x}|-1" aria-label="0 lượt đúng">0</button>${i.tr.split('').map((c,q)=>`<button type="button" class="tb tb-${c==='V'?'v':c==='X'?'x':'o'}" data-a="setr" data-v="${x}|${q}" aria-label="${q+1} lượt đúng trên 10 (${(q+1)*10}%)">${c==='V'?'✓':c==='X'?'✗':q+1}</button>`).join('')}</div>
- <div class="si-f"><span class="sm">${tn?`<b>${trOk(i.tr)}/${tn}</b> đúng · <b>${trPct(i.tr)}%</b> · ${esc(SUP[i.sup].p)}`:'<span class="mu">Chưa ghi kết quả</span>'}</span>${tn?`<button class="btn s" data-a="setrc" data-v="${x}">Xóa kết quả</button>`:''}</div>
+ <div class="si-f"><span class="sm">${tn?`<b>${trOk(i.tr)}/${tn}</b> đúng · <b>${trPct(i.tr)}%</b> · ${esc(supsOf(i).map(q=>SUP[q].p).join(' + '))}`:'<span class="mu">Chưa ghi kết quả</span>'}</span>${tn?`<button class="btn s" data-a="setrc" data-v="${x}">Xóa kết quả</button>`:''}</div>
  <input class="sm" placeholder="Ghi chú riêng (không bắt buộc)" value="${esc(i.nt||'')}" data-c="sein" data-v="${x}" aria-label="Ghi chú"></div>`}
 /* Lĩnh vực ⇒ mục tiêu ngắn hạn (chọn từ kế hoạch, lấy từ ngân hàng mục tiêu) ⇒ nhiều mục tiêu buổi trị liệu do giáo viên viết theo SMART */
 function seGroups(m){const keys=[];m.it.forEach(i=>{const k=i.pl||'';if(!keys.includes(k))keys.push(k)});
@@ -115,7 +130,7 @@ MODALS.se=()=>{const m=S.modal,k=kidBy(m.k);if(!k||!canKid(k.id)){S.modal=null;r
 ACT.sesave=()=>{const m=S.modal,k=kidBy(m.k);if(!k||!canKid(k.id))return false;
  if(!m.date){toast('Hãy chọn ngày');return false}
  if(!m.it.length){toast('Hãy chọn ít nhất một mục tiêu cho buổi');return false}
- const it=m.it.map(i=>{const o={g:i.g,sup:i.sup,tr:i.tr};if(i.nt&&i.nt.trim())o.nt=i.nt.trim();if(i.sg&&i.sg.trim())o.sg=i.sg.trim().slice(0,400);const pp=i.pl?planBy(i.pl):null;if(pp&&pp.k===m.k)o.pl=pp.id;return o}),done=it.some(i=>trN(i.tr));
+ const it=m.it.map(i=>{const sa=supsOf(i),o={g:i.g,sup:supMain(sa),tr:i.tr};if(sa.length>1)o.sups=sa;if(i.nt&&i.nt.trim())o.nt=i.nt.trim();if(i.sg&&i.sg.trim())o.sg=i.sg.trim().slice(0,400);const pp=i.pl?planBy(i.pl):null;if(pp&&pp.k===m.k)o.pl=pp.id;return o}),done=it.some(i=>trN(i.tr));
  if(done&&m.date>TODAY){toast('Chưa đến ngày này nên chưa ghi kết quả được');return false}
  const o={k:m.k,date:m.date,by:m.by,st:done?'xong':'kh',dom:[...new Set(m.dom.concat(it.map(i=>gDom(i.g))))],it,note:(m.note||'').trim(),home:(m.home||'').trim()};
  if(m.id)Object.assign(DB.sess.find(s=>s.id===m.id),o);else DB.sess.push(Object.assign({id:'s'+uid()},o));
