@@ -45,4 +45,4 @@ ACT.tpmv=v=>{const [i,d]=v.split('|').map(Number),j=i+d;if(j<0||j>=DB.tpl.length
 ACT.tpdel=v=>{if(DB.tpl.length<=1){toast('Mẫu cần có ít nhất một mục');return false}ask('Xóa mục này khỏi mẫu? Nội dung đã viết ở mục này sẽ không còn hiện trong báo cáo.',()=>{DB.tpl=DB.tpl.filter(x=>x.k!==v);toast('Đã xóa mục')},'Xóa')};
 /* xóa báo cáo (Trưởng Trung tâm, Quản lý): mọi trạng thái; báo cáo đã gửi thì phụ huynh không còn xem được */
 ACT.bcdel=v=>{const r=DB.rp.find(x=>x.id===v);if(!r||!isLead())return false;
- ask('Xóa báo cáo '+mLabel(r.per)+' của bé '+kn(r.hs)+'?'+(r.s==='gui'?' Báo cáo đã gửi sẽ không còn hiện với phụ huynh.':'')+' Không hoàn tác được.',()=>{DB.rp=DB.rp.filter(x=>x.id!==v);S.modal=null;toast('Đã xóa báo cáo');render()},'Xóa báo cáo');return false};
+ ask('Xóa báo cáo '+mLabel(r.per)+' của bé '+kn(r.hs)+'?'+(r.s==='gui'?' Báo cáo đã gửi sẽ không còn hiện với phụ huynh.':'')+' Không hoàn tác được.',()=>{DB.rp=DB.rp.filter(x=>x.id!==v);S.modal=null;toast('Đã xóa báo cáo');render()},'Xóa báo cáo')};   /* không trả false: phải vẽ lại để hộp xác nhận hiện lên */
