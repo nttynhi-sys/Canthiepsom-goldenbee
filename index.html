@@ -1805,8 +1805,15 @@ function sched(k,m){const out=[],ls=DB.lich.filter(l=>l.hs===k.id),bd=btOf(k);
   ls.forEach(l=>{if(l.type==='bu'&&l.date===d)out.push({d,sid:l.id,kind:'bu',slot:l.slot})});
   if(inBt)out.push({d,sid:k.gr,kind:'bt',slot:BT.s})}
  return out}
-/* Học phí tháng = số ca 1-1 tính riêng × giá ca + số ngày bán trú × giá ngày bán trú (gồm sẵn 1 ca 1-1 mỗi ngày) */
-function invoice(k,m){if(k.st!=='dang'||k.sd.slice(0,7)>m)return 0;const xs=sched(k,m);
+/* Thời gian tính phí riêng của bé: k.fs = tính từ ngày, k.fe = tính đến hết ngày (cả hai tùy chọn, ISO yyyy-mm-dd).
+   Không đặt thì tính như cũ: từ đầu tháng nhập học (k.sd) đến khi bé ngưng. Chỉ các buổi trong khoảng này mới tính học phí, hoàn phí nghỉ và
+   ảnh hưởng ngày nghỉ lễ; lịch học và điểm danh vẫn như cũ (bé vẫn có thể học thử ngoài khoảng tính phí). */
+const feeOn=(k,d)=>(!k.fs||d>=k.fs)&&(!k.fe||d<=k.fe);
+const feeStartM=k=>(k.fs||k.sd||'').slice(0,7);
+const hasFeeWin=k=>!!(k.fs||k.fe);
+const schedF=(k,m)=>sched(k,m).filter(x=>feeOn(k,x.d));
+/* Học phí tháng = số ca 1-1 tính riêng × giá ca + số ngày bán trú × giá ngày bán trú (gồm sẵn 1 ca 1-1 mỗi ngày); raw=true: bỏ qua thời gian tính phí riêng (tính trọn tháng) */
+function invoice(k,m,raw){if(k.st!=='dang'||(raw?k.sd:feeStartM(k)).slice(0,7)>m)return 0;const xs=raw?sched(k,m):schedF(k,m);
  return xs.filter(x=>x.kind==='11'&&!x.inc).reduce((a,x)=>a+feeSlot(k,x.sid),0)+xs.filter(x=>x.kind==='bt').length*kidBt(k)}
 const makeupFor=(h,d,s)=>DB.mk.find(r=>r.hs===h&&r.from.d===d&&r.from.sid===s&&(r.s==='xn'||r.s==='xong'));
 const CL={cm:'x',p:'P',kp:'K',tt:'N',bv:'V'};
@@ -1829,7 +1836,7 @@ function feeOf(k,kind,d,sid,code,m){
 function settle(k,m){
  const r={k:k.id,m,rows:[],cells:{},plan:0,planInc:0,planBt:0,cm:0,p:0,kp:0,tt:0,bv:0,bu:0,none:0,lost:0,refund:0,stop:k.st==='nghi'};
  const put=(d,c)=>{const a=r.cells[d]=r.cells[d]||[];if(!a.includes(c))a.push(c)};
- for(const x of sched(k,m)){
+ for(const x of schedF(k,m)){
   const code=DB.att[x.d+'|'+x.sid+'|'+k.id]||'';
   if(x.kind==='bu'){if(code==='cm'){r.bu++;put(x.d,'B')}else if(x.d<WD)put(x.d,'?');continue}
   if(x.kind==='11'){if(x.inc){r.planInc++;continue}r.plan++}else r.planBt++;   /* ca 1-1 trong gói bán trú tính theo ngày bán trú, không tính riêng */
@@ -3333,7 +3340,7 @@ function hpStaff(){const h=S.hp=Object.assign({tab:'tq',m:CM,st:'',q:''},S.hp),m
 function hpDebt(h){const m=h.m,q=h.q.toLowerCase();
  const rows=DB.kids.filter(k=>(k.st==='dang'||balance(k.id)!==0)&&(!q||(k.n+' '+k.pn).toLowerCase().includes(q))).map(k=>({k,b:balance(k.id)})).filter(x=>!h.st||(h.st==='no'?x.b>0:h.st==='du'?x.b<0:x.b===0)).sort((a,c)=>c.b-a.b),p=pg('hp',rows,15);
  return plockCard(true)+`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="hpq">Tìm theo tên bé hoặc phụ huynh</label><input id="hpq" data-i="hpq" value="${esc(h.q)}"></div><div><label for="hpm">Tháng</label><select id="hpm" data-c="hpm">${opts([sm(CM,-2),sm(CM,-1),CM].map(x=>[x,mLabel(x)]),m)}</select></div><div><label for="hps">Tình trạng</label><select id="hps" data-c="hps"><option value="">Tất cả</option>${opts([['no','Còn nợ'],['dd','Đã đủ'],['du','Dư có']],h.st)}</select></div></div>`
- +tbl(['Bé','Phụ huynh','>Học phí '+m.slice(5)+'/'+m.slice(0,4),'>Trừ phí dư tháng trước','>Đã thu','>Công nợ','Tình trạng',''],p.rows.map(({k,b})=>`<tr><td><b>${esc(k.n)}</b>${canMoney()&&hasKpr(k)?' '+tg('Giá riêng','in'):''}<br><span class="sm mu">${esc(progShort(k))}</span></td><td>${esc(k.pn)}<br><span class="sm mu">${esc(k.pp)}</span></td><td class="r nw">${fnum(billed(k.id,m))}</td><td class="r nw">${surM(k.id,m)?'-'+fnum(surM(k.id,m)):'–'}</td><td class="r nw">${fnum(paidM(k.id,m))}</td><td class="r nw"><b>${fnum(b)}</b></td><td>${balTag(b,k)}</td><td class="nw"><button class="btn s" data-a="slopen" data-v="${k.id}">Sổ</button>${canMoney()?` <button class="btn s" data-a="kpropen" data-v="${k.id}" aria-label="Giá riêng của ${esc(k.n)}">Giá riêng</button> <button class="btn s p" data-a="thuopen" data-v="${k.id}">Ghi thu</button>`:''}</td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+`</div>`}
+ +tbl(['Bé','Phụ huynh','>Học phí '+m.slice(5)+'/'+m.slice(0,4),'>Trừ phí dư tháng trước','>Đã thu','>Công nợ','Tình trạng',''],p.rows.map(({k,b})=>`<tr><td><b>${esc(k.n)}</b>${canMoney()&&hasKpr(k)?' '+tg('Giá riêng','in'):''}${canMoney()&&hasFeeWin(k)?' '+tg('Tính phí riêng','wa'):''}<br><span class="sm mu">${esc(progShort(k))}</span></td><td>${esc(k.pn)}<br><span class="sm mu">${esc(k.pp)}</span></td><td class="r nw">${fnum(billed(k.id,m))}</td><td class="r nw">${surM(k.id,m)?'-'+fnum(surM(k.id,m)):'–'}</td><td class="r nw">${fnum(paidM(k.id,m))}</td><td class="r nw"><b>${fnum(b)}</b></td><td>${balTag(b,k)}</td><td class="nw"><button class="btn s" data-a="slopen" data-v="${k.id}">Sổ</button>${canMoney()?` <button class="btn s" data-a="kpropen" data-v="${k.id}" aria-label="Giá riêng của ${esc(k.n)}">Giá riêng</button> <button class="btn s" data-a="kfwopen" data-v="${k.id}" aria-label="Thời gian tính phí của ${esc(k.n)}">Thời gian tính phí</button> <button class="btn s p" data-a="thuopen" data-v="${k.id}">Ghi thu</button>`:''}</td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+`</div>`}
 function hpBook(h){const es=DB.lg.slice().sort((a,c)=>a.date===c.date?(a.id<c.id?1:-1):a.date<c.date?1:-1),p=pg('hpb',es,20);
  return`<div class="card">`+tbl(['Ngày','Bé','Loại','Nội dung','>Số tiền'],p.rows.map(e=>`<tr><td class="nw">${vd(e.date)}</td><td>${esc(kn(e.hs))}</td><td>${tg(LGK[e.kind][0],LGK[e.kind][1])}</td><td>${esc(e.note)}</td><td class="r nw">${LGK[e.kind][2]>0?'':'-'}${fnum(e.amt)}</td></tr>`).join(''),'Chưa có giao dịch.')+p.html+`</div>`}
 /* --- sổ công nợ từng bé --- */
@@ -3341,7 +3348,7 @@ ACT.slopen=v=>{if(!canMoney())return false;S.modal={t:'sl',id:v}};
 MODALS.sl=()=>{const id=S.modal.id,k=kidBy(id),rs=ledgerRows(id),b=balance(id);if(!k||!canKid(id)){S.modal=null;return''}
  return mdl('Sổ học phí · '+k.n,`<div class="grid"><div class="card kpi"><div class="mu sm">Công nợ hiện tại</div><div class="big ${b>0?'er':'ok'}">${fmt(b)}</div><div class="sm mu">${b>0?'Còn phải đóng':b<0?'Đang dư có, trừ vào tháng sau':'Đã đóng đủ'}</div></div></div>`
  +tbl(['Ngày','Loại','Nội dung','>Số tiền','>Còn lại',''],rs.slice().reverse().map(({e,b})=>`<tr><td class="nw">${vd(e.date)}</td><td>${tg(LGK[e.kind][0],LGK[e.kind][1])}</td><td>${esc(e.note)}</td><td class="r nw">${LGK[e.kind][2]>0?'':'-'}${fnum(e.amt)}</td><td class="r nw">${fnum(b)}</td><td>${canMoney()?`<button class="btn s no" data-a="lgdel" data-v="${e.id}" aria-label="Xóa dòng">Xóa</button>`:''}</td></tr>`).join(''),'Chưa có giao dịch.')
- +(canMoney()?`<div class="acts" style="margin-top:12px"><button class="btn p" data-a="thuopen" data-v="${id}">Ghi thu hoặc giảm giá</button><button class="btn" data-a="cfopen" data-v="${id}">Chuyển phí cho anh chị em</button><button class="btn" data-a="kpropen" data-v="${id}">Giá riêng</button></div>`:''),1)};
+ +(canMoney()?`<div class="acts" style="margin-top:12px"><button class="btn p" data-a="thuopen" data-v="${id}">Ghi thu hoặc giảm giá</button><button class="btn" data-a="cfopen" data-v="${id}">Chuyển phí cho anh chị em</button><button class="btn" data-a="kpropen" data-v="${id}">Giá riêng</button><button class="btn" data-a="kfwopen" data-v="${id}">Thời gian tính phí</button></div>`:''),1)};
 ACT.lgdel=v=>{if(!canMoney())return false;const e=DB.lg.find(x=>x.id===v);if(!e)return;ask('Xóa dòng “'+e.note+'” ('+fmt(e.amt)+')?',()=>{DB.lg=DB.lg.filter(x=>x.id!==v);Object.keys(DB.set).forEach(k=>{if(DB.set[k].ref===v)delete DB.set[k]});toast('Đã xóa dòng')},'Xóa')};
 ACT.thuopen=v=>{if(!canMoney())return false;const b=balance(v);S.modal={t:'thu',id:v,back:S.modal&&S.modal.t==='sl'}};
 MODALS.thu=()=>{const id=S.modal.id,b=balance(id);
@@ -3369,6 +3376,37 @@ function hpParent(){const ks=myKids();
  return head('Học phí của bé','Học phí, khoản đã đóng và khoản hoàn do nghỉ')+ks.map(k=>{const b=balance(k.id),rs=ledgerRows(k.id).reverse().slice(0,12);
   return`<div class="card"><h2>${esc(k.n)}</h2><div class="grid"><div class="card kpi"><div class="mu sm">${b>0?'Còn phải đóng':b<0?'Dư có (trừ vào tháng sau)':'Tình trạng'}</div><div class="big ${b>0?'er':'ok'}">${b===0?'Đã đóng đủ':fmt(Math.abs(b))}</div></div><div class="card kpi"><div class="mu sm">Học phí ${mLabel(CM)}</div><div class="big">${fmt(billed(k.id,CM))}</div><div class="sm mu">${esc(progShort(k))}</div></div></div>`
   +tbl(['Ngày','Nội dung','>Số tiền'],rs.map(({e})=>`<tr><td class="nw">${vd(e.date)}</td><td>${tg(LGK[e.kind][0],LGK[e.kind][1])} ${esc(e.note)}</td><td class="r nw">${LGK[e.kind][2]>0?'':'-'}${fnum(e.amt)}</td></tr>`).join(''),'Chưa có giao dịch.')+`<p class="sm mu" style="margin-top:8px">Học phí đóng từ đầu tháng và đóng nguyên tháng. Khoản “Hoàn phí nghỉ” (phí dư) được trừ vào học phí tháng sau. Xem chi tiết từng buổi nghỉ ở mục Cổng phụ huynh.</p></div>`+feeNextCard(k)}).join('')||'<div class="card"><p class="empty">Chưa có bé nào gắn với tài khoản này.</p></div>'}
+
+/* --- Thời gian tính phí riêng của bé: bé vào học giữa tháng, hoặc ngừng tính phí giữa tháng ---
+   Lưu ở hồ sơ bé: k.sd (ngày bắt đầu đi học), k.fs (tính từ ngày), k.fe (tính đến hết ngày); xem feeOn, schedF ở p04-domain.js */
+ACT.kfwopen=v=>{if(!canMoney())return false;S.modal={t:'kfw',id:v,err:''}};
+ACT.kfwsd=()=>{const sd=$q('#kf-sd'),fs=$q('#kf-fs');if(sd&&fs&&sd.value)fs.value=sd.value;return false};
+ACT.kfwclr=v=>{const k=kidBy(v);if(!k||!canMoney())return false;delete k.fs;delete k.fe;S.modal=null;toast('Đã bỏ thời gian tính phí riêng: tính như cũ (từ đầu tháng nhập học)')};
+MODALS.kfw=()=>{const id=S.modal.id,k=kidBy(id);if(!k||!canMoney()||!canKid(id)){S.modal=null;return''}
+ const rows=[sm(CM,-1),CM,sm(CM,1)].map(m=>{const full=invoice(k,m,true),cur=invoice(k,m),st=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hp'&&e.m===m);
+  return`<tr><td class="nw">${mLabel(m)}</td><td class="r nw">${fnum(full)}</td><td class="r nw"><b>${fnum(cur)}</b></td><td class="r nw">${st.length?fnum(st.reduce((a,e)=>a+e.amt,0)):'<span class="mu">Chưa lập</span>'}</td></tr>`}).join('');
+ return mdl('Thời gian tính phí · '+k.n,`<p class="sm mu" style="margin-bottom:10px">Dùng khi bé vào học giữa tháng hoặc nghỉ giữa tháng: chỉ các buổi trong khoảng này mới tính học phí. Để trống thì tính như cũ (từ đầu tháng nhập học, đến khi bé ngưng can thiệp). Lịch học và điểm danh không đổi.</p>
+ <form id="kfwf" class="f"><div class="f2"><div><label for="kf-sd">Ngày bắt đầu đi học (nhập học)</label><input id="kf-sd" name="sd" type="date" value="${esc(k.sd||'')}" required></div><div></div></div>
+ <div class="f2"><div><label for="kf-fs">Tính phí từ ngày</label><input id="kf-fs" name="fs" type="date" value="${esc(k.fs||'')}"></div><div><label for="kf-fe">Tính phí đến hết ngày</label><input id="kf-fe" name="fe" type="date" value="${esc(k.fe||'')}"></div></div>
+ <div class="acts"><button class="btn s" type="button" data-a="kfwsd">Tính từ ngày bắt đầu đi học</button>${hasFeeWin(k)?`<button class="btn s no" type="button" data-a="kfwclr" data-v="${k.id}">Bỏ thời gian tính phí riêng</button>`:''}</div>
+ ${tbl(['Tháng','>Trọn tháng','>Theo khoảng tính phí','>Đã lập'],rows)}
+ <p class="sm mu">Hóa đơn đã lập không tự đổi; sau khi lưu, hệ thống hỏi có cập nhật các hóa đơn bị ảnh hưởng không.</p>
+ <div class="err" role="alert">${esc(S.modal.err||'')}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu</button></div></form>`)};
+FORM.kfwf=f=>{if(!canMoney())return false;const k=kidBy(S.modal.id);if(!k)return false;
+ const e=f.elements,iso=d=>/^\d{4}-\d{2}-\d{2}$/.test(d),sd=e.sd.value,fs=e.fs.value,fe=e.fe.value,fail=m=>{S.modal.err=m};
+ if(!iso(sd))return fail('Hãy nhập ngày bắt đầu đi học.');
+ if((fs&&!iso(fs))||(fe&&!iso(fe)))return fail('Ngày không hợp lệ.');
+ if(fs&&fe&&fe<fs)return fail('Ngày kết thúc tính phí phải cùng ngày hoặc sau ngày bắt đầu tính phí.');
+ const hp=DB.lg.filter(x=>x.hs===k.id&&x.kind==='hp'),months=[...new Set(hp.map(x=>x.m))],before={};
+ months.forEach(m=>{before[m]=invoice(k,m)});
+ k.sd=sd;if(fs)k.fs=fs;else delete k.fs;if(fe)k.fe=fe;else delete k.fe;
+ /* chỉ gợi ý cập nhật hóa đơn được lập tự động theo cách tính cũ (một dòng, đúng bằng số tính cũ) mà nay đổi số */
+ const diffs=months.map(m=>({m,e:hp.filter(x=>x.m===m),old:before[m],now:invoice(k,m)})).filter(x=>x.now!==x.old&&x.e.length===1&&x.e[0].amt===x.old);
+ S.modal=null;
+ if(!diffs.length){toast('Đã lưu thời gian tính phí của '+k.n);return}
+ ask('Đã lưu thời gian tính phí của '+k.n+'. Có '+diffs.length+' hóa đơn đã lập theo cách tính cũ: '+diffs.map(x=>mLow(x.m)+' '+fmt(x.old)+' → '+fmt(x.now)).join('; ')+'. Cập nhật các hóa đơn này theo thời gian tính phí mới?',()=>{
+  diffs.forEach(x=>{const en=x.e[0];if(x.now>0){en.amt=x.now;en.note=(en.note||'Học phí '+mLow(x.m))+' (tính phí '+(k.fs?'từ '+vd(k.fs):'')+(k.fs&&k.fe?' ':'')+(k.fe?'đến '+vd(k.fe):'')+')'}else DB.lg=DB.lg.filter(y=>y.id!==en.id)});
+  toast('Đã cập nhật '+diffs.length+' hóa đơn');render()},'Cập nhật hóa đơn')};
 /* ===== 10. Tiền lương ===== */
 const PMODE={thang:'Lương cố định',buoi:'Theo ca 1-1',kethop:'Cơ bản và theo ca'};
 const tlMonths=()=>[sm(CM,-2),sm(CM,-1),CM].map(x=>[x,mLabel(x)]);
@@ -4253,7 +4291,7 @@ const holTag=h=>tg(HOLK[h.k]||HOLK.le,h.k==='tt'?'wa':'in');
 
 /* Ảnh hưởng của một ngày nghỉ: bao nhiêu bé bán trú, buổi 1-1 tính riêng, lượt điểm danh đã ghi, và số tiền học phí giảm */
 function holImpact(d){const w=dow(d),r={bt:0,s11:0,money:0,att:0,bu:0};if(w===0)return r;
- DB.kids.forEach(k=>{if(k.st!=='dang'||k.sd.slice(0,7)>d.slice(0,7))return;
+ DB.kids.forEach(k=>{if(k.st!=='dang'||feeStartM(k)>d.slice(0,7)||!feeOn(k,d))return;
   if(btHas(k,w)){r.bt++;r.money+=kidBt(k)}
   const inc=incIdW(k,w);
   DB.lich.forEach(l=>{if(l.type==='11'&&l.hs===k.id&&l.day===w&&l.id!==inc){r.s11++;r.money+=feeSlot(k,l.id)}})});
@@ -4310,7 +4348,7 @@ function surplusPrev(k,m){const posted=DB.lg.filter(e=>e.hs===k.id&&e.kind==='ho
  if(posted.length)return{amt:posted.reduce((s,e)=>s+e.amt,0),posted:true};
  if(k.st!=='dang')return{amt:0,posted:false};
  return{amt:settle(k,sm(m,-1)).refund,posted:false}}
-function feeBreak(k,m){const xs=sched(k,m),gross=invoice(k,m),sp=surplusPrev(k,m),st=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hp'&&e.m===m);
+function feeBreak(k,m){const xs=schedF(k,m),gross=invoice(k,m),sp=surplusPrev(k,m),st=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hp'&&e.m===m);
  return{bt:xs.filter(x=>x.kind==='bt').length,s11:xs.filter(x=>x.kind==='11'&&!x.inc).length,gross,sur:sp.amt,posted:sp.posted,due:Math.max(0,gross-sp.amt),closed:holIn(m),
   has:st.length>0,stored:st.reduce((s,e)=>s+e.amt,0)}}
 /* thẻ học phí tháng sau cho phụ huynh: học phí theo lịch, trừ phí dư tháng trước, số phải đóng */

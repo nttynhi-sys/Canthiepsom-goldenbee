@@ -7,7 +7,7 @@ const holTag=h=>tg(HOLK[h.k]||HOLK.le,h.k==='tt'?'wa':'in');
 
 /* Ảnh hưởng của một ngày nghỉ: bao nhiêu bé bán trú, buổi 1-1 tính riêng, lượt điểm danh đã ghi, và số tiền học phí giảm */
 function holImpact(d){const w=dow(d),r={bt:0,s11:0,money:0,att:0,bu:0};if(w===0)return r;
- DB.kids.forEach(k=>{if(k.st!=='dang'||k.sd.slice(0,7)>d.slice(0,7))return;
+ DB.kids.forEach(k=>{if(k.st!=='dang'||feeStartM(k)>d.slice(0,7)||!feeOn(k,d))return;
   if(btHas(k,w)){r.bt++;r.money+=kidBt(k)}
   const inc=incIdW(k,w);
   DB.lich.forEach(l=>{if(l.type==='11'&&l.hs===k.id&&l.day===w&&l.id!==inc){r.s11++;r.money+=feeSlot(k,l.id)}})});
@@ -64,7 +64,7 @@ function surplusPrev(k,m){const posted=DB.lg.filter(e=>e.hs===k.id&&e.kind==='ho
  if(posted.length)return{amt:posted.reduce((s,e)=>s+e.amt,0),posted:true};
  if(k.st!=='dang')return{amt:0,posted:false};
  return{amt:settle(k,sm(m,-1)).refund,posted:false}}
-function feeBreak(k,m){const xs=sched(k,m),gross=invoice(k,m),sp=surplusPrev(k,m),st=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hp'&&e.m===m);
+function feeBreak(k,m){const xs=schedF(k,m),gross=invoice(k,m),sp=surplusPrev(k,m),st=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hp'&&e.m===m);
  return{bt:xs.filter(x=>x.kind==='bt').length,s11:xs.filter(x=>x.kind==='11'&&!x.inc).length,gross,sur:sp.amt,posted:sp.posted,due:Math.max(0,gross-sp.amt),closed:holIn(m),
   has:st.length>0,stored:st.reduce((s,e)=>s+e.amt,0)}}
 /* thẻ học phí tháng sau cho phụ huynh: học phí theo lịch, trừ phí dư tháng trước, số phải đóng */
