@@ -72,8 +72,15 @@ function sched(k,m){const out=[],ls=DB.lich.filter(l=>l.hs===k.id),bd=btOf(k);
   ls.forEach(l=>{if(l.type==='bu'&&l.date===d)out.push({d,sid:l.id,kind:'bu',slot:l.slot})});
   if(inBt)out.push({d,sid:k.gr,kind:'bt',slot:BT.s})}
  return out}
-/* Học phí tháng = số ca 1-1 tính riêng × giá ca + số ngày bán trú × giá ngày bán trú (gồm sẵn 1 ca 1-1 mỗi ngày) */
-function invoice(k,m){if(k.st!=='dang'||k.sd.slice(0,7)>m)return 0;const xs=sched(k,m);
+/* Thời gian tính phí riêng của bé: k.fs = tính từ ngày, k.fe = tính đến hết ngày (cả hai tùy chọn, ISO yyyy-mm-dd).
+   Không đặt thì tính như cũ: từ đầu tháng nhập học (k.sd) đến khi bé ngưng. Chỉ các buổi trong khoảng này mới tính học phí, hoàn phí nghỉ và
+   ảnh hưởng ngày nghỉ lễ; lịch học và điểm danh vẫn như cũ (bé vẫn có thể học thử ngoài khoảng tính phí). */
+const feeOn=(k,d)=>(!k.fs||d>=k.fs)&&(!k.fe||d<=k.fe);
+const feeStartM=k=>(k.fs||k.sd||'').slice(0,7);
+const hasFeeWin=k=>!!(k.fs||k.fe);
+const schedF=(k,m)=>sched(k,m).filter(x=>feeOn(k,x.d));
+/* Học phí tháng = số ca 1-1 tính riêng × giá ca + số ngày bán trú × giá ngày bán trú (gồm sẵn 1 ca 1-1 mỗi ngày); raw=true: bỏ qua thời gian tính phí riêng (tính trọn tháng) */
+function invoice(k,m,raw){if(k.st!=='dang'||(raw?k.sd:feeStartM(k)).slice(0,7)>m)return 0;const xs=raw?sched(k,m):schedF(k,m);
  return xs.filter(x=>x.kind==='11'&&!x.inc).reduce((a,x)=>a+feeSlot(k,x.sid),0)+xs.filter(x=>x.kind==='bt').length*kidBt(k)}
 const makeupFor=(h,d,s)=>DB.mk.find(r=>r.hs===h&&r.from.d===d&&r.from.sid===s&&(r.s==='xn'||r.s==='xong'));
 const CL={cm:'x',p:'P',kp:'K',tt:'N',bv:'V'};
@@ -96,7 +103,7 @@ function feeOf(k,kind,d,sid,code,m){
 function settle(k,m){
  const r={k:k.id,m,rows:[],cells:{},plan:0,planInc:0,planBt:0,cm:0,p:0,kp:0,tt:0,bv:0,bu:0,none:0,lost:0,refund:0,stop:k.st==='nghi'};
  const put=(d,c)=>{const a=r.cells[d]=r.cells[d]||[];if(!a.includes(c))a.push(c)};
- for(const x of sched(k,m)){
+ for(const x of schedF(k,m)){
   const code=DB.att[x.d+'|'+x.sid+'|'+k.id]||'';
   if(x.kind==='bu'){if(code==='cm'){r.bu++;put(x.d,'B')}else if(x.d<WD)put(x.d,'?');continue}
   if(x.kind==='11'){if(x.inc){r.planInc++;continue}r.plan++}else r.planBt++;   /* ca 1-1 trong gói bán trú tính theo ngày bán trú, không tính riêng */
