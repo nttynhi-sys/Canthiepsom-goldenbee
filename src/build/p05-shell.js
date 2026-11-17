@@ -4,13 +4,13 @@ const PW='123456';
 const ACCESS={
  ql:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','mt','bc','td','cp','tb','tk'],
  tt:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','hp','tl','mt','bc','td','cp','tb','tk'],
- vp:['dash','tn','cc','vi','dd','hp','tl','td','tb','tk'],
+ vp:['dash','hs','tn','cc','vi','dd','hp','tl','td','tb','tk'],
  gv:['dash','hs','lh','tn','cc','vi','dd','hb','tl','mt','bc','td','tb'],
  ph:['cp','lh','tn','hb','hp','tb']};
 const NAV=[['dash','Dashboard','Tổng quan'],['ns','Nhân sự','Con người'],['hs','Học sinh'],['pc','Phân công'],['lh','Lịch học','Vận hành'],['tn','Thực đơn bán trú'],['cc','Chấm công'],['vi','Vi phạm nội quy'],['dd','Điểm danh'],['hb','Học bù'],['hp','Học phí','Tài chính'],['tl','Tiền lương'],['mt','Ngân hàng mục tiêu','Chuyên môn'],['bc','Báo cáo chuyên môn'],['td','Ảnh, video và tài liệu'],['cp','Cổng phụ huynh','Phụ huynh'],['tb','Thông báo'],['tk','Thống kê','Báo cáo']];
 const VLAB={gv:{hs:'Học sinh của tôi',lh:'Lịch dạy của tôi',cc:'Chấm công của tôi',vi:'Vi phạm của tôi',dd:'Điểm danh',tl:'Phiếu lương của tôi',bc:'Báo cáo của tôi',td:'Ảnh, video và tài liệu'},ph:{cp:'Cổng phụ huynh',hp:'Học phí',lh:'Lịch học của bé',tn:'Thực đơn bán trú'},vp:{cc:'Chấm công nhân sự',dd:'Ngày học và phép'}};
 /* tiêu đề nhóm riêng cho từng vai trò (khi nhóm gốc không hiện ra với vai trò đó) */
-const NAVG={vp:{tn:'Vận hành',tb:'Liên lạc'},ph:{cp:'Tổng quan',lh:'Lịch học',tb:'Liên lạc'}};
+const NAVG={vp:{hs:'Con người',tn:'Vận hành',tb:'Liên lạc'},ph:{cp:'Tổng quan',lh:'Lịch học',tb:'Liên lạc'}};
 const vlab=v=>((VLAB[U&&U.role]||{})[v])||NAV.find(n=>n[0]===v)[1];
 const isQL=()=>!!U&&U.role==='ql',isTT=()=>!!U&&U.role==='tt',isVP=()=>!!U&&U.role==='vp',isLead=()=>!!U&&(U.role==='ql'||U.role==='tt'),isGV=()=>!!U&&U.role==='gv',isPH=()=>!!U&&U.role==='ph';
 /* Người được phân giao dạy trẻ (1-1, bán trú, học bù): Giáo viên (gv) và Quản lý (ql). Trưởng Trung tâm, Văn phòng và hành chính không nằm trong danh sách phân giao. Quản lý vẫn giữ quyền Quản lý của mình, chỉ thêm việc được chọn làm người dạy. */
@@ -24,7 +24,8 @@ const activeTeachers=()=>DB.staff.filter(s=>s.st==='dang'&&(s.role==='gv'||(s.ro
    canCfg: chỉ Trưởng Trung tâm đổi thông số tiền, mức lương và vai trò nhân sự.
    seesAll: thấy mọi học sinh và mọi nhân sự (Quản lý, Trưởng Trung tâm, Văn phòng).
    noFee/feeTx: Quản lý và Giáo viên không thấy chữ nào về phí; feeTx ẩn câu nhắc đến phí với hai vai trò này. */
-const canMoney=()=>isTT()||isVP(),canCfg=()=>isTT(),seesAll=()=>isLead()||isVP(),noFee=()=>isQL()||isGV(),feeTx=t=>noFee()?'':t;
+/* xóa hồ sơ bé: Trưởng Trung tâm, Quản lý, Văn phòng (hành chính) */
+const canDelKid=()=>isLead()||isVP(),canMoney=()=>isTT()||isVP(),canCfg=()=>isTT(),seesAll=()=>isLead()||isVP(),noFee=()=>isQL()||isGV(),feeTx=t=>noFee()?'':t;
 /* hồ sơ nhân sự Quản lý, Trưởng Trung tâm và Văn phòng chỉ Trưởng Trung tâm sửa (Quản lý chỉ sửa được hồ sơ của chính mình) */
 const lockAcc=s=>!isTT()&&!!s&&(s.role==='tt'||s.role==='vp'||(s.role==='ql'&&(!U||s.id!==U.id)));
 const myGroups=()=>isGV()?DB.groups.filter(g=>grHas(g,U.id)):[];
