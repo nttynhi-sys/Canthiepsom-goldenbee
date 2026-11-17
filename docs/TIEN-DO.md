@@ -56,6 +56,7 @@ Cập nhật 16/11/2026 (mã ứng dụng cuối: `154babd`). Quy tắc, nghiệ
 - Kỹ thuật: tìm nguyên nhân `z25-sd-bank` và `n2.js`. Chưa có yêu cầu tính năng nào đang chờ.
 
 ## 10. Nhật ký
+- 17/11 phụ huynh thấy phí cọc của bé mình ở mục Học phí (đang giữ hoặc đã hoàn), chỉ đọc; `api/parent.js` thêm lấy `dep` theo mã bé. Không đổi database. Bài thử `z55-phu-huynh-phi-coc`, `phone-api`.
 - 17/11 phí cọc của bé (cột Phí cọc, Hoàn cọc, nhãn Đã hoàn tiền cọc ở Học phí; chỉ hoàn khi bé ngưng và đã đóng đủ học phí; bảng tiền `dep`, không đổi lược đồ); sửa nút Xóa báo cáo và Xóa hồ sơ nhân sự (hộp xác nhận không hiện do `return false`). Bài thử `z54-phi-coc`, `cloud-phi-coc`.
 - 17/11 học phí theo thời gian tính phí riêng của bé (`k.fs`, `k.fe`, sửa `k.sd`): nút Thời gian tính phí ở Học phí, học phí, hoàn phí nghỉ và ngày nghỉ lễ chỉ tính trong khoảng, hỏi cập nhật hóa đơn đã lập. Không đổi database. Bài thử `z53-hoc-phi-tinh-tu-ngay`, `cloud-hoc-phi-tinh-tu-ngay`.
 - 17/11 xóa hồ sơ bé: sửa lỗi hộp xác nhận không hiện (`ACT.hsdelk` trả `false`), cho Trưởng Trung tâm, Quản lý, Văn phòng xóa (`canDelKid`), thêm nút Xóa ở danh sách; Văn phòng có mục Học sinh chỉ gồm danh sách và thông tin. Không đổi database. Bài thử `z52-xoa-ho-so-be`, `cloud-xoa-ho-so-be`.
