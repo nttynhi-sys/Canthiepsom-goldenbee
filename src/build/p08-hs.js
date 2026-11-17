@@ -278,6 +278,7 @@ ACT.hslsdel=v=>{const l=DB.lich.find(x=>x.id===v),k=l&&kidBy(l.hs),back=S.modal;
 /* --- xóa hồ sơ bé (Trưởng Trung tâm, Quản lý, Văn phòng): nhập sai hoặc bé không còn học; bé chỉ nghỉ thì dùng "Ngưng can thiệp" --- */
 function hsDelKid(id){
  if(DB.kpr)delete DB.kpr[id];
+ if(DB.dep)delete DB.dep[id];
  DB.kids=DB.kids.filter(x=>x.id!==id);
  DB.sess=DB.sess.filter(x=>x.k!==id);
  DB.plans=DB.plans.filter(x=>x.k!==id);

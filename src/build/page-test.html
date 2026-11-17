@@ -638,9 +638,9 @@ function telNorm(s){let t=String(s==null?'':s).trim();if(!t)return'';
 /* Khóa phụ huynh: email (nếu có), nếu không thì số điện thoại. Mọi bé cùng khóa thuộc cùng một tài khoản phụ huynh. */
 const pkeyOf=k=>{const e=String(k&&k.pe||'').trim().toLowerCase();if(e&&e.includes('@'))return e;const t=telNorm(k&&k.pp);return t?'tel:'+t:''};
 /* Hình dạng từng nhóm dữ liệu: danh sách có mã (id hoặc k), bảng khóa, mục đơn */
-const CSH={arr:['staff','kids','cg','tg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb','hol','media','ref','tri','vio'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon','vam','kpr'],one:['cfg']};
+const CSH={arr:['staff','kids','cg','tg','plans','sess','groups','lich','lr','mk','lg','rp','nt','tkb','hol','media','ref','tri','vio'],arrk:{tpl:'k'},map:['att','ts','set','rd','menu','bon','vam','kpr','dep'],one:['cfg']};
 /* Nhóm dữ liệu tiền: chỉ Trưởng Trung tâm và Văn phòng đọc và ghi được (giáo viên chỉ đọc lương của mình) */
-const MONEYC=['lg','set','bon','vam','kpr'],CFG_MONEY=['p11','pbtDay','pbtDay11','giamTru','thue','v1','v2','lt_ng','lt_nh','lt_gq','lt_ms','lt_vd','lt_tc','lt_nc'],CFG_DEF={pbtDay:380000,pbtDay11:180000,v1:20000,v2:30000,lt_ng:180000,lt_nh:180000,lt_gq:200000,lt_ms:200000,lt_vd:200000,lt_tc:180000,lt_nc:190000};   /* dữ liệu cũ chưa có giá bán trú theo ngày thì lấy giá mặc định */
+const MONEYC=['lg','set','bon','vam','kpr','dep'],CFG_MONEY=['p11','pbtDay','pbtDay11','giamTru','thue','v1','v2','lt_ng','lt_nh','lt_gq','lt_ms','lt_vd','lt_tc','lt_nc'],CFG_DEF={pbtDay:380000,pbtDay11:180000,v1:20000,v2:30000,lt_ng:180000,lt_nh:180000,lt_gq:200000,lt_ms:200000,lt_vd:200000,lt_tc:180000,lt_nc:190000};   /* dữ liệu cũ chưa có giá bán trú theo ngày thì lấy giá mặc định */
 const PAY_STUB=()=>({mode:'thang',base:0,rate:0,rateBt:0,allow:0,bh:0,latePen:0});
 const canM=()=>MONEY_ROLES.includes(CLD.role);
 const KEYF=c=>CSH.arrk[c]||'id';
@@ -684,7 +684,7 @@ function cflat(db,withMoney){const M=new Map();
  return M}
 
 /* ---- dựng DB từ các dòng đã tải ---- */
-function cEmpty(){return{v:7,vio:[],vam:{},kpr:{},media:[],ref:[],tri:[],hol:[],tkb:[],cfg:{},staff:[],kids:[],cg:[],tg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
+function cEmpty(){return{v:7,vio:[],vam:{},kpr:{},dep:{},media:[],ref:[],tri:[],hol:[],tkb:[],cfg:{},staff:[],kids:[],cg:[],tg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:[],nt:[],bon:{},rd:{},menu:{}}}
 function cApply(D,t,r,pay,cfgm){const c=r.collection;
  if(t==='money'&&c==='pay'){pay[r.id]=r.data;return}
  if(t==='money'&&c==='cfgm'){Object.assign(cfgm,r.data);cfgm._has=1;return}
@@ -798,7 +798,7 @@ async function cloudSetup(kind){
  if(kind==='demo'){const s=DB.staff.find(x=>x.role==='tt')||DB.staff[1];s.em=email;s.n=name}
  else{
   const me={id:'nv01',n:name,role:'tt',pos:'Trưởng Trung tâm',ph:'',em:email,st:'dang',sd:TODAY,sup:'',pay:PAY_STUB()};
-  DB.staff=[me];['kids','cg','tg','plans','sess','lich','lr','mk','lg','rp','nt','vio'].forEach(k=>{DB[k]=[]});['att','ts','set','rd','menu','bon','vam','kpr'].forEach(k=>{DB[k]={}});
+  DB.staff=[me];['kids','cg','tg','plans','sess','lich','lr','mk','lg','rp','nt','vio'].forEach(k=>{DB[k]=[]});['att','ts','set','rd','menu','bon','vam','kpr','dep'].forEach(k=>{DB[k]={}});
   DB.groups=[{id:'G1',n:BTN[0],ts:[],gv:'',tg:''},{id:'G2',n:BTN[1],ts:[],gv:'',tg:''}];DB.tkb=tkbDefault(DB.groups)}
  CLD.snap=new Map();CLD.ord={};CLD.maxo=0;
  cloudEnter();if(CLD.stage==='app')cloudFlush()}
@@ -1051,7 +1051,7 @@ function tkbDefault(groups){const out=[];
 /* ===== Dữ liệu mẫu (giả lập, không phải trẻ thật) ===== */
 function seed(){
  let sd=20261108;const R=()=>(sd=(sd*1664525+1013904223)%4294967296)/4294967296,P=a=>a[Math.floor(R()*a.length)],RI=(a,b)=>a+Math.floor(R()*(b-a+1)),SH=a=>a.slice().sort(()=>R()-.5);
- const D={v:7,vio:[],vam:{},kpr:{},hol:[],pul:{},tkb:[],cfg:{name:'TRUNG TÂM CAN THIỆP SỚM GOLDEN BEE',addr:'28 Trường Thi 1, Quận Hải Châu, TP. Đà Nẵng',tel:'0793502567',p11:180000,pbtDay:380000,pbtDay11:180000,lateAfter:'08:15',ccIn:'07:15',ccOut:'18:00',v1:20000,v2:30000,cc:26,giamTru:15500000,thue:10,rule:{pLoss:30,ttRefund:100,bvRefund:50,bvRefund11:100,gvKp:50,gvP:0}},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:TPL0.map(x=>({...x})),nt:[],bon:{},rd:{},menu:{}};
+ const D={v:7,vio:[],vam:{},kpr:{},dep:{},hol:[],pul:{},tkb:[],cfg:{name:'TRUNG TÂM CAN THIỆP SỚM GOLDEN BEE',addr:'28 Trường Thi 1, Quận Hải Châu, TP. Đà Nẵng',tel:'0793502567',p11:180000,pbtDay:380000,pbtDay11:180000,lateAfter:'08:15',ccIn:'07:15',ccOut:'18:00',v1:20000,v2:30000,cc:26,giamTru:15500000,thue:10,rule:{pLoss:30,ttRefund:100,bvRefund:50,bvRefund11:100,gvKp:50,gvP:0}},staff:[],kids:[],cg:[],plans:[],sess:[],groups:[],lich:[],att:{},ts:{},lr:[],mk:[],lg:[],set:{},rp:[],tpl:TPL0.map(x=>({...x})),nt:[],bon:{},rd:{},menu:{}};
  DB=D;
  const HO=['Nguyễn','Trần','Lê','Phạm','Hoàng','Huỳnh','Phan','Vũ','Võ','Đặng','Bùi','Đỗ','Hồ','Ngô','Dương','Lý'];
  const SN=['Minh Anh','Thu Trang','Quang Huy','Lan Phương','Hải Yến','Văn Nam','Thanh Hà','Đức Thịnh','Ngọc Lan','Hồng Nhung','Quốc Bảo','Thùy Linh','Khánh Ly','Tuấn Anh','Bích Phượng','Mai Hương','Thanh Tâm','Kim Ngân','Diệu Linh','Xuân Mai','Phương Thảo','Hoài An','Nhật Lệ','Thu Hiền','Trọng Nghĩa','Yến Nhi','Cẩm Tú','Gia Linh','Bảo Trâm','Anh Thư'];
@@ -2310,7 +2310,7 @@ ACT.nvdel=v=>{const s=stBy(v);if(!s)return false;
  if(!canDelStaff(s)){toast(accOf(s)?'Hãy thu hồi quyền đăng nhập của '+s.n+' trước khi xóa hồ sơ':'Bạn không có quyền xóa hồ sơ này');return false}
  const used=DB.kids.filter(k=>kHas(k,s.id)).length+DB.lich.filter(l=>l.gv===s.id).length+DB.groups.filter(g=>grHas(g,s.id)).length;
  if(used){toast(s.n+' đang phụ trách '+used+' bé, buổi 1-1 hoặc lớp. Hãy chuyển phân công trước khi xóa.');return false}
- ask('Xóa hồ sơ nhân sự '+s.n+'? Lịch sử đã dạy và chấm công vẫn giữ, nhưng tên người này sẽ hiện là “(đã xóa)”.',()=>{DB.staff=DB.staff.filter(x=>x.id!==s.id);S.modal=null;toast('Đã xóa hồ sơ nhân sự');render()},'Xóa hồ sơ');return false};
+ ask('Xóa hồ sơ nhân sự '+s.n+'? Lịch sử đã dạy và chấm công vẫn giữ, nhưng tên người này sẽ hiện là “(đã xóa)”.',()=>{DB.staff=DB.staff.filter(x=>x.id!==s.id);S.modal=null;toast('Đã xóa hồ sơ nhân sự');render()},'Xóa hồ sơ')};   /* không trả false: phải vẽ lại để hộp xác nhận hiện lên */
 /* ===== 3. Học sinh ===== */
 const wk11=id=>DB.lich.filter(l=>l.type==='11'&&l.hs===id).length;
 /* số ca 1-1 hằng tuần ngoài các ca nằm trong gói bán trú (mỗi ngày bán trú có tối đa một ca trong gói) */
@@ -2591,6 +2591,7 @@ ACT.hslsdel=v=>{const l=DB.lich.find(x=>x.id===v),k=l&&kidBy(l.hs),back=S.modal;
 /* --- xóa hồ sơ bé (Trưởng Trung tâm, Quản lý, Văn phòng): nhập sai hoặc bé không còn học; bé chỉ nghỉ thì dùng "Ngưng can thiệp" --- */
 function hsDelKid(id){
  if(DB.kpr)delete DB.kpr[id];
+ if(DB.dep)delete DB.dep[id];
  DB.kids=DB.kids.filter(x=>x.id!==id);
  DB.sess=DB.sess.filter(x=>x.k!==id);
  DB.plans=DB.plans.filter(x=>x.k!==id);
@@ -3337,16 +3338,35 @@ function hpStaff(){const h=S.hp=Object.assign({tab:'tq',m:CM,st:'',q:''},S.hp),m
  return head('Học phí','Thu, hoàn, chuyển phí và công nợ','<button class="btn s" data-a="hpxl">Xuất Excel</button>')
  +`<div class="grid">${kpi('Phải thu '+mLow(m),fmt(fs.due),'theo hóa đơn tháng')}${kpi('Đã thu',fmt(fs.paid),fs.due?Math.round(fs.paid*100/fs.due)+'% hóa đơn':'','ok')}${kpi('Công nợ hiện tại',fmt(totalDebt()),debtors().length+' gia đình còn nợ',totalDebt()?'er':'ok')}${kpi('Hoàn phí nghỉ',fmt(refunds),'trừ vào học phí '+mLow(m))}</div>`
  +tabsH(tabs,h.tab,'hptab')+(h.tab==='tq'?hpDebt(h):h.tab==='sao'?hpBook(h):h.tab==='hol'?holTab():hpGen())}
+/* --- Phí cọc: một số bé đặt cọc khi vào học. Chỉ hoàn sau khi bé ngưng học và đã đóng đủ học phí. Dữ liệu tiền (money_records, collection dep, khóa = mã bé,
+   {a: số tiền cọc, r: ngày hoàn 'yyyy-mm-dd' hoặc bỏ trống}); không cộng vào công nợ học phí --- */
+const depOf=k=>{const o=(DB.dep||{})[k.id]||{};return{a:isFinite(+o.a)&&+o.a>0?+o.a:0,r:o.r||''}};
+const depWhy=k=>k.st!=='nghi'?'Bé chưa ngưng học':balance(k.id)>0?'Bé còn nợ học phí '+fmt(balance(k.id)):'';
+const depCell=k=>{const d=depOf(k);
+ return`<div class="dep" style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;min-width:110px;max-width:150px"><input type="number" min="0" step="1000" inputmode="numeric" style="width:104px" value="${d.a||''}" placeholder="0" data-c="depamt" data-v="${esc(k.id)}" aria-label="Phí cọc của ${esc(k.n)}" ${d.r?'disabled':''}>`
+  +(d.a>0?(d.r?`<button class="btn s" data-a="depview" data-v="${esc(k.id)}" title="Đã hoàn ngày ${vd(d.r)}. Bấm để xem hoặc hủy">${tg('Đã hoàn tiền cọc','ok')}</button>`:`<button class="btn s ${depWhy(k)?'':'p'}" data-a="deprf" data-v="${esc(k.id)}" ${depWhy(k)?'aria-disabled="true" title="'+esc(depWhy(k))+'"':''}>Hoàn cọc</button>`):'')+`</div>`};
+CHG.depamt=(v,t)=>{const k=kidBy(t.dataset.v);if(!k||!canMoney()||!canKid(k.id))return false;if(depOf(k).r){toast('Cọc đã hoàn, muốn sửa hãy hủy hoàn trước');return}
+ const n=String(v).trim()===''?0:+v;if(!isFinite(n)||n<0){toast('Số tiền cọc không hợp lệ');return}
+ if(!DB.dep)DB.dep={};if(n>0||DB.dep[k.id])DB.dep[k.id]=Object.assign({},DB.dep[k.id],{a:Math.round(n)});
+ setTimeout(render,0);return false};   /* vẽ lại sau khi ô nhập mất tiêu điểm: tránh vẽ lồng trong sự kiện blur */
+ACT.deprf=v=>{const k=kidBy(v);if(!k||!canMoney()||!canKid(v))return false;const d=depOf(k);if(!(d.a>0)||d.r)return false;
+ const why=depWhy(k);if(why){toast('Chưa hoàn được cọc: '+why+'. Chỉ hoàn cọc khi bé đã ngưng học và đã đóng đủ học phí.');return false}
+ ask('Hoàn tiền cọc '+fmt(d.a)+' cho bé '+k.n+'? Hệ thống ghi ngày hoàn là hôm nay ('+vd(TODAY)+') và đánh dấu “Đã hoàn tiền cọc”.',()=>{DB.dep[k.id]=Object.assign({},DB.dep[k.id],{a:d.a,r:TODAY});toast('Đã ghi hoàn tiền cọc của '+k.n);render()},'Hoàn cọc')};
+ACT.depview=v=>{const k=kidBy(v);if(!k||!canMoney()||!canKid(v))return false;const d=depOf(k);if(!d.r)return false;
+ ask('Bé '+k.n+' đã được hoàn tiền cọc '+fmt(d.a)+' vào ngày '+vd(d.r)+'. Nếu ghi nhầm, bấm “Hủy hoàn cọc” để đánh dấu lại là chưa hoàn.',()=>{DB.dep[k.id]=Object.assign({},DB.dep[k.id],{a:d.a,r:''});toast('Đã hủy đánh dấu hoàn cọc của '+k.n);render()},'Hủy hoàn cọc')};
+const depSum=()=>{const ks=DB.kids.filter(k=>depOf(k).a>0),held=ks.filter(k=>!depOf(k).r),ret=ks.filter(k=>depOf(k).r);
+ return ks.length?`<p class="sm mu" style="margin-top:8px">Phí cọc: đang giữ <b>${fmt(held.reduce((a,k)=>a+depOf(k).a,0))}</b> (${held.length} bé) · đã hoàn <b>${fmt(ret.reduce((a,k)=>a+depOf(k).a,0))}</b> (${ret.length} bé). Cọc chỉ hoàn khi bé đã ngưng học và đã đóng đủ học phí; không tính vào công nợ học phí.</p>`:''};
 function hpDebt(h){const m=h.m,q=h.q.toLowerCase();
- const rows=DB.kids.filter(k=>(k.st==='dang'||balance(k.id)!==0)&&(!q||(k.n+' '+k.pn).toLowerCase().includes(q))).map(k=>({k,b:balance(k.id)})).filter(x=>!h.st||(h.st==='no'?x.b>0:h.st==='du'?x.b<0:x.b===0)).sort((a,c)=>c.b-a.b),p=pg('hp',rows,15);
+ const rows=DB.kids.filter(k=>(k.st==='dang'||balance(k.id)!==0||depOf(k).a>0)&&(!q||(k.n+' '+k.pn).toLowerCase().includes(q))).map(k=>({k,b:balance(k.id)})).filter(x=>!h.st||(h.st==='no'?x.b>0:h.st==='du'?x.b<0:x.b===0)).sort((a,c)=>c.b-a.b),p=pg('hp',rows,15);
  return plockCard(true)+`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="hpq">Tìm theo tên bé hoặc phụ huynh</label><input id="hpq" data-i="hpq" value="${esc(h.q)}"></div><div><label for="hpm">Tháng</label><select id="hpm" data-c="hpm">${opts([sm(CM,-2),sm(CM,-1),CM].map(x=>[x,mLabel(x)]),m)}</select></div><div><label for="hps">Tình trạng</label><select id="hps" data-c="hps"><option value="">Tất cả</option>${opts([['no','Còn nợ'],['dd','Đã đủ'],['du','Dư có']],h.st)}</select></div></div>`
- +tbl(['Bé','Phụ huynh','>Học phí '+m.slice(5)+'/'+m.slice(0,4),'>Trừ phí dư tháng trước','>Đã thu','>Công nợ','Tình trạng',''],p.rows.map(({k,b})=>`<tr><td><b>${esc(k.n)}</b>${canMoney()&&hasKpr(k)?' '+tg('Giá riêng','in'):''}${canMoney()&&hasFeeWin(k)?' '+tg('Tính phí riêng','wa'):''}<br><span class="sm mu">${esc(progShort(k))}</span></td><td>${esc(k.pn)}<br><span class="sm mu">${esc(k.pp)}</span></td><td class="r nw">${fnum(billed(k.id,m))}</td><td class="r nw">${surM(k.id,m)?'-'+fnum(surM(k.id,m)):'–'}</td><td class="r nw">${fnum(paidM(k.id,m))}</td><td class="r nw"><b>${fnum(b)}</b></td><td>${balTag(b,k)}</td><td class="nw"><button class="btn s" data-a="slopen" data-v="${k.id}">Sổ</button>${canMoney()?` <button class="btn s" data-a="kpropen" data-v="${k.id}" aria-label="Giá riêng của ${esc(k.n)}">Giá riêng</button> <button class="btn s" data-a="kfwopen" data-v="${k.id}" aria-label="Thời gian tính phí của ${esc(k.n)}">Thời gian tính phí</button> <button class="btn s p" data-a="thuopen" data-v="${k.id}">Ghi thu</button>`:''}</td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+`</div>`}
+ +tbl(['Bé','Phụ huynh','>Học phí '+m.slice(5)+'/'+m.slice(0,4),'>Trừ phí dư tháng trước','>Đã thu','>Công nợ','Tình trạng','Phí cọc',''],p.rows.map(({k,b})=>`<tr><td style="min-width:140px"><b>${esc(k.n)}</b>${canMoney()&&hasKpr(k)?' '+tg('Giá riêng','in'):''}${canMoney()&&hasFeeWin(k)?' '+tg('Tính phí riêng','wa'):''}<br><span class="sm mu">${esc(progShort(k))}</span></td><td>${esc(k.pn)}<br><span class="sm mu">${esc(k.pp)}</span></td><td class="r nw">${fnum(billed(k.id,m))}</td><td class="r nw">${surM(k.id,m)?'-'+fnum(surM(k.id,m)):'–'}</td><td class="r nw">${fnum(paidM(k.id,m))}</td><td class="r nw"><b>${fnum(b)}</b></td><td>${balTag(b,k)}</td><td>${depCell(k)}</td><td><div style="display:flex;flex-wrap:wrap;gap:4px;min-width:150px;max-width:190px"><button class="btn s" data-a="slopen" data-v="${k.id}">Sổ</button>${canMoney()?`<button class="btn s p" data-a="thuopen" data-v="${k.id}">Ghi thu</button><button class="btn s" data-a="kpropen" data-v="${k.id}" aria-label="Giá riêng của ${esc(k.n)}">Giá riêng</button><button class="btn s" data-a="kfwopen" data-v="${k.id}" aria-label="Thời gian tính phí của ${esc(k.n)}">Thời gian tính phí</button>`:''}</div></td></tr>`).join(''),'Không có học sinh phù hợp.')+p.html+depSum()+`</div>`}
 function hpBook(h){const es=DB.lg.slice().sort((a,c)=>a.date===c.date?(a.id<c.id?1:-1):a.date<c.date?1:-1),p=pg('hpb',es,20);
  return`<div class="card">`+tbl(['Ngày','Bé','Loại','Nội dung','>Số tiền'],p.rows.map(e=>`<tr><td class="nw">${vd(e.date)}</td><td>${esc(kn(e.hs))}</td><td>${tg(LGK[e.kind][0],LGK[e.kind][1])}</td><td>${esc(e.note)}</td><td class="r nw">${LGK[e.kind][2]>0?'':'-'}${fnum(e.amt)}</td></tr>`).join(''),'Chưa có giao dịch.')+p.html+`</div>`}
 /* --- sổ công nợ từng bé --- */
 ACT.slopen=v=>{if(!canMoney())return false;S.modal={t:'sl',id:v}};
 MODALS.sl=()=>{const id=S.modal.id,k=kidBy(id),rs=ledgerRows(id),b=balance(id);if(!k||!canKid(id)){S.modal=null;return''}
  return mdl('Sổ học phí · '+k.n,`<div class="grid"><div class="card kpi"><div class="mu sm">Công nợ hiện tại</div><div class="big ${b>0?'er':'ok'}">${fmt(b)}</div><div class="sm mu">${b>0?'Còn phải đóng':b<0?'Đang dư có, trừ vào tháng sau':'Đã đóng đủ'}</div></div></div>`
+ +(depOf(k).a>0?`<p class="sm" style="margin:10px 0">Phí cọc: <b>${fmt(depOf(k).a)}</b> · ${depOf(k).r?tg('Đã hoàn tiền cọc ngày '+vd(depOf(k).r),'ok'):tg('Đang giữ','wa')}</p>`:'')
  +tbl(['Ngày','Loại','Nội dung','>Số tiền','>Còn lại',''],rs.slice().reverse().map(({e,b})=>`<tr><td class="nw">${vd(e.date)}</td><td>${tg(LGK[e.kind][0],LGK[e.kind][1])}</td><td>${esc(e.note)}</td><td class="r nw">${LGK[e.kind][2]>0?'':'-'}${fnum(e.amt)}</td><td class="r nw">${fnum(b)}</td><td>${canMoney()?`<button class="btn s no" data-a="lgdel" data-v="${e.id}" aria-label="Xóa dòng">Xóa</button>`:''}</td></tr>`).join(''),'Chưa có giao dịch.')
  +(canMoney()?`<div class="acts" style="margin-top:12px"><button class="btn p" data-a="thuopen" data-v="${id}">Ghi thu hoặc giảm giá</button><button class="btn" data-a="cfopen" data-v="${id}">Chuyển phí cho anh chị em</button><button class="btn" data-a="kpropen" data-v="${id}">Giá riêng</button><button class="btn" data-a="kfwopen" data-v="${id}">Thời gian tính phí</button></div>`:''),1)};
 ACT.lgdel=v=>{if(!canMoney())return false;const e=DB.lg.find(x=>x.id===v);if(!e)return;ask('Xóa dòng “'+e.note+'” ('+fmt(e.amt)+')?',()=>{DB.lg=DB.lg.filter(x=>x.id!==v);Object.keys(DB.set).forEach(k=>{if(DB.set[k].ref===v)delete DB.set[k]});toast('Đã xóa dòng')},'Xóa')};
@@ -3370,7 +3390,7 @@ function hpGen(){const m=S.hp.gm||sm(CM,1),rows=DB.kids.filter(k=>k.st==='dang')
  +`<p class="sm mu" style="margin-top:6px">${rows.length>12?'Hiển thị 12 trong '+rows.length+' trẻ. ':''}Chưa tạo: ${todo.length} hóa đơn, tổng ${fmt(todo.reduce((s,x)=>s+x.f.gross,0))} (sau khi trừ phí dư còn phải đóng ${fmt(todo.reduce((s,x)=>s+x.f.due,0))}). Phí dư tạm tính được ghi chính thức vào công nợ ở mục Điểm danh, nút “Ghi khoản hoàn vào công nợ”.</p><div class="acts" style="margin-top:10px"><button class="btn p" data-a="hpgen" data-v="${m}" ${todo.length?'':'disabled'}>Tạo ${todo.length} hóa đơn ${mLabel(m)}</button></div></div>`}
 ACT.holgo=()=>{S.hp=Object.assign({tab:'tq',m:CM,st:'',q:''},S.hp,{tab:'hol'})};
 ACT.hpgen=m=>{if(!canMoney())return false;let n=0;DB.kids.forEach(k=>{if(k.st!=='dang'||DB.lg.some(e=>e.hs===k.id&&e.kind==='hp'&&e.m===m))return;const a=invoice(k,m);if(a>0){const nh=holIn(m).length;DB.lg.push({id:'e'+uid(),hs:k.id,date:m+'-01',kind:'hp',amt:a,m,note:'Học phí '+mLow(m)+(nh?' (đã trừ '+nh+' ngày nghỉ lễ)':'')});n++}});toast('Đã tạo '+n+' hóa đơn')};
-ACT.hpxl=()=>{if(!canMoney())return false;const m=S.hp.m||CM;exportXLSX('cong-no-hoc-phi-'+m+'.xlsx',[{n:'Công nợ',rows:[['Mã','Họ tên','Phụ huynh','Điện thoại','Học phí '+m,'Đã thu','Công nợ hiện tại']].concat(DB.kids.filter(k=>k.st==='dang'||balance(k.id)!==0).map(k=>[kcode(k),k.n,k.pn,k.pp,billed(k.id,m),paidM(k.id,m),balance(k.id)]))},{n:'Sổ thu chi',rows:[['Ngày','Mã bé','Họ tên','Loại','Nội dung','Số tiền']].concat(DB.lg.slice().sort((a,c)=>a.date<c.date?-1:1).map(e=>[vd(e.date),kcodeOf(e.hs),kn(e.hs),LGK[e.kind][0],e.note,LGK[e.kind][2]*e.amt]))}])};
+ACT.hpxl=()=>{if(!canMoney())return false;const m=S.hp.m||CM;exportXLSX('cong-no-hoc-phi-'+m+'.xlsx',[{n:'Công nợ',rows:[['Mã','Họ tên','Phụ huynh','Điện thoại','Học phí '+m,'Đã thu','Công nợ hiện tại','Phí cọc','Tình trạng cọc']].concat(DB.kids.filter(k=>k.st==='dang'||balance(k.id)!==0||depOf(k).a>0).map(k=>[kcode(k),k.n,k.pn,k.pp,billed(k.id,m),paidM(k.id,m),balance(k.id),depOf(k).a||'',depOf(k).a?(depOf(k).r?'Đã hoàn '+vd(depOf(k).r):'Đang giữ'):'']))},{n:'Sổ thu chi',rows:[['Ngày','Mã bé','Họ tên','Loại','Nội dung','Số tiền']].concat(DB.lg.slice().sort((a,c)=>a.date<c.date?-1:1).map(e=>[vd(e.date),kcodeOf(e.hs),kn(e.hs),LGK[e.kind][0],e.note,LGK[e.kind][2]*e.amt]))}])};
 /* --- góc nhìn phụ huynh --- */
 function hpParent(){const ks=myKids();
  return head('Học phí của bé','Học phí, khoản đã đóng và khoản hoàn do nghỉ')+ks.map(k=>{const b=balance(k.id),rs=ledgerRows(k.id).reverse().slice(0,12);
@@ -3490,7 +3510,7 @@ ACT.tpmv=v=>{const [i,d]=v.split('|').map(Number),j=i+d;if(j<0||j>=DB.tpl.length
 ACT.tpdel=v=>{if(DB.tpl.length<=1){toast('Mẫu cần có ít nhất một mục');return false}ask('Xóa mục này khỏi mẫu? Nội dung đã viết ở mục này sẽ không còn hiện trong báo cáo.',()=>{DB.tpl=DB.tpl.filter(x=>x.k!==v);toast('Đã xóa mục')},'Xóa')};
 /* xóa báo cáo (Trưởng Trung tâm, Quản lý): mọi trạng thái; báo cáo đã gửi thì phụ huynh không còn xem được */
 ACT.bcdel=v=>{const r=DB.rp.find(x=>x.id===v);if(!r||!isLead())return false;
- ask('Xóa báo cáo '+mLabel(r.per)+' của bé '+kn(r.hs)+'?'+(r.s==='gui'?' Báo cáo đã gửi sẽ không còn hiện với phụ huynh.':'')+' Không hoàn tác được.',()=>{DB.rp=DB.rp.filter(x=>x.id!==v);S.modal=null;toast('Đã xóa báo cáo');render()},'Xóa báo cáo');return false};
+ ask('Xóa báo cáo '+mLabel(r.per)+' của bé '+kn(r.hs)+'?'+(r.s==='gui'?' Báo cáo đã gửi sẽ không còn hiện với phụ huynh.':'')+' Không hoàn tác được.',()=>{DB.rp=DB.rp.filter(x=>x.id!==v);S.modal=null;toast('Đã xóa báo cáo');render()},'Xóa báo cáo')};   /* không trả false: phải vẽ lại để hộp xác nhận hiện lên */
 /* ===== 12. Ảnh, video và tài liệu =====
    Tệp nằm trong Supabase Storage, bucket riêng tư gb-media (không công khai), đường dẫn m/<mã>.<đuôi>.
    Danh mục nằm ở bảng records, collection 'media': {id,kind:'img'|'vid'|'doc',t,p,ct,sz,d,by,bn,at,ks:[mã bé],gr,sh,n,cat}.
@@ -4750,6 +4770,7 @@ function migrate7(d){
  if(!Array.isArray(d.vio))d.vio=[];
  if(!d.vam||typeof d.vam!=='object'||Array.isArray(d.vam))d.vam={};
  if(!d.kpr||typeof d.kpr!=='object'||Array.isArray(d.kpr))d.kpr={};
+ if(!d.dep||typeof d.dep!=='object'||Array.isArray(d.dep))d.dep={};
  const c=d.cfg;if(!c.ccIn)c.ccIn='07:15';if(!c.ccOut)c.ccOut='18:00';if(c.v1==null)c.v1=20000;if(c.v2==null)c.v2=30000;
  d.v=7}
 const okDB=d=>d&&Array.isArray(d.staff)&&Array.isArray(d.kids)&&d.cfg&&d.cfg.rule&&d.set&&d.rd&&d.att&&Array.isArray(d.rp)&&Array.isArray(d.tpl);
@@ -4759,6 +4780,7 @@ const okDB=d=>d&&Array.isArray(d.staff)&&Array.isArray(d.kids)&&d.cfg&&d.cfg.rul
  if(okDB(d)&&d.v===7&&Array.isArray(d.vio)&&d.vam&&Array.isArray(d.hol)&&Array.isArray(d.plans)&&Array.isArray(d.sess)&&Array.isArray(d.cg)&&d.menu&&Array.isArray(d.groups)&&Array.isArray(d.tkb))DB=d;
  else if(okDB(d)&&d.v>=2&&d.v<=6){try{if(d.v===2)migrate(d);if(d.v<=3)migrate4(d);if(d.v<=4)migrate5(d);if(d.v<=5)migrate6(d);migrate7(d);save()}catch(e){DB=null;seed();save()}}
  else{seed();save()}
+ if(!DB.dep||typeof DB.dep!=='object'||Array.isArray(DB.dep))DB.dep={};   /* phí cọc từng bé (dữ liệu tiền) */
  if(!DB.kpr||typeof DB.kpr!=='object'||Array.isArray(DB.kpr))DB.kpr={};   /* dữ liệu mẫu bản 7 cũ chưa có giá riêng từng bé */
  try{const th=localStorage.getItem('gb_th');if(th)document.documentElement.dataset.theme=th}catch(e){}
  try{const em=localStorage.getItem('gb_u');if(em){const a=findAccount(em);if(a){U=a;S.v=ACCESS[a.role][0]}}}catch(e){}
