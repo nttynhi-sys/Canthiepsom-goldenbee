@@ -1,7 +1,7 @@
 /* ===== 7. Điểm danh: theo ngày ===== */
 const STB={'11':['cm','p','kp','tt'],bt:['cm','p','kp','bv','tt'],bu:['cm','p','kp'],inc:['cm','p','kp','bv','tt']};
 /* Trưởng Trung tâm, Quản lý và Giáo viên sửa được điểm danh mọi ngày đã qua, mọi tháng (giáo viên chỉ với trẻ của mình: canKid, rowHas); ngày chưa đến thì chưa điểm danh được */
-const canEditAtt=d=>d<=TODAY&&(isLead()||isGV());
+const canEditAtt=d=>isLead()||isGV();   /* mọi ngày (cả ngày đã qua, hôm nay và ngày sắp tới), mọi tháng; giáo viên chỉ với trẻ của mình (canKid, rowHas) */
 const attKey=(d,s,h)=>d+'|'+s+'|'+h;
 const mkFor=(h,d,sid)=>DB.mk.find(r=>r.hs===h&&r.from.d===d&&r.from.sid===sid);
 VIEWS.dd=()=>{const t=S.dd=Object.assign({tab:seesAll()?'sheet':'roll',date:WD,m:WD.slice(0,7),q:'',pr:'',fl:'',gv:'',kid:'',un:false},S.dd);
@@ -22,7 +22,8 @@ const feeNote=(d,s,k)=>{const cur=DB.att[attKey(d,s.sid,k.id)];if(!cur||cur==='c
  const o=feeOf(k,s.kind,d,s.sid,cur,d.slice(0,7));
  return`<span class="sm">${esc(o.note)}${o.ls||o.rf?'. Mất <b>'+fnum(o.ls)+' ₫</b>, hoàn <b>'+fnum(o.rf)+' ₫</b>':''}</span>`};
 const mkBtn=(d,s,k)=>{const cur=DB.att[attKey(d,s.sid,k.id)];if(s.kind!=='11'||s.inc||!['p','kp','tt'].includes(cur)||!canEditAtt(d))return'';
- const r=mkFor(k.id,d,s.sid);return r?`<button class="btn s" data-a="nav" data-v="hb">Học bù: ${esc(MKS[r.s]?MKS[r.s][0]:'')}</button>`:`<button class="btn s" data-a="mkfrom" data-v="${d}|${s.sid}|${k.id}">Tạo yêu cầu học bù</button>`};
+ const r=mkFor(k.id,d,s.sid),fill=!DB.lich.some(l=>l.type==='bu'&&l.date===d&&l.slot===(DB.lich.find(x=>x.id===s.sid)||{}).slot&&l.gv===(DB.lich.find(x=>x.id===s.sid)||{}).gv)?`<button class="btn s" data-a="mkfill" data-v="${d}|${s.sid}|${k.id}" title="Xếp bé khác học bù vào đúng ngày và khung giờ bé này vắng">Xếp bé khác vào giờ này</button>`:'<span class="sm mu">Đã có bé học bù vào giờ này</span>';
+ return(r?`<button class="btn s" data-a="nav" data-v="hb">Học bù: ${esc(MKS[r.s]?MKS[r.s][0]:'')}</button>`:`<button class="btn s" data-a="mkfrom" data-v="${d}|${s.sid}|${k.id}">Tạo yêu cầu học bù</button>`)+' '+fill};
 ACT.att=v=>{const [d,sid,h,c]=v.split('|');if(!canKid(h)||!canEditAtt(d)){toast('Bạn chưa thể sửa điểm danh này');return false}
  const key=attKey(d,sid,h),old=DB.att[key];if(old===c)delete DB.att[key];else DB.att[key]=c;
  /* ngày bán trú: ca 1-1 trong gói đi theo tình trạng nghỉ của ngày (ghi nghỉ thì ca 1-1 cũng nghỉ; bỏ hoặc đổi sang có mặt thì bỏ theo) */
@@ -35,9 +36,9 @@ function ddRoll(){const t=S.dd,d=t.date,can=canEditAtt(d);
  const pend=s=>s.kids.some(k=>!DB.att[attKey(d,s.sid,k.id)]);if(t.un)ds=ds.filter(pend);
  const one=ds.filter(s=>s.kind!=='bt'),grp=ds.filter(s=>s.kind==='bt');let tot=0,rec=0,cm=0;
  ds.forEach(s=>s.kids.forEach(k=>{tot++;const c=DB.att[attKey(d,s.sid,k.id)];if(c){rec++;if(c==='cm')cm++}}));
- const ctl=`<div class="card"><div class="f2"><div><label for="dd-d">Ngày</label><input id="dd-d" type="date" data-c="dddate" value="${d}" max="${TODAY}"></div>${seesAll()?`<div><label for="dd-g">Giáo viên</label><select id="dd-g" data-c="ddgv"><option value="">Tất cả</option>${opts(DB.staff.filter(isTeacher).map(s=>[s.id,tName(s)]),t.gv)}</select></div>`:''}<div style="display:flex;align-items:end"><label class="chk" style="margin:0 0 8px"><input type="checkbox" data-c="ddun" ${t.un?'checked':''}> Chỉ hiện lượt chưa điểm danh</label></div></div>
- <div class="acts" style="margin-top:10px"><button class="btn s" data-a="ddday" data-v="-1">Ngày trước</button><button class="btn s" data-a="ddday" data-v="1" ${addD(d,1)>TODAY?'disabled':''}>Ngày sau</button><b>${DAYN[dow(d)]}, ${vd(d)}</b>${d===WD&&WD!==TODAY?'<span class="mu sm">(ngày làm việc gần nhất)</span>':''}</div>
- ${!can?`<p class="note sm" style="margin-top:10px">${d>TODAY?'Chưa đến ngày này nên chưa điểm danh được.':isVP()?'Văn phòng chỉ xem điểm danh. Việc ghi và sửa do giáo viên, Quản lý hoặc Trưởng Trung tâm thực hiện.':'Bạn không có quyền sửa điểm danh này.'}</p>`:''}</div>`;
+ const ctl=`<div class="card"><div class="f2"><div><label for="dd-d">Ngày</label><input id="dd-d" type="date" data-c="dddate" value="${d}"></div>${seesAll()?`<div><label for="dd-g">Giáo viên</label><select id="dd-g" data-c="ddgv"><option value="">Tất cả</option>${opts(DB.staff.filter(isTeacher).map(s=>[s.id,tName(s)]),t.gv)}</select></div>`:''}<div style="display:flex;align-items:end"><label class="chk" style="margin:0 0 8px"><input type="checkbox" data-c="ddun" ${t.un?'checked':''}> Chỉ hiện lượt chưa điểm danh</label></div></div>
+ <div class="acts" style="margin-top:10px"><button class="btn s" data-a="ddday" data-v="-1">Ngày trước</button><button class="btn s" data-a="ddday" data-v="1">Ngày sau</button><b>${DAYN[dow(d)]}, ${vd(d)}</b>${d===WD&&WD!==TODAY?'<span class="mu sm">(ngày làm việc gần nhất)</span>':''}</div>
+ ${!can?`<p class="note sm" style="margin-top:10px">${isVP()?'Văn phòng chỉ xem điểm danh. Việc ghi và sửa do giáo viên, Quản lý hoặc Trưởng Trung tâm thực hiện.':'Bạn không có quyền sửa điểm danh này.'}</p>`:''}</div>`;
  const kp=`<div class="grid">${kpi('Lượt học',tot,'trong ngày')}${kpi('Đã điểm danh',rec+'/'+tot,tot?Math.round(rec*100/tot)+'%':'',rec<tot?'er':'ok')}${kpi('Có mặt',cm,rec?Math.round(cm*100/rec)+'% số đã ghi':'')}${kpi('Nghỉ',rec-cm,'P, KP, TT/GV nghỉ, nhập viện')}</div>`;
  if(!ds.length)return ctl+`<div class="card"><p class="empty">${dow(d)===0?'Chủ nhật không có buổi 1-1 hay học bù nào (bán trú nghỉ).':isClosed(d)?'Trung tâm nghỉ ngày này: '+esc(holOf(d).n)+'. Ngày nghỉ không tính học phí và không cần điểm danh.':'Không có buổi học nào phù hợp trong ngày này.'}</p></div>`;
  const hint=`<p class="note sm" style="margin-bottom:12px"><b>Cách ghi P và KP:</b> Nghỉ P khi phụ huynh báo trong nhóm chung trước 7g sáng cùng ngày với ca sáng, trước 12g với ca chiều và tối (bán trú: báo trước 1 ngày hoặc trước 7g sáng). Báo sau mốc này hoặc không báo thì ghi KP. Bấm lại vào trạng thái đang chọn để xóa.</p>`;
