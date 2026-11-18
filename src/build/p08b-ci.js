@@ -10,16 +10,18 @@ const strip=tr=>`<span class="trs" role="img" aria-label="${trOk(tr)} lượt đ
 /* người phụ trách bé: các giáo viên 1-1 của bé (nhiều người, ngang nhau), nếu không có thì mọi giáo viên của lớp bán trú (ngang nhau) */
 const kidGVs=k=>kTs(k).length?kTs(k):grTs(grBy(k.gr));
 const kidGV=k=>kidGVs(k)[0]||'';
-const canEditSess=s=>!!U&&canKid(s.k)&&(isLead()||(isGV()&&(s.by===U.id||kidGVs(kidBy(s.k)||{}).includes(U.id))&&s.date>=addD(TODAY,-14)));
+/* giáo viên sửa, xóa được buổi của bé mình dạy ở mọi ngày (không còn giới hạn 14 ngày) */
+const canEditSess=s=>!!U&&canKid(s.k)&&(isLead()||(isGV()&&(s.by===U.id||kidGVs(kidBy(s.k)||{}).includes(U.id))));
 const planBy=id=>DB.plans.find(p=>p.id===id);
 /* Chỉ còn mục tiêu ngắn hạn (h:'n'); kế hoạch cũ h:'d' vẫn đọc được và hiện như mục tiêu ngắn hạn. sm: nội dung mục tiêu buổi theo SMART (tùy chọn) */
-function addPlanItem(k,g,h,sm){if(DB.plans.some(p=>p.k===k&&p.g===g&&p.s!=='dat'))return false;const o={id:'p'+uid(),k,g,h:'n',s:'dang',from:TODAY,due:addD(TODAY,HZ.n[2]),by:U?U.id:''};if(sm&&String(sm).trim())o.sm=String(sm).trim().slice(0,400);DB.plans.push(o);return o.id}
+function addPlanItem(k,g,h,sm,from){if(DB.plans.some(p=>p.k===k&&p.g===g&&p.s!=='dat'))return false;const f=/^\d{4}-\d{2}-\d{2}$/.test(from||'')&&from<=addD(TODAY,365)?from:TODAY,o={id:'p'+uid(),k,g,h:'n',s:'dang',from:f,due:addD(f,HZ.n[2]),by:U?U.id:''};   /* from: ngày bắt đầu mục tiêu, chọn được mọi ngày */if(sm&&String(sm).trim())o.sm=String(sm).trim().slice(0,400);DB.plans.push(o);return o.id}
 
 /* ---------- Kế hoạch mục tiêu của từng bé ---------- */
 function planRow(p){const g=goalOf(p.g),m=masteryOf(p.k,p.g),lr=m.last,ready=m.ready&&p.s==='dang';
  const spark=m.rs.slice(-8).map(r=>{const sc=recSc(r);return`<i style="height:${Math.max(8,sc)}%" title="${sc}/100"></i>`}).join('');
  return`<div class="pl ${p.s==='dat'?'dn':''}"><div class="pl-m"><b>${esc(g?g.n:'(mục tiêu đã xóa)')}</b><div class="sm mu">${g?esc(g.t)+' · '+esc(gSrc(g))+(g.a?' · '+esc(g.a):''):''}</div>
  <div class="pl-t">${g?domTag(g.d,g):''} ${tg(PST[p.s][0],PST[p.s][1])}${ready?' '+tg('Đủ điều kiện đạt','ok'):''} <span class="sm mu">Từ ${vdm(p.from)} · hạn ${vdm(p.due)}${p.dt?' · đạt '+vdm(p.dt):''}</span></div>${g?gxHtml(g,'s',{open:1}):''}
+ <label class="sm" for="pf-${p.id}" style="display:block;margin-top:8px"><b>Ngày bắt đầu mục tiêu</b></label><input id="pf-${p.id}" type="date" value="${esc(p.from||'')}" max="${addD(TODAY,365)}" data-c="plfrom" data-v="${p.id}" style="width:auto">
  <label class="sm" for="sm-${p.id}" style="display:block;margin-top:8px"><b>Nội dung mục tiêu buổi trị liệu (SMART)</b></label><textarea id="sm-${p.id}" rows="2" maxlength="400" data-c="plsm" data-v="${p.id}" placeholder="Cụ thể, đo lường được, khả thi, phù hợp, có thời hạn. Ví dụ: Trong buổi này, bé gọi tên đúng 5/10 đồ vật khi cô chỉ tranh." style="width:100%">${esc(p.sm||'')}</textarea></div>
  <div class="pl-r">${lr?`${supTag(lr.sup)} <b>${trPct(lr.tr)}%</b><span class="spk" aria-hidden="true">${spark}</span><span class="sm mu">${m.cnt} buổi</span>`:'<span class="sm mu">Chưa có số liệu</span>'}</div>
  <div class="pl-a">${p.s==='dang'?`<button class="btn s" data-a="plok" data-v="${p.id}">Đánh dấu đạt</button><button class="btn s" data-a="pltam" data-v="${p.id}">Tạm dừng</button>`:`<button class="btn s" data-a="plre" data-v="${p.id}">${p.s==='dat'?'Mở lại':'Tiếp tục'}</button>`}<button class="btn s no" data-a="pldel" data-v="${p.id}">Bỏ</button></div></div>`}
@@ -34,6 +36,7 @@ const planBack=k=>{S.modal={t:'hs',id:k,tab:'kh'}};
 ACT.plok=v=>{const p=planBy(v);if(p){p.s='dat';p.dt=TODAY;toast('Đã đánh dấu đạt: '+trunc(gName(p.g),40))}};
 ACT.pltam=v=>{const p=planBy(v);if(p)p.s='tam'};
 ACT.plre=v=>{const p=planBy(v);if(p){p.s='dang';delete p.dt}};
+CHG.plfrom=(v,t)=>{const p=planBy(t.dataset.v);if(!p||!canKid(p.k)||!/^\d{4}-\d{2}-\d{2}$/.test(v||'')||v>addD(TODAY,365))return false;p.from=v;p.due=addD(v,HZ.n[2]);setTimeout(render,0);return false};   /* vẽ lại sau khi ô nhập mất tiêu điểm */
 CHG.plsm=(v,t)=>{const p=planBy(t.dataset.v);if(!p||!canKid(p.k))return false;const x=String(v||'').trim().slice(0,400);if(x)p.sm=x;else delete p.sm;return false};
 ACT.pldel=v=>{const p=planBy(v);if(!p)return false;ask('Bỏ mục tiêu “'+gName(p.g)+'” khỏi kế hoạch? Số liệu các buổi đã ghi vẫn được giữ lại.',()=>{DB.plans=DB.plans.filter(x=>x.id!==v);planBack(p.k)},'Bỏ')};
 ACT.plnext=v=>{const [k,g]=v.split('|'),src=DB.plans.find(p=>p.k===k&&p.s==='dat'&&nextOf(p.g)&&nextOf(p.g).id===g);if(addPlanItem(k,g,'n',src&&src.sm||''))toast('Đã thêm vào kế hoạch ngắn hạn')};
@@ -198,7 +201,8 @@ function libPanel(f,o){const P=o.idp||'lf',hs=libHeads(f),all=libFind(f),p=pg(LP
  <div class="acts" style="margin-bottom:8px"><span class="sm"><b>${all.length}</b> mục phù hợp</span>${hasF?'<button class="btn s" data-a="lfclr">Xóa bộ lọc</button>':''}${f.age!==''&&f.age!=null?'<span class="sm mu">Đang lọc theo mốc phát triển của mục tiêu, không theo tuổi thật của bé. Bộ ABLLS-R và hoạt động OT không chia theo mốc tuổi nên không hiện khi lọc.</span>':''}</div>${f.src==='vb'?vbPanel(f,P):''}`
  +(p.rows.length?`<div class="gl">${p.rows.map(i=>libItem(i,o)).join('')}</div>`:'<p class="empty">Không có mục tiêu phù hợp. Hãy nới bộ lọc hoặc đổi từ khóa.</p>')+p.html}
 /* ---------- Ngân hàng mục tiêu: chọn mục tiêu trực tiếp cho bé (giáo viên và quản lý) ---------- */
-const bkInit=()=>S.bk=Object.assign({kid:'',sel:[]},S.bk);
+const bkInit=()=>S.bk=Object.assign({kid:'',sel:[],d:TODAY},S.bk);
+CHG.bkd=v=>{if(v)bkInit().d=v;return false};
 const bkKids=()=>myKids().filter(k=>k.st==='dang').sort((a,b)=>a.n.localeCompare(b.n,'vi'));
 const dots=n=>String(n).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
 function hsLib(){const b=bkInit(),ks=bkKids(),nc=(DB.cg||[]).length,ntg=tgItems().length;
@@ -208,7 +212,7 @@ function hsLib(){const b=bkInit(),ks=bkKids(),nc=(DB.cg||[]).length,ntg=tgItems(
  return`<div class="card"><p class="mu sm" style="margin-bottom:12px">${dots(LIBI.length)} mục tiêu chia theo ${LDOM.length} lĩnh vực (ABLLS-R, ESDM/Denver, VB-MAPP, mốc phát triển Mầm non, hoạt động OT, thang chơi Westby, chuỗi phát triển chơi và Ngôn ngữ trị liệu 0–6 tuổi)${nc?' và '+nc+' mục tiêu do Trung tâm tự thêm':''}${ntg?(nc?', ':' và ')+ntg+' mục do giáo viên tự thêm':''}. Cách chọn: chọn bé, chọn lĩnh vực rồi tick các mục tiêu cần luyện, sau đó bấm “Thêm vào kế hoạch”. Khi ghi buổi can thiệp, bạn cũng chọn mục tiêu theo lĩnh vực từ ngân hàng này.</p>
  <div class="bk-w"><label for="bk-k"><b>Chọn mục tiêu cho bé</b></label><select id="bk-k" data-c="bkkid"><option value="">${ks.length?'Chọn bé…':'Chưa có bé nào để chọn'}</option>${opts(ks.map(k=>[k.id,k.n+' · '+age(k.dob)]),b.kid)}</select>${kid?`<span class="sm mu">${esc(kid.nd)} · đang có ${own.length} mục tiêu trong kế hoạch</span>`:'<span class="sm mu">Chọn bé để thêm mục tiêu vào kế hoạch. Chưa chọn bé vẫn xem và tìm mục tiêu được.</span>'}</div>`
  +libPanel(S.hs.lib,{pick:true,cn:'bksel',idp:'bk',edit:true,sel:b.sel,taken,per:20})
- +`<div class="bk-f"><span class="bk-s sm"><b id="bk-cnt">${b.sel.length}</b> mục đã chọn${kid?' cho '+esc(kid.n):''}</span><button class="btn s" id="bk-clr" data-a="bkclr" ${b.sel.length?'':'disabled'}>Bỏ chọn</button><button class="btn p" data-a="bkok">Thêm vào kế hoạch</button></div></div>`}
+ +`<div class="bk-f"><span class="bk-s sm"><b id="bk-cnt">${b.sel.length}</b> mục đã chọn${kid?' cho '+esc(kid.n):''}</span><button class="btn s" id="bk-clr" data-a="bkclr" ${b.sel.length?'':'disabled'}>Bỏ chọn</button><label class="sm" for="bk-d" style="margin:0">Ngày bắt đầu</label><input id="bk-d" type="date" value="${esc(b.d||TODAY)}" max="${addD(TODAY,365)}" data-c="bkd" style="width:auto" aria-label="Ngày bắt đầu mục tiêu"><button class="btn p" data-a="bkok">Thêm vào kế hoạch</button></div></div>`}
 const bkCount=()=>{const b=S.bk,e=$q('#bk-cnt'),x=$q('#bk-clr');if(e)e.textContent=b.sel.length;if(x)x.disabled=!b.sel.length};
 CHG.bkkid=v=>{const b=bkInit();b.kid=v;b.up=''};
 CHG.bksel=(v,t)=>{const b=bkInit();b.sel=t.checked?b.sel.filter(x=>x!==v).concat(v):b.sel.filter(x=>x!==v);bkCount();return false};
@@ -217,19 +221,19 @@ ACT.bkclr=()=>{bkInit().sel=[]};
 ACT.bkok=()=>{const b=bkInit(),k=b.kid?kidBy(b.kid):null;
  if(!k||!canKid(k.id)){toast('Hãy chọn bé ở ô “Chọn mục tiêu cho bé” trước');return false}
  if(!b.sel.length){toast('Hãy tick chọn ít nhất một mục tiêu');return false}
- let n=0;b.sel.forEach(g=>{if(addPlanItem(k.id,g,'n',''))n++});b.sel=[];
+ let n=0;b.sel.forEach(g=>{if(addPlanItem(k.id,g,'n','',b.d))n++});b.sel=[];
  toast('Đã thêm '+n+' mục tiêu vào kế hoạch ngắn hạn của '+k.n);
  S.modal={t:'hs',id:k.id,tab:'kh'}};
 VIEWS.mt=()=>{hsInit();return head('Ngân hàng mục tiêu','Chọn mục tiêu theo lĩnh vực để đưa vào kế hoạch và buổi can thiệp của bé',(isLead()?'<button class="btn p" data-a="cgnew">Thêm mục tiêu của Trung tâm</button>':'')+(myKids().length?'<button class="btn" data-a="tgnew">Thêm mục tiêu mới cho bé</button>':''))+hsLib()};
 
 /* ---------- Bộ chọn mục tiêu (thêm vào kế hoạch hoặc vào buổi) ---------- */
-ACT.pkopen=v=>{S.modal={t:'gp',mode:'plan',k:v,back:S.modal&&S.modal.t==='hs'?S.modal:null,f:{dom:'',src:'',head:'',age:'',q:''},sel:[],sm:''};S.pg.gp=1};
+ACT.pkopen=v=>{S.modal={t:'gp',mode:'plan',k:v,back:S.modal&&S.modal.t==='hs'?S.modal:null,f:{dom:'',src:'',head:'',age:'',q:''},sel:[],sm:'',d:TODAY};S.pg.gp=1};
 const gpCount=()=>{const m=S.modal,e=$q('#gp-cnt'),b=$q('#gp-ok');if(e)e.textContent=m.sel.length;if(b)b.disabled=!m.sel.length};
 CHG.gpsel=(v,t)=>{const m=S.modal;m.sel=t.checked?m.sel.filter(x=>x!==v).concat(v):m.sel.filter(x=>x!==v);gpCount();return false};
-CHG.gpsm=v=>{S.modal.sm=v;return false};CHG.gppl=v=>{S.modal.pl=v;return false};
+CHG.gpsm=v=>{S.modal.sm=v;return false};CHG.gpd=v=>{if(v)S.modal.d=v;return false};CHG.gppl=v=>{S.modal.pl=v;return false};
 ACT.gpback=()=>{S.modal=S.modal.back||null};
 ACT.gpok=()=>{const m=S.modal;if(!m.sel.length)return false;
- if(m.mode==='plan'){let n=0;m.sel.forEach(g=>{if(addPlanItem(m.k,g,'n',m.sm||''))n++});toast('Đã thêm '+n+' mục tiêu vào kế hoạch ngắn hạn');S.modal=m.back?Object.assign({},m.back,{tab:'kh'}):{t:'hs',id:m.k,tab:'kh'}}
+ if(m.mode==='plan'){let n=0;m.sel.forEach(g=>{if(addPlanItem(m.k,g,'n',m.sm||'',m.d))n++});toast('Đã thêm '+n+' mục tiêu vào kế hoạch ngắn hạn');S.modal=m.back?Object.assign({},m.back,{tab:'kh'}):{t:'hs',id:m.k,tab:'kh'}}
  else{const b=m.back;let nn=0;
   m.sel.forEach(g=>{let pl='';
    if(m.pl&&m.pl!=='auto')pl=m.pl;
@@ -240,7 +244,7 @@ ACT.gpok=()=>{const m=S.modal;if(!m.sel.length)return false;
 MODALS.gp=()=>{const m=S.modal,k=kidBy(m.k);if(!k){S.modal=null;return''}
  const taken=m.mode==='plan'?kidPlans(k.id).filter(p=>p.s!=='dat').map(p=>p.g):m.back.it.map(i=>i.g);
  return mdl('Chọn mục tiêu cho '+k.n,`<p class="mu sm" style="margin-bottom:10px">${m.mode==='plan'?'Chọn một hoặc nhiều mục tiêu để đưa vào kế hoạch của bé.':'Chọn mục tiêu để thêm vào buổi can thiệp.'} Bấm “Chi tiết” để xem mô tả, ví dụ và tiêu chí chấm.</p>`+libPanel(m.f,{pick:true,sel:m.sel,taken,per:12})
- +`<div class="gp-f"><span class="sm"><b id="gp-cnt">${m.sel.length}</b> mục đã chọn</span>${m.mode==='plan'?`<span style="display:flex;flex-direction:column;gap:4px;flex:1 1 320px;min-width:0"><label for="gp-sm" class="sm" style="margin:0">Nội dung mục tiêu buổi trị liệu (SMART) <span class="mu">· không bắt buộc, áp dụng cho các mục tiêu đã chọn; sửa riêng từng mục tiêu trong kế hoạch</span></label><textarea id="gp-sm" rows="2" maxlength="400" data-c="gpsm" placeholder="Cụ thể, đo lường được, khả thi, phù hợp, có thời hạn. Ví dụ: Trong buổi này, bé gọi tên đúng 5/10 đồ vật khi cô chỉ tranh." style="width:100%">${esc(m.sm||'')}</textarea></span>`:`<span style="display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap"><label for="gp-pl" class="sm" style="margin:0">Thuộc mục tiêu ngắn hạn</label><select id="gp-pl" data-c="gppl" style="width:auto;max-width:100%">${opts([['auto','Tự chọn theo lĩnh vực'],['','Chưa gắn mục tiêu ngắn hạn']].concat(kidPlans(k.id).filter(p=>p.s!=='dat').map(p=>[p.id,gName(p.g)])),m.pl)}</select></span>`}<span class="acts"><button class="btn" data-a="gpback">Quay lại</button><button class="btn p" id="gp-ok" data-a="gpok" ${m.sel.length?'':'disabled'}>${m.mode==='plan'?'Thêm vào kế hoạch':'Thêm vào buổi'}</button></span></div>`,1)};
+ +`<div class="gp-f"><span class="sm"><b id="gp-cnt">${m.sel.length}</b> mục đã chọn</span>${m.mode==='plan'?`<span style="display:flex;flex-direction:column;gap:4px;flex:1 1 320px;min-width:0"><label for="gp-d" class="sm" style="margin:0">Ngày bắt đầu mục tiêu <span class="mu">· chọn được mọi ngày, mặc định hôm nay</span></label><input id="gp-d" type="date" value="${esc(m.d||TODAY)}" max="${addD(TODAY,365)}" data-c="gpd" style="width:auto"><label for="gp-sm" class="sm" style="margin:6px 0 0">Nội dung mục tiêu buổi trị liệu (SMART) <span class="mu">· không bắt buộc, áp dụng cho các mục tiêu đã chọn; sửa riêng từng mục tiêu trong kế hoạch</span></label><textarea id="gp-sm" rows="2" maxlength="400" data-c="gpsm" placeholder="Cụ thể, đo lường được, khả thi, phù hợp, có thời hạn. Ví dụ: Trong buổi này, bé gọi tên đúng 5/10 đồ vật khi cô chỉ tranh." style="width:100%">${esc(m.sm||'')}</textarea></span>`:`<span style="display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap"><label for="gp-pl" class="sm" style="margin:0">Thuộc mục tiêu ngắn hạn</label><select id="gp-pl" data-c="gppl" style="width:auto;max-width:100%">${opts([['auto','Tự chọn theo lĩnh vực'],['','Chưa gắn mục tiêu ngắn hạn']].concat(kidPlans(k.id).filter(p=>p.s!=='dat').map(p=>[p.id,gName(p.g)])),m.pl)}</select></span>`}<span class="acts"><button class="btn" data-a="gpback">Quay lại</button><button class="btn p" id="gp-ok" data-a="gpok" ${m.sel.length?'':'disabled'}>${m.mode==='plan'?'Thêm vào kế hoạch':'Thêm vào buổi'}</button></span></div>`,1)};
 
 /* ---------- Mục tiêu do Trung tâm tự thêm ---------- */
 ACT.cgnew=()=>{S.modal={t:'cg',id:''}};ACT.cgedit=v=>{S.modal={t:'cg',id:v}};
@@ -258,6 +262,7 @@ MODALS.tg=()=>{const ks=myKids(),lv=[['n','Mục tiêu ngắn hạn (1–3 thán
  <form id="tgf" class="f"><div class="f2"><div><label for="tg-k">Bé</label><select id="tg-k" name="k" required>${opts(ks.map(k=>[k.id,k.n]),'')}</select></div><div><label for="tg-lv">Loại mục tiêu</label><select id="tg-lv" name="lv">${opts(lv,'n')}</select></div></div>
  <div><label for="tg-d">Lĩnh vực</label><select id="tg-d" name="d">${opts(LDOM.map(d=>[d.id,d.n]),'')}</select></div>
  <div><label for="tg-n">Mục tiêu cụ thể</label><input id="tg-n" name="n" required placeholder="Ví dụ: Trẻ gọi tên bạn khi bạn chào"></div>
+ <div><label for="tg-d">Ngày bắt đầu mục tiêu <span class="mu">· chọn được mọi ngày</span></label><input id="tg-d" name="d0" type="date" value="${TODAY}" max="${addD(TODAY,365)}"></div>
  <div><label for="tg-o">Mô tả hoặc tiêu chí đạt</label><textarea id="tg-o" name="o" rows="3"></textarea></div>
  <div><label for="tg-sm">Nội dung mục tiêu buổi trị liệu (SMART) <span class="mu">· không bắt buộc</span></label><textarea id="tg-sm" name="sm" rows="2" maxlength="400" placeholder="Cụ thể, đo lường được, khả thi, phù hợp, có thời hạn. Ví dụ: Trong buổi này, bé gọi tên đúng 5/10 đồ vật khi cô chỉ tranh."></textarea></div>
  <div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu mục tiêu</button></div></form>`)};
@@ -266,7 +271,7 @@ FORM.tgf=f=>{const e=f.elements,k=e.k.value,lv=e.lv.value,n=e.n.value.trim();
  if(!k||!canKid(k)){toast('Chỉ chọn bé mà bạn đang phụ trách');return false}
  DB.tg=DB.tg||[];const id='t'+uid();
  DB.tg.push({id,by:U.id,kid:k,lv,d:e.d.value,n,o:e.o.value.trim(),at:TODAY});
- if(lv!=='buoi')addPlanItem(k,'tg:'+id,'n',e.sm.value);
+ if(lv!=='buoi')addPlanItem(k,'tg:'+id,'n',e.sm.value,e.d0.value);
  S.modal=null;toast(lv==='buoi'?'Đã lưu mục tiêu buổi trị liệu. Chọn khi ghi buổi can thiệp':'Đã thêm vào kế hoạch ngắn hạn của bé');};
 ACT.tgdel=v=>{const t=(DB.tg||[]).find(x=>x.id===v);if(!t)return;if(!(isLead()||t.by===U.id)){toast('Chỉ người thêm hoặc Trưởng Trung tâm, Quản lý được xóa');return false}
  const n=DB.plans.filter(p=>p.g==='tg:'+v).length;

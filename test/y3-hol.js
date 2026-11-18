@@ -62,7 +62,8 @@ const main=page=>page.evaluate(()=>document.querySelector('#main').innerText);
  /* lương: ngày nghỉ lễ tính đủ công cho giáo viên theo tháng; giáo viên theo ca không có ca */
  const pr=await ev(()=>{
   const pm=sm(CM,-1);
-  const sm_=DB.staff.find(s=>s.pay&&s.pay.mode==='thang'&&s.role==='gv'&&s.st==='dang'),sb=DB.staff.find(s=>s.pay&&s.pay.mode==='buoi'&&s.st==='dang');
+  const cand=DB.staff.filter(s=>s.pay&&s.pay.mode==='thang'&&s.role==='gv'&&s.st==='dang'),sb=DB.staff.find(s=>s.pay&&s.pay.mode==='buoi'&&s.st==='dang');
+  const sm_=cand.find(s=>mDates(pm).some(d=>isW(d)&&d<WD&&tsSt(s.id,d)==='abs'))||cand[0];   /* chọn giáo viên có ngày vắng (dữ liệu mẫu ngẫu nhiên theo ngày chạy) */
   DB.hol=[];
   /* chọn ngày làm việc mà giáo viên này không có chấm công và không có đơn nghỉ được duyệt (dữ liệu mẫu ngẫu nhiên theo ngày chạy), ưu tiên thứ Ba */
   const free=mDates(pm).filter(d=>isW(d)&&d<WD&&tsSt(sm_.id,d)==='abs'),hd=free.find(d=>dow(d)===2)||free[0];

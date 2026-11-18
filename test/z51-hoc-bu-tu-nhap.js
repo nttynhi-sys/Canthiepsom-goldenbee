@@ -5,7 +5,10 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
 (async()=>{const {b,page,errs}=await open();await login(page,'tt');
  const ev=(f,a)=>page.evaluate(f,a),W=ms=>page.waitForTimeout(ms||80);
  const setup=()=>ev(()=>{const l=DB.lich.find(x=>x.type==='11'),r={id:'mkT'+uid(),hs:l.hs,from:{d:addD(TODAY,-2),sid:l.id,kind:'11',slot:l.slot},by:'tt',why:'t',s:'dk',props:[],pick:null,log:[]};
-  DB.mk.push(r);S.modal={t:'mkp',id:r.id,gv:mkGV(r)};render();return{id:r.id,d:addD(TODAY,9),today:TODAY}});
+  DB.mk.push(r);const gv=mkGV(r);S.modal={t:'mkp',id:r.id,gv};render();
+  /* chọn ngày không trùng lịch ở cả hai giờ thử (phụ thuộc ngày chạy: giáo viên có thể đang phụ trách lớp bán trú vào thứ đó) */
+  let d=addD(TODAY,9);for(let i=3;i<40;i++){const c=addD(TODAY,i);if(isW(c)&&!conflict({date:c,slot:'19:00',gv,hs:l.hs})&&!conflict({date:c,slot:'18:30',gv,hs:l.hs})){d=c;break}}
+  return{id:r.id,d,today:TODAY}});
  const fill=async(i,d,t)=>{await page.fill('#mk-md'+i,d);await page.fill('#mk-mt'+i,t)};
  let S1=await setup();await page.waitForSelector('#mkpf');
  ok('form có 3 dòng tự nhập ngày và giờ, nút gửi không bị khóa',(await page.$$('.mk-man')).length===3&&!(await page.$eval('#mkpf button[type=submit]',e=>e.disabled)));
