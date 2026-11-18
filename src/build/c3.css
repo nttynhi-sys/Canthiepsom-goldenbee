@@ -321,3 +321,5 @@ body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit
 .dm-r{border-top:1px solid var(--bd)}.dm-r .pl{padding:0;border:0}.dm-n{font-weight:600;padding-top:2px}
 .dm-d{text-transform:uppercase;letter-spacing:.04em;margin-top:6px}.dm-k{display:flex;flex-direction:column;gap:4px;align-items:flex-start}.dm-k b{font-size:17px}
 @media (max-width:640px){.dm-th,.dm-r{grid-template-columns:30px minmax(0,1fr)}.dm-th span:last-child{display:none}.dm-k{grid-column:2;flex-direction:row;align-items:center;gap:8px}}
+
+.ma-c{display:inline-block;margin:6px 0 0;padding:4px 10px;border:1px solid var(--bd);border-radius:999px;font-size:13px}.ma-c.on{border-color:var(--ok,#2e7d32)}.ma-d{margin:4px 0 8px;font-size:14px}.dm-m .ma-c{display:block;border:0;padding:0;margin-top:4px}
