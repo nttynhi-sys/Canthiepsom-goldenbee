@@ -29,7 +29,7 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  const cmb=await page.$$('.stb .st-cm');if(cmb.length){await cmb[0].click();await W(50)}
  ok('gv marks attendance',(await ev(()=>Object.keys(DB.att).filter(k=>k.startsWith(WD)).length))>=1);
  await page.fill('#dd-d','2026-10-20');await page.dispatchEvent('#dd-d','change');await W(80);
- const dis=await page.$$eval('.st',e=>e.every(x=>x.disabled));ok('gv cannot edit attendance older than 7 days',dis&&(await page.$$('.st')).length>0);
+ const dis=await page.$$eval('.st',e=>e.every(x=>x.disabled));ok('gv can edit attendance older than 7 days (mọi ngày đã qua)',!dis&&(await page.$$('.st')).length>0);
  await page.click('.tab[data-v="sheet"]');await W(60);
  const hdr=await page.$eval('.sheet thead',e=>e.innerText);ok('gv sheet hides money columns',!/Học phí|Hoàn|Phí mất/.test(hdr)&&/Có mặt/.test(hdr));
  const kt=await page.$$eval('.kpi',e=>e.map(x=>x.innerText.replace(/\n/g,' ')).join(' | '));ok('gv sheet KPIs have no money',!/₫/.test(kt),kt);
