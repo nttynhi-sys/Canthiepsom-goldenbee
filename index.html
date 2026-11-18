@@ -509,6 +509,8 @@ body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit
 .dm-r{border-top:1px solid var(--bd)}.dm-r .pl{padding:0;border:0}.dm-n{font-weight:600;padding-top:2px}
 .dm-d{text-transform:uppercase;letter-spacing:.04em;margin-top:6px}.dm-k{display:flex;flex-direction:column;gap:4px;align-items:flex-start}.dm-k b{font-size:17px}
 @media (max-width:640px){.dm-th,.dm-r{grid-template-columns:30px minmax(0,1fr)}.dm-th span:last-child{display:none}.dm-k{grid-column:2;flex-direction:row;align-items:center;gap:8px}}
+
+.ma-c{display:inline-block;margin:6px 0 0;padding:4px 10px;border:1px solid var(--bd);border-radius:999px;font-size:13px}.ma-c.on{border-color:var(--ok,#2e7d32)}.ma-d{margin:4px 0 8px;font-size:14px}.dm-m .ma-c{display:block;border:0;padding:0;margin-top:4px}
 </style></head><body>
 <div id="app"></div>
 <script>
@@ -2632,6 +2634,7 @@ function planRow(p){const g=goalOf(p.g),m=masteryOf(p.k,p.g),lr=m.last,ready=m.r
  return`<div class="pl ${p.s==='dat'?'dn':''}"><div class="pl-m"><b>${esc(g?g.n:'(mục tiêu đã xóa)')}</b><div class="sm mu">${g?esc(g.t)+' · '+esc(gSrc(g))+(g.a?' · '+esc(g.a):''):''}</div>
  <div class="pl-t">${g?domTag(g.d,g):''} ${tg(PST[p.s][0],PST[p.s][1])}${ready?' '+tg('Đủ điều kiện đạt','ok'):''} <span class="sm mu">Từ ${vdm(p.from)} · hạn ${vdm(p.due)}${p.dt?' · đạt '+vdm(p.dt):''}</span></div>${g?gxHtml(g,'s',{open:1}):''}
  <label class="sm" for="pf-${p.id}" style="display:block;margin-top:8px"><b>Ngày bắt đầu mục tiêu</b></label><input id="pf-${p.id}" type="date" value="${esc(p.from||'')}" max="${addD(TODAY,365)}" data-c="plfrom" data-v="${p.id}" style="width:auto">
+ <label class="sm" for="ma-${p.id}" style="display:block;margin-top:8px"><b>Mốc tuổi phát triển</b> <span class="mu">· phụ huynh chỉ thấy khi đã có mốc</span></label><select id="ma-${p.id}" data-c="plma" data-v="${p.id}" style="width:auto"><option value="" ${p.ma===undefined||p.ma===''?'selected':''}>${maAuto(p)!=null?'Theo ngân hàng mục tiêu ('+esc(maText(maAuto(p)))+')':'Chưa định (để trống)'}</option>${AGEB.map((a,i)=>`<option value="${i}" ${String(p.ma)===String(i)?'selected':''}>${esc(a[1])}</option>`).join('')}<option value="x" ${p.ma==='x'?'selected':''}>Không định mốc phát triển</option></select>
  <label class="sm" for="sm-${p.id}" style="display:block;margin-top:8px"><b>Nội dung mục tiêu buổi trị liệu (SMART)</b></label><textarea id="sm-${p.id}" rows="2" maxlength="400" data-c="plsm" data-v="${p.id}" placeholder="Cụ thể, đo lường được, khả thi, phù hợp, có thời hạn. Ví dụ: Trong buổi này, bé gọi tên đúng 5/10 đồ vật khi cô chỉ tranh." style="width:100%">${esc(p.sm||'')}</textarea></div>
  <div class="pl-r">${lr?`${supTag(lr.sup)} <b>${trPct(lr.tr)}%</b><span class="spk" aria-hidden="true">${spark}</span><span class="sm mu">${m.cnt} buổi</span>`:'<span class="sm mu">Chưa có số liệu</span>'}</div>
  <div class="pl-a">${p.s==='dang'?`<button class="btn s" data-a="plok" data-v="${p.id}">Đánh dấu đạt</button><button class="btn s" data-a="pltam" data-v="${p.id}">Tạm dừng</button>`:`<button class="btn s" data-a="plre" data-v="${p.id}">${p.s==='dat'?'Mở lại':'Tiếp tục'}</button>`}<button class="btn s no" data-a="pldel" data-v="${p.id}">Bỏ</button></div></div>`}
@@ -2647,6 +2650,7 @@ ACT.plok=v=>{const p=planBy(v);if(p){p.s='dat';p.dt=TODAY;toast('Đã đánh d�
 ACT.pltam=v=>{const p=planBy(v);if(p)p.s='tam'};
 ACT.plre=v=>{const p=planBy(v);if(p){p.s='dang';delete p.dt}};
 CHG.plfrom=(v,t)=>{const p=planBy(t.dataset.v);if(!p||!canKid(p.k)||!/^\d{4}-\d{2}-\d{2}$/.test(v||'')||v>addD(TODAY,365))return false;p.from=v;p.due=addD(v,HZ.n[2]);setTimeout(render,0);return false};   /* vẽ lại sau khi ô nhập mất tiêu điểm */
+CHG.plma=(v,t)=>{const p=planBy(t.dataset.v);if(!p||!canKid(p.k))return false;if(v==='x')p.ma='x';else if(/^[0-7]$/.test(v||''))p.ma=+v;else delete p.ma;setTimeout(render,0);return false};
 CHG.plsm=(v,t)=>{const p=planBy(t.dataset.v);if(!p||!canKid(p.k))return false;const x=String(v||'').trim().slice(0,400);if(x)p.sm=x;else delete p.sm;return false};
 ACT.pldel=v=>{const p=planBy(v);if(!p)return false;ask('Bỏ mục tiêu “'+gName(p.g)+'” khỏi kế hoạch? Số liệu các buổi đã ghi vẫn được giữ lại.',()=>{DB.plans=DB.plans.filter(x=>x.id!==v);planBack(p.k)},'Bỏ')};
 ACT.plnext=v=>{const [k,g]=v.split('|'),src=DB.plans.find(p=>p.k===k&&p.s==='dat'&&nextOf(p.g)&&nextOf(p.g).id===g);if(addPlanItem(k,g,'n',src&&src.sm||''))toast('Đã thêm vào kế hoạch ngắn hạn')};
@@ -4589,6 +4593,16 @@ function gtUp(){return null}   /* đã bỏ tầng dài hạn: mọi kế hoạc
 function gtItemPlan(k,it,byG){if(it.pl){const p=planBy(it.pl);if(p&&p.k===k)return p}
  const a=byG[it.g];return a?(a.find(p=>p.s!=='dat')||a[0]):null}
 
+/* Mốc tuổi phát triển của mục tiêu ngắn hạn (plans[].ma): không đặt = lấy theo mốc tuổi của mục tiêu trong ngân hàng (m 0..4, nếu có); số 0..7 = giáo viên chọn (AGEB); 'x' = giáo viên chọn không định mốc. Mục tiêu không có mốc thì để trống, phụ huynh không thấy. */
+const maAuto=p=>{const g=goalOf(p.g);return g&&/^[0-7]$/.test(String(g.m))?+g.m:null};   /* chỉ khi mục tiêu thuộc đúng một mốc; mục tiêu trải nhiều mốc (m dạng "1,2") hoặc không có mốc thì để trống */
+function maOf(p){if(!p||p.ma==='x')return null;if(p.ma!==undefined&&p.ma!==''&&AGEB[+p.ma])return +p.ma;return maAuto(p)}
+const maText=i=>AGEB[i][1];
+function maChip(s){const i=maOf(s.p);if(i==null)return'';const got=s.p.s==='dat'||s.st==='dat';
+ return`<span class="ma-c ${got?'on':''}"><span class="gt-k">Mốc tuổi phát triển</span> <b>${esc(maText(i))}</b> · ${got?'bé đã đạt':'đang hướng tới'}</span>`}
+/* mốc cao nhất bé đã đạt ở một lĩnh vực (chỉ tính mục tiêu ngắn hạn đã đạt và có mốc) */
+function maDom(list){let b=null;list.forEach(s=>{if(!(s.p.s==='dat'||s.st==='dat'))return;const i=maOf(s.p);if(i!=null&&(b==null||i>b))b=i});return b}
+const maDomHtml=list=>{const b=maDom(list);return b==null?'':`<p class="ma-d">Mốc tuổi phát triển bé đã đạt ở lĩnh vực này: <b>${esc(maText(b))}</b></p>`};
+
 /* dựng cây cho một bé: {longs:[nút dài hạn], orph:[nút ngắn hạn chưa gắn], shorts:[mọi nút ngắn hạn]} */
 function gtTree(kid){
  const ps=kidPlans(kid),byG={};ps.forEach(p=>(byG[p.g]=byG[p.g]||[]).push(p));
@@ -4611,7 +4625,7 @@ const gtLast=x=>x.last?`Buổi gần nhất: đúng <b>${trOk(x.last.tr)}/${trN(
 function gtGoals(n,m){const gs=n.gs;if(!gs.length)return'';
  return`<ul class="gtg">${gs.map(x=>`<li class="s-${x.st}"><span class="gt-ic" aria-hidden="true">${GTS[x.st][1]}</span><div><span class="gt-k">Mục tiêu buổi</span><span class="gtg-n">${esc(gName(x.g))}</span><span class="gtg-s">${gtChip(x.st)} ${gtLast(x)}</span>${(x.last?x.rs.filter(r=>r.d===x.last.d&&r.sg):[]).map(r=>`<span class="gtg-h"><b>Mục tiêu buổi (SMART):</b> ${esc(r.sg)}</span>`).join('')}${x.rs.length>1?`<span class="gtg-h">Các buổi gần đây: ${x.rs.slice(-5).map(r=>trOk(r.tr)+'/'+trN(r.tr)).join(' → ')}</span>`:''}${m==='pdf'?'':gxHtml(goalOf(x.g),'p')}</div></li>`).join('')}</ul>`}
 function gtShort(s,par,m){return`<div class="gts s-${s.st}"><div class="gts-h"><span class="gt-ic" aria-hidden="true">${GTS[s.st][1]}</span><div class="gts-t"><span class="gt-k">Mục tiêu ngắn hạn</span><b>${esc(gName(s.p.g))}</b></div>${gtChip(s.st)}</div>
- <div class="gt-pb">${gtBar(s.pct,s.st)}<b>${s.pct}%</b></div>${s.total?`<p class="gt-sub">${s.dn}/${s.total} mục tiêu buổi đã đạt</p>`:'<p class="gt-sub">Chưa có mục tiêu buổi nào được ghi.</p>'}${gxHtml(goalOf(s.p.g),m==='pdf'?'pdf':'p',{open:1})}${gtGoals(s,m)}</div>`}
+ <div class="gt-pb">${gtBar(s.pct,s.st)}<b>${s.pct}%</b></div>${maChip(s)}${s.total?`<p class="gt-sub">${s.dn}/${s.total} mục tiêu buổi đã đạt</p>`:'<p class="gt-sub">Chưa có mục tiêu buổi nào được ghi.</p>'}${gxHtml(goalOf(s.p.g),m==='pdf'?'pdf':'p',{open:1})}${gtGoals(s,m)}</div>`}
 function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=='tam'),O=T.orph.filter(s=>s.p.s!=='tam'),m=o.pdf?'pdf':'p';
  if(!L.length&&!O.length)return'<p class="empty">Giáo viên chưa đặt mục tiêu cho bé. Khi có mục tiêu, bé đạt hay chưa đạt sẽ hiện ở đây.</p>';
  const sh=T.shorts.filter(s=>s.p.s!=='tam'),cnt={dat:0,tien:0,luyen:0,moi:0};
@@ -4625,7 +4639,7 @@ function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=
  const card=n=>`<article class="gtp nb s-${n.st}"><div class="gtp-h"><div><span class="gt-k">Mục tiêu dài hạn</span><h3 class="gtp-t">${esc(gName(n.p.g))}</h3></div>${gtChip(n.st,1)}</div>
   <div class="gt-pb">${gtBar(n.pct,n.st)}<b>${n.pct}%</b></div><p class="gt-sub">${n.total?n.dn+'/'+n.total+' mục tiêu con đã đạt':'Chưa có mục tiêu ngắn hạn.'}</p>
   ${gxHtml(goalOf(n.p.g),m==='pdf'?'pdf':'p',{open:1})}${n.ch.filter(s=>s.p.s!=='tam').map(s=>gtShort(s,1,m)).join('')}${n.gs.length?`<div class="gts"><div class="gts-h"><div class="gts-t"><span class="gt-k">Luyện trực tiếp</span></div></div>${gtGoals(n,m)}</div>`:''}</article>`;
- return sum+lg+L.map(card).join('')+gtByDom(O).map(g=>`<article class="gtp nb"><div class="gtp-h"><div><span class="gt-k">Lĩnh vực</span><h3 class="gtp-t">${esc(g.n)}</h3></div></div>${g.list.map(s=>gtShort(s,1,m)).join('')}</article>`).join('')}
+ return sum+lg+L.map(card).join('')+gtByDom(O).map(g=>`<article class="gtp nb"><div class="gtp-h"><div><span class="gt-k">Lĩnh vực</span><h3 class="gtp-t">${esc(g.n)}</h3></div></div>${maDomHtml(g.list)}${g.list.map(s=>gtShort(s,1,m)).join('')}</article>`).join('')}
 
 /* nhóm các nút mục tiêu ngắn hạn theo lĩnh vực: [{d, n:'1. tên', list}] theo thứ tự lĩnh vực trong LDOM */
 function gtByDom(shorts){const m={};shorts.forEach(s=>{const d=gDom(s.p.g)||'';(m[d]=m[d]||[]).push(s)});
@@ -4637,8 +4651,8 @@ const gtDays=p=>Math.max(0,Math.round((new Date(p.dt||TODAY)-new Date(p.from))/8
 function gtKidsStaff(n){if(!n.gs.length)return'';
  return`<ul class="gt-ks">${n.gs.map(x=>`<li>${gtChip(x.st)} <span class="gt-gn">${esc(gName(x.g))}</span> <span class="sm mu">${x.n?x.n+' buổi · '+gtLast(x).replace(/<\/?b>/g,''):'chưa luyện'}</span></li>`).join('')}</ul>`}
 function gtShortStaff(s){return planRow(s.p)+`<div class="gt-x">${s.total?`<div class="sm"><b>Mục tiêu buổi</b> · ${s.dn}/${s.total} đã đạt · ${s.pct}%</div>`+gtKidsStaff(s):'<div class="sm mu">Chưa có mục tiêu buổi. Khi ghi buổi can thiệp, chọn mục tiêu ngắn hạn này cho từng dòng mục tiêu.</div>'}</div>`}
-function gtTable(shorts){return gtByDom(shorts).map(g=>`<h3 class="dm-h">${esc(g.n)}</h3><div class="dm-t"><div class="dm-th"><span>STT</span><span>Mục tiêu ngắn hạn ⇒ mục tiêu buổi trị liệu</span><span>Kết quả</span></div>`
-  +g.list.map((s,i)=>`<div class="dm-r"><div class="dm-n">${i+1}</div><div class="dm-m">${gtShortStaff(s)}<div class="sm mu dm-d">Đã học ${gtDays(s.p)} ngày</div></div><div class="dm-k">${gtChip(s.st)}<b>${s.pct}%</b></div></div>`).join('')+'</div>').join('')}
+function gtTable(shorts){return gtByDom(shorts).map(g=>`<h3 class="dm-h">${esc(g.n)}</h3>${maDomHtml(g.list)}<div class="dm-t"><div class="dm-th"><span>STT</span><span>Mục tiêu ngắn hạn ⇒ mục tiêu buổi trị liệu</span><span>Kết quả</span></div>`
+  +g.list.map((s,i)=>`<div class="dm-r"><div class="dm-n">${i+1}</div><div class="dm-m">${gtShortStaff(s)}<div class="sm mu dm-d">Đã học ${gtDays(s.p)} ngày</div>${maChip(s)}</div><div class="dm-k">${gtChip(s.st)}<b>${s.pct}%</b></div></div>`).join('')+'</div>').join('')}
 function gtStaff(k){const T=gtTree(k.id),open=T.shorts.filter(s=>s.p.s!=='dat'),done=T.shorts.filter(s=>s.p.s==='dat');
  let h=`<h3 style="margin-top:12px">Mục tiêu ngắn hạn <span class="mu sm">· ${HZ.n[1]} · ${open.length} mục tiêu</span></h3><p class="sm mu" style="margin:0 0 8px">Mục tiêu xếp theo lĩnh vực. Chọn mục tiêu từ ngân hàng mục tiêu hoặc tự viết mục tiêu khác. Mỗi mục tiêu ngắn hạn gồm các mục tiêu buổi trị liệu (các dòng mục tiêu trong buổi can thiệp); có thể ghi thêm nội dung theo SMART cho mục tiêu buổi.</p>`;
  h+=open.length?gtTable(open):'<p class="mu sm" style="margin:0 0 8px">Chưa có mục tiêu ngắn hạn. Bấm “Chọn mục tiêu từ ngân hàng”.</p>';

@@ -20,6 +20,16 @@ function gtUp(){return null}   /* đã bỏ tầng dài hạn: mọi kế hoạc
 function gtItemPlan(k,it,byG){if(it.pl){const p=planBy(it.pl);if(p&&p.k===k)return p}
  const a=byG[it.g];return a?(a.find(p=>p.s!=='dat')||a[0]):null}
 
+/* Mốc tuổi phát triển của mục tiêu ngắn hạn (plans[].ma): không đặt = lấy theo mốc tuổi của mục tiêu trong ngân hàng (m 0..4, nếu có); số 0..7 = giáo viên chọn (AGEB); 'x' = giáo viên chọn không định mốc. Mục tiêu không có mốc thì để trống, phụ huynh không thấy. */
+const maAuto=p=>{const g=goalOf(p.g);return g&&/^[0-7]$/.test(String(g.m))?+g.m:null};   /* chỉ khi mục tiêu thuộc đúng một mốc; mục tiêu trải nhiều mốc (m dạng "1,2") hoặc không có mốc thì để trống */
+function maOf(p){if(!p||p.ma==='x')return null;if(p.ma!==undefined&&p.ma!==''&&AGEB[+p.ma])return +p.ma;return maAuto(p)}
+const maText=i=>AGEB[i][1];
+function maChip(s){const i=maOf(s.p);if(i==null)return'';const got=s.p.s==='dat'||s.st==='dat';
+ return`<span class="ma-c ${got?'on':''}"><span class="gt-k">Mốc tuổi phát triển</span> <b>${esc(maText(i))}</b> · ${got?'bé đã đạt':'đang hướng tới'}</span>`}
+/* mốc cao nhất bé đã đạt ở một lĩnh vực (chỉ tính mục tiêu ngắn hạn đã đạt và có mốc) */
+function maDom(list){let b=null;list.forEach(s=>{if(!(s.p.s==='dat'||s.st==='dat'))return;const i=maOf(s.p);if(i!=null&&(b==null||i>b))b=i});return b}
+const maDomHtml=list=>{const b=maDom(list);return b==null?'':`<p class="ma-d">Mốc tuổi phát triển bé đã đạt ở lĩnh vực này: <b>${esc(maText(b))}</b></p>`};
+
 /* dựng cây cho một bé: {longs:[nút dài hạn], orph:[nút ngắn hạn chưa gắn], shorts:[mọi nút ngắn hạn]} */
 function gtTree(kid){
  const ps=kidPlans(kid),byG={};ps.forEach(p=>(byG[p.g]=byG[p.g]||[]).push(p));
@@ -42,7 +52,7 @@ const gtLast=x=>x.last?`Buổi gần nhất: đúng <b>${trOk(x.last.tr)}/${trN(
 function gtGoals(n,m){const gs=n.gs;if(!gs.length)return'';
  return`<ul class="gtg">${gs.map(x=>`<li class="s-${x.st}"><span class="gt-ic" aria-hidden="true">${GTS[x.st][1]}</span><div><span class="gt-k">Mục tiêu buổi</span><span class="gtg-n">${esc(gName(x.g))}</span><span class="gtg-s">${gtChip(x.st)} ${gtLast(x)}</span>${(x.last?x.rs.filter(r=>r.d===x.last.d&&r.sg):[]).map(r=>`<span class="gtg-h"><b>Mục tiêu buổi (SMART):</b> ${esc(r.sg)}</span>`).join('')}${x.rs.length>1?`<span class="gtg-h">Các buổi gần đây: ${x.rs.slice(-5).map(r=>trOk(r.tr)+'/'+trN(r.tr)).join(' → ')}</span>`:''}${m==='pdf'?'':gxHtml(goalOf(x.g),'p')}</div></li>`).join('')}</ul>`}
 function gtShort(s,par,m){return`<div class="gts s-${s.st}"><div class="gts-h"><span class="gt-ic" aria-hidden="true">${GTS[s.st][1]}</span><div class="gts-t"><span class="gt-k">Mục tiêu ngắn hạn</span><b>${esc(gName(s.p.g))}</b></div>${gtChip(s.st)}</div>
- <div class="gt-pb">${gtBar(s.pct,s.st)}<b>${s.pct}%</b></div>${s.total?`<p class="gt-sub">${s.dn}/${s.total} mục tiêu buổi đã đạt</p>`:'<p class="gt-sub">Chưa có mục tiêu buổi nào được ghi.</p>'}${gxHtml(goalOf(s.p.g),m==='pdf'?'pdf':'p',{open:1})}${gtGoals(s,m)}</div>`}
+ <div class="gt-pb">${gtBar(s.pct,s.st)}<b>${s.pct}%</b></div>${maChip(s)}${s.total?`<p class="gt-sub">${s.dn}/${s.total} mục tiêu buổi đã đạt</p>`:'<p class="gt-sub">Chưa có mục tiêu buổi nào được ghi.</p>'}${gxHtml(goalOf(s.p.g),m==='pdf'?'pdf':'p',{open:1})}${gtGoals(s,m)}</div>`}
 function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=='tam'),O=T.orph.filter(s=>s.p.s!=='tam'),m=o.pdf?'pdf':'p';
  if(!L.length&&!O.length)return'<p class="empty">Giáo viên chưa đặt mục tiêu cho bé. Khi có mục tiêu, bé đạt hay chưa đạt sẽ hiện ở đây.</p>';
  const sh=T.shorts.filter(s=>s.p.s!=='tam'),cnt={dat:0,tien:0,luyen:0,moi:0};
@@ -56,7 +66,7 @@ function gtParent(kid,o){o=o||{};const T=gtTree(kid),L=T.longs.filter(n=>n.p.s!=
  const card=n=>`<article class="gtp nb s-${n.st}"><div class="gtp-h"><div><span class="gt-k">Mục tiêu dài hạn</span><h3 class="gtp-t">${esc(gName(n.p.g))}</h3></div>${gtChip(n.st,1)}</div>
   <div class="gt-pb">${gtBar(n.pct,n.st)}<b>${n.pct}%</b></div><p class="gt-sub">${n.total?n.dn+'/'+n.total+' mục tiêu con đã đạt':'Chưa có mục tiêu ngắn hạn.'}</p>
   ${gxHtml(goalOf(n.p.g),m==='pdf'?'pdf':'p',{open:1})}${n.ch.filter(s=>s.p.s!=='tam').map(s=>gtShort(s,1,m)).join('')}${n.gs.length?`<div class="gts"><div class="gts-h"><div class="gts-t"><span class="gt-k">Luyện trực tiếp</span></div></div>${gtGoals(n,m)}</div>`:''}</article>`;
- return sum+lg+L.map(card).join('')+gtByDom(O).map(g=>`<article class="gtp nb"><div class="gtp-h"><div><span class="gt-k">Lĩnh vực</span><h3 class="gtp-t">${esc(g.n)}</h3></div></div>${g.list.map(s=>gtShort(s,1,m)).join('')}</article>`).join('')}
+ return sum+lg+L.map(card).join('')+gtByDom(O).map(g=>`<article class="gtp nb"><div class="gtp-h"><div><span class="gt-k">Lĩnh vực</span><h3 class="gtp-t">${esc(g.n)}</h3></div></div>${maDomHtml(g.list)}${g.list.map(s=>gtShort(s,1,m)).join('')}</article>`).join('')}
 
 /* nhóm các nút mục tiêu ngắn hạn theo lĩnh vực: [{d, n:'1. tên', list}] theo thứ tự lĩnh vực trong LDOM */
 function gtByDom(shorts){const m={};shorts.forEach(s=>{const d=gDom(s.p.g)||'';(m[d]=m[d]||[]).push(s)});
@@ -68,8 +78,8 @@ const gtDays=p=>Math.max(0,Math.round((new Date(p.dt||TODAY)-new Date(p.from))/8
 function gtKidsStaff(n){if(!n.gs.length)return'';
  return`<ul class="gt-ks">${n.gs.map(x=>`<li>${gtChip(x.st)} <span class="gt-gn">${esc(gName(x.g))}</span> <span class="sm mu">${x.n?x.n+' buổi · '+gtLast(x).replace(/<\/?b>/g,''):'chưa luyện'}</span></li>`).join('')}</ul>`}
 function gtShortStaff(s){return planRow(s.p)+`<div class="gt-x">${s.total?`<div class="sm"><b>Mục tiêu buổi</b> · ${s.dn}/${s.total} đã đạt · ${s.pct}%</div>`+gtKidsStaff(s):'<div class="sm mu">Chưa có mục tiêu buổi. Khi ghi buổi can thiệp, chọn mục tiêu ngắn hạn này cho từng dòng mục tiêu.</div>'}</div>`}
-function gtTable(shorts){return gtByDom(shorts).map(g=>`<h3 class="dm-h">${esc(g.n)}</h3><div class="dm-t"><div class="dm-th"><span>STT</span><span>Mục tiêu ngắn hạn ⇒ mục tiêu buổi trị liệu</span><span>Kết quả</span></div>`
-  +g.list.map((s,i)=>`<div class="dm-r"><div class="dm-n">${i+1}</div><div class="dm-m">${gtShortStaff(s)}<div class="sm mu dm-d">Đã học ${gtDays(s.p)} ngày</div></div><div class="dm-k">${gtChip(s.st)}<b>${s.pct}%</b></div></div>`).join('')+'</div>').join('')}
+function gtTable(shorts){return gtByDom(shorts).map(g=>`<h3 class="dm-h">${esc(g.n)}</h3>${maDomHtml(g.list)}<div class="dm-t"><div class="dm-th"><span>STT</span><span>Mục tiêu ngắn hạn ⇒ mục tiêu buổi trị liệu</span><span>Kết quả</span></div>`
+  +g.list.map((s,i)=>`<div class="dm-r"><div class="dm-n">${i+1}</div><div class="dm-m">${gtShortStaff(s)}<div class="sm mu dm-d">Đã học ${gtDays(s.p)} ngày</div>${maChip(s)}</div><div class="dm-k">${gtChip(s.st)}<b>${s.pct}%</b></div></div>`).join('')+'</div>').join('')}
 function gtStaff(k){const T=gtTree(k.id),open=T.shorts.filter(s=>s.p.s!=='dat'),done=T.shorts.filter(s=>s.p.s==='dat');
  let h=`<h3 style="margin-top:12px">Mục tiêu ngắn hạn <span class="mu sm">· ${HZ.n[1]} · ${open.length} mục tiêu</span></h3><p class="sm mu" style="margin:0 0 8px">Mục tiêu xếp theo lĩnh vực. Chọn mục tiêu từ ngân hàng mục tiêu hoặc tự viết mục tiêu khác. Mỗi mục tiêu ngắn hạn gồm các mục tiêu buổi trị liệu (các dòng mục tiêu trong buổi can thiệp); có thể ghi thêm nội dung theo SMART cho mục tiêu buổi.</p>`;
  h+=open.length?gtTable(open):'<p class="mu sm" style="margin:0 0 8px">Chưa có mục tiêu ngắn hạn. Bấm “Chọn mục tiêu từ ngân hàng”.</p>';

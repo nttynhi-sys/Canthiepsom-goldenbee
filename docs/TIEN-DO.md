@@ -56,6 +56,7 @@ Cập nhật 16/11/2026 (mã ứng dụng cuối: `154babd`). Quy tắc, nghiệ
 - Kỹ thuật: tìm nguyên nhân `z25-sd-bank` và `n2.js`. Chưa có yêu cầu tính năng nào đang chờ.
 
 ## 10. Nhật ký
+- 18/11 (3) mốc tuổi phát triển cho mục tiêu ngắn hạn (`plans[].ma`): tự lấy từ ngân hàng khi có đúng một mốc, giáo viên điền hoặc chọn "Không định mốc"; hiện ở bảng nhân viên và báo cáo phụ huynh (chỉ mục tiêu có mốc, kèm mốc cao nhất đã đạt theo lĩnh vực). Không đổi database. Bài thử `z58`.
 - 18/11 (2) giáo viên điểm danh ngày bất kỳ (cả ngày sắp tới); học bù chọn mọi ngày giờ, giáo viên xếp lịch luôn, nhận cả buổi nghỉ cũ hơn 45 ngày; nút "Xếp bé khác vào giờ này" cho bé vắng (`mkfill`); form ghi buổi hiện sẵn mục tiêu đã chọn để bấm Tiếp tục (`sePrevPanel`); cửa sổ tải ảnh/video giữ mở để tải tiếp. Không đổi database. Bài thử `z57`; sửa `z51`, `z56`, `y7-media`.
 - 18/11 giáo viên sửa điểm danh học sinh và buổi can thiệp của trẻ mình ở mọi ngày, mọi tháng (bỏ giới hạn 7 và 14 ngày); chọn và sửa được ngày bắt đầu mục tiêu ngắn hạn. Không đổi database. Bài thử `z56-gv-sua-moi-ngay`; sửa `flows3` (quy tắc cũ), `y3-hol` và `z51` (phụ thuộc ngày chạy).
 - 17/11 phụ huynh thấy phí cọc của bé mình ở mục Học phí (đang giữ hoặc đã hoàn), chỉ đọc; `api/parent.js` thêm lấy `dep` theo mã bé. Không đổi database. Bài thử `z55-phu-huynh-phi-coc`, `phone-api`.
