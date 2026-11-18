@@ -16,9 +16,12 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  let R=await ev(id=>{const r=DB.mk.find(x=>x.id===id);return{s:r.s,props:r.props.map(p=>p.d+'|'+p.slot)}},S1.id);
  ok('tự nhập một khung giờ: gửi đề xuất, đúng ngày và giờ đã nhập',R.s==='tt'&&R.props.length===1&&R.props[0]===S1.d+'|19:00',R);
  S1=await setup();await page.waitForSelector('#mkpf');
- await page.evaluate(()=>{document.querySelector('#mk-md0').removeAttribute('min')});
- await fill(0,'2020-01-02','09:00');await page.click('#mkpf button[type=submit]');await W();
- ok('ngày ở quá khứ bị từ chối, giữ nguyên dữ liệu đã nhập',/quá khứ/.test(await page.textContent('#mkpf .err'))&&await page.inputValue('#mk-mt0')==='09:00');
+ ok('ô ngày không giới hạn quá khứ (không có thuộc tính min)',!(await page.getAttribute('#mk-md0','min')));
+ const PD=await ev(id=>{const r=DB.mk.find(x=>x.id===id),gv=S.modal.gv;for(let i=3;i<70;i++){const c=addD(TODAY,-i);if(isW(c)&&!conflict({date:c,slot:'19:00',gv,hs:r.hs}))return c}return null},S1.id);
+ await fill(0,PD,'19:00');await page.click('#mkpf button[type=submit]');await W();
+ const RP=await ev(id=>{const r=DB.mk.find(x=>x.id===id);return{s:r.s,props:r.props.map(p=>p.d+'|'+p.slot)}},S1.id);
+ ok('nhập lại dữ liệu bù cũ: ngày trong quá khứ được nhận',RP.s==='tt'&&RP.props[0]===PD+'|19:00',{PD,RP});
+ S1=await setup();await page.waitForSelector('#mkpf');
  await fill(0,S1.d,'06:00');await page.click('#mkpf button[type=submit]');await W();
  ok('giờ ngoài khung 07:15 đến 19:10 bị từ chối',/Giờ bắt đầu phải từ/.test(await page.textContent('#mkpf .err')));
  await page.fill('#mk-md0','');await page.fill('#mk-mt0','10:00');await page.click('#mkpf button[type=submit]');await W();

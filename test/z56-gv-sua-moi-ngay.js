@@ -12,7 +12,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  ok('giáo viên mẫu có buổi 1-1 ở ngày cũ hơn 7 ngày và cũ hơn 2 tháng',!!F.a&&!!F.b&&F.role==='gv',F);
  /* 1. điểm danh ngày cũ */
  const A=await ev(f=>({a:canEditAtt(f.a.d),b:canEditAtt(f.b.d),today:canEditAtt(TODAY),future:canEditAtt(addD(TODAY,1))}),F);
- ok('giáo viên sửa được điểm danh ngày cũ hơn 7 ngày và cả tháng trước; ngày chưa đến vẫn chưa được',A.a&&A.b&&A.today&&!A.future,A);
+ ok('giáo viên sửa được điểm danh mọi ngày: cũ hơn 7 ngày, tháng trước, hôm nay và cả ngày sắp tới',A.a&&A.b&&A.today&&A.future,A);
  await ev(f=>{S.dd=Object.assign(S.dd||{},{tab:'roll',date:f.b.d});go('dd');render()},F);await page.waitForSelector('.stb');
  ok('màn Điểm danh theo ngày: ngày cũ hiện nút trạng thái bấm được, không có cảnh báo "chỉ sửa 7 ngày"',!(await page.$('.stb .st[disabled]'))&&!/7 ngày gần nhất/.test(await page.textContent('#main')));
  await page.click('.stb .st-p >> nth=0');await W();
@@ -60,6 +60,6 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  for(const role of ['tt','ql','vp']){
   const o=await open();await login(o.page,role);
   const r=await o.page.evaluate(()=>({old:canEditAtt(addD(TODAY,-90)),fut:canEditAtt(addD(TODAY,1))}));
-  ok(role+': '+(role==='vp'?'vẫn chỉ xem điểm danh':'sửa được điểm danh ngày cũ'),role==='vp'?(!r.old&&!r.fut):(r.old&&!r.fut),r);
+  ok(role+': '+(role==='vp'?'vẫn chỉ xem điểm danh':'sửa được điểm danh ngày cũ'),role==='vp'?(!r.old&&!r.fut):(r.old&&r.fut),r);
   await o.b.close()}
  console.log(`\n${passes} PASS, ${fails} FAIL`);process.exit(fails?1:0)})();

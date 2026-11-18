@@ -185,11 +185,11 @@ ACT.mshare=v=>{const m=medList().find(x=>x.id===v);if(!m||!medEdit(m))return fal
 
 /* ---- tải lên ---- */
 ACT.upm=v=>{if(!canUpload())return false;const [kind,k]=String(v||'av').split('|');
- S.up={busy:false,err:'',msg:'',form:null};S.modal={t:'upm',kind:kind==='doc'?'doc':'av',only:kind==='vid'?'vid':'',k:k||'',back:modalBack()}};
+ S.up={busy:false,err:'',msg:'',form:null,done:0};S.modal={t:'upm',kind:kind==='doc'?'doc':'av',only:kind==='vid'?'vid':'',k:k||'',back:modalBack()}};
 const upBtn=l=>`<button class="btn p" type="submit" ${S.up&&S.up.busy?'disabled':''}>${S.up&&S.up.busy?esc(S.up.msg||'Đang tải lên...'):l}</button>`;
 MODALS.upm=()=>{const m=S.modal,doc=m.kind==='doc',vid=m.only==='vid',F=Object.assign({d:WD,t:'',n:'',cat:'Giáo án',gr:'',sh:1,ks:m.k?[m.k]:[]},S.up&&S.up.form||{});
  const ks=myKids().filter(k=>k.st==='dang').sort((a,b)=>a.n<b.n?-1:1),gs=(isLead()||isVP()?DB.groups:myGroups());
- return mdl(doc?'Tải tài liệu lên':vid?'Tải video lên':'Tải ảnh, video lên',`<form id="upmf" class="f"><div><label for="um-f">${doc?'Tệp tài liệu (PDF, Word, Excel, PowerPoint, CSV, văn bản; tối đa '+MEDIA_MB+' MB mỗi tệp)':vid?'Video (MP4, MOV, M4V, 3GP, WebM, MKV, AVI, MPEG, WMV; tối đa '+MEDIA_MB+' MB mỗi tệp)':'Ảnh hoặc video (JPG, PNG, WebP, GIF, MP4, MOV, 3GP, WebM, MKV, AVI…; tối đa '+MEDIA_MB+' MB mỗi tệp)'}</label><input id="um-f" name="f" type="file" multiple accept="${MEDIA_ACC[doc?'doc':vid?'vid':'av']}" required data-c="umf">
+ return mdl(doc?'Tải tài liệu lên':vid?'Tải video lên':'Tải ảnh, video lên',`<form id="upmf" class="f">${S.up.done?`<p id="um-done" class="note" role="status" style="margin:0 0 8px"><b>Đã tải lên ${S.up.done} tệp.</b> Chọn tiếp để tải thêm ngay, không cần đóng cửa sổ. Bấm “Đóng” khi đã xong.</p>`:''}<div><label for="um-f">${doc?'Tệp tài liệu (PDF, Word, Excel, PowerPoint, CSV, văn bản; tối đa '+MEDIA_MB+' MB mỗi tệp)':vid?'Video (MP4, MOV, M4V, 3GP, WebM, MKV, AVI, MPEG, WMV; tối đa '+MEDIA_MB+' MB mỗi tệp)':'Ảnh hoặc video (JPG, PNG, WebP, GIF, MP4, MOV, 3GP, WebM, MKV, AVI…; tối đa '+MEDIA_MB+' MB mỗi tệp)'}</label><input id="um-f" name="f" type="file" multiple accept="${MEDIA_ACC[doc?'doc':vid?'vid':'av']}" required data-c="umf">
  <div class="acts" style="margin-top:6px;align-items:center"><button class="btn s" type="button" data-a="umadd">+ Chọn thêm tệp</button><span class="sm mu">Chọn nhiều tệp một lần (giữ Ctrl hoặc Cmd, hoặc Shift; trên điện thoại chạm nhiều ảnh), hoặc kéo thả tệp vào cửa sổ này. Bấm “Chọn thêm tệp” để thêm tiếp mà không mất các tệp đã chọn.</span></div>
  <input id="um-f2" type="file" multiple hidden accept="${MEDIA_ACC[doc?'doc':vid?'vid':'av']}" data-c="umf2"><div id="um-list" class="sm" aria-live="polite"></div></div>
  <div class="f2"><div><label for="um-d">${doc?'Ngày':'Ngày chụp, quay'}</label><input id="um-d" name="d" type="date" value="${esc(F.d)}" max="${TODAY}" required></div>
@@ -199,10 +199,11 @@ MODALS.upm=()=>{const m=S.modal,doc=m.kind==='doc',vid=m.only==='vid',F=Object.a
  <div><div class="acts" style="justify-content:space-between;align-items:center"><label style="margin:0">Gắn với bé ${doc?'(không bắt buộc)':''}</label><span><button class="btn s" type="button" data-a="mall" data-v="1">Chọn tất cả</button> <button class="btn s" type="button" data-a="mall" data-v="0">Bỏ chọn</button></span></div>
  <div class="mkl" role="group" aria-label="Danh sách bé">${ks.map(k=>`<label class="chk"><input type="checkbox" name="kid" value="${esc(k.id)}" ${F.ks.includes(k.id)?'checked':''}> ${esc(k.n)}</label>`).join('')||'<p class="empty">Chưa có bé nào.</p>'}</div></div>
  <label class="chk"><input type="checkbox" name="sh" ${F.sh?'checked':''}> Chia sẻ cho phụ huynh của bé được chọn</label>
- <div class="err" role="alert">${esc(S.up.err)}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Hủy</button>${upBtn('Tải lên')}</div></form>`)};
+ <label class="chk"><input type="checkbox" name="closeafter" ${F.close?'checked':''}> Tự đóng cửa sổ sau khi tải xong</label>
+ <div class="err" role="alert">${esc(S.up.err)}</div><div class="acts" style="justify-content:flex-end"><button class="btn" type="button" data-a="mx">Đóng</button>${upBtn('Tải lên')}</div></form>`)};
 
 /* danh sách tệp đã chọn trong cửa sổ tải lên; "Chọn thêm tệp" cộng dồn vào ô chọn chính (không vẽ lại cửa sổ nên không mất tệp) */
-function umShow(){const f=$q('#um-f'),o=$q('#um-list');if(!f||!o)return;const a=[...f.files];
+function umShow(){const f=$q('#um-f'),o=$q('#um-list');if(!f||!o)return;const dn=$q('#um-done');if(dn)dn.remove();if(S.up)S.up.done=0;const a=[...f.files];
  o.innerHTML=a.length?`<b>${a.length} tệp đã chọn</b> · ${(a.reduce((n,x)=>n+x.size,0)/1048576).toFixed(1)} MB<ul style="margin:4px 0 0 18px;padding:0">${a.slice(0,8).map(x=>`<li>${esc(x.name)} <span class="mu">(${(x.size/1048576).toFixed(1)} MB)</span></li>`).join('')}${a.length>8?`<li class="mu">và ${a.length-8} tệp khác</li>`:''}</ul>`:''}
 ACT.umadd=()=>{const g=$q('#um-f2');if(g)g.click();return false};
 CHG.umf=()=>{umShow();return false};
@@ -234,7 +235,7 @@ async function medRemove(path){const r=await sbReq('/storage/v1/object/'+MEDIA_B
  if(!r.ok&&r.status!==404)throw new Error('del '+r.status)}
 FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
  const doc=S.modal.kind==='doc',e=f.elements,files=[...e.f.files],kids=[...f.querySelectorAll('input[name=kid]:checked')].map(c=>c.value).filter(canKid),
-  form={d:e.d.value,t:e.t.value.trim(),n:e.n.value.trim(),cat:doc?e.cat.value:'Giáo án',gr:doc?'':e.gr.value,sh:e.sh.checked?1:0,ks:kids};
+  form={d:e.d.value,t:e.t.value.trim(),n:e.n.value.trim(),cat:doc?e.cat.value:'Giáo án',gr:doc?'':e.gr.value,sh:e.sh.checked?1:0,ks:kids,close:e.closeafter.checked};
  S.up=Object.assign(S.up||{},{err:'',form});
  const fail=m=>{S.up.err=m;const er=f.querySelector('.err');if(er)er.textContent=m;return false};   /* không vẽ lại cửa sổ: giữ nguyên các tệp đã chọn */
  if(!files.length)return fail('Hãy chọn ít nhất một tệp.')
@@ -266,7 +267,9 @@ FORM.upmf=f=>{if(!canUpload()||(S.up&&S.up.busy))return false;
   const q=jobs.slice(),worker=async()=>{while(q.length){const j=q.shift();try{await one(j)}catch(x){bad.push(j.file.name+': '+(x&&x.message||'lỗi không rõ'))}done++;S.up.msg='Đang tải '+Math.min(done+1,jobs.length)+'/'+jobs.length+'...';render()}};
   try{S.up.msg='Đang tải 1/'+jobs.length+'...';render();await Promise.all([worker(),worker(),worker()]);
    if(bad.length){S.up.err=(ok?'Đã tải lên '+ok+' tệp. ':'')+'Chưa tải được '+bad.length+' tệp: '+bad.slice(0,3).join('; ')+(bad.length>3?'…':'')+(ok?' Hãy chọn lại các tệp chưa tải.':'')}
-   else{S.modal=S.modal.back||null;toast('Đã tải lên '+ok+' tệp'+(!doc&&!kids.length?'. Giáo viên vào tab “Hoạt động chung” để chọn bé.':''))}}
+   else{toast('Đã tải lên '+ok+' tệp'+(!doc&&!kids.length?'. Giáo viên vào tab “Hoạt động chung” để chọn bé.':''));
+    if(form.close)S.modal=S.modal.back||null;
+    else{S.up.done=ok;S.up.err='';S.up.form=Object.assign({},form,{t:''})}}}   /* giữ cửa sổ mở (ngày, bé, lớp, ghi chú giữ nguyên) để tải tiếp, không phải thoát ra rồi mở lại */
   catch(x){S.up.err='Lỗi khi tải lên: '+(x&&x.message||'lỗi không rõ')}
   finally{S.up.busy=false;BUSY--;render()}})();
  return false};
