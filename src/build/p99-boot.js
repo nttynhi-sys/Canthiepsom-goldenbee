@@ -58,6 +58,7 @@ function migrate7(d){
  DB=d;
  d.staff.forEach(s=>{if(s.cc==null)s.cc=ccOf(s.pay)});
  if(!Array.isArray(d.vio))d.vio=[];
+ if(!Array.isArray(d.sub))d.sub=[];
  if(!d.vam||typeof d.vam!=='object'||Array.isArray(d.vam))d.vam={};
  if(!d.kpr||typeof d.kpr!=='object'||Array.isArray(d.kpr))d.kpr={};
  if(!d.dep||typeof d.dep!=='object'||Array.isArray(d.dep))d.dep={};
@@ -67,6 +68,7 @@ const okDB=d=>d&&Array.isArray(d.staff)&&Array.isArray(d.kids)&&d.cfg&&d.cfg.rul
 (function boot(){
  if(CLOUDMODE){try{const th=localStorage.getItem('gb_th');if(th)document.documentElement.dataset.theme=th}catch(e){}cloudBoot();initCaps();return}
  let d=null;try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+ if(okDB(d)&&d.v===7&&!Array.isArray(d.sub))d.sub=[];   /* dữ liệu mẫu cũ chưa có dạy thay */
  if(okDB(d)&&d.v===7&&Array.isArray(d.vio)&&d.vam&&Array.isArray(d.hol)&&Array.isArray(d.plans)&&Array.isArray(d.sess)&&Array.isArray(d.cg)&&d.menu&&Array.isArray(d.groups)&&Array.isArray(d.tkb))DB=d;
  else if(okDB(d)&&d.v>=2&&d.v<=6){try{if(d.v===2)migrate(d);if(d.v<=3)migrate4(d);if(d.v<=4)migrate5(d);if(d.v<=5)migrate6(d);migrate7(d);save()}catch(e){DB=null;seed();save()}}
  else{seed();save()}
