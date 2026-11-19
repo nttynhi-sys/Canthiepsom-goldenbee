@@ -7,7 +7,7 @@ function unrecorded(d){let n=0;dayList(d).forEach(s=>s.kids.forEach(k=>{if(!DB.a
 /* ngày dạy hiển thị ở bảng điều khiển: ngày làm việc gần nhất (WD); riêng Chủ nhật hôm nay có ca 1-1 hoặc học bù thì hiện chính hôm nay. WD vẫn dùng cho chấm công và tính công. */
 const schDay=()=>sunHas(TODAY)?TODAY:WD;
 const todo=(n,t,v,c)=>n?`<div class="rw"><span>${tg(n,c||'wa')} ${t}</span><button class="btn s" data-a="nav" data-v="${v}">Mở</button></div>`:'';
-VIEWS.dash=()=>isVP()?dashVP():isLead()?dashLead():dashGV();
+VIEWS.dash=()=>'<div class="dsh">'+(isVP()?dashVP():isLead()?dashLead():dashGV())+'</div>';   /* khung chỉ để gắn màu sắc tươi sáng cho Dashboard (c3.css, .dsh), không đổi bố cục */
 /* Dashboard của Văn phòng: học phí, công nợ, lương, chấm công, điểm danh để chốt số liệu */
 function dashVP(){
  const SD=schDay();
