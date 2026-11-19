@@ -511,6 +511,51 @@ body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit
 @media (max-width:640px){.dm-th,.dm-r{grid-template-columns:30px minmax(0,1fr)}.dm-th span:last-child{display:none}.dm-k{grid-column:2;flex-direction:row;align-items:center;gap:8px}}
 
 .ma-c{display:inline-block;margin:6px 0 0;padding:4px 10px;border:1px solid var(--bd);border-radius:999px;font-size:13px}.ma-c.on{border-color:var(--ok,#2e7d32)}.ma-d{margin:4px 0 8px;font-size:14px}.dm-m .ma-c{display:block;border:0;padding:0;margin-top:4px}
+
+/* Toàn bộ các màn hình (vùng #main): màu tươi sáng kiểu Material (chỉ đổi màu, không đổi bố cục). Mỗi thẻ số liệu một sắc riêng, nền pha nhạt từ màu đó nên hợp cả giao diện sáng lẫn tối; thẻ nội dung có viền trên và tiêu đề cùng màu. */
+#main{--k1:#fb8c00;--k2:#43a047;--k3:#00acc1;--k4:#8e24aa;--k5:#ec407a;--k6:#5c6bc0}
+#main .kpi{--k:var(--k1);background:linear-gradient(135deg,color-mix(in srgb,var(--k) 16%,var(--card)),color-mix(in srgb,var(--k) 6%,var(--card)));border-color:color-mix(in srgb,var(--k) 38%,var(--bd));border-top:4px solid var(--k);box-shadow:0 3px 10px color-mix(in srgb,var(--k) 16%,transparent)}
+#main .grid>.kpi:nth-child(6n+2){--k:var(--k2)}#main .grid>.kpi:nth-child(6n+3){--k:var(--k3)}#main .grid>.kpi:nth-child(6n+4){--k:var(--k4)}#main .grid>.kpi:nth-child(6n+5){--k:var(--k5)}#main .grid>.kpi:nth-child(6n+6){--k:var(--k6)}
+#main .kpi .big:not(.er):not(.ok){color:var(--k)}
+#main .kpi>.mu.sm:first-child{color:var(--tx);font-weight:600}
+#main .card:not(.kpi){--k:var(--k3);border-top:4px solid var(--k);box-shadow:0 2px 8px color-mix(in srgb,var(--k) 10%,transparent)}
+#main .two>.card:nth-child(odd){--k:var(--k4)}#main .two>.card:nth-child(even){--k:var(--k1)}
+#main .card:not(.kpi)>h2{color:var(--k)}
+#main .bar i{background:linear-gradient(90deg,var(--k3),var(--k2))}
+/* Thanh bên trắng, xanh ngọc (chỉ đổi màu; trang đăng nhập vẫn dùng màu nền cũ) */
+.side{--sidetx:#17393d;--sidemu:#4f8187;--sun:#047781;--onsun:#ffffff;background:#ffffff;border-right:1px solid #cfe9ec;box-shadow:2px 0 12px rgba(4,119,129,.08)}
+.side .brand b{color:#047781}
+.side .nav button:hover{background:#e3f4f5}
+.side .nav button.on{background:linear-gradient(135deg,#0a8590,#047781);box-shadow:0 3px 10px rgba(4,119,129,.3)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .side{--sidetx:#d6eef0;--sidemu:#7fb5ba;--sun:#26c6da;--onsun:#00363b;background:#0b1f22;border-right-color:#16393d;box-shadow:none}:root:not([data-theme="light"]) .side .brand b{color:#62c8d3}:root:not([data-theme="light"]) .side .nav button:hover{background:rgba(255,255,255,.08)}}
+:root[data-theme="dark"] .side{--sidetx:#d6eef0;--sidemu:#7fb5ba;--sun:#26c6da;--onsun:#00363b;background:#0b1f22;border-right-color:#16393d;box-shadow:none}
+:root[data-theme="dark"] .side .brand b{color:#62c8d3}:root[data-theme="dark"] .side .nav button:hover{background:rgba(255,255,255,.08)}
+/* ===== Bảng màu Trắng – Xanh ngọc – Vàng cho toàn ứng dụng (chỉ đổi màu, không đổi bố cục) ===== */
+:root{--bg:#f0f9fa;--card:#ffffff;--bd:#d6eaec;--ac:#047781;--acs:#d8f0f2;--onac:#ffffff;--sun:#f4d133;--sus:#fff4c2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ac:#4dd0e1;--acs:#12353a;--onac:#00363b}}
+:root[data-theme="dark"]{--ac:#4dd0e1;--acs:#12353a;--onac:#00363b}
+.tab.on{color:var(--ac);border-color:var(--ac)}
+.btn.p{background:linear-gradient(135deg,color-mix(in srgb,var(--ac) 85%,#fff),var(--ac))}
+th{color:color-mix(in srgb,#00acc1 62%,var(--tx));background:color-mix(in srgb,#00acc1 8%,var(--card))}
+.tag.in{background:color-mix(in srgb,#00acc1 16%,var(--card));color:color-mix(in srgb,#00acc1 78%,var(--tx))}
+/* trạng thái mục tiêu và báo cáo tiến độ của bé: đạt xanh lá, tiến bộ xanh ngọc, cần luyện cam, sắp luyện vàng (màu nền ghi cụ thể để đủ tương phản chữ và biểu tượng) */
+.s-dat,.s-gan{--sc:#17703c;--scs:#dff2e6}
+.s-tien{--sc:#00717f;--scs:#d7eef2}
+.s-luyen{--sc:#a64300;--scs:#fde9d6}
+.s-moi,.s-tam{--sc:#7a5c00;--scs:#fdf2c6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .s-dat,:root:not([data-theme="light"]) .s-gan{--sc:#5fd08a;--scs:#163a28}:root:not([data-theme="light"]) .s-tien{--sc:#4dd0e1;--scs:#12353a}:root:not([data-theme="light"]) .s-luyen{--sc:#ffa352;--scs:#4a2c12}:root:not([data-theme="light"]) .s-moi,:root:not([data-theme="light"]) .s-tam{--sc:#f4d133;--scs:#4a3f12}}
+:root[data-theme="dark"] .s-dat,:root[data-theme="dark"] .s-gan{--sc:#5fd08a;--scs:#163a28}:root[data-theme="dark"] .s-tien{--sc:#4dd0e1;--scs:#12353a}:root[data-theme="dark"] .s-luyen{--sc:#ffa352;--scs:#4a2c12}:root[data-theme="dark"] .s-moi,:root[data-theme="dark"] .s-tam{--sc:#f4d133;--scs:#4a3f12}
+.gt-bar{background:color-mix(in srgb,#00acc1 14%,var(--card))}
+.gtp{border-color:color-mix(in srgb,var(--sc) 28%,var(--bd))}
+.gts{background:color-mix(in srgb,var(--sc) 6%,var(--card))}
+.gt-k{color:color-mix(in srgb,#00838f 70%,var(--tx))}
+/* trang đăng nhập: trắng, xanh ngọc, vàng */
+.lgl{background:linear-gradient(160deg,#0a8590,#047781 55%,#03565c);color:#ffffff}
+.lgl h1{color:#ffd93b}
+.lgi{color:rgba(255,255,255,.88)}
+.lgr{background:linear-gradient(180deg,var(--card),color-mix(in srgb,#00acc1 10%,var(--card)))}
+.lgr .btn.p{background:linear-gradient(135deg,#0a8590,#047781);border-color:#047781;color:#fff;box-shadow:0 4px 12px rgba(4,119,129,.28)}
+.lgr input:focus{border-color:#047781;box-shadow:0 0 0 3px rgba(244,209,51,.45);outline:0}
 </style></head><body>
 <div id="app"></div>
 <script>
@@ -2172,7 +2217,7 @@ function unrecorded(d){let n=0;dayList(d).forEach(s=>s.kids.forEach(k=>{if(!DB.a
 /* ngày dạy hiển thị ở bảng điều khiển: ngày làm việc gần nhất (WD); riêng Chủ nhật hôm nay có ca 1-1 hoặc học bù thì hiện chính hôm nay. WD vẫn dùng cho chấm công và tính công. */
 const schDay=()=>sunHas(TODAY)?TODAY:WD;
 const todo=(n,t,v,c)=>n?`<div class="rw"><span>${tg(n,c||'wa')} ${t}</span><button class="btn s" data-a="nav" data-v="${v}">Mở</button></div>`:'';
-VIEWS.dash=()=>isVP()?dashVP():isLead()?dashLead():dashGV();
+VIEWS.dash=()=>'<div class="dsh">'+(isVP()?dashVP():isLead()?dashLead():dashGV())+'</div>';   /* khung chỉ để gắn màu sắc tươi sáng cho Dashboard (c3.css, .dsh), không đổi bố cục */
 /* Dashboard của Văn phòng: học phí, công nợ, lương, chấm công, điểm danh để chốt số liệu */
 function dashVP(){
  const SD=schDay();
