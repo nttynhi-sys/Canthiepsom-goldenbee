@@ -127,13 +127,14 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   ok('parent: nhân viên (giáo viên) không dùng được: 403', (await call('parent', { action: 'load' }, GV2)).code === 403);
   ok('parent: không đăng nhập: 401', (await call('parent', { action: 'load' })).code === 401);
   ok('parent: thao tác lạ: 400', (await call('parent', { action: 'xoa' }, TA)).code === 400);
-  R('sub', 'sbA1', { id: 'sbA1', d: '2026-11-25', sid: 'l1', hs: 'hs001', gv: 'nv11', og: 'nv10', n: 'cô ốm', by: 'tt', at: '2026-11-19' }); R('sub', 'sbB1', { id: 'sbB1', d: '2026-11-25', sid: 'l9', hs: 'hs004', gv: 'nv11', og: 'nv10', n: 'khác' });
+  R('sub', 'sbA1', { id: 'sbA1', d: '2026-11-25', sid: 'l1', hs: 'hs001', gv: 'nv11', og: 'nv10', n: 'cô ốm', by: 'tt', at: '2026-11-19', slot: '09:45' }); R('sub', 'sbA2', { id: 'sbA2', d: '2026-11-26', sid: 'l1', hs: 'hs002', gv: 'nv11', slot: 'không phải giờ' }); R('sub', 'sbB1', { id: 'sbB1', d: '2026-11-25', sid: 'l9', hs: 'hs004', gv: 'nv11', og: 'nv10', n: 'khác' });
   const la = await call('parent', { action: 'load' }, TA); const J = la.json;
   const ids = c => (J.records || []).filter(r => r.collection === c).map(r => r.id).sort().join(',');
   const mids = c => (J.money || []).filter(r => r.collection === c).map(r => r.id).sort().join(',');
   ok('parent A: chỉ thấy 2 bé của mình', la.code === 200 && ids('kids') === 'hs001,hs002' && J.kids.join() === 'hs001,hs002', la.body.slice(0, 200));
   const SB = (J.records || []).filter(r => r.collection === 'sub');
-  ok('parent A: nhận dạy thay của bé mình, chỉ ngày, buổi, bé, giáo viên dạy thay (không có giáo viên gốc, ghi chú, người phân công)', SB.length === 1 && SB[0].id === 'sbA1' && JSON.stringify(Object.keys(SB[0].data).sort()) === JSON.stringify(['d', 'gv', 'hs', 'id', 'sid']) && SB[0].data.gv === 'nv11', JSON.stringify(SB));
+  ok('parent A: nhận dạy thay của bé mình, chỉ ngày, buổi, bé, giáo viên dạy thay (không có giáo viên gốc, ghi chú, người phân công)', SB.length === 2 && SB.some(r => r.id === 'sbA1' && JSON.stringify(Object.keys(r.data).sort()) === JSON.stringify(['d', 'gv', 'hs', 'id', 'sid', 'slot']) && r.data.gv === 'nv11' && r.data.slot === '09:45'), JSON.stringify(SB));
+  ok('parent A: giờ học đã đổi chỉ được chuyển khi đúng dạng HH:MM', (SB.find(r => r.id === 'sbA2') || { data: { slot: 'x' } }).data.slot === undefined, JSON.stringify(SB));
   ok('parent A: không nhận dạy thay của bé khác', !SB.some(r => r.data.hs === 'hs004'));
   ok('parent A: hồ sơ bé mang số thứ tự hiển thị của mã (kids.no), bé chưa dồn mã thì không có', (J.records.find(r => r.collection === 'kids' && r.id === 'hs001') || { data: {} }).data.no === 5 && (J.records.find(r => r.collection === 'kids' && r.id === 'hs002') || { data: {} }).data.no === undefined);
   ok('parent A: nhận được danh sách ngày nghỉ của Trung tâm', ids('hol') === 'hl1');
@@ -169,7 +170,7 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   /* ---- kéo thay đổi ---- */
   const since = { records: J.records.reduce((m, r) => r.updated_at > m ? r.updated_at : m, ''), money: J.money.reduce((m, r) => r.updated_at > m ? r.updated_at : m, '') };
   const p0 = (await call('parent', { action: 'pull', since, known: J.kids }, TA)).json;
-  ok('pull: có danh sách dạy thay đang có của bé mình (để gỡ dạy thay đã bỏ)', Array.isArray(p0.live && p0.live.sub) && p0.live.sub.join() === 'sbA1', JSON.stringify(p0.live));
+  ok('pull: có danh sách dạy thay đang có của bé mình (để gỡ dạy thay đã bỏ)', Array.isArray(p0.live && p0.live.sub) && p0.live.sub.join() === 'sbA1,sbA2', JSON.stringify(p0.live));
   ok('pull: không đổi thì không có dòng nào', p0.records.length === 0 && p0.money.length === 0);
   R('sess', 's3', { id: 's3', k: 'hs002', note: 'Mới' }); R('sess', 's4', { id: 's4', k: 'hs004', note: 'Của bé khác' }); M('lg', 'e3', { id: 'e3', hs: 'hs002', amt: 3 });
   const p1 = (await call('parent', { action: 'pull', since, known: J.kids }, TA)).json;

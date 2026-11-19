@@ -81,8 +81,8 @@ const LOCKED_MSG = 'Cổng phụ huynh đang tạm khóa vì học phí quá h�
 /* Cấu hình tiền gửi cho phụ huynh: chỉ các khóa trình duyệt cần để tự tính học phí (đơn giá 1-1, bán trú, giá từng loại 1-1).
    Không gửi giảm trừ gia cảnh, thuế, mức trừ vi phạm của nhân viên; khóa lạ cũng bị bỏ (danh sách trắng). Khớp CFG_MONEY ở src/build/p02b-cloud.js. */
 const PARENT_CFGM = ['p11', 'pbtDay', 'pbtDay11', 'lt_ng', 'lt_nh', 'lt_gq', 'lt_ms', 'lt_vd', 'lt_tc', 'lt_nc'];
-/* dạy thay: phụ huynh chỉ nhận ngày, buổi, bé và giáo viên dạy thay; không nhận giáo viên gốc, ghi chú (lý do nghỉ) hay người phân công */
-const parentSub = d => ({ id: d.id, d: d.d, sid: d.sid, hs: d.hs, gv: d.gv });
+/* dạy thay: phụ huynh chỉ nhận ngày, buổi, bé, giáo viên dạy thay và giờ học đã đổi (nếu có); không nhận giáo viên gốc, ghi chú (lý do nghỉ) hay người phân công */
+const parentSub = d => Object.assign({ id: d.id, d: d.d, sid: d.sid, hs: d.hs, gv: d.gv }, typeof d.slot === 'string' && /^\d{2}:\d{2}$/.test(d.slot) ? { slot: d.slot } : {});
 const parentCfgm = d => { const o = {}; PARENT_CFGM.forEach(k => { if (d && d[k] != null) o[k] = d[k]; }); return o; };
 
 async function snapshot(me, since, known) {
