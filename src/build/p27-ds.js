@@ -4,7 +4,12 @@
    Buổi 1-1 hằng tuần không đổi; chỉ ngày d đổi người dạy. Giáo viên dạy thay điểm danh, ghi buổi và nhận tiền công theo ca của ngày đó.
    Lịch trống của giáo viên trong một ngày tính từ lịch dạy, ngày nghỉ phép, lớp bán trú; buổi của bé vắng (ABS_ATT) cũng được coi là giờ trống. */
 const canSub=()=>isLead()||isVP();
-const dsLeave=(gv,d)=>DB.lr.find(l=>l.st===gv&&l.s==='duyet'&&l.f<=d&&d<=l.t)||null;
+/* giáo viên nghỉ vào ngày d: đơn nghỉ đã duyệt, hoặc chấm công nghỉ cả ngày; chấm công nghỉ nửa ngày chỉ tính khi truyền giờ slot rơi vào nửa ngày nghỉ */
+function dsLeave(gv,d,slot){const l=DB.lr.find(x=>x.st===gv&&x.s==='duyet'&&x.f<=d&&d<=x.t);if(l)return l;
+ const r=tsLv(gv,d);if(!r)return null;
+ if(r.l==='full'||(slot&&(r.l==='am'?slot<CC_AM_END:slot>=CC_AM_END)))return{type:r.lk?'kl':'phep',half:r.l==='full'?'':r.l,ts:1};
+ return null}
+const dsLvT=lv=>'Nghỉ '+(lv.half==='am'?'nửa ngày sáng':lv.half==='pm'?'nửa ngày chiều':lv.type==='kl'?'không lương':'có phép');
 const dsLesson=sid=>DB.lich.find(x=>x.id===sid);
 const dsLessonsOn=d=>DB.lich.filter(l=>(l.type==='11'&&l.day===dow(d))||(l.type==='bu'&&l.date===d));
 const dsTeachers=()=>DB.staff.filter(s=>s.st==='dang'&&isTeacher(s));
@@ -12,7 +17,7 @@ const dsTeachers=()=>DB.staff.filter(s=>s.st==='dang'&&isTeacher(s));
 function dsWhy(gv,d,slot,sid){
  const t=stBy(gv);if(!t||t.st!=='dang'||!isTeacher(t))return'Không phải giáo viên đang làm việc';
  if(isClosed(d))return'Trung tâm nghỉ ngày này';
- if(dsLeave(gv,d))return'Đang nghỉ phép hoặc nghỉ ốm';
+ if(dsLeave(gv,d,slot))return'Đang nghỉ (phép, ốm hoặc nửa ngày)';
  const w=dow(d);if(DB.groups.some(g=>grHas(g,gv)&&grOpen(g,w)))return'Đang phụ trách lớp bán trú';
  for(const l of dsLessonsOn(d)){if(l.id===sid||!l.slot||!slotOver(l.slot,slot)||effGv(l,d)!==gv)continue;
   if(ABS_ATT.includes(DB.att[attKey(d,l.id,l.hs)]))continue;   /* bé vắng: giáo viên rảnh */
@@ -26,7 +31,7 @@ function dsRanges(gv,d){const out=[];let cur=null;
  SLOTS.forEach(s=>{if(!dsWhy(gv,d,s,'')){if(cur)cur.e=s;else cur={b:s,e:s}}else if(cur){out.push(cur);cur=null}});
  if(cur)out.push(cur);return out.map(r=>r.b===r.e?slotLb(r.b):r.b+'–'+slotEnd(r.e))}
 /* buổi cần người dạy thay trong ngày d: giáo viên gốc có đơn nghỉ đã duyệt */
-const dsNeed=d=>dayList(d).filter(s=>(s.kind==='11'||s.kind==='bu')&&!s.sub&&(l=>l&&dsLeave(l.gv,d))(dsLesson(s.sid)));
+const dsNeed=d=>dayList(d).filter(s=>(s.kind==='11'||s.kind==='bu')&&!s.sub&&(l=>l&&dsLeave(l.gv,d,l.slot))(dsLesson(s.sid)));
 function dsNeedCount(){let n=0;for(let i=0;i<7;i++){const d=addD(TODAY,i);if(isSch(d))n+=dsNeed(d).length}return n}
 const dsDef=()=>({tab:'cv',d:isSch(WD)&&WD>=TODAY?WD:TODAY,all:0,q:''});
 
@@ -49,7 +54,7 @@ function dsKidCard(k){if(!canSub())return'';const n=(DB.sub||[]).filter(s=>s.hs=
 
 function dsLessonTab(c){
  const q=ascii(c.q||''),rows=dayList(c.d).filter(s=>s.kind==='11'||s.kind==='bu').map(s=>({s,l:dsLesson(s.sid),k:s.kids[0]})).filter(r=>r.l&&r.k)
-  .filter(r=>!q||ascii(r.k.n+' '+kcode(r.k)).includes(q)).map(r=>Object.assign(r,{lv:dsLeave(r.l.gv,c.d)}))
+  .filter(r=>!q||ascii(r.k.n+' '+kcode(r.k)).includes(q)).map(r=>Object.assign(r,{lv:dsLeave(r.l.gv,c.d,r.l.slot)}))
   .filter(r=>c.all||q||r.lv||r.s.sub).sort((a,b)=>(!!b.lv-!!a.lv)||(a.s.slot<b.s.slot?-1:1));
  const need=rows.filter(r=>r.lv&&!r.s.sub).length;
  const ctl=`<div class="card"><div class="top" style="gap:10px;margin:0"><p style="margin:0">${need?`<b>${need}</b> buổi chưa có người dạy thay`:'Không có buổi nào đang chờ người dạy thay'}${c.all||q?'':' · chỉ hiện buổi của giáo viên nghỉ và buổi đã có người dạy thay'}</p>
@@ -58,7 +63,7 @@ function dsLessonTab(c){
  return ctl+`<div class="card tbl"><table><thead><tr><th>Giờ</th><th>Học sinh</th><th>Giáo viên của bé</th><th>Dạy thay</th><th></th></tr></thead><tbody>`
  +rows.map(r=>{const sb=r.s.sub,ab=ABS_ATT.includes(DB.att[attKey(c.d,r.s.sid,r.k.id)])&&!sb&&!r.lv;
   return`<tr><td>${slotLb(r.l.slot)}<br><span class="sm mu">${r.l.type==='bu'?'Học bù':'1-1'}</span></td><td><b>${esc(r.k.n)}</b><br><span class="sm mu">${esc(kcode(r.k))}</span></td>
-  <td>${esc(sn(r.l.gv))}${r.lv?'<br>'+tg('Nghỉ '+(r.lv.type==='kl'?'không lương':'có phép'),'wa'):''}${ab?'<br>'+tg('Bé vắng','gy'):''}</td>
+  <td>${esc(sn(r.l.gv))}${r.lv?'<br>'+tg(dsLvT(r.lv),'wa'):''}${ab?'<br>'+tg('Bé vắng','gy'):''}</td>
   <td>${sb?`<b>${esc(sn(sb.gv))}</b>${sb.n?'<br><span class="sm mu">'+esc(sb.n)+'</span>':''}`:(r.lv?tg('Chưa có người dạy thay','er'):'<span class="mu">—</span>')}</td>
   <td style="white-space:nowrap"><button class="btn s ${sb||!r.lv?'':'p'}" data-a="dsopen" data-v="${esc(c.d+'|'+r.s.sid)}">${sb?'Đổi người':'Phân công'}</button>${sb?` <button class="btn s no" data-a="dsdel" data-v="${esc(c.d+'|'+r.s.sid)}">Bỏ dạy thay</button>`:''}</td></tr>`}).join('')+`</tbody></table></div>`}
 
@@ -66,13 +71,13 @@ function dsFreeTab(c){
  if(isClosed(c.d))return'<p class="empty">Trung tâm nghỉ ngày này.</p>';
  const tc=dsTeachers().map(t=>{const lv=dsLeave(t.id,c.d),w=dow(c.d),gr=DB.groups.some(g=>grHas(g,t.id)&&grOpen(g,w)),
    own=dsLessonsOn(c.d).filter(l=>effGv(l,c.d)===t.id).sort((a,b)=>a.slot<b.slot?-1:1),fr=dsFreed(t.id,c.d),rg=lv||gr?[]:dsRanges(t.id,c.d),subs=(DB.sub||[]).filter(x=>x.d===c.d&&x.gv===t.id);
-   return{t,lv,gr,own,fr,rg,subs}}).sort((a,b)=>((!!a.lv||a.gr)-(!!b.lv||b.gr))||(b.rg.length-a.rg.length)||(a.t.n<b.t.n?-1:1));
+   return{t,lv,hv:lv?null:tsLv(t.id,c.d),gr,own,fr,rg,subs}}).sort((a,b)=>((!!a.lv||a.gr)-(!!b.lv||b.gr))||(b.rg.length-a.rg.length)||(a.t.n<b.t.n?-1:1));
  const q=ascii(c.q||''),list=q?tc.filter(x=>ascii(x.t.n).includes(q)):tc,n=tc.filter(x=>!x.lv&&!x.gr&&x.rg.length).length;
  const ch=(a,b)=>`<span class="tag ${a}" style="margin:2px 4px 2px 0;display:inline-block">${b}</span>`;
  return`<div class="card"><p style="margin:0"><b>${n}</b> giáo viên còn giờ trống ngày ${vdm(c.d)}. Giờ có bé vắng (nghỉ P, KP, nhập viện, Trung tâm nghỉ) được tính là giờ trống.</p></div>
  <div class="card tbl"><table><thead><tr><th>Giáo viên</th><th>Giờ trống</th><th>Buổi có bé vắng (giờ rảnh)</th><th>Đang dạy</th></tr></thead><tbody>`
  +list.map(x=>{const busy=x.own.filter(l=>!ABS_ATT.includes(DB.att[attKey(c.d,l.id,l.hs)]));
-  return`<tr><td><b>${esc(tName(x.t))}</b>${x.lv?'<br>'+tg('Nghỉ '+(x.lv.type==='kl'?'không lương':'có phép'),'wa'):''}${x.gr?'<br>'+tg('Lớp bán trú','in'):''}</td>
+  return`<tr><td><b>${esc(tName(x.t))}</b>${x.lv?'<br>'+tg(dsLvT(x.lv),'wa'):''}${!x.lv&&x.hv?'<br>'+tg(LVT[x.hv.l],'wa'):''}${x.gr?'<br>'+tg('Lớp bán trú','in'):''}</td>
   <td>${x.lv||x.gr?'<span class="mu">Không dạy thay được</span>':x.rg.length?x.rg.map(r=>ch('ok',esc(r))).join(''):'<span class="mu">Hết giờ trống</span>'}</td>
   <td>${x.fr.length?x.fr.map(l=>ch('y',esc(l.slot+' · '+given(kn(l.hs))+' ('+AC[DB.att[attKey(c.d,l.id,l.hs)]]+')'))).join(''):'<span class="mu">—</span>'}</td>
   <td>${busy.length?busy.map(l=>ch('gy',esc(l.slot+' · '+given(kn(l.hs))))).join(''):'<span class="mu">—</span>'}${x.subs.map(s=>ch('in','Dạy thay '+esc(dsLesson(s.sid)?dsLesson(s.sid).slot:'')+' · '+esc(given(kn(s.hs))))).join('')}</td></tr>`}).join('')+`</tbody></table></div>
@@ -83,7 +88,7 @@ ACT.dsopen=v=>{if(!canSub())return false;const [d,sid]=v.split('|'),l=dsLesson(s
 function dsOpts(d,l){const o=dsTeachers().filter(t=>t.id!==l.gv).map(t=>{const why=dsWhy(t.id,d,l.slot,l.id),fr=why?[]:dsFreedAt(t.id,d,l.slot,l.id);return{t,why,fr}})
   .sort((a,b)=>(!!a.why-!!b.why)||(b.fr.length-a.fr.length)||(a.t.n<b.t.n?-1:1));return o}
 MODALS.dsa=()=>{const m=S.modal,l=dsLesson(m.sid),k=l&&kidBy(l.hs);if(!l||!k||!canSub()){S.modal=null;return''}
- const cur=subOf(m.d,m.sid),o=dsOpts(m.d,l),free=o.filter(x=>!x.why),lv=dsLeave(l.gv,m.d);
+ const cur=subOf(m.d,m.sid),o=dsOpts(m.d,l),free=o.filter(x=>!x.why),lv=dsLeave(l.gv,m.d,l.slot);
  return mdl('Phân giáo viên dạy thay',`<p class="sm" style="margin-bottom:8px"><b>${esc(k.n)}</b> · ${esc(kcode(k))}<br>${DAYN[dow(m.d)]} ${vd(m.d)} · ${slotLb(l.slot)} · ${l.type==='bu'?'Học bù':'1-1'}<br><span class="mu">Giáo viên của bé: ${esc(sn(l.gv))}${lv?' (đang nghỉ)':''}</span></p>
  <form id="dsaf" class="f"><div><label for="ds-g">Giáo viên dạy thay</label><select id="ds-g" name="gv"><option value="">Chọn giáo viên</option>${o.map(x=>`<option value="${x.t.id}" ${x.why?'disabled':''} ${cur&&cur.gv===x.t.id?'selected':''}>${esc(tName(x.t))} · ${x.why?esc(x.why):x.fr.length?'rảnh vì '+esc(given(kn(x.fr[0].hs)))+' nghỉ':'rảnh'}</option>`).join('')}</select></div>
  ${l.type==='11'?`<div><label for="ds-t">Dạy thay đến hết ngày (cùng thứ mỗi tuần, để trống nếu chỉ ngày này)</label><input id="ds-t" name="to" type="date" min="${m.d}" value=""></div>`:''}
@@ -94,11 +99,11 @@ MODALS.dsa=()=>{const m=S.modal,l=dsLesson(m.sid),k=l&&kidBy(l.hs);if(!l||!k||!c
 function dsApply(l,d,gv,n){
  DB.sub=(DB.sub||[]).filter(x=>!(x.d===d&&x.sid===l.id));
  DB.sub.push({id:'sb'+uid(),d,sid:l.id,hs:l.hs,gv,og:l.gv,by:U.id,at:TODAY,n:n||''});
- if(dsLeave(l.gv,d)){const key=attKey(d,l.id,l.hs);if(DB.att[key]==='tt')delete DB.att[key];
+ if(dsLeave(l.gv,d,l.slot)){const key=attKey(d,l.id,l.hs);if(DB.att[key]==='tt')delete DB.att[key];
   DB.mk.forEach(r=>{if(r.hs===l.hs&&r.from.d===d&&r.from.sid===l.id&&r.why==='Giáo viên nghỉ phép'&&r.s==='dk'&&!(r.props||[]).length){r.s='huy';r.dsub=1;r.log.push({at:TODAY,by:U.id,tx:'Đã phân giáo viên dạy thay, không cần học bù'})}})}}
 function dsUndo(l,d){
  DB.sub=(DB.sub||[]).filter(x=>!(x.d===d&&x.sid===l.id));
- if(dsLeave(l.gv,d)){const key=attKey(d,l.id,l.hs);if(!DB.att[key])DB.att[key]='tt';
+ if(dsLeave(l.gv,d,l.slot)){const key=attKey(d,l.id,l.hs);if(!DB.att[key]&&DB.lr.some(x=>x.st===l.gv&&x.s==='duyet'&&x.f<=d&&d<=x.t))DB.att[key]='tt';
   DB.mk.forEach(r=>{if(r.dsub&&r.hs===l.hs&&r.from.d===d&&r.from.sid===l.id&&r.s==='huy'){r.s='dk';delete r.dsub;r.log.push({at:TODAY,by:U.id,tx:'Bỏ dạy thay, mở lại yêu cầu học bù'})}})}}
 FORM.dsaf=f=>{const m=S.modal,l=dsLesson(m.sid),gv=f.elements.gv.value,to=f.elements.to?f.elements.to.value:'',n=String(f.elements.n.value||'').trim().slice(0,80);
  if(!canSub()||!l||!kidBy(l.hs))return false;

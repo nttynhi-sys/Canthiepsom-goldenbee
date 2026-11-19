@@ -556,6 +556,9 @@ th{color:color-mix(in srgb,#00acc1 62%,var(--tx));background:color-mix(in srgb,#
 .lgr{background:linear-gradient(180deg,var(--card),color-mix(in srgb,#00acc1 10%,var(--card)))}
 .lgr .btn.p{background:linear-gradient(135deg,#0a8590,#047781);border-color:#047781;color:#fff;box-shadow:0 4px 12px rgba(4,119,129,.28)}
 .lgr input:focus{border-color:#047781;box-shadow:0 0 0 3px rgba(244,209,51,.45);outline:0}
+
+/* ký hiệu chấm công nghỉ nửa ngày: N có phép, Q không lương */
+.sc-N{background:var(--ins);color:var(--in)}.sc-Q{background:var(--ers);color:var(--er)}
 </style></head><body>
 <div id="app"></div>
 <script>
@@ -904,7 +907,7 @@ async function cloudPull(){
    Object.keys(pay).forEach(id=>{const s=DB.staff.find(y=>y.id===id);if(s)s.pay=pay[id]});
    CFG_MONEY.forEach(k=>{if(cfgm[k]!=null)DB.cfg[k]=cfgm[k]})}
   /* mục chung (tài liệu tham khảo, tri ân) đã bị xóa hoặc gỡ: máy chủ gửi danh sách đang đăng, bỏ những mục không còn */
-  if(ph&&got&&got.live)['ref','tri'].forEach(c=>{const keep=new Set(got.live[c]||[]),a=DB[c]||[],n=a.filter(x=>keep.has(x.id));
+  if(ph&&got&&got.live)['ref','tri','sub'].forEach(c=>{const keep=new Set(got.live[c]||[]),a=DB[c]||[],n=a.filter(x=>keep.has(x.id));
    if(n.length!==a.length){a.filter(x=>!keep.has(x.id)).forEach(x=>CLD.snap.delete('records|'+c+'|'+x.id));DB[c]=n;any=true}});
   if(any){const nf=cflat(DB,withM);changed.forEach(k=>{if(nf.has(k))CLD.snap.set(k,nf.get(k).s)});softRender()}}
  catch(e){}
@@ -1933,7 +1936,10 @@ function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))retur
 const needCC=s=>!s||s.cc!==false,ccOf=pay=>!!pay&&(pay.mode!=='buoi'||(+pay.rateBt||0)>0);
 function tsSt(id,d){const l=DB.lr.find(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t);if(l)return l.type==='kl'?'kl':'leave';
  if(!needCC(stBy(id)))return isW(d)&&isClosed(d)?'hol':'';
- const r=DB.ts[id+'|'+d];if(r&&r.i)return r.i>DB.cfg.lateAfter?'late':'ok';
+ const r=DB.ts[id+'|'+d];
+ if(r&&r.l==='full')return r.lk?'kl':'leave';   /* chấm công nghỉ cả ngày (l:'full'; lk:1 là không lương) */
+ if(r&&(r.l==='am'||r.l==='pm'))return r.lk?'halfkl':'half';   /* nghỉ nửa ngày sáng (am) hoặc chiều (pm): làm nửa còn lại */
+ if(r&&r.i)return r.i>DB.cfg.lateAfter?'late':'ok';
  if(isW(d)&&isClosed(d))return 'hol';
  if(d>TODAY||!isW(d))return '';return d>=WD?'chua':'abs'}
 /* Tỉ lệ lương một ca 1-1 theo tình trạng của bé: có mặt và dạy bù trả đủ 100%; bé nghỉ không phép được 50%; các trường hợp còn lại do Trung tâm đặt */
@@ -1948,9 +1954,10 @@ function payroll(s,m){
  const myGr=DB.groups.filter(g=>grHas(g,s.id)),open6=myGr.some(g=>grOpen(g,6));
  let cong=0,late=0,btd=0,leave=0,abs=0,hol=0;
  const ss={cm:0,kp:0,p:0,tt:0,bv:0,bu:0,none:0},cc=needCC(s);
- for(const d of dts){const t=tsSt(s.id,d),w=dow(d),worked=cc?(t==='ok'||t==='late'):t==='';   /* trả theo ca: không chấm công, ngày làm việc thường (không nghỉ phép, không nghỉ lễ) coi là có mặt để đếm ca chưa điểm danh */
+ for(const d of dts){const t=tsSt(s.id,d),w=dow(d),worked=cc?(t==='ok'||t==='late'||t==='half'||t==='halfkl'):t==='';   /* trả theo ca: không chấm công, ngày làm việc thường (không nghỉ phép, không nghỉ lễ) coi là có mặt để đếm ca chưa điểm danh */
   if(!cc){if(t==='hol')continue}
-  else if(worked){cong++;if(t==='late')late++;if(myGr.length&&(w<=5||(w===6&&open6)))btd++}
+  else if(worked){cong+=t==='halfkl'?.5:1;if(t==='late')late++;if(t==='half')leave+=.5;if(t==='halfkl')abs+=.5;   /* nửa ngày có phép hưởng đủ công; nửa ngày không lương chỉ tính nửa công */
+  if(myGr.length&&(w<=5||(w===6&&open6)))btd++}
   else if(t==='leave'){cong++;leave++}else if(t==='hol'){cong++;hol++;continue}   /* ngày nghỉ lễ hưởng nguyên lương ngày công, không có ca dạy */
   else if(t==='abs'||t==='kl')abs++;
   /* ca 1-1 tính theo điểm danh của bé trong ca đó */
@@ -3128,7 +3135,7 @@ function lhParent(){const ks=myKids().filter(k=>k.st==='dang');
  const k=kidBy(h.kid),g=btOf(k).length?grBy(k.gr):null,ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.id);
  const days=[];for(let i=0;i<14;i++){const d=addD(TODAY,i);if(!isSch(d))continue;const xs=sched(k,d.slice(0,7)).filter(x=>x.d===d).sort((a,b)=>a.slot<b.slot?-1:1);if(xs.length)days.push({d,xs})}
  const line=(d,x)=>{const l=x.kind==='bt'?null:DB.lich.find(y=>y.id===x.sid),c=DB.att[d+'|'+x.sid+'|'+k.id];
-  const what=x.kind==='bt'?'Bán trú '+esc(g?g.n:'')+' · '+BTLB:(x.kind==='bu'?'Học bù ':'Can thiệp 1-1 ')+slotLb(x.slot)+(l?' · '+esc(given(sn(l.gv))):'');
+  const what=x.kind==='bt'?'Bán trú '+esc(g?g.n:'')+' · '+BTLB:(x.kind==='bu'?'Học bù ':'Can thiệp 1-1 ')+slotLb(x.slot)+(l?' · '+esc(given(sn(effGv(l,d))))+(subOf(d,l.id)?' '+tg('Giáo viên dạy thay','y'):''):'');
   return`<div class="rw"><span>${what}</span>${c?tg(AC[c],c==='cm'?'ok':c==='kp'?'er':c==='p'?'wa':'in'):''}</div>`};
  return head('Lịch học của bé','Giờ học 1-1 và giờ bán trú của bé trong tuần')+(ks.length>1?tabsH(ks.map(x=>[x.id,given(x.n)]),h.kid,'lhk'):'')
  +`<div class="grid"><div class="card kpi"><div class="mu sm">Học 1-1</div><div class="big">${ls.length} buổi</div><div class="sm mu">mỗi tuần${ls.length?', '+esc(kTs(k).length?kGiven(k):given(mainGV(k))):''}</div></div><div class="card kpi"><div class="mu sm">Bán trú</div><div class="big">${g?esc(g.n):'Không'}</div><div class="sm mu">${g?BTLB+', '+esc(dayTx(btOf(k))):'Bé chưa đăng ký bán trú'}</div></div></div>`
@@ -3136,10 +3143,15 @@ function lhParent(){const ks=myKids().filter(k=>k.st==='dang');
  +`${holCard(60)}<div class="card"><h2>Lịch 14 ngày tới</h2>${days.length?days.map(({d,xs})=>`<div class="mday" style="margin-bottom:8px"><div class="mh"><b>${DAYN[dow(d)]}</b> <span class="mu sm">${vdm(d)}</span>${d===TODAY?' '+tg('Hôm nay','y'):''}</div>${xs.map(x=>line(d,x)).join('')}</div>`).join(''):'<p class="empty">Chưa có lịch trong 14 ngày tới.</p>'}<div class="acts" style="margin-top:10px">${g?'<button class="btn s" data-a="nav" data-v="tn">Thực đơn bán trú</button>':''}<button class="btn s" data-a="nav" data-v="hb">Đăng ký học bù</button></div></div>`}
 /* ===== 6. Chấm công nhân viên ===== */
 const hm=()=>{const d=new Date();return pad(d.getHours())+':'+pad(d.getMinutes())};
-const CSYM={ok:['x','Đủ công'],late:['M','Đi muộn'],leave:['P','Nghỉ phép'],kl:['K','Nghỉ không lương'],abs:['A','Vắng không phép'],chua:['·','Chưa chấm'],hol:['L','Nghỉ lễ']};
+const CSYM={ok:['x','Đủ công'],late:['M','Đi muộn'],leave:['P','Nghỉ phép'],kl:['K','Nghỉ không lương'],half:['N','Nghỉ nửa ngày'],halfkl:['Q','Nghỉ nửa ngày không lương'],abs:['A','Vắng không phép'],chua:['·','Chưa chấm'],hol:['L','Nghỉ lễ']};
 const LRT={phep:'Nghỉ phép',om:'Nghỉ ốm',kl:'Nghỉ không lương'};
 const LRS={cho:['Chờ duyệt','wa'],duyet:['Đã duyệt','ok'],tuchoi:['Từ chối','er']};
 /* Chấm công do Quản lý hoặc Trưởng Trung tâm thực hiện cho nhân sự làm giờ cố định (lương cố định tháng); giáo viên không tự chấm công. Nhân sự chỉ trả lương theo ca 1-1 (s.cc===false) không cần chấm công, xem needCC ở p04-domain.js. */
+/* Nghỉ nửa ngày hoặc cả ngày do người chấm công ghi thẳng vào chấm công của giáo viên fulltime (DB.ts[nhânviên|ngày] = {i,o,l,lk}): l = 'full' nghỉ cả ngày, 'am' nghỉ nửa ngày sáng (làm từ 13:00), 'pm' nghỉ nửa ngày chiều (làm đến 12:00); lk:1 là nghỉ không lương. Trưởng Trung tâm, Quản lý và Văn phòng (hành chính) ghi được. */
+const CC_AM_END='12:00',CC_PM_START='13:00',canLeaveMark=()=>isLead()||isVP();
+const tsLv=(id,d)=>{const r=DB.ts[id+'|'+d];return r&&(r.l==='full'||r.l==='am'||r.l==='pm')?r:null};
+const LVT={full:'Nghỉ cả ngày',am:'Nghỉ nửa ngày sáng',pm:'Nghỉ nửa ngày chiều'};
+const ccCls=k=>k==='ok'?'ok':k==='late'?'wa':k==='leave'||k==='kl'||k==='half'||k==='halfkl'?'in':k==='abs'?'er':'gy';
 const ccIn=()=>DB.cfg.ccIn||'07:15',ccOut=()=>DB.cfg.ccOut||'18:00';
 const selfCC=()=>!!U&&!isGV()&&!isPH()&&needCC(stBy(U.id));   /* Trưởng Trung tâm, Quản lý, Văn phòng vẫn tự chấm công của mình */
 const ccStaff=()=>DB.staff.filter(s=>s.st==='dang'&&needCC(s));
@@ -3154,22 +3166,22 @@ ACT.ccm=v=>{S.cc.m=sm(S.cc.m,+v)};
 ACT.ci=()=>{if(!selfCC())return false;const k=U.id+'|'+WD,r=DB.ts[k]||(DB.ts[k]={i:'',o:''});if(!r.i){r.i=hm();toast('Đã chấm công vào lúc '+r.i)}else if(!r.o){r.o=hm();toast('Đã chấm công ra lúc '+r.o)}};
 function ccMe(){const me=stBy(U.id),t=DB.ts[U.id+'|'+WD],st=tsSt(U.id,WD);
  if(!needCC(me))return`<div class="card"><h2>Chấm công</h2><p>Bạn được trả lương theo ca 1-1 nên <b>không cần chấm công</b>. Tiền công tính theo số ca bạn đã dạy và điểm danh của bé.</p></div>`;
- if(!selfCC())return`<div class="card"><h2>Chấm công ngày ${DAYN[dow(WD)]} ${vd(WD)}</h2><p>${st==='leave'||st==='kl'?'Hôm nay bạn nghỉ phép đã được duyệt.':t&&t.i?'Quản lý đã chấm công: vào lúc <b>'+t.i+'</b>'+(st==='late'?' '+tg('Đi muộn','wa'):'')+(t.o?', ra lúc <b>'+t.o+'</b>':''):'Quản lý chưa chấm công cho bạn.'}</p><p class="sm mu" style="margin-top:8px">Giáo viên làm giờ cố định không tự chấm công. Quản lý hoặc Trưởng Trung tâm chấm công cho bạn mỗi ngày; nếu thấy sai, hãy báo Quản lý. Đi muộn nếu vào sau ${DB.cfg.lateAfter}.</p></div>`;
+ if(!selfCC())return`<div class="card"><h2>Chấm công ngày ${DAYN[dow(WD)]} ${vd(WD)}</h2><p>${st==='leave'||st==='kl'?'Hôm nay bạn nghỉ'+(tsLv(U.id,WD)?' (Quản lý đã chấm công nghỉ cả ngày).':' phép đã được duyệt.'):st==='half'||st==='halfkl'?'Hôm nay bạn nghỉ nửa ngày ('+(tsLv(U.id,WD).l==='am'?'buổi sáng, làm từ '+CC_PM_START:'buổi chiều, làm đến '+CC_AM_END)+').':t&&t.i?'Quản lý đã chấm công: vào lúc <b>'+t.i+'</b>'+(st==='late'?' '+tg('Đi muộn','wa'):'')+(t.o?', ra lúc <b>'+t.o+'</b>':''):'Quản lý chưa chấm công cho bạn.'}</p><p class="sm mu" style="margin-top:8px">Giáo viên làm giờ cố định không tự chấm công. Quản lý hoặc Trưởng Trung tâm chấm công cho bạn mỗi ngày; nếu thấy sai, hãy báo Quản lý. Đi muộn nếu vào sau ${DB.cfg.lateAfter}.</p></div>`;
  return`<div class="card"><h2>Chấm công ngày ${DAYN[dow(WD)]} ${vd(WD)}</h2><p>${t&&t.i?'Vào lúc <b>'+t.i+'</b>'+(st==='late'?' '+tg('Đi muộn','wa'):''):'Bạn chưa chấm công vào.'}${t&&t.o?', ra lúc <b>'+t.o+'</b>':''}</p><div class="acts" style="margin-top:10px"><button class="btn y" data-a="ci" ${t&&t.o?'disabled':''}>${t&&t.i?'Chấm công ra':'Chấm công vào'}</button></div><p class="sm mu" style="margin-top:8px">Quy định: vào sau ${DB.cfg.lateAfter} tính là đi muộn. ${WD!==TODAY?'Hôm nay là ngày nghỉ nên hệ thống ghi vào ngày làm việc gần nhất.':''}</p></div>`}
 function ccToday(){let h=ccMe();
  if(seesAll())h+=ccRoster();
  else if(needCC(stBy(U.id)))h+=ccMine(S.cc.m);
  return h}
 /* Bảng chấm công trong ngày do Quản lý, Trưởng Trung tâm thực hiện (Văn phòng chỉ xem) */
-function ccRoster(){const d=ccDay(),st=ccStaff(),cnt={},skip=DB.staff.filter(s=>s.st==='dang'&&!needCC(s)),open=isW(d)&&!isClosed(d),edit=isLead()&&open;
+function ccRoster(){const d=ccDay(),st=ccStaff(),cnt={},skip=DB.staff.filter(s=>s.st==='dang'&&!needCC(s)),open=isW(d)&&!isClosed(d),edit=isLead()&&open,mark=canLeaveMark()&&open;
  st.forEach(s=>{const k=tsSt(s.id,d);cnt[k]=(cnt[k]||0)+1});
  const todo=(cnt.chua||0)+(cnt.abs||0);
  return`<div class="card"><div class="top"><h2>Chấm công ngày ${DAYN[dow(d)]} ${vd(d)}</h2><div class="acts"><div><label class="sm mu" for="cc-d">Ngày</label><input id="cc-d" type="date" data-c="ccdate" value="${d}" max="${TODAY}"></div>${edit?`<button class="btn p" data-a="ccall" ${todo?'':'disabled'}>Chấm có mặt cho ${todo} người chưa chấm</button>`:''}</div></div>
- <div class="grid">${kpi('Đúng giờ',cnt.ok||0,'ngày '+vdm(d),'ok')}${kpi('Đi muộn',cnt.late||0,'vào sau '+DB.cfg.lateAfter)}${kpi('Nghỉ phép',(cnt.leave||0)+(cnt.kl||0),'đã duyệt')}${kpi('Chưa chấm công',todo,'chưa có giờ vào',todo?'er':'')}</div>
+ <div class="grid">${kpi('Đúng giờ',cnt.ok||0,'ngày '+vdm(d),'ok')}${kpi('Đi muộn',cnt.late||0,'vào sau '+DB.cfg.lateAfter)}${kpi('Nghỉ phép',(cnt.leave||0)+(cnt.kl||0)+(cnt.half||0)+(cnt.halfkl||0),'đã duyệt hoặc đã chấm'+((cnt.half||0)+(cnt.halfkl||0)?', trong đó '+((cnt.half||0)+(cnt.halfkl||0))+' nửa ngày':''))}${kpi('Chưa chấm công',todo,'chưa có giờ vào',todo?'er':'')}</div>
  ${open?'':`<p class="note sm" style="margin:10px 0">Ngày ${vdm(d)} là ngày nghỉ, không chấm công.</p>`}
- `+tbl(['Nhân viên','Chức vụ','Giờ vào','Giờ ra','Trạng thái',''],st.map(s=>{const t=DB.ts[s.id+'|'+d],k=tsSt(s.id,d),can=edit&&k!=='leave'&&k!=='kl'&&k!=='hol';
-  return`<tr><td><b>${esc(s.n)}</b></td><td>${esc(s.pos)}</td><td>${t?t.i||'–':'–'}</td><td>${t?t.o||'–':'–'}</td><td>${k?tg(CSYM[k]?CSYM[k][1]:'–',k==='ok'?'ok':k==='late'?'wa':k==='leave'||k==='kl'?'in':k==='abs'?'er':'gy'):''}</td><td class="nw">${can&&(k==='chua'||k==='abs')?`<button class="btn s p" data-a="ccon" data-v="${s.id}|${d}" title="Ghi vào ${ccIn()}, ra ${ccOut()}">Có mặt</button> `:''}${can?`<button class="btn s" data-a="tsedit" data-v="${s.id}|${d}">Sửa giờ</button>`:''}</td></tr>`}).join(''),'Chưa có nhân sự cần chấm công.')
- +`<p class="sm mu" style="margin-top:8px">${isLead()?`Nút "Có mặt" ghi giờ vào ${ccIn()} và giờ ra ${ccOut()} (hôm nay chưa đến giờ ra thì chỉ ghi giờ vào). Nhân sự đi muộn hoặc về sớm thì bấm "Sửa giờ". Đổi giờ mặc định ở Nhân sự, Cài đặt.`:'Chỉ xem, việc chấm công do Quản lý hoặc Trưởng Trung tâm thực hiện.'}</p>`
+ `+tbl(['Nhân viên','Chức vụ','Giờ vào','Giờ ra','Trạng thái',''],st.map(s=>{const t=DB.ts[s.id+'|'+d],k=tsSt(s.id,d),lvm=tsLv(s.id,d),lrOn=DB.lr.some(l=>l.st===s.id&&l.s==='duyet'&&l.f<=d&&d<=l.t),can=edit&&!lrOn&&!lvm&&k!=='hol';
+  return`<tr><td><b>${esc(s.n)}</b></td><td>${esc(s.pos)}</td><td>${t?t.i||'–':'–'}</td><td>${t?t.o||'–':'–'}</td><td>${k?tg((CSYM[k]?CSYM[k][1]:'–')+(lvm&&lvm.l!=='full'?' ('+(lvm.l==='am'?'sáng':'chiều')+')':''),ccCls(k)):''}</td><td class="nw">${mark&&!lrOn&&k!=='hol'?`<button class="btn s" data-a="tsl" data-v="${s.id}|${d}">${lvm?'Sửa nghỉ':'Nghỉ'}</button> `:''}${can&&(k==='chua'||k==='abs')?`<button class="btn s p" data-a="ccon" data-v="${s.id}|${d}" title="Ghi vào ${ccIn()}, ra ${ccOut()}">Có mặt</button> `:''}${can?`<button class="btn s" data-a="tsedit" data-v="${s.id}|${d}">Sửa giờ</button>`:''}</td></tr>`}).join(''),'Chưa có nhân sự cần chấm công.')
+ +`<p class="sm mu" style="margin-top:8px">${isLead()?`Nút "Có mặt" ghi giờ vào ${ccIn()} và giờ ra ${ccOut()} (hôm nay chưa đến giờ ra thì chỉ ghi giờ vào). Nhân sự đi muộn hoặc về sớm thì bấm "Sửa giờ"; nhân sự nghỉ cả ngày hoặc nửa ngày thì bấm "Nghỉ". Đổi giờ mặc định ở Nhân sự, Cài đặt.`:'Chỉ xem, việc chấm công do Quản lý hoặc Trưởng Trung tâm thực hiện.'}</p>`
  +(skip.length?`<p class="sm mu" style="margin-top:6px">Không cần chấm công (trả lương theo ca 1-1): ${skip.map(s=>esc(s.n)).join(', ')}.</p>`:'')+`</div>`}
 /* ghi có mặt đủ giờ cho một người trong ngày d; chỉ khi ngày đó còn trống (chưa chấm hoặc vắng) */
 function ccMark(id,d){const s=stBy(id);if(!s||!needCC(s)||d>TODAY)return false;const k=tsSt(id,d);if(k!=='chua'&&k!=='abs')return false;
@@ -3179,18 +3191,32 @@ ACT.ccon=v=>{if(!isLead())return false;const [id,d]=v.split('|');if(!ccMark(id,d
 ACT.ccall=()=>{if(!isLead())return false;const d=ccDay();let n=0;ccStaff().forEach(s=>{if(ccMark(s.id,d))n++});if(!n)return false;toast('Đã chấm có mặt cho '+n+' người')};
 function ccMine(m){const s=stBy(U.id),p=payroll(s,m),rows=mDates(m).filter(d=>isW(d)&&d<=TODAY);
  return`<div class="card"><div class="top"><h2>${mLabel(m)}</h2><div class="acts"><button class="btn s" data-a="ccm" data-v="-1">Tháng trước</button><button class="btn s" data-a="ccm" data-v="1" ${m>=CM?'disabled':''}>Tháng sau</button></div></div><p class="mu sm" style="margin-bottom:8px">Công ${p.cong}/${DB.cfg.cc} · đi muộn ${p.late} lần · nghỉ phép ${p.leave} ngày · vắng ${p.abs} ngày</p>`
- +tbl(['Ngày','Giờ vào','Giờ ra','Trạng thái'],rows.reverse().map(d=>{const t=DB.ts[U.id+'|'+d],k=tsSt(U.id,d);return`<tr><td class="nw">${DAYS[dow(d)]} ${vdm(d)}</td><td>${t?t.i||'–':'–'}</td><td>${t?t.o||'–':'–'}</td><td>${k?tg(CSYM[k][1],k==='ok'?'ok':k==='late'?'wa':k==='leave'||k==='kl'?'in':k==='abs'?'er':'gy'):''}</td></tr>`}).join(''),'Chưa có ngày làm việc nào.')+`</div>`}
+ +tbl(['Ngày','Giờ vào','Giờ ra','Trạng thái'],rows.reverse().map(d=>{const t=DB.ts[U.id+'|'+d],k=tsSt(U.id,d);return`<tr><td class="nw">${DAYS[dow(d)]} ${vdm(d)}</td><td>${t?t.i||'–':'–'}</td><td>${t?t.o||'–':'–'}</td><td>${k?tg(CSYM[k][1],ccCls(k)):''}</td></tr>`}).join(''),'Chưa có ngày làm việc nào.')+`</div>`}
 function ccGrid(){const m=S.cc.m,ds=mDates(m),st=ccStaff(),skip=DB.staff.filter(s=>s.st==='dang'&&!needCC(s));
  return`<div class="card"><div class="top"><h2>Bảng công ${mLabel(m)}</h2><div class="acts"><button class="btn s" data-a="ccm" data-v="-1">Tháng trước</button><button class="btn s" data-a="ccm" data-v="1" ${m>=CM?'disabled':''}>Tháng sau</button><button class="btn s" data-a="ccxl">Xuất Excel</button></div></div>
  <div class="legend">${Object.entries(CSYM).map(([k,v])=>`<span><i class="sc sc-${v[0]==='·'?'q':v[0]}">${v[0]}</i> ${v[1]}</span>`).join('')}</div>
  <div class="tw"><table class="sheet"><thead><tr><th class="s1">Nhân viên</th>${ds.map(d=>`<th class="dc ${dow(d)===0?'sun':''}">${pd(d).getDate()}<br><span class="mu">${DAYS[dow(d)]}</span></th>`).join('')}<th class="r">Công</th><th class="r">Muộn</th><th class="r">Phép</th></tr></thead><tbody>
- ${st.map(s=>{const p=payroll(s,m);return`<tr><td class="s1"><b>${esc(given(s.n))}</b></td>${ds.map(d=>{const k=dow(d)===0?'':tsSt(s.id,d),sy=k?CSYM[k][0]:'';return`<td class="dc ${dow(d)===0?'sun':''}">${sy?`<button class="sc sc-${sy==='·'?'q':sy}" data-a="tsedit" data-v="${s.id}|${d}" title="${CSYM[k][1]}" ${isLead()&&d<=TODAY?'':'disabled'}>${sy}</button>`:''}</td>`}).join('')}<td class="r"><b>${p.cong}</b></td><td class="r">${p.late}</td><td class="r">${p.leave}</td></tr>`}).join('')}</tbody></table></div><p class="sm mu" style="margin-top:8px">${isLead()?'Bấm vào một ô để sửa giờ vào ra. ':'Chỉ xem, việc sửa công do Quản lý hoặc Trưởng Trung tâm thực hiện. '}Công chuẩn mỗi tháng là ${DB.cfg.cc} ngày.${skip.length?' Không cần chấm công (trả lương theo ca 1-1): '+skip.map(s=>esc(s.n)).join(', ')+'.':''}</p></div>`}
+ ${st.map(s=>{const p=payroll(s,m);return`<tr><td class="s1"><b>${esc(given(s.n))}</b></td>${ds.map(d=>{const k=dow(d)===0?'':tsSt(s.id,d),sy=k?CSYM[k][0]:'';return`<td class="dc ${dow(d)===0?'sun':''}">${sy?`<button class="sc sc-${sy==='·'?'q':sy}" data-a="tsedit" data-v="${s.id}|${d}" title="${CSYM[k][1]}" ${d<=TODAY&&(isLead()||(isVP()&&tsLv(s.id,d)))?'':'disabled'}>${sy}</button>`:''}</td>`}).join('')}<td class="r"><b>${p.cong}</b></td><td class="r">${p.late}</td><td class="r">${p.leave}</td></tr>`}).join('')}</tbody></table></div><p class="sm mu" style="margin-top:8px">${isLead()?'Bấm vào một ô để sửa giờ vào ra. ':'Chỉ xem, việc sửa công do Quản lý hoặc Trưởng Trung tâm thực hiện. '}Công chuẩn mỗi tháng là ${DB.cfg.cc} ngày.${skip.length?' Không cần chấm công (trả lương theo ca 1-1): '+skip.map(s=>esc(s.n)).join(', ')+'.':''}</p></div>`}
 ACT.ccxl=()=>{const m=S.cc.m,ds=mDates(m).filter(isW);exportXLSX('bang-cong-nhan-vien-'+m+'.xlsx',[{n:'Bảng công',rows:[['Mã','Nhân viên','Chức vụ'].concat(ds.map(d=>pd(d).getDate()+'/'+(+m.slice(5,7))),['Công','Đi muộn','Nghỉ phép','Vắng'])].concat(ccStaff().map(s=>{const p=payroll(s,m);return[s.id,s.n,s.pos].concat(ds.map(d=>{const k=tsSt(s.id,d);return k?CSYM[k][0]:''}),[p.cong,p.late,p.leave,p.abs])}))}])};
-ACT.tsedit=v=>{const [id,d]=v.split('|');if(!isLead()||!needCC(stBy(id)))return false;S.modal={t:'tse',id,d}};
+ACT.tsedit=v=>{const [id,d]=v.split('|');if(!needCC(stBy(id)))return false;if(tsLv(id,d)&&canLeaveMark()){S.modal={t:'tsl',id,d};return}if(!isLead())return false;S.modal={t:'tse',id,d}};
 MODALS.tse=()=>{const m=S.modal,t=DB.ts[m.id+'|'+m.d]||{i:'',o:''};
  return mdl('Chấm công '+sn(m.id),`<form id="tsef" class="f"><p class="mu sm">${DAYN[dow(m.d)]} ${vd(m.d)}</p><div class="f2"><div><label for="ts-i">Giờ vào</label><input id="ts-i" name="i" type="time" value="${t.i}"></div><div><label for="ts-o">Giờ ra</label><input id="ts-o" name="o" type="time" value="${t.o}"></div></div><div class="acts" style="justify-content:flex-end"><button class="btn no" type="button" data-a="tsclr">Xóa chấm công</button><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu</button></div></form>`)};
 FORM.tsef=f=>{if(!isLead())return false;const m=S.modal,i=f.elements.i.value,o=f.elements.o.value;if(!i&&!o)delete DB.ts[m.id+'|'+m.d];else DB.ts[m.id+'|'+m.d]={i,o};S.modal=null;toast('Đã cập nhật chấm công')};
 ACT.tsclr=()=>{if(!isLead())return false;delete DB.ts[S.modal.id+'|'+S.modal.d];S.modal=null;toast('Đã xóa chấm công')};
+/* --- chấm công nghỉ cả ngày, nửa ngày --- */
+ACT.tsl=v=>{const [id,d]=v.split('|');if(!canLeaveMark()||!needCC(stBy(id))||d>TODAY)return false;S.modal={t:'tsl',id,d}};
+MODALS.tsl=()=>{const m=S.modal,s=stBy(m.id);if(!s||!canLeaveMark()){S.modal=null;return''}const cur=tsLv(m.id,m.d),l=cur?cur.l:'full';
+ return mdl('Chấm công nghỉ · '+s.n,`<form id="tslf" class="f"><p class="mu sm" style="margin:0">${DAYN[dow(m.d)]} ${vd(m.d)}</p>
+ <div><span class="lbl">Thời gian nghỉ</span>${[['full','Nghỉ cả ngày'],['am','Nghỉ nửa ngày sáng (đi làm từ '+CC_PM_START+')'],['pm','Nghỉ nửa ngày chiều (làm đến '+CC_AM_END+')']].map(([v,t])=>`<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="radio" name="l" value="${v}" ${l===v?'checked':''}> ${t}</label>`).join('')}</div>
+ <div><label for="tl-k">Loại nghỉ</label><select id="tl-k" name="lk">${opts([['','Nghỉ có phép (hưởng lương)'],['1','Nghỉ không lương']],cur&&cur.lk?'1':'')}</select></div>
+ <p class="sm mu" style="margin:0">Nghỉ có phép: cả ngày hưởng đủ công, nửa ngày vẫn hưởng đủ công của ngày đó. Nghỉ không lương: cả ngày không tính công, nửa ngày tính nửa công. Các buổi 1-1 rơi vào giờ nghỉ cần phân giáo viên dạy thay ở mục Dạy thay.</p>
+ <div class="acts" style="justify-content:flex-end">${cur?'<button class="btn no" type="button" data-a="tslclr">Bỏ nghỉ</button>':''}<button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu</button></div></form>`)};
+FORM.tslf=f=>{if(!canLeaveMark())return false;const m=S.modal,s=stBy(m.id);if(!s||!needCC(s)||m.d>TODAY)return false;
+ const l=f.elements.l.value,past=m.d<TODAY,now=hm(),r={i:'',o:'',l};if(f.elements.lk.value==='1')r.lk=1;
+ if(l==='am'){if(past||now>=CC_PM_START)r.i=CC_PM_START;if(past||now>=ccOut())r.o=ccOut()}
+ else if(l==='pm'){if(past||now>=ccIn())r.i=ccIn();if(past||now>=CC_AM_END)r.o=CC_AM_END}
+ DB.ts[m.id+'|'+m.d]=r;S.modal=null;toast('Đã chấm công '+LVT[l].toLowerCase()+' cho '+given(s.n))};
+ACT.tslclr=()=>{if(!canLeaveMark())return false;delete DB.ts[S.modal.id+'|'+S.modal.d];S.modal=null;toast('Đã bỏ nghỉ, chấm công lại cho ngày này')};
 /* --- đơn nghỉ phép --- */
 function ccLeave(){const rows=DB.lr.filter(l=>seesAll()||l.st===U.id).sort((a,b)=>a.s===b.s?(a.f<b.f?1:-1):a.s==='cho'?-1:1);
  return`<div class="card">`+tbl(['Nhân viên','Loại','Thời gian','Số ngày','Lý do','Trạng thái',''],rows.map(l=>`<tr><td><b>${esc(sn(l.st))}</b></td><td>${LRT[l.type]}</td><td class="nw">${vdm(l.f)}${l.t!==l.f?' đến '+vdm(l.t):''}</td><td>${lrDays(l)}</td><td>${esc(l.why)}</td><td>${tg(LRS[l.s][0],LRS[l.s][1])}</td><td class="nw">${l.s==='cho'&&isLead()?`<button class="btn s p" data-a="lrok" data-v="${l.id}">Duyệt</button> <button class="btn s no" data-a="lrno" data-v="${l.id}">Từ chối</button>`:l.s==='cho'&&l.st===U.id?`<button class="btn s no" data-a="lrdel" data-v="${l.id}">Hủy đơn</button>`:''}</td></tr>`).join(''),'Chưa có đơn nghỉ nào.')+`<p class="note sm" style="margin-top:10px">Khi duyệt đơn nghỉ của giáo viên, các buổi 1-1 rơi vào thời gian nghỉ tự động được ghi "Trung tâm/GV nghỉ" và tạo yêu cầu học bù cho từng bé.${feeTx(' Nếu gia đình không nhận học bù, trung tâm hoàn phí buổi đó theo quy định.')}</p></div>`}
@@ -4202,7 +4228,7 @@ function cpParent(){const ks=myKids();
  +tabsH([['tq','Tổng quan'],['tb','Tiến bộ của bé'],['ch','Chuyên cần và học phí'],['bc','Báo cáo'],['vd','Ảnh và video của bé'],['ref','Tài liệu tham khảo'],['tri','Góc tri ân']],c.tab,'cptab')+(c.tab==='tq'?cpHome(k):c.tab==='tb'?progView(k,{parent:true}):c.tab==='ch'?cpMonth(k):c.tab==='bc'?cpReports(k):c.tab==='ref'?refParent():c.tab==='tri'?triParent():mediaParent(k.id))}
 function cpHome(k){const up=upcoming(k,6),last=DB.sess.filter(s=>s.k===k.id&&s.note).sort((a,b)=>a.date<b.date?1:-1)[0],b=balance(k.id);
  return`<div class="grid">${kpi('Học phí',b>0?fmt(b):b<0?fmt(-b):'Đủ',b>0?'còn phải đóng':b<0?'dư có, trừ vào tháng sau':'đã đóng đủ',b>0?'er':'ok')}${kpi('Thông báo mới',unread(),'chưa đọc')}${kpi('Báo cáo đã nhận',DB.rp.filter(r=>r.hs===k.id&&r.s==='gui').length,'từ giáo viên')}</div>`
- +`<div class="two"><div class="card"><h2>Lịch học sắp tới</h2>${up.length?up.map(x=>`<div class="rw"><span><b>${DAYS[dow(x.d)]} ${vdm(x.d)}</b> · ${x.kind==='bt'?'Bán trú '+esc((grBy(x.sid)||{}).n||'')+' · '+BTLB:x.kind==='bu'?'Học bù '+slotLb(x.slot):'Can thiệp 1-1 '+slotLb(x.slot)}</span></div>`).join(''):'<p class="empty">Chưa có lịch trong 10 ngày tới.</p>'}<div class="acts" style="margin-top:10px"><button class="btn s" data-a="cplh" data-v="${k.id}">Lịch học và giờ 1-1</button><button class="btn s" data-a="nav" data-v="hb">Đăng ký học bù</button></div></div>
+ +`<div class="two"><div class="card"><h2>Lịch học sắp tới</h2>${up.length?up.map(x=>`<div class="rw"><span><b>${DAYS[dow(x.d)]} ${vdm(x.d)}</b> · ${x.kind==='bt'?'Bán trú '+esc((grBy(x.sid)||{}).n||'')+' · '+BTLB:x.kind==='bu'?'Học bù '+slotLb(x.slot):'Can thiệp 1-1 '+slotLb(x.slot)}${(sb=>sb?' · '+tg('Giáo viên dạy thay','y')+' '+esc(given(sn(sb.gv))):'')(x.kind==='bt'?null:subOf(x.d,x.sid))}</span></div>`).join(''):'<p class="empty">Chưa có lịch trong 10 ngày tới.</p>'}<div class="acts" style="margin-top:10px"><button class="btn s" data-a="cplh" data-v="${k.id}">Lịch học và giờ 1-1</button><button class="btn s" data-a="nav" data-v="hb">Đăng ký học bù</button></div></div>
  <div class="card"><h2>Nhận xét buổi gần nhất</h2>${last?`<p class="mu sm">${vd(last.date)}</p><p>${esc(last.note)}</p>`:'<p class="empty">Chưa có nhận xét.</p>'}</div></div>`
  +(k.gr?`<div class="card"><h2>Thực đơn bán trú ${menuDayLb()}</h2>${menuMini(menuDay())}<div class="acts" style="margin-top:10px"><button class="btn s" data-a="nav" data-v="tn">Thực đơn cả tuần</button></div></div>`:'')
  +`<div class="card"><h2>Tiến bộ của bé</h2>${progMini(k)}</div>`}
@@ -4804,7 +4830,12 @@ ACT.videl=id=>{const v=vioOf(id);if(!v||!(isTT()||(isQL()&&v.s==='cho'&&v.st!==U
    Buổi 1-1 hằng tuần không đổi; chỉ ngày d đổi người dạy. Giáo viên dạy thay điểm danh, ghi buổi và nhận tiền công theo ca của ngày đó.
    Lịch trống của giáo viên trong một ngày tính từ lịch dạy, ngày nghỉ phép, lớp bán trú; buổi của bé vắng (ABS_ATT) cũng được coi là giờ trống. */
 const canSub=()=>isLead()||isVP();
-const dsLeave=(gv,d)=>DB.lr.find(l=>l.st===gv&&l.s==='duyet'&&l.f<=d&&d<=l.t)||null;
+/* giáo viên nghỉ vào ngày d: đơn nghỉ đã duyệt, hoặc chấm công nghỉ cả ngày; chấm công nghỉ nửa ngày chỉ tính khi truyền giờ slot rơi vào nửa ngày nghỉ */
+function dsLeave(gv,d,slot){const l=DB.lr.find(x=>x.st===gv&&x.s==='duyet'&&x.f<=d&&d<=x.t);if(l)return l;
+ const r=tsLv(gv,d);if(!r)return null;
+ if(r.l==='full'||(slot&&(r.l==='am'?slot<CC_AM_END:slot>=CC_AM_END)))return{type:r.lk?'kl':'phep',half:r.l==='full'?'':r.l,ts:1};
+ return null}
+const dsLvT=lv=>'Nghỉ '+(lv.half==='am'?'nửa ngày sáng':lv.half==='pm'?'nửa ngày chiều':lv.type==='kl'?'không lương':'có phép');
 const dsLesson=sid=>DB.lich.find(x=>x.id===sid);
 const dsLessonsOn=d=>DB.lich.filter(l=>(l.type==='11'&&l.day===dow(d))||(l.type==='bu'&&l.date===d));
 const dsTeachers=()=>DB.staff.filter(s=>s.st==='dang'&&isTeacher(s));
@@ -4812,7 +4843,7 @@ const dsTeachers=()=>DB.staff.filter(s=>s.st==='dang'&&isTeacher(s));
 function dsWhy(gv,d,slot,sid){
  const t=stBy(gv);if(!t||t.st!=='dang'||!isTeacher(t))return'Không phải giáo viên đang làm việc';
  if(isClosed(d))return'Trung tâm nghỉ ngày này';
- if(dsLeave(gv,d))return'Đang nghỉ phép hoặc nghỉ ốm';
+ if(dsLeave(gv,d,slot))return'Đang nghỉ (phép, ốm hoặc nửa ngày)';
  const w=dow(d);if(DB.groups.some(g=>grHas(g,gv)&&grOpen(g,w)))return'Đang phụ trách lớp bán trú';
  for(const l of dsLessonsOn(d)){if(l.id===sid||!l.slot||!slotOver(l.slot,slot)||effGv(l,d)!==gv)continue;
   if(ABS_ATT.includes(DB.att[attKey(d,l.id,l.hs)]))continue;   /* bé vắng: giáo viên rảnh */
@@ -4826,7 +4857,7 @@ function dsRanges(gv,d){const out=[];let cur=null;
  SLOTS.forEach(s=>{if(!dsWhy(gv,d,s,'')){if(cur)cur.e=s;else cur={b:s,e:s}}else if(cur){out.push(cur);cur=null}});
  if(cur)out.push(cur);return out.map(r=>r.b===r.e?slotLb(r.b):r.b+'–'+slotEnd(r.e))}
 /* buổi cần người dạy thay trong ngày d: giáo viên gốc có đơn nghỉ đã duyệt */
-const dsNeed=d=>dayList(d).filter(s=>(s.kind==='11'||s.kind==='bu')&&!s.sub&&(l=>l&&dsLeave(l.gv,d))(dsLesson(s.sid)));
+const dsNeed=d=>dayList(d).filter(s=>(s.kind==='11'||s.kind==='bu')&&!s.sub&&(l=>l&&dsLeave(l.gv,d,l.slot))(dsLesson(s.sid)));
 function dsNeedCount(){let n=0;for(let i=0;i<7;i++){const d=addD(TODAY,i);if(isSch(d))n+=dsNeed(d).length}return n}
 const dsDef=()=>({tab:'cv',d:isSch(WD)&&WD>=TODAY?WD:TODAY,all:0,q:''});
 
@@ -4849,7 +4880,7 @@ function dsKidCard(k){if(!canSub())return'';const n=(DB.sub||[]).filter(s=>s.hs=
 
 function dsLessonTab(c){
  const q=ascii(c.q||''),rows=dayList(c.d).filter(s=>s.kind==='11'||s.kind==='bu').map(s=>({s,l:dsLesson(s.sid),k:s.kids[0]})).filter(r=>r.l&&r.k)
-  .filter(r=>!q||ascii(r.k.n+' '+kcode(r.k)).includes(q)).map(r=>Object.assign(r,{lv:dsLeave(r.l.gv,c.d)}))
+  .filter(r=>!q||ascii(r.k.n+' '+kcode(r.k)).includes(q)).map(r=>Object.assign(r,{lv:dsLeave(r.l.gv,c.d,r.l.slot)}))
   .filter(r=>c.all||q||r.lv||r.s.sub).sort((a,b)=>(!!b.lv-!!a.lv)||(a.s.slot<b.s.slot?-1:1));
  const need=rows.filter(r=>r.lv&&!r.s.sub).length;
  const ctl=`<div class="card"><div class="top" style="gap:10px;margin:0"><p style="margin:0">${need?`<b>${need}</b> buổi chưa có người dạy thay`:'Không có buổi nào đang chờ người dạy thay'}${c.all||q?'':' · chỉ hiện buổi của giáo viên nghỉ và buổi đã có người dạy thay'}</p>
@@ -4858,7 +4889,7 @@ function dsLessonTab(c){
  return ctl+`<div class="card tbl"><table><thead><tr><th>Giờ</th><th>Học sinh</th><th>Giáo viên của bé</th><th>Dạy thay</th><th></th></tr></thead><tbody>`
  +rows.map(r=>{const sb=r.s.sub,ab=ABS_ATT.includes(DB.att[attKey(c.d,r.s.sid,r.k.id)])&&!sb&&!r.lv;
   return`<tr><td>${slotLb(r.l.slot)}<br><span class="sm mu">${r.l.type==='bu'?'Học bù':'1-1'}</span></td><td><b>${esc(r.k.n)}</b><br><span class="sm mu">${esc(kcode(r.k))}</span></td>
-  <td>${esc(sn(r.l.gv))}${r.lv?'<br>'+tg('Nghỉ '+(r.lv.type==='kl'?'không lương':'có phép'),'wa'):''}${ab?'<br>'+tg('Bé vắng','gy'):''}</td>
+  <td>${esc(sn(r.l.gv))}${r.lv?'<br>'+tg(dsLvT(r.lv),'wa'):''}${ab?'<br>'+tg('Bé vắng','gy'):''}</td>
   <td>${sb?`<b>${esc(sn(sb.gv))}</b>${sb.n?'<br><span class="sm mu">'+esc(sb.n)+'</span>':''}`:(r.lv?tg('Chưa có người dạy thay','er'):'<span class="mu">—</span>')}</td>
   <td style="white-space:nowrap"><button class="btn s ${sb||!r.lv?'':'p'}" data-a="dsopen" data-v="${esc(c.d+'|'+r.s.sid)}">${sb?'Đổi người':'Phân công'}</button>${sb?` <button class="btn s no" data-a="dsdel" data-v="${esc(c.d+'|'+r.s.sid)}">Bỏ dạy thay</button>`:''}</td></tr>`}).join('')+`</tbody></table></div>`}
 
@@ -4866,13 +4897,13 @@ function dsFreeTab(c){
  if(isClosed(c.d))return'<p class="empty">Trung tâm nghỉ ngày này.</p>';
  const tc=dsTeachers().map(t=>{const lv=dsLeave(t.id,c.d),w=dow(c.d),gr=DB.groups.some(g=>grHas(g,t.id)&&grOpen(g,w)),
    own=dsLessonsOn(c.d).filter(l=>effGv(l,c.d)===t.id).sort((a,b)=>a.slot<b.slot?-1:1),fr=dsFreed(t.id,c.d),rg=lv||gr?[]:dsRanges(t.id,c.d),subs=(DB.sub||[]).filter(x=>x.d===c.d&&x.gv===t.id);
-   return{t,lv,gr,own,fr,rg,subs}}).sort((a,b)=>((!!a.lv||a.gr)-(!!b.lv||b.gr))||(b.rg.length-a.rg.length)||(a.t.n<b.t.n?-1:1));
+   return{t,lv,hv:lv?null:tsLv(t.id,c.d),gr,own,fr,rg,subs}}).sort((a,b)=>((!!a.lv||a.gr)-(!!b.lv||b.gr))||(b.rg.length-a.rg.length)||(a.t.n<b.t.n?-1:1));
  const q=ascii(c.q||''),list=q?tc.filter(x=>ascii(x.t.n).includes(q)):tc,n=tc.filter(x=>!x.lv&&!x.gr&&x.rg.length).length;
  const ch=(a,b)=>`<span class="tag ${a}" style="margin:2px 4px 2px 0;display:inline-block">${b}</span>`;
  return`<div class="card"><p style="margin:0"><b>${n}</b> giáo viên còn giờ trống ngày ${vdm(c.d)}. Giờ có bé vắng (nghỉ P, KP, nhập viện, Trung tâm nghỉ) được tính là giờ trống.</p></div>
  <div class="card tbl"><table><thead><tr><th>Giáo viên</th><th>Giờ trống</th><th>Buổi có bé vắng (giờ rảnh)</th><th>Đang dạy</th></tr></thead><tbody>`
  +list.map(x=>{const busy=x.own.filter(l=>!ABS_ATT.includes(DB.att[attKey(c.d,l.id,l.hs)]));
-  return`<tr><td><b>${esc(tName(x.t))}</b>${x.lv?'<br>'+tg('Nghỉ '+(x.lv.type==='kl'?'không lương':'có phép'),'wa'):''}${x.gr?'<br>'+tg('Lớp bán trú','in'):''}</td>
+  return`<tr><td><b>${esc(tName(x.t))}</b>${x.lv?'<br>'+tg(dsLvT(x.lv),'wa'):''}${!x.lv&&x.hv?'<br>'+tg(LVT[x.hv.l],'wa'):''}${x.gr?'<br>'+tg('Lớp bán trú','in'):''}</td>
   <td>${x.lv||x.gr?'<span class="mu">Không dạy thay được</span>':x.rg.length?x.rg.map(r=>ch('ok',esc(r))).join(''):'<span class="mu">Hết giờ trống</span>'}</td>
   <td>${x.fr.length?x.fr.map(l=>ch('y',esc(l.slot+' · '+given(kn(l.hs))+' ('+AC[DB.att[attKey(c.d,l.id,l.hs)]]+')'))).join(''):'<span class="mu">—</span>'}</td>
   <td>${busy.length?busy.map(l=>ch('gy',esc(l.slot+' · '+given(kn(l.hs))))).join(''):'<span class="mu">—</span>'}${x.subs.map(s=>ch('in','Dạy thay '+esc(dsLesson(s.sid)?dsLesson(s.sid).slot:'')+' · '+esc(given(kn(s.hs))))).join('')}</td></tr>`}).join('')+`</tbody></table></div>
@@ -4883,7 +4914,7 @@ ACT.dsopen=v=>{if(!canSub())return false;const [d,sid]=v.split('|'),l=dsLesson(s
 function dsOpts(d,l){const o=dsTeachers().filter(t=>t.id!==l.gv).map(t=>{const why=dsWhy(t.id,d,l.slot,l.id),fr=why?[]:dsFreedAt(t.id,d,l.slot,l.id);return{t,why,fr}})
   .sort((a,b)=>(!!a.why-!!b.why)||(b.fr.length-a.fr.length)||(a.t.n<b.t.n?-1:1));return o}
 MODALS.dsa=()=>{const m=S.modal,l=dsLesson(m.sid),k=l&&kidBy(l.hs);if(!l||!k||!canSub()){S.modal=null;return''}
- const cur=subOf(m.d,m.sid),o=dsOpts(m.d,l),free=o.filter(x=>!x.why),lv=dsLeave(l.gv,m.d);
+ const cur=subOf(m.d,m.sid),o=dsOpts(m.d,l),free=o.filter(x=>!x.why),lv=dsLeave(l.gv,m.d,l.slot);
  return mdl('Phân giáo viên dạy thay',`<p class="sm" style="margin-bottom:8px"><b>${esc(k.n)}</b> · ${esc(kcode(k))}<br>${DAYN[dow(m.d)]} ${vd(m.d)} · ${slotLb(l.slot)} · ${l.type==='bu'?'Học bù':'1-1'}<br><span class="mu">Giáo viên của bé: ${esc(sn(l.gv))}${lv?' (đang nghỉ)':''}</span></p>
  <form id="dsaf" class="f"><div><label for="ds-g">Giáo viên dạy thay</label><select id="ds-g" name="gv"><option value="">Chọn giáo viên</option>${o.map(x=>`<option value="${x.t.id}" ${x.why?'disabled':''} ${cur&&cur.gv===x.t.id?'selected':''}>${esc(tName(x.t))} · ${x.why?esc(x.why):x.fr.length?'rảnh vì '+esc(given(kn(x.fr[0].hs)))+' nghỉ':'rảnh'}</option>`).join('')}</select></div>
  ${l.type==='11'?`<div><label for="ds-t">Dạy thay đến hết ngày (cùng thứ mỗi tuần, để trống nếu chỉ ngày này)</label><input id="ds-t" name="to" type="date" min="${m.d}" value=""></div>`:''}
@@ -4894,11 +4925,11 @@ MODALS.dsa=()=>{const m=S.modal,l=dsLesson(m.sid),k=l&&kidBy(l.hs);if(!l||!k||!c
 function dsApply(l,d,gv,n){
  DB.sub=(DB.sub||[]).filter(x=>!(x.d===d&&x.sid===l.id));
  DB.sub.push({id:'sb'+uid(),d,sid:l.id,hs:l.hs,gv,og:l.gv,by:U.id,at:TODAY,n:n||''});
- if(dsLeave(l.gv,d)){const key=attKey(d,l.id,l.hs);if(DB.att[key]==='tt')delete DB.att[key];
+ if(dsLeave(l.gv,d,l.slot)){const key=attKey(d,l.id,l.hs);if(DB.att[key]==='tt')delete DB.att[key];
   DB.mk.forEach(r=>{if(r.hs===l.hs&&r.from.d===d&&r.from.sid===l.id&&r.why==='Giáo viên nghỉ phép'&&r.s==='dk'&&!(r.props||[]).length){r.s='huy';r.dsub=1;r.log.push({at:TODAY,by:U.id,tx:'Đã phân giáo viên dạy thay, không cần học bù'})}})}}
 function dsUndo(l,d){
  DB.sub=(DB.sub||[]).filter(x=>!(x.d===d&&x.sid===l.id));
- if(dsLeave(l.gv,d)){const key=attKey(d,l.id,l.hs);if(!DB.att[key])DB.att[key]='tt';
+ if(dsLeave(l.gv,d,l.slot)){const key=attKey(d,l.id,l.hs);if(!DB.att[key]&&DB.lr.some(x=>x.st===l.gv&&x.s==='duyet'&&x.f<=d&&d<=x.t))DB.att[key]='tt';
   DB.mk.forEach(r=>{if(r.dsub&&r.hs===l.hs&&r.from.d===d&&r.from.sid===l.id&&r.s==='huy'){r.s='dk';delete r.dsub;r.log.push({at:TODAY,by:U.id,tx:'Bỏ dạy thay, mở lại yêu cầu học bù'})}})}}
 FORM.dsaf=f=>{const m=S.modal,l=dsLesson(m.sid),gv=f.elements.gv.value,to=f.elements.to?f.elements.to.value:'',n=String(f.elements.n.value||'').trim().slice(0,80);
  if(!canSub()||!l||!kidBy(l.hs))return false;

@@ -153,7 +153,10 @@ function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))retur
 const needCC=s=>!s||s.cc!==false,ccOf=pay=>!!pay&&(pay.mode!=='buoi'||(+pay.rateBt||0)>0);
 function tsSt(id,d){const l=DB.lr.find(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t);if(l)return l.type==='kl'?'kl':'leave';
  if(!needCC(stBy(id)))return isW(d)&&isClosed(d)?'hol':'';
- const r=DB.ts[id+'|'+d];if(r&&r.i)return r.i>DB.cfg.lateAfter?'late':'ok';
+ const r=DB.ts[id+'|'+d];
+ if(r&&r.l==='full')return r.lk?'kl':'leave';   /* chấm công nghỉ cả ngày (l:'full'; lk:1 là không lương) */
+ if(r&&(r.l==='am'||r.l==='pm'))return r.lk?'halfkl':'half';   /* nghỉ nửa ngày sáng (am) hoặc chiều (pm): làm nửa còn lại */
+ if(r&&r.i)return r.i>DB.cfg.lateAfter?'late':'ok';
  if(isW(d)&&isClosed(d))return 'hol';
  if(d>TODAY||!isW(d))return '';return d>=WD?'chua':'abs'}
 /* Tỉ lệ lương một ca 1-1 theo tình trạng của bé: có mặt và dạy bù trả đủ 100%; bé nghỉ không phép được 50%; các trường hợp còn lại do Trung tâm đặt */
@@ -168,9 +171,10 @@ function payroll(s,m){
  const myGr=DB.groups.filter(g=>grHas(g,s.id)),open6=myGr.some(g=>grOpen(g,6));
  let cong=0,late=0,btd=0,leave=0,abs=0,hol=0;
  const ss={cm:0,kp:0,p:0,tt:0,bv:0,bu:0,none:0},cc=needCC(s);
- for(const d of dts){const t=tsSt(s.id,d),w=dow(d),worked=cc?(t==='ok'||t==='late'):t==='';   /* trả theo ca: không chấm công, ngày làm việc thường (không nghỉ phép, không nghỉ lễ) coi là có mặt để đếm ca chưa điểm danh */
+ for(const d of dts){const t=tsSt(s.id,d),w=dow(d),worked=cc?(t==='ok'||t==='late'||t==='half'||t==='halfkl'):t==='';   /* trả theo ca: không chấm công, ngày làm việc thường (không nghỉ phép, không nghỉ lễ) coi là có mặt để đếm ca chưa điểm danh */
   if(!cc){if(t==='hol')continue}
-  else if(worked){cong++;if(t==='late')late++;if(myGr.length&&(w<=5||(w===6&&open6)))btd++}
+  else if(worked){cong+=t==='halfkl'?.5:1;if(t==='late')late++;if(t==='half')leave+=.5;if(t==='halfkl')abs+=.5;   /* nửa ngày có phép hưởng đủ công; nửa ngày không lương chỉ tính nửa công */
+  if(myGr.length&&(w<=5||(w===6&&open6)))btd++}
   else if(t==='leave'){cong++;leave++}else if(t==='hol'){cong++;hol++;continue}   /* ngày nghỉ lễ hưởng nguyên lương ngày công, không có ca dạy */
   else if(t==='abs'||t==='kl')abs++;
   /* ca 1-1 tính theo điểm danh của bé trong ca đó */
