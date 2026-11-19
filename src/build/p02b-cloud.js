@@ -232,7 +232,7 @@ async function cloudPull(){
    Object.keys(pay).forEach(id=>{const s=DB.staff.find(y=>y.id===id);if(s)s.pay=pay[id]});
    CFG_MONEY.forEach(k=>{if(cfgm[k]!=null)DB.cfg[k]=cfgm[k]})}
   /* mục chung (tài liệu tham khảo, tri ân) đã bị xóa hoặc gỡ: máy chủ gửi danh sách đang đăng, bỏ những mục không còn */
-  if(ph&&got&&got.live)['ref','tri'].forEach(c=>{const keep=new Set(got.live[c]||[]),a=DB[c]||[],n=a.filter(x=>keep.has(x.id));
+  if(ph&&got&&got.live)['ref','tri','sub'].forEach(c=>{const keep=new Set(got.live[c]||[]),a=DB[c]||[],n=a.filter(x=>keep.has(x.id));
    if(n.length!==a.length){a.filter(x=>!keep.has(x.id)).forEach(x=>CLD.snap.delete('records|'+c+'|'+x.id));DB[c]=n;any=true}});
   if(any){const nf=cflat(DB,withM);changed.forEach(k=>{if(nf.has(k))CLD.snap.set(k,nf.get(k).s)});softRender()}}
  catch(e){}

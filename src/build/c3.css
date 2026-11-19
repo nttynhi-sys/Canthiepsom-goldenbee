@@ -368,3 +368,6 @@ th{color:color-mix(in srgb,#00acc1 62%,var(--tx));background:color-mix(in srgb,#
 .lgr{background:linear-gradient(180deg,var(--card),color-mix(in srgb,#00acc1 10%,var(--card)))}
 .lgr .btn.p{background:linear-gradient(135deg,#0a8590,#047781);border-color:#047781;color:#fff;box-shadow:0 4px 12px rgba(4,119,129,.28)}
 .lgr input:focus{border-color:#047781;box-shadow:0 0 0 3px rgba(244,209,51,.45);outline:0}
+
+/* ký hiệu chấm công nghỉ nửa ngày: N có phép, Q không lương */
+.sc-N{background:var(--ins);color:var(--in)}.sc-Q{background:var(--ers);color:var(--er)}
