@@ -124,11 +124,14 @@ const balance=h=>DB.lg.filter(e=>e.hs===h).reduce((s,e)=>s+LGK[e.kind][2]*e.amt,
 /* --- Lịch học --- */
 function lichAt(w,slot,date){return DB.lich.filter(l=>l.slot===slot&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)))}
 /* các buổi chồng giờ với ca bắt đầu lúc `slot` (dùng để kiểm tra trùng khi giờ bắt đầu chọn tự do) */
-function lichNear(w,slot,date){return DB.lich.filter(l=>l.slot&&slotOver(l.slot,slot)&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)))}
+function lichNear(w,slot,date){return DB.lich.filter(l=>l.slot&&slotOver(date?effSlot(l,date):l.slot,slot)&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)))}
 /* --- Dạy thay: bản ghi DB.sub (collection sub) = {id,d,sid,hs,gv,og,by,at,n}: ngày d, buổi sid (mã trong DB.lich) do giáo viên gv dạy thay giáo viên gốc og. Buổi 1-1 hằng tuần không đổi, chỉ riêng ngày d đổi người dạy. --- */
 const ABS_ATT=['p','kp','tt','bv'];   /* bé vắng: giáo viên của buổi đó rảnh trong khung giờ này */
 const subOf=(d,sid)=>(DB.sub||[]).find(s=>s.d===d&&s.sid===sid)||null;
 const effGv=(l,d)=>{const s=subOf(d,l.id);return s?s.gv:l.gv};
+/* giờ học của buổi sid ngày d: dạy thay có thể đổi giờ riêng ngày đó cho hợp giáo viên dạy thay (sub.slot); ca hằng tuần không đổi. Học phí vẫn tính theo giờ gốc. */
+const effSlot=(l,d)=>{const s=subOf(d,l.id);return s&&s.slot?s.slot:l.slot};
+const sbSlot=(d,sid,slot)=>{const s=subOf(d,sid);return s&&s.slot?s.slot:slot};
 function conflict(x){const w=x.date?dow(x.date):x.day;
  if(x.date&&isClosed(x.date))return 'Trung tâm nghỉ ngày này ('+holOf(x.date).n+')';
  if(DB.groups.some(g=>grHas(g,x.gv)&&grOpen(g,w)))return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
@@ -144,7 +147,7 @@ function freeSlots(gv,hs,from,n){const out=[];let d=from;
 function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))return out;
  DB.lich.forEach(l=>{if(l.type==='11'&&l.day===w&&(!first[l.hs]||l.slot<first[l.hs].slot))first[l.hs]=l});
  DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);
-  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:effGv(l,date),sub:subOf(date,l.id),slot:l.slot,kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
+  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(effSlot(l,date)),gv:effGv(l,date),sub:subOf(date,l.id),slot:effSlot(l,date),kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
  DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,kids:ks})});
  return out.sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0)}
 

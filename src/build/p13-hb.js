@@ -89,7 +89,7 @@ FORM.mkfillf=f=>{const m=S.modal,l0=DB.lich.find(x=>x.id===m.sid),v=f.elements.o
  let rid;
  if(v.startsWith('r|')){const r=DB.mk.find(x=>x.id===v.slice(2));if(!r||!canKid(r.hs)){m.err='Không còn yêu cầu học bù này.';return}rid=r.id}
  else{const [,d0,sid0,h0]=v.split('|');if(!canKid(h0)){m.err='Bạn chưa phụ trách bé này.';return}rid=mkMake(h0,d0,sid0,AC[DB.att[attKey(d0,sid0,h0)]]||'Nghỉ')}
- const r=DB.mk.find(x=>x.id===rid),x={id:'lb'+uid(),type:'bu',date:m.d,slot:l0.slot,gv:effGv(l0,m.d),hs:r.hs,mk:rid},
+ const r=DB.mk.find(x=>x.id===rid),x={id:'lb'+uid(),type:'bu',date:m.d,slot:effSlot(l0,m.d),gv:effGv(l0,m.d),hs:r.hs,mk:rid},
   c=conflict(Object.assign({},x,{id:l0.id}));   /* khung giờ của bé vắng được trống ra nên bỏ buổi gốc khỏi kiểm tra trùng */
  if(c){m.err=c+'.';if(!v.startsWith('r|'))DB.mk=DB.mk.filter(y=>y.id!==rid);return}
  DB.lich=DB.lich.filter(l=>l.mk!==rid);DB.lich.push(x);r.props=[{id:'p0',d:m.d,slot:x.slot,gv:x.gv,by:'gv'}];r.pick='p0';r.s='xn';

@@ -125,7 +125,7 @@ function lhParent(){const ks=myKids().filter(k=>k.st==='dang');
  const k=kidBy(h.kid),g=btOf(k).length?grBy(k.gr):null,ls=DB.lich.filter(l=>l.type==='11'&&l.hs===k.id);
  const days=[];for(let i=0;i<14;i++){const d=addD(TODAY,i);if(!isSch(d))continue;const xs=sched(k,d.slice(0,7)).filter(x=>x.d===d).sort((a,b)=>a.slot<b.slot?-1:1);if(xs.length)days.push({d,xs})}
  const line=(d,x)=>{const l=x.kind==='bt'?null:DB.lich.find(y=>y.id===x.sid),c=DB.att[d+'|'+x.sid+'|'+k.id];
-  const what=x.kind==='bt'?'Bán trú '+esc(g?g.n:'')+' · '+BTLB:(x.kind==='bu'?'Học bù ':'Can thiệp 1-1 ')+slotLb(x.slot)+(l?' · '+esc(given(sn(effGv(l,d))))+(subOf(d,l.id)?' '+tg('Giáo viên dạy thay','y'):''):'');
+  const what=x.kind==='bt'?'Bán trú '+esc(g?g.n:'')+' · '+BTLB:(x.kind==='bu'?'Học bù ':'Can thiệp 1-1 ')+slotLb(sbSlot(d,x.sid,x.slot))+(l?' · '+esc(given(sn(effGv(l,d))))+(subOf(d,l.id)?' '+tg('Giáo viên dạy thay','y')+(subOf(d,l.id).slot?' '+tg('Đổi giờ','wa'):''):''):'');
   return`<div class="rw"><span>${what}</span>${c?tg(AC[c],c==='cm'?'ok':c==='kp'?'er':c==='p'?'wa':'in'):''}</div>`};
  return head('Lịch học của bé','Giờ học 1-1 và giờ bán trú của bé trong tuần')+(ks.length>1?tabsH(ks.map(x=>[x.id,given(x.n)]),h.kid,'lhk'):'')
  +`<div class="grid"><div class="card kpi"><div class="mu sm">Học 1-1</div><div class="big">${ls.length} buổi</div><div class="sm mu">mỗi tuần${ls.length?', '+esc(kTs(k).length?kGiven(k):given(mainGV(k))):''}</div></div><div class="card kpi"><div class="mu sm">Bán trú</div><div class="big">${g?esc(g.n):'Không'}</div><div class="sm mu">${g?BTLB+', '+esc(dayTx(btOf(k))):'Bé chưa đăng ký bán trú'}</div></div></div>`
