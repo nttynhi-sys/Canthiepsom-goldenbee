@@ -233,7 +233,7 @@ function hsSchedule(k){const lead=isLead(),m=S.modal,bd=btOf(k),g=grBy(k.gr),$$=
    <p class="sm mu">Mỗi bé chọn ngày riêng: có bé học T2–T7, có bé chỉ vài buổi mỗi tuần. Hệ thống kiểm tra trùng giáo viên và bé ở từng ngày và chỉ thêm những ngày còn trống.</p>
    <div class="acts" style="justify-content:flex-end"><button class="btn p" type="submit">Thêm các buổi</button></div></form>`:'')+`</div>`;
  const tt=`<div class="card"><h2>Thời khóa biểu của ${esc(given(k.n))}</h2>${kidWeek(k)}</div>`;
- return bt+one+kprCard(k)+tt}
+ return bt+one+dsKidCard(k)+kprCard(k)+tt}
 /* Giá riêng của bé: chỉ Trưởng TT và Văn phòng thấy và sửa (là dữ liệu tiền, collection kpr của money_records, khóa = mã bé). Gồm giá bán trú 1 ngày (khóa bt) và giá một buổi theo từng loại 1-1 (khóa = mã loại); bỏ trống = giá chung.
    Khi bỏ hết vẫn ghi {} (không xóa dòng) để máy phụ huynh đồng bộ gia tăng nhận được thay đổi. Một form dùng chung cho thẻ trong hồ sơ bé và hộp "Giá riêng" ở trang Học phí: cả hai gửi FORM.kprf, mã bé lấy từ S.modal.id. */
 const KPR_HELP='Ô để trống thì tính theo giá chung (Nhân sự → Cài đặt). Giá bán trú riêng là giá trọn gói 1 ngày, đã gồm một ca 1-1 trong ngày: phần ca 1-1 trong gói vẫn theo thông số chung nên chênh lệch nằm ở phí bán trú, và hoàn phí khi nghỉ tính theo giá riêng này. Giá 1-1 riêng chỉ áp dụng cho ca đã chọn đúng loại đó; ca cũ chưa chọn loại tính theo giá chung 1 buổi 1-1. Giá riêng có hiệu lực từ lần tính tiếp theo, hóa đơn đã lập không tự đổi.';

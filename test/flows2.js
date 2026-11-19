@@ -21,7 +21,7 @@ const res=[];const ok=(n,c,x)=>{res.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
  await page.click('#nvf button[type=submit]');await W(80);
  ok('HR add staff',(await ev(()=>DB.staff.length))===31&&(await ev(()=>DB.staff.some(s=>s.em==='kiem.thu@goldenbee.vn'))));
  // permissions tab + settings
- await page.click('.tab[data-v="pq"]');await W(50);ok('permission matrix renders',(await page.$$eval('table tbody tr',r=>r.length))===18);
+ await page.click('.tab[data-v="pq"]');await W(50);ok('permission matrix renders',(await page.$$eval('table tbody tr',r=>r.length))===19);
  await page.click('.tab[data-v="cd"]');await W(50);await page.fill('#p11','350000');await page.click('#cfgf button[type=submit]');await W(60);
  ok('settings saved',(await ev(()=>DB.cfg.p11))===350000);await ev(()=>{DB.cfg.p11=300000});
  // Học phí: ghi thu

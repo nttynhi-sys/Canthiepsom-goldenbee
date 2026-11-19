@@ -34,7 +34,7 @@ language sql stable security definer set search_path = '' as $$
   select case
     when coll = 'pul' then false   -- pul: mở khóa cổng phụ huynh quá hạn, chỉ api/plock.js (khóa secret) ghi
     when coll in ('ref','tri','vio') then private.my_role() in ('tt','ql')   -- tài liệu tham khảo, góc tri ân, vi phạm nội quy: chỉ Trưởng Trung tâm, Quản lý (vio còn bị vio_ok giới hạn thêm)
-    when coll = 'ts' then private.my_role() in ('tt','vp','ql')   -- chấm công: giáo viên không tự chấm, chỉ xem
+    when coll in ('ts','sub') then private.my_role() in ('tt','vp','ql')   -- chấm công, dạy thay: giáo viên không tự ghi, chỉ xem
     when private.my_role() in ('tt','vp','ql') then true
     when private.my_role() = 'gv' then coll not in ('staff','cfg','hol')   -- hol: ngày nghỉ lễ ảnh hưởng học phí, giáo viên chỉ đọc
     else false end

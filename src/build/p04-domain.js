@@ -125,11 +125,15 @@ const balance=h=>DB.lg.filter(e=>e.hs===h).reduce((s,e)=>s+LGK[e.kind][2]*e.amt,
 function lichAt(w,slot,date){return DB.lich.filter(l=>l.slot===slot&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)))}
 /* các buổi chồng giờ với ca bắt đầu lúc `slot` (dùng để kiểm tra trùng khi giờ bắt đầu chọn tự do) */
 function lichNear(w,slot,date){return DB.lich.filter(l=>l.slot&&slotOver(l.slot,slot)&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)))}
+/* --- Dạy thay: bản ghi DB.sub (collection sub) = {id,d,sid,hs,gv,og,by,at,n}: ngày d, buổi sid (mã trong DB.lich) do giáo viên gv dạy thay giáo viên gốc og. Buổi 1-1 hằng tuần không đổi, chỉ riêng ngày d đổi người dạy. --- */
+const ABS_ATT=['p','kp','tt','bv'];   /* bé vắng: giáo viên của buổi đó rảnh trong khung giờ này */
+const subOf=(d,sid)=>(DB.sub||[]).find(s=>s.d===d&&s.sid===sid)||null;
+const effGv=(l,d)=>{const s=subOf(d,l.id);return s?s.gv:l.gv};
 function conflict(x){const w=x.date?dow(x.date):x.day;
  if(x.date&&isClosed(x.date))return 'Trung tâm nghỉ ngày này ('+holOf(x.date).n+')';
  if(DB.groups.some(g=>grHas(g,x.gv)&&grOpen(g,w)))return 'Giáo viên đang phụ trách lớp bán trú vào ngày này';
  const same=lichNear(w,x.slot,x.date).filter(l=>l.id!==x.id);
- if(same.some(l=>l.gv===x.gv))return 'Giáo viên đã có buổi khác ở khung giờ này';
+ if(same.some(l=>(x.date?effGv(l,x.date):l.gv)===x.gv))return 'Giáo viên đã có buổi khác ở khung giờ này';
  if(same.some(l=>l.hs===x.hs))return 'Trẻ đã có buổi khác ở khung giờ này';
  if(x.date&&DB.lr.some(l=>l.st===x.gv&&l.s==='duyet'&&l.f<=x.date&&x.date<=l.t))return 'Giáo viên có đơn nghỉ đã duyệt vào ngày này';
  return ''}
@@ -140,7 +144,7 @@ function freeSlots(gv,hs,from,n){const out=[];let d=from;
 function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))return out;
  DB.lich.forEach(l=>{if(l.type==='11'&&l.day===w&&(!first[l.hs]||l.slot<first[l.hs].slot))first[l.hs]=l});
  DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);
-  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:l.gv,slot:l.slot,kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
+  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(l.slot),gv:effGv(l,date),sub:subOf(date,l.id),slot:l.slot,kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
  DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,kids:ks})});
  return out.sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0)}
 
@@ -160,7 +164,7 @@ const vioAmt=v=>+((DB.vam||{})[v.st+'|'+v.id])||0;
 const vioList=(id,m)=>(DB.vio||[]).filter(v=>v.st===id&&v.s==='duyet'&&(!m||String(v.d).slice(0,7)===m));
 const vioSum=(id,m)=>vioList(id,m).reduce((a,v)=>a+vioAmt(v),0);
 function payroll(s,m){
- const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id),pc=gvPct();
+ const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id||(DB.sub||[]).some(x=>x.sid===l.id&&x.gv===s.id)),pc=gvPct();
  const myGr=DB.groups.filter(g=>grHas(g,s.id)),open6=myGr.some(g=>grOpen(g,6));
  let cong=0,late=0,btd=0,leave=0,abs=0,hol=0;
  const ss={cm:0,kp:0,p:0,tt:0,bv:0,bu:0,none:0},cc=needCC(s);
@@ -170,11 +174,11 @@ function payroll(s,m){
   else if(t==='leave'){cong++;leave++}else if(t==='hol'){cong++;hol++;continue}   /* ngày nghỉ lễ hưởng nguyên lương ngày công, không có ca dạy */
   else if(t==='abs'||t==='kl')abs++;
   /* ca 1-1 tính theo điểm danh của bé trong ca đó */
-  mine.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===d)){const c=DB.att[d+'|'+l.id+'|'+l.hs];
+  mine.forEach(l=>{if(effGv(l,d)===s.id&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===d))){const c=DB.att[d+'|'+l.id+'|'+l.hs];
    if(c&&ss[c]!=null){ss[c]++;if(l.type==='bu'&&c==='cm')ss.bu++}else if(!c&&worked)ss.none++}})}
  /* Chủ nhật: không tính ngày công, không chấm công, không nghỉ phép; chỉ các ca 1-1 và học bù dạy vào Chủ nhật được tính theo ca (lương cố định tháng không tính thêm vì bySess=0). */
  for(const d of mDates(m)){if(dow(d)!==0||d>=WD)continue;
-  mine.forEach(l=>{if((l.type==='11'&&l.day===0)||(l.type==='bu'&&l.date===d)){const c=DB.att[d+'|'+l.id+'|'+l.hs];
+  mine.forEach(l=>{if(effGv(l,d)===s.id&&((l.type==='11'&&l.day===0)||(l.type==='bu'&&l.date===d))){const c=DB.att[d+'|'+l.id+'|'+l.hs];
    if(c&&ss[c]!=null){ss[c]++;if(l.type==='bu'&&c==='cm')ss.bu++}else if(!c)ss.none++}})}
  const teach=ss.cm,units=ss.cm*pc.cm+ss.kp*pc.kp+ss.p*pc.p+ss.tt*pc.tt+ss.bv*pc.bv;
  const byDay=f.mode==='buoi'?0:(f.base||0)*Math.min(cong,cfg.cc)/cfg.cc,bySess=f.mode==='thang'?0:units/100*(f.rate||0),byBt=btd*(f.rateBt||0),allow=f.allow||0,bonus=DB.bon[s.id+'|'+m]||0,pen=late*(f.latePen||0),bh=(f.base||0)*(f.bh||0)/100;

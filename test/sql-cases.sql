@@ -219,6 +219,8 @@ update public.records set data='{"st":"nv04","d":"2026-11-03","r":"r1","lv":1,"s
 select t.chk('ql sửa được vi phạm chờ duyệt', (select count(*) from public.records where collection='vio' and data->>'n'='sửa'), 1);
 insert into public.records(collection,id,data) values ('ts','nv04|2026-11-03','{"i":"07:15","o":"18:00"}');
 select t.chk('ql chấm công được cho nhân sự (ts)', (select count(*) from public.records where collection='ts'), 1);
+insert into public.records(collection,id,data) values ('sub','sb1','{"d":"2026-11-23","sid":"l1","hs":"hs01","gv":"nv04","og":"nv05"}');
+select t.chk('ql phân dạy thay được (sub)', (select count(*) from public.records where collection='sub'), 1);
 select t.chk('ql không thấy tiền (vam)', (select count(*) from public.money_records), 0);
 
 select t.as_user('00000000-0000-0000-0000-000000000001','tt@gb.vn');
@@ -246,9 +248,12 @@ do $$ begin
   begin insert into public.records(collection,id,data) values ('vio','vg','{"st":"nv04","s":"cho"}'); raise exception 'FAIL gv ghi được vi phạm'; exception when insufficient_privilege then raise notice 'PASS gv không ghi được vi phạm'; end;
   begin insert into public.records(collection,id,data) values ('ts','nv04|2026-11-05','{"i":"07:00","o":""}'); raise exception 'FAIL gv tự chấm công được'; exception when insufficient_privilege then raise notice 'PASS gv không tự chấm công được (ts)'; end;
   begin update public.records set data='{"i":"06:00","o":""}' where collection='ts' and id='nv04|2026-11-03'; if found then raise exception 'FAIL gv sửa được chấm công'; end if; raise notice 'PASS gv không sửa được chấm công (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS gv không sửa được chấm công'; end;
+  begin insert into public.records(collection,id,data) values ('sub','sbg','{"d":"2026-11-23","sid":"l1","hs":"hs01","gv":"nv04"}'); raise exception 'FAIL gv tự phân dạy thay được'; exception when insufficient_privilege then raise notice 'PASS gv không tự phân dạy thay được (sub)'; end;
+  begin update public.records set data='{"gv":"nv04"}' where collection='sub' and id='sb1'; if found then raise exception 'FAIL gv sửa được dạy thay'; end if; raise notice 'PASS gv không sửa được dạy thay (0 dòng)'; exception when insufficient_privilege then raise notice 'PASS gv không sửa được dạy thay'; end;
   begin insert into public.money_records(collection,id,data) values ('vam','nv04|vz','1'); raise exception 'FAIL gv ghi được số tiền trừ'; exception when insufficient_privilege then raise notice 'PASS gv không ghi được số tiền trừ'; end;
 end $$;
 select t.chk('gv đọc được chấm công của mình và của người khác (chỉ đọc)', (select count(*) from public.records where collection='ts'), 1);
+select t.chk('gv đọc được dạy thay (chỉ đọc)', (select count(*) from public.records where collection='sub'), 1);
 
 select t.as_user('00000000-0000-0000-0000-000000000003','sdt@example.com');
 select t.chk('gv (nv05) thấy vi phạm đã duyệt của mình, không thấy bản chờ duyệt', (select count(*) from public.records where collection='vio'), 1);
@@ -264,6 +269,8 @@ do $$ begin
 end $$;
 insert into public.records(collection,id,data) values ('ts','nv08|2026-11-03','{"i":"07:30","o":"17:00"}');
 select t.chk('vp vẫn tự chấm công được (ts)', (select count(*) from public.records where collection='ts' and id like 'nv08|%'), 1);
+insert into public.records(collection,id,data) values ('sub','sb2','{"d":"2026-11-24","sid":"l1","hs":"hs01","gv":"nv04","og":"nv05"}');
+select t.chk('vp phân dạy thay được (sub)', (select count(*) from public.records where collection='sub'), 2);
 
 select t.as_user('00000000-0000-0000-0000-000000000004','ph@gb.vn');
 select t.chk('ph không đọc được vi phạm, chấm công, số tiền trừ', (select count(*) from public.records where collection in ('vio','ts'))+(select count(*) from public.money_records where collection='vam'), 0);

@@ -10,9 +10,9 @@ const tab=async(page,t)=>{await page.click(`#main .tabs .tab[data-v="${t}"]`);aw
 const hasModal=page=>page.evaluate(()=>!!document.querySelector('.mdc'));
 const closeModal=async page=>{await page.evaluate(()=>{S.modal=null;render()});await page.waitForTimeout(30)};
 const EXP={
- ql:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','mt','bc','td','cp','tb','tk'],
- tt:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','hp','tl','mt','bc','td','cp','tb','tk'],
- vp:['dash','hs','tn','cc','vi','dd','hp','tl','td','tb','tk'],
+ ql:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','ds','mt','bc','td','cp','tb','tk'],
+ tt:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','ds','hp','tl','mt','bc','td','cp','tb','tk'],
+ vp:['dash','hs','tn','cc','vi','dd','ds','hp','tl','td','tb','tk'],
  gv:['dash','hs','lh','cc','vi','dd','hb','tl','mt','bc','td','tb'],
  ph:['cp','lh','tn','hb','hp','tb']};
 (async()=>{
@@ -144,7 +144,7 @@ const EXP={
   ok('Trưởng TT: có thông số học phí, lương để sửa',!!(await page.$('#cfgf #p11')));
   await tab(page,'pq');
   const pq=await page.$$eval('#main table tbody tr',e=>e.length),pqh=await page.$$eval('#main table thead th',e=>e.map(x=>x.textContent));
-  ok('Ma trận phân quyền: 18 mục, 5 vai trò',pq===18&&JSON.stringify(pqh)==='["Mục","Quản lý","Trưởng Trung tâm","Văn phòng","Giáo viên","Phụ huynh"]',[pq,pqh]);
+  ok('Ma trận phân quyền: 19 mục, 5 vai trò',pq===19&&JSON.stringify(pqh)==='["Mục","Quản lý","Trưởng Trung tâm","Văn phòng","Giáo viên","Phụ huynh"]',[pq,pqh]);
   await tab(page,'ds');
   /* cấp vai trò Văn phòng cho một nhân viên hành chính */
   const hc=await page.evaluate(()=>DB.staff.find(s=>s.role==='hc'&&s.st==='dang'&&s.id!=='nv26').id);

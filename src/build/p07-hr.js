@@ -14,6 +14,7 @@ const PERM={
  vi:['Ghi vi phạm nội quy và đề xuất mức, không thấy số tiền','Ghi, duyệt và quyết định số tiền trừ lương','Xem vi phạm và số tiền trừ, không sửa','Xem vi phạm đã duyệt của mình','—'],
  dd:['Điểm danh, sửa bảng, không thấy phí','Điểm danh, sửa bảng, tính phí','Xem số ngày học, phép và tính phí, không sửa điểm danh','Lớp mình phụ trách','—'],
  hb:['Xếp lịch bù','Xếp lịch bù','—','Đề xuất lịch cho trẻ mình','Đăng ký, chọn lịch bù'],
+ ds:['Phân giáo viên dạy thay, xem lịch trống','Phân giáo viên dạy thay, xem lịch trống','Phân giáo viên dạy thay, xem lịch trống','—','—'],
  hp:['—','Thu, hoàn, chuyển phí, đổi thông số tiền','Thu, hoàn, chuyển phí','—','Học phí của bé'],
  tl:['—','Tính lương mọi nhân sự, thưởng, đổi mức lương','Tính lương giáo viên, hành chính, quản lý, thưởng','Phiếu lương của mình','—'],
  bc:['Duyệt, gửi phụ huynh','Duyệt, gửi phụ huynh','—','Soạn báo cáo trẻ mình','—'],

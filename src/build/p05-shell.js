@@ -2,12 +2,12 @@
 const PW='123456';
 /* Phần tiền (học phí, thu chi, công nợ, lương) chỉ Trưởng Trung tâm và Văn phòng xem và thao tác: Quản lý không có mục 'hp' và 'tl'. */
 const ACCESS={
- ql:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','mt','bc','td','cp','tb','tk'],
- tt:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','hp','tl','mt','bc','td','cp','tb','tk'],
- vp:['dash','hs','tn','cc','vi','dd','hp','tl','td','tb','tk'],
+ ql:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','ds','mt','bc','td','cp','tb','tk'],
+ tt:['dash','ns','hs','pc','lh','tn','cc','vi','dd','hb','ds','hp','tl','mt','bc','td','cp','tb','tk'],
+ vp:['dash','hs','tn','cc','vi','dd','ds','hp','tl','td','tb','tk'],
  gv:['dash','hs','lh','tn','cc','vi','dd','hb','tl','mt','bc','td','tb'],
  ph:['cp','lh','tn','hb','hp','tb']};
-const NAV=[['dash','Dashboard','Tổng quan'],['ns','Nhân sự','Con người'],['hs','Học sinh'],['pc','Phân công'],['lh','Lịch học','Vận hành'],['tn','Thực đơn bán trú'],['cc','Chấm công'],['vi','Vi phạm nội quy'],['dd','Điểm danh'],['hb','Học bù'],['hp','Học phí','Tài chính'],['tl','Tiền lương'],['mt','Ngân hàng mục tiêu','Chuyên môn'],['bc','Báo cáo chuyên môn'],['td','Ảnh, video và tài liệu'],['cp','Cổng phụ huynh','Phụ huynh'],['tb','Thông báo'],['tk','Thống kê','Báo cáo']];
+const NAV=[['dash','Dashboard','Tổng quan'],['ns','Nhân sự','Con người'],['hs','Học sinh'],['pc','Phân công'],['lh','Lịch học','Vận hành'],['tn','Thực đơn bán trú'],['cc','Chấm công'],['vi','Vi phạm nội quy'],['dd','Điểm danh'],['hb','Học bù'],['ds','Dạy thay'],['hp','Học phí','Tài chính'],['tl','Tiền lương'],['mt','Ngân hàng mục tiêu','Chuyên môn'],['bc','Báo cáo chuyên môn'],['td','Ảnh, video và tài liệu'],['cp','Cổng phụ huynh','Phụ huynh'],['tb','Thông báo'],['tk','Thống kê','Báo cáo']];
 const VLAB={gv:{hs:'Học sinh của tôi',lh:'Lịch dạy của tôi',cc:'Chấm công của tôi',vi:'Vi phạm của tôi',dd:'Điểm danh',tl:'Phiếu lương của tôi',bc:'Báo cáo của tôi',td:'Ảnh, video và tài liệu'},ph:{cp:'Cổng phụ huynh',hp:'Học phí',lh:'Lịch học của bé',tn:'Thực đơn bán trú'},vp:{cc:'Chấm công nhân sự',dd:'Ngày học và phép'}};
 /* tiêu đề nhóm riêng cho từng vai trò (khi nhóm gốc không hiện ra với vai trò đó) */
 const NAVG={vp:{hs:'Con người',tn:'Vận hành',tb:'Liên lạc'},ph:{cp:'Tổng quan',lh:'Lịch học',tb:'Liên lạc'}};
@@ -32,8 +32,10 @@ const myGroups=()=>isGV()?DB.groups.filter(g=>grHas(g,U.id)):[];
 /* Thực đơn và thời khóa biểu bán trú: Trưởng Trung tâm, Quản lý, Văn phòng, phụ huynh và giáo viên đứng lớp bán trú (mọi giáo viên được phân vào lớp, ngang nhau). Giáo viên chỉ dạy 1-1 không thấy. */
 const btView=()=>!isGV()||myGroups().length>0;
 const navList=()=>ACCESS[U.role].filter(v=>v!=='tn'||btView());
+/* giáo viên dạy thay thấy bé đã được phân dạy thay (trong 30 ngày gần đây và sắp tới) để điểm danh và ghi buổi */
+const subKid=id=>!!U&&(DB.sub||[]).some(s=>s.gv===U.id&&s.hs===id&&s.d>=addD(TODAY,-30));
 function myKids(){if(!U)return[];if(seesAll())return DB.kids;
- if(isGV()){const gs=myGroups().map(g=>g.id);return DB.kids.filter(k=>kHas(k,U.id)||(k.gr&&gs.includes(k.gr))||DB.lich.some(l=>l.gv===U.id&&l.hs===k.id))}
+ if(isGV()){const gs=myGroups().map(g=>g.id);return DB.kids.filter(k=>kHas(k,U.id)||(k.gr&&gs.includes(k.gr))||DB.lich.some(l=>l.gv===U.id&&l.hs===k.id)||subKid(k.id))}
  return DB.kids.filter(k=>pkeyOf(k)===U.pkey)}
 const canKid=id=>myKids().some(k=>k.id===id);
 const rdKey=n=>n.id+'|'+(U?U.id:'');
@@ -48,6 +50,7 @@ const unread=()=>noticesFor().filter(n=>!DB.rd[rdKey(n)]&&n.by!==(U&&U.id)).leng
 function badge(v){if(!U)return 0;const ks=myKids().map(k=>k.id);
  if(v==='cc'&&isLead())return DB.lr.filter(l=>l.s==='cho').length;
  if(v==='vi'&&isTT())return DB.vio.filter(x=>x.s==='cho').length;
+ if(v==='ds'&&canSub())return dsNeedCount();
  if(v==='hb')return DB.mk.filter(r=>ks.includes(r.hs)&&(isPH()?r.s==='tt':r.s==='dk')).length;
  if(v==='bc'&&isLead())return DB.rp.filter(r=>r.s==='cho').length;
  if(v==='bc'&&isGV())return DB.rp.filter(r=>r.au===U.id&&(r.s==='nhap')).length;
