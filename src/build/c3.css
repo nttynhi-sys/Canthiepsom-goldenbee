@@ -342,3 +342,29 @@ body.gph #pdfc,body.gph .tph .mi{-webkit-user-drag:none;user-select:none;-webkit
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .side{--sidetx:#d6eef0;--sidemu:#7fb5ba;--sun:#26c6da;--onsun:#00363b;background:#0b1f22;border-right-color:#16393d;box-shadow:none}:root:not([data-theme="light"]) .side .brand b{color:#62c8d3}:root:not([data-theme="light"]) .side .nav button:hover{background:rgba(255,255,255,.08)}}
 :root[data-theme="dark"] .side{--sidetx:#d6eef0;--sidemu:#7fb5ba;--sun:#26c6da;--onsun:#00363b;background:#0b1f22;border-right-color:#16393d;box-shadow:none}
 :root[data-theme="dark"] .side .brand b{color:#62c8d3}:root[data-theme="dark"] .side .nav button:hover{background:rgba(255,255,255,.08)}
+/* ===== Bảng màu Trắng – Xanh ngọc – Vàng cho toàn ứng dụng (chỉ đổi màu, không đổi bố cục) ===== */
+:root{--bg:#f0f9fa;--card:#ffffff;--bd:#d6eaec;--ac:#047781;--acs:#d8f0f2;--onac:#ffffff;--sun:#f4d133;--sus:#fff4c2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ac:#4dd0e1;--acs:#12353a;--onac:#00363b}}
+:root[data-theme="dark"]{--ac:#4dd0e1;--acs:#12353a;--onac:#00363b}
+.tab.on{color:var(--ac);border-color:var(--ac)}
+.btn.p{background:linear-gradient(135deg,color-mix(in srgb,var(--ac) 85%,#fff),var(--ac))}
+th{color:color-mix(in srgb,#00acc1 62%,var(--tx));background:color-mix(in srgb,#00acc1 8%,var(--card))}
+.tag.in{background:color-mix(in srgb,#00acc1 16%,var(--card));color:color-mix(in srgb,#00acc1 78%,var(--tx))}
+/* trạng thái mục tiêu và báo cáo tiến độ của bé: đạt xanh lá, tiến bộ xanh ngọc, cần luyện cam, sắp luyện vàng (màu nền ghi cụ thể để đủ tương phản chữ và biểu tượng) */
+.s-dat,.s-gan{--sc:#17703c;--scs:#dff2e6}
+.s-tien{--sc:#00717f;--scs:#d7eef2}
+.s-luyen{--sc:#a64300;--scs:#fde9d6}
+.s-moi,.s-tam{--sc:#7a5c00;--scs:#fdf2c6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .s-dat,:root:not([data-theme="light"]) .s-gan{--sc:#5fd08a;--scs:#163a28}:root:not([data-theme="light"]) .s-tien{--sc:#4dd0e1;--scs:#12353a}:root:not([data-theme="light"]) .s-luyen{--sc:#ffa352;--scs:#4a2c12}:root:not([data-theme="light"]) .s-moi,:root:not([data-theme="light"]) .s-tam{--sc:#f4d133;--scs:#4a3f12}}
+:root[data-theme="dark"] .s-dat,:root[data-theme="dark"] .s-gan{--sc:#5fd08a;--scs:#163a28}:root[data-theme="dark"] .s-tien{--sc:#4dd0e1;--scs:#12353a}:root[data-theme="dark"] .s-luyen{--sc:#ffa352;--scs:#4a2c12}:root[data-theme="dark"] .s-moi,:root[data-theme="dark"] .s-tam{--sc:#f4d133;--scs:#4a3f12}
+.gt-bar{background:color-mix(in srgb,#00acc1 14%,var(--card))}
+.gtp{border-color:color-mix(in srgb,var(--sc) 28%,var(--bd))}
+.gts{background:color-mix(in srgb,var(--sc) 6%,var(--card))}
+.gt-k{color:color-mix(in srgb,#00838f 70%,var(--tx))}
+/* trang đăng nhập: trắng, xanh ngọc, vàng */
+.lgl{background:linear-gradient(160deg,#0a8590,#047781 55%,#03565c);color:#ffffff}
+.lgl h1{color:#ffd93b}
+.lgi{color:rgba(255,255,255,.88)}
+.lgr{background:linear-gradient(180deg,var(--card),color-mix(in srgb,#00acc1 10%,var(--card)))}
+.lgr .btn.p{background:linear-gradient(135deg,#0a8590,#047781);border-color:#047781;color:#fff;box-shadow:0 4px 12px rgba(4,119,129,.28)}
+.lgr input:focus{border-color:#047781;box-shadow:0 0 0 3px rgba(244,209,51,.45);outline:0}
