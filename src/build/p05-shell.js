@@ -39,14 +39,16 @@ function myKids(){if(!U)return[];if(seesAll())return DB.kids;
  return DB.kids.filter(k=>pkeyOf(k)===U.pkey)}
 const canKid=id=>myKids().some(k=>k.id===id);
 const rdKey=n=>n.id+'|'+(U?U.id:'');
+/* thông báo gửi riêng (n.to là mảng mã nhân sự, ví dụ phân công dạy thay): chỉ người nhận tính là chưa đọc và nhận thông báo; Trưởng Trung tâm, Quản lý, Văn phòng vẫn xem được trong danh sách */
+const ntMine=n=>!n.to||(!!U&&n.to.includes(U.id));
 function noticesFor(){if(!U)return[];
  return DB.nt.filter(n=>{if(n.fin&&noFee())return false;
   if(seesAll())return true;
-  if(n.aud==='nb')return isGV();
+  if(n.aud==='nb')return isGV()&&ntMine(n);
   if(isGV())return n.by===U.id;
   if(n.tg==='all')return true;
   const ks=myKids();return ks.some(k=>k.id===n.tg||k.gr===n.tg)}).sort((a,b)=>(b.pin-a.pin)||(a.at<b.at?1:-1))}
-const unread=()=>noticesFor().filter(n=>!DB.rd[rdKey(n)]&&n.by!==(U&&U.id)).length;
+const unread=()=>noticesFor().filter(n=>!DB.rd[rdKey(n)]&&n.by!==(U&&U.id)&&ntMine(n)).length;
 function badge(v){if(!U)return 0;const ks=myKids().map(k=>k.id);
  if(v==='cc'&&isLead())return DB.lr.filter(l=>l.s==='cho').length;
  if(v==='vi'&&isTT())return DB.vio.filter(x=>x.s==='cho').length;

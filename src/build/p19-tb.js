@@ -1,11 +1,11 @@
 /* ===== 14. Thông báo ===== */
-const tgLabel=n=>n.aud==='nb'?'Toàn bộ nhân viên':n.tg==='all'?'Mọi phụ huynh':grBy(n.tg)?'Phụ huynh '+grBy(n.tg).n:'Phụ huynh bé '+kn(n.tg);
-function recips(n){if(n.aud==='nb')return DB.staff.filter(s=>s.st==='dang'&&s.role!=='hc').map(s=>s.id);
+const tgLabel=n=>n.to?'Gửi riêng cho '+n.to.map(id=>given(sn(id))).join(', '):n.aud==='nb'?'Toàn bộ nhân viên':n.tg==='all'?'Mọi phụ huynh':grBy(n.tg)?'Phụ huynh '+grBy(n.tg).n:'Phụ huynh bé '+kn(n.tg);
+function recips(n){if(n.to)return n.to.slice();if(n.aud==='nb')return DB.staff.filter(s=>s.st==='dang'&&s.role!=='hc').map(s=>s.id);
  return[...new Set(DB.kids.filter(k=>n.tg==='all'||k.id===n.tg||k.gr===n.tg).filter(k=>pkeyOf(k)).map(k=>'ph|'+pkeyOf(k)))]}
 const readCount=n=>recips(n).filter(r=>DB.rd[n.id+'|'+r]).length;
 VIEWS.tb=()=>{const ns=noticesFor();
  return head('Thông báo',unread()?unread()+' thông báo chưa đọc':'Bạn đã đọc hết thông báo',(unread()?'<button class="btn" data-a="rdall">Đánh dấu đã đọc tất cả</button>':'')+(isPH()?'':'<button class="btn p" data-a="tbnew">Soạn thông báo</button>'))
- +(ns.length?ns.map(n=>{const un=!DB.rd[rdKey(n)]&&n.by!==U.id,rc=!isPH()&&(isLead()||n.by===U.id)?recips(n):null;
+ +(ns.length?ns.map(n=>{const un=!DB.rd[rdKey(n)]&&n.by!==U.id&&ntMine(n),rc=!isPH()&&(isLead()||n.by===U.id)?recips(n):null;
   return`<div class="card" style="${un?'border-color:var(--ac)':''}"><div class="top" style="margin-bottom:6px"><div><h2 style="margin:0">${n.pin?tg('Ghim','y')+' ':''}${esc(n.t)}</h2><p class="sm mu">${esc(tgLabel(n))} · ${esc(sn(n.by))} · ${vd(n.at)}</p></div><div class="acts">${un?`<span class="tag er">Mới</span><button class="btn s" data-a="rd" data-v="${n.id}">Đã đọc</button>`:''}${!isPH()&&(isLead()||n.by===U.id)?`<button class="btn s no" data-a="tbdel" data-v="${n.id}">Xóa</button>`:''}</div></div><p style="white-space:pre-line">${esc(n.b)}</p>${rc?`<p class="sm mu" style="margin-top:8px">Đã đọc ${readCount(n)}/${rc.length} người nhận</p>`:''}</div>`}).join(''):'<div class="card"><p class="empty">Chưa có thông báo nào.</p></div>')};
 ACT.rd=v=>{const n=DB.nt.find(x=>x.id===v);if(n)DB.rd[rdKey(n)]=1};
 ACT.rdall=()=>{noticesFor().forEach(n=>{DB.rd[rdKey(n)]=1})};
