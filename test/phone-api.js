@@ -161,6 +161,11 @@ let pass = 0, fail = 0; const ok = (n, c, x) => { if (c) { pass++; console.log('
   const lb = (await call('parent', { action: 'load' }, TB)).json;
   ok('parent B: bé Dũng cùng SĐT với gia đình A vẫn tách biệt', lb.kids.join() === 'hs004' && lb.records.filter(r => r.collection === 'lich').map(r => r.id).sort().join() === 'l2,lb9' && !JSON.stringify(lb).includes('hs001'));
   ok('parent B: thông báo lớp Ong mật', lb.records.filter(r => r.collection === 'nt').map(r => r.id).sort().join() === 'n1,n3,n6');
+  /* thông báo đổi giáo viên hoặc giờ học (dạy thay) gửi cho phụ huynh của bé: chỉ bé mình; thông báo gửi riêng cho giáo viên (aud nb) thì không */
+  R('nt', 'ntDT1', { id: 'ntDT1', aud: 'ph', tg: 'hs001', t: 'Thay đổi giáo viên dạy', b: 'Cô dạy thay', by: 'nv01', at: '2026-11-20' }); R('nt', 'ntDT2', { id: 'ntDT2', aud: 'ph', tg: 'hs004', t: 'Thay đổi giáo viên dạy', b: 'Của bé khác', by: 'nv01', at: '2026-11-20' }); R('nt', 'ntNB', { id: 'ntNB', aud: 'nb', tg: 'all', to: ['nv04'], t: 'Phân công dạy thay', b: 'Chỉ giáo viên', by: 'nv01', at: '2026-11-20' });
+  const NTs = ((await call('parent', { action: 'load' }, TA)).json.records || []).filter(r => r.collection === 'nt').map(r => r.id);
+  ok('parent A: nhận thông báo đổi giáo viên của bé mình; không nhận của bé khác, không nhận thông báo gửi riêng cho giáo viên', NTs.includes('ntDT1') && !NTs.includes('ntDT2') && !NTs.includes('ntNB'), JSON.stringify(NTs));
+  ['ntDT1', 'ntDT2', 'ntNB'].forEach(i => E.recs.delete('nt|' + i));
   /* RLS: phụ huynh không đọc/ghi trực tiếp được */
   const direct = async (path, tok, init) => (await fetch(E.url + path, Object.assign({ headers: { apikey: 'pub', authorization: 'Bearer ' + tok, 'content-type': 'application/json' } }, init || {})));
   ok('RLS: phụ huynh đọc thẳng bảng records chỉ thấy 0 dòng', (await (await direct('/rest/v1/records?select=*', TA)).json()).length === 0);
