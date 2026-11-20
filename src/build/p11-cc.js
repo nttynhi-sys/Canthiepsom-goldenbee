@@ -17,7 +17,7 @@ const lrDays=l=>{let n=0;for(let d=l.f;d<=l.t;d=addD(d,1))if(isW(d))n++;return n
 VIEWS.cc=()=>{const c=S.cc=Object.assign({tab:'hn',m:CM},S.cc),pend=DB.lr.filter(l=>l.s==='cho').length;
  const tabs=seesAll()?[['hn','Hôm nay'],['bang','Bảng công tháng'],['don','Đơn nghỉ phép'+(pend?' ('+pend+')':'')]]:[['hn','Chấm công của tôi'],['don','Đơn nghỉ phép của tôi']];
  if(!tabs.some(t=>t[0]===c.tab))c.tab='hn';
- return head(isGV()?'Chấm công của tôi':'Chấm công',isGV()?'Quản lý chấm công cho giáo viên làm giờ cố định; giáo viên trả theo ca không cần chấm công':'Quản lý chấm công cho nhân sự làm giờ cố định; nhân sự trả theo ca 1-1 không cần chấm công',c.tab==='don'?'<button class="btn p" data-a="lrnew">Tạo đơn nghỉ</button>':'')+tabsH(tabs,c.tab,'cctab')+(c.tab==='hn'?ccToday():c.tab==='bang'?ccGrid():ccLeave())};
+ return head(isGV()?'Chấm công của tôi':'Chấm công',isGV()?'Quản lý chấm công cho giáo viên làm giờ cố định; giáo viên trả theo ca không cần chấm công':'Quản lý chấm công cho nhân sự làm giờ cố định; nhân sự trả theo ca 1-1 không cần chấm công',c.tab==='don'?'<button class="btn p" data-a="lrnew">Tạo đơn nghỉ</button>':canLeaveMark()&&seesAll()?'<button class="btn p" data-a="tsm">Chấm nghỉ nhiều ngày</button>':'')+tabsH(tabs,c.tab,'cctab')+(c.tab==='hn'?ccToday():c.tab==='bang'?ccGrid():ccLeave())};
 ACT.cctab=v=>{S.cc.tab=v};
 ACT.ccm=v=>{S.cc.m=sm(S.cc.m,+v)};
 ACT.ci=()=>{if(!selfCC())return false;const k=U.id+'|'+WD,r=DB.ts[k]||(DB.ts[k]={i:'',o:''});if(!r.i){r.i=hm();toast('Đã chấm công vào lúc '+r.i)}else if(!r.o){r.o=hm();toast('Đã chấm công ra lúc '+r.o)}};
@@ -53,25 +53,70 @@ function ccGrid(){const m=S.cc.m,ds=mDates(m),st=ccStaff(),skip=DB.staff.filter(
  return`<div class="card"><div class="top"><h2>Bảng công ${mLabel(m)}</h2><div class="acts"><button class="btn s" data-a="ccm" data-v="-1">Tháng trước</button><button class="btn s" data-a="ccm" data-v="1" ${m>=CM?'disabled':''}>Tháng sau</button><button class="btn s" data-a="ccxl">Xuất Excel</button></div></div>
  <div class="legend">${Object.entries(CSYM).map(([k,v])=>`<span><i class="sc sc-${v[0]==='·'?'q':v[0]}">${v[0]}</i> ${v[1]}</span>`).join('')}</div>
  <div class="tw"><table class="sheet"><thead><tr><th class="s1">Nhân viên</th>${ds.map(d=>`<th class="dc ${dow(d)===0?'sun':''}">${pd(d).getDate()}<br><span class="mu">${DAYS[dow(d)]}</span></th>`).join('')}<th class="r">Công</th><th class="r">Muộn</th><th class="r">Phép</th></tr></thead><tbody>
- ${st.map(s=>{const p=payroll(s,m);return`<tr><td class="s1"><b>${esc(given(s.n))}</b></td>${ds.map(d=>{const k=dow(d)===0?'':tsSt(s.id,d),sy=k?CSYM[k][0]:'';return`<td class="dc ${dow(d)===0?'sun':''}">${sy?`<button class="sc sc-${sy==='·'?'q':sy}" data-a="tsedit" data-v="${s.id}|${d}" title="${CSYM[k][1]}" ${d<=TODAY&&(isLead()||(isVP()&&tsLv(s.id,d)))?'':'disabled'}>${sy}</button>`:''}</td>`}).join('')}<td class="r"><b>${p.cong}</b></td><td class="r">${p.late}</td><td class="r">${p.leave}</td></tr>`}).join('')}</tbody></table></div><p class="sm mu" style="margin-top:8px">${isLead()?'Bấm vào một ô để sửa giờ vào ra. ':'Chỉ xem, việc sửa công do Quản lý hoặc Trưởng Trung tâm thực hiện. '}Công chuẩn mỗi tháng là ${DB.cfg.cc} ngày.${skip.length?' Không cần chấm công (trả lương theo ca 1-1): '+skip.map(s=>esc(s.n)).join(', ')+'.':''}</p></div>`}
+ ${st.map(s=>{const p=payroll(s,m);return`<tr><td class="s1"><b>${esc(given(s.n))}</b></td>${ds.map(d=>{const k=dow(d)===0?'':tsSt(s.id,d),sy=k?CSYM[k][0]:'';return`<td class="dc ${dow(d)===0?'sun':''}">${sy?`<button class="sc sc-${sy==='·'?'q':sy}" data-a="tsedit" data-v="${s.id}|${d}" title="${CSYM[k][1]}" ${(canLeaveMark()&&tsLv(s.id,d))||(d<=TODAY&&isLead())?'':'disabled'}>${sy}</button>`:''}</td>`}).join('')}<td class="r"><b>${p.cong}</b></td><td class="r">${p.late}</td><td class="r">${p.leave}</td></tr>`}).join('')}</tbody></table></div><p class="sm mu" style="margin-top:8px">${isLead()?'Bấm vào một ô để sửa giờ vào ra. ':'Chỉ xem, việc sửa công do Quản lý hoặc Trưởng Trung tâm thực hiện. '}Công chuẩn mỗi tháng là ${DB.cfg.cc} ngày.${skip.length?' Không cần chấm công (trả lương theo ca 1-1): '+skip.map(s=>esc(s.n)).join(', ')+'.':''}</p></div>`}
 ACT.ccxl=()=>{const m=S.cc.m,ds=mDates(m).filter(isW);exportXLSX('bang-cong-nhan-vien-'+m+'.xlsx',[{n:'Bảng công',rows:[['Mã','Nhân viên','Chức vụ'].concat(ds.map(d=>pd(d).getDate()+'/'+(+m.slice(5,7))),['Công','Đi muộn','Nghỉ phép','Vắng'])].concat(ccStaff().map(s=>{const p=payroll(s,m);return[s.id,s.n,s.pos].concat(ds.map(d=>{const k=tsSt(s.id,d);return k?CSYM[k][0]:''}),[p.cong,p.late,p.leave,p.abs])}))}])};
-ACT.tsedit=v=>{const [id,d]=v.split('|');if(!needCC(stBy(id)))return false;if(tsLv(id,d)&&canLeaveMark()){S.modal={t:'tsl',id,d};return}if(!isLead())return false;S.modal={t:'tse',id,d}};
+ACT.tsedit=v=>{const [id,d]=v.split('|');if(!needCC(stBy(id)))return false;if(tsLv(id,d)&&canLeaveMark()){S.modal={t:'tsl',id,d};return}if(!isLead()||d>TODAY)return false;S.modal={t:'tse',id,d}};
 MODALS.tse=()=>{const m=S.modal,t=DB.ts[m.id+'|'+m.d]||{i:'',o:''};
  return mdl('Chấm công '+sn(m.id),`<form id="tsef" class="f"><p class="mu sm">${DAYN[dow(m.d)]} ${vd(m.d)}</p><div class="f2"><div><label for="ts-i">Giờ vào</label><input id="ts-i" name="i" type="time" value="${t.i}"></div><div><label for="ts-o">Giờ ra</label><input id="ts-o" name="o" type="time" value="${t.o}"></div></div><div class="acts" style="justify-content:flex-end"><button class="btn no" type="button" data-a="tsclr">Xóa chấm công</button><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu</button></div></form>`)};
 FORM.tsef=f=>{if(!isLead())return false;const m=S.modal,i=f.elements.i.value,o=f.elements.o.value;if(!i&&!o)delete DB.ts[m.id+'|'+m.d];else DB.ts[m.id+'|'+m.d]={i,o};S.modal=null;toast('Đã cập nhật chấm công')};
 ACT.tsclr=()=>{if(!isLead())return false;delete DB.ts[S.modal.id+'|'+S.modal.d];S.modal=null;toast('Đã xóa chấm công')};
 /* --- chấm công nghỉ cả ngày, nửa ngày --- */
-ACT.tsl=v=>{const [id,d]=v.split('|');if(!canLeaveMark()||!needCC(stBy(id))||d>TODAY)return false;S.modal={t:'tsl',id,d}};
+/* bản ghi chấm công nghỉ: ngày đã qua ghi đủ giờ làm của nửa ngày còn lại, hôm nay ghi theo giờ hiện tại, ngày sắp tới chưa có giờ */
+function tsRec(l,lk,d){const past=d<TODAY,fut=d>TODAY,now=hm(),r={i:'',o:'',l};if(lk)r.lk=1;
+ if(l==='am'){if(past||(!fut&&now>=CC_PM_START))r.i=CC_PM_START;if(past||(!fut&&now>=ccOut()))r.o=ccOut()}
+ else if(l==='pm'){if(past||(!fut&&now>=ccIn()))r.i=ccIn();if(past||(!fut&&now>=CC_AM_END))r.o=CC_AM_END}
+ return r}
+/* chấm nghỉ nhiều ngày, nhiều người, kể cả nhiều tháng và ngày sắp tới (chấm trước): chọn nhân sự, khoảng ngày, thứ trong tuần, cả ngày hoặc nửa ngày, có phép hoặc không lương */
+const TSM_MAX=1100,TSM_WD=[1,2,3,4,5,6];
+ACT.tsm=()=>{if(!canLeaveMark())return false;S.modal={t:'tsm',ids:[],from:TODAY,to:TODAY,l:'full',lk:'',wd:TSM_WD.slice(),err:''}};
+CHG.tsmf=v=>{if(/^\d{4}-\d{2}-\d{2}$/.test(v||''))S.modal.from=v;S.modal.err=''};
+CHG.tsmt=v=>{if(/^\d{4}-\d{2}-\d{2}$/.test(v||''))S.modal.to=v;S.modal.err=''};
+CHG.tsml=v=>{S.modal.l=v;return false};
+CHG.tsmk=v=>{S.modal.lk=v;return false};
+CHG.tsms=(v,t)=>{const m=S.modal,a=new Set(m.ids);if(t.checked)a.add(v);else a.delete(v);m.ids=[...a];m.err=''};
+CHG.tsmw=(v,t)=>{const m=S.modal,a=new Set(m.wd);if(t.checked)a.add(+v);else a.delete(+v);m.wd=[...a];m.err=''};
+ACT.tsmall=v=>{S.modal.ids=+v?ccStaff().map(s=>s.id):[]};
+function tsmDays(m){if(!m.from||!m.to||m.to<m.from)return null;const out=[];let n=0;
+ for(let d=m.from;d<=m.to;d=addD(d,1)){if(++n>TSM_MAX)return false;if(isW(d)&&m.wd.includes(dow(d)))out.push(d)}return out}
+MODALS.tsm=()=>{const m=S.modal;if(!canLeaveMark()){S.modal=null;return''}
+ const st=ccStaff().slice().sort((a,b)=>a.n<b.n?-1:1),days=tsmDays(m);
+ return mdl('Chấm công nghỉ nhiều ngày',`<form id="tsmf" class="f"><p class="sm mu" style="margin:0">Chấm công nghỉ trước cho nhân sự làm giờ cố định, các ngày bất kỳ trong tháng hoặc nhiều tháng (kể cả ngày sắp tới). Chủ nhật và ngày Trung tâm nghỉ được bỏ qua.</p>
+ <div><span class="lbl">Nhân sự</span><div class="acts" style="margin:4px 0"><button type="button" class="btn s" data-a="tsmall" data-v="1">Chọn tất cả</button><button type="button" class="btn s" data-a="tsmall" data-v="0">Bỏ chọn</button><span class="sm mu">Đã chọn ${m.ids.length}</span></div>
+ <div style="max-height:170px;overflow:auto;border:1px solid var(--bd);border-radius:10px;padding:6px 10px">${st.map(s=>`<label style="display:flex;gap:8px;align-items:center;margin:3px 0"><input type="checkbox" data-c="tsms" value="${s.id}" ${m.ids.includes(s.id)?'checked':''}> ${esc(s.n)} <span class="mu sm">${esc(s.pos||'')}</span></label>`).join('')||'<span class="mu">Chưa có nhân sự cần chấm công.</span>'}</div></div>
+ <div class="f2"><div><label for="tm-f">Từ ngày</label><input id="tm-f" type="date" value="${esc(m.from)}" data-c="tsmf"></div><div><label for="tm-t">Đến ngày</label><input id="tm-t" type="date" value="${esc(m.to)}" data-c="tsmt"></div></div>
+ <div><span class="lbl">Các thứ trong tuần</span><div style="display:flex;flex-wrap:wrap;gap:4px 14px">${TSM_WD.map(w=>`<label style="display:flex;gap:6px;align-items:center"><input type="checkbox" data-c="tsmw" value="${w}" ${m.wd.includes(w)?'checked':''}> ${DAYS[w]}</label>`).join('')}</div></div>
+ <div><span class="lbl">Thời gian nghỉ</span>${[['full','Nghỉ cả ngày'],['am','Nghỉ nửa ngày sáng (đi làm từ '+CC_PM_START+')'],['pm','Nghỉ nửa ngày chiều (làm đến '+CC_AM_END+')']].map(([v,t])=>`<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="radio" name="l" data-c="tsml" value="${v}" ${m.l===v?'checked':''}> ${t}</label>`).join('')}</div>
+ <div><label for="tm-k">Loại nghỉ</label><select id="tm-k" data-c="tsmk">${opts([['','Nghỉ có phép (hưởng lương)'],['1','Nghỉ không lương']],m.lk)}</select></div>
+ <p class="sm mu" style="margin:0">${days===false?'Khoảng ngày quá dài (tối đa '+TSM_MAX+' ngày mỗi lần).':days===null?'Chọn khoảng ngày hợp lệ.':'Khoảng đã chọn có <b>'+days.length+'</b> ngày làm việc, '+m.ids.length+' nhân sự.'} Ngày nhân sự đã chấm có mặt (có giờ vào ra), đã có đơn nghỉ được duyệt hoặc Trung tâm nghỉ sẽ được bỏ qua. Các buổi 1-1 rơi vào giờ nghỉ hiện ở mục Dạy thay để phân giáo viên dạy thay.</p>
+ <div class="err" role="alert">${esc(m.err||'')}</div><div class="acts" style="justify-content:flex-end"><button class="btn no" type="button" data-a="tsmclr">Bỏ nghỉ các ngày này</button><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Chấm nghỉ</button></div></form>`)};
+/* áp dụng cho từng người, từng ngày; clear = bỏ dấu nghỉ đã chấm trước đó */
+function tsmRun(clear){const m=S.modal;if(!canLeaveMark())return false;
+ if(!m.ids.length){m.err='Hãy chọn ít nhất một nhân sự.';return}
+ if(!m.wd.length){m.err='Hãy chọn ít nhất một thứ trong tuần.';return}
+ const days=tsmDays(m);if(days===false){m.err='Khoảng ngày quá dài, tối đa '+TSM_MAX+' ngày mỗi lần.';return}
+ if(days===null){m.err='Ngày kết thúc phải sau hoặc cùng ngày bắt đầu.';return}
+ if(!days.length){m.err='Khoảng ngày đã chọn không có ngày làm việc nào.';return}
+ let ok=0,closed=0,lr=0,pres=0,none=0;
+ m.ids.forEach(id=>{const s=stBy(id);if(!s||!needCC(s))return;days.forEach(d=>{
+  if(isClosed(d)){closed++;return}
+  const k=id+'|'+d,r=DB.ts[k];
+  if(clear){if(r&&r.l){delete DB.ts[k];ok++}else none++;return}
+  if(DB.lr.some(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t)){lr++;return}
+  if(r&&!r.l&&(r.i||r.o)){pres++;return}
+  DB.ts[k]=tsRec(m.l,!!m.lk,d);ok++})});
+ if(!ok){m.err=clear?'Không có ngày nào đã chấm nghỉ trong khoảng này.':'Không chấm được ngày nào'+(pres||lr||closed?': '+[pres?pres+' lượt đã chấm có mặt':'',lr?lr+' lượt đã có đơn nghỉ duyệt':'',closed?closed+' lượt Trung tâm nghỉ':''].filter(Boolean).join(', '):'')+'.';return}
+ S.modal=null;toast((clear?'Đã bỏ nghỉ ':'Đã chấm nghỉ ')+ok+' lượt (nhân sự × ngày)'+(clear?'':(pres||lr||closed?'. Bỏ qua: '+[pres?pres+' đã chấm có mặt':'',lr?lr+' đã có đơn nghỉ duyệt':'',closed?closed+' Trung tâm nghỉ':''].filter(Boolean).join(', '):'')))}
+FORM.tsmf=f=>tsmRun(false);
+ACT.tsmclr=()=>tsmRun(true);
+ACT.tsl=v=>{const [id,d]=v.split('|');if(!canLeaveMark()||!needCC(stBy(id)))return false;S.modal={t:'tsl',id,d}};
 MODALS.tsl=()=>{const m=S.modal,s=stBy(m.id);if(!s||!canLeaveMark()){S.modal=null;return''}const cur=tsLv(m.id,m.d),l=cur?cur.l:'full';
  return mdl('Chấm công nghỉ · '+s.n,`<form id="tslf" class="f"><p class="mu sm" style="margin:0">${DAYN[dow(m.d)]} ${vd(m.d)}</p>
  <div><span class="lbl">Thời gian nghỉ</span>${[['full','Nghỉ cả ngày'],['am','Nghỉ nửa ngày sáng (đi làm từ '+CC_PM_START+')'],['pm','Nghỉ nửa ngày chiều (làm đến '+CC_AM_END+')']].map(([v,t])=>`<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="radio" name="l" value="${v}" ${l===v?'checked':''}> ${t}</label>`).join('')}</div>
  <div><label for="tl-k">Loại nghỉ</label><select id="tl-k" name="lk">${opts([['','Nghỉ có phép (hưởng lương)'],['1','Nghỉ không lương']],cur&&cur.lk?'1':'')}</select></div>
  <p class="sm mu" style="margin:0">Nghỉ có phép: cả ngày hưởng đủ công, nửa ngày vẫn hưởng đủ công của ngày đó. Nghỉ không lương: cả ngày không tính công, nửa ngày tính nửa công. Các buổi 1-1 rơi vào giờ nghỉ cần phân giáo viên dạy thay ở mục Dạy thay.</p>
  <div class="acts" style="justify-content:flex-end">${cur?'<button class="btn no" type="button" data-a="tslclr">Bỏ nghỉ</button>':''}<button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit">Lưu</button></div></form>`)};
-FORM.tslf=f=>{if(!canLeaveMark())return false;const m=S.modal,s=stBy(m.id);if(!s||!needCC(s)||m.d>TODAY)return false;
- const l=f.elements.l.value,past=m.d<TODAY,now=hm(),r={i:'',o:'',l};if(f.elements.lk.value==='1')r.lk=1;
- if(l==='am'){if(past||now>=CC_PM_START)r.i=CC_PM_START;if(past||now>=ccOut())r.o=ccOut()}
- else if(l==='pm'){if(past||now>=ccIn())r.i=ccIn();if(past||now>=CC_AM_END)r.o=CC_AM_END}
+FORM.tslf=f=>{if(!canLeaveMark())return false;const m=S.modal,s=stBy(m.id);if(!s||!needCC(s))return false;
+ const l=f.elements.l.value,r=tsRec(l,f.elements.lk.value==='1',m.d);
  DB.ts[m.id+'|'+m.d]=r;S.modal=null;toast('Đã chấm công '+LVT[l].toLowerCase()+' cho '+given(s.n))};
 ACT.tslclr=()=>{if(!canLeaveMark())return false;delete DB.ts[S.modal.id+'|'+S.modal.d];S.modal=null;toast('Đã bỏ nghỉ, chấm công lại cho ngày này')};
 /* --- đơn nghỉ phép --- */
