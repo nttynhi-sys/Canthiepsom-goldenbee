@@ -30,6 +30,8 @@ async function login(page,e,p){await page.waitForSelector('#login');await page.f
  await page.selectOption('#ds-g',P.T2);await page.fill('#ds-n','Cô nghỉ ốm');await page.click('#dsaf button[type=submit]');
  let r1;for(let i=0;i<30;i++){await sleep(400);r1=[...srv.recs.entries()].find(([k,v])=>k.startsWith('sub|')&&v.data&&v.data.sid===P.sid);if(r1)break}
  ok('máy chủ nhận bản ghi dạy thay ở bảng records (collection sub), đúng ngày, buổi, giáo viên',!!r1&&r1[1].data.d===P.d&&r1[1].data.gv===P.T2&&r1[1].data.og===P.T1,r1&&r1[1].data);
+ let nt;for(let i=0;i<30;i++){await sleep(400);nt=[...srv.recs.entries()].find(([k,v])=>k.startsWith('nt|')&&v.data&&v.data.to&&v.data.to.includes(P.T2));if(nt)break}
+ ok('thông báo cho giáo viên dạy thay lưu ở bảng records (collection nt), gửi riêng kèm danh sách người nhận',!!nt&&nt[1].data.aud==='nb'&&nt[1].data.t==='Phân công dạy thay',nt&&nt[1].data);
  ok('dạy thay không phải dữ liệu tiền: không nằm ở money_records',![...srv.mon.keys()].some(k=>k.startsWith('sub|')));
  await ctx.close();
  /* Quản lý thấy bản ghi, và bỏ dạy thay thì máy chủ xóa bản ghi */
