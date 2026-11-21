@@ -115,7 +115,8 @@ function settle(k,m){
   r.refund+=o.rf;r.lost+=o.ls}
  if(r.stop){r.refund=0;r.rows.forEach(x=>{x.rf=0;x.note+=' (bé đã ngưng can thiệp: không hoàn)'})}
  r.refund=Math.round(r.refund);r.lost=Math.round(r.lost);return r}
-function postSettle(k,m){const key=k.id+'|'+m,old=DB.set[key],r=settle(k,m);
+function postSettle(k,m){const key=k.id+'|'+m,old=DB.set[key];if(old&&old.man)return;   /* số trừ phí dư nhập tay được giữ nguyên */
+ const r=settle(k,m);
  if(old)DB.lg=DB.lg.filter(x=>x.id!==old.ref);
  if(r.refund>0){const nm=sm(m,1),e={id:uid(),hs:k.id,date:nm+'-01',kind:'hoan',amt:r.refund,m:nm,note:'Hoàn phí nghỉ '+mLow(m)+', trừ vào học phí tháng sau',src:key};DB.lg.push(e);DB.set[key]={ref:e.id,amt:e.amt,at:TODAY}}
  else delete DB.set[key]}
