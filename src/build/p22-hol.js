@@ -60,7 +60,10 @@ function holCard(days){const xs=holUpcoming(days);
 /* --- Học phí trả trước: học phí tháng m, trừ phí dư của tháng trước --- */
 /* Phí dư của tháng trước (khoản hoàn do bé nghỉ có phép, Trung tâm nghỉ, nhập viện): lấy khoản đã ghi vào công nợ tháng m, chưa ghi thì tính tạm từ điểm danh.
    Bé đã ngưng can thiệp thì không có phí dư (settle trả hoàn 0). */
-function surplusPrev(k,m){const posted=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hoan'&&e.m===m);
+/* Số tiền trừ phí dư do người dùng nhập tay (DB.set[bé|tháng trước] có man:1, kể cả nhập 0): ưu tiên hơn số tự tính từ điểm danh; xem surManual ở p14-hp.js */
+function surplusPrev(k,m){const mk=(DB.set||{})[k.id+'|'+sm(m,-1)];
+ if(mk&&mk.man)return{amt:Math.max(0,+mk.amt||0),posted:true,man:true};
+ const posted=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hoan'&&e.m===m);
  if(posted.length)return{amt:posted.reduce((s,e)=>s+e.amt,0),posted:true};
  if(k.st!=='dang')return{amt:0,posted:false};
  return{amt:settle(k,sm(m,-1)).refund,posted:false}}
