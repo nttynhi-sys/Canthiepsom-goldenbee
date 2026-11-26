@@ -55,7 +55,7 @@ MODALS.hs=()=>{const m=S.modal,k=kidBy(m.id);if(!k||!canKid(k.id)){S.modal=null;
  return mdl(k.n+' · '+kcode(k),tabsH(T,m.tab,'hstab2')+b,1)};
 function hsInfo(k){const g=grBy(k.gr),r=(a,b)=>`<div class="rw"><span class="mu">${a}</span><b>${b}</b></div>`;
  return`<div class="two"><div>${r('Giới tính',k.g==='M'?'Nam':'Nữ')}${r('Ngày sinh',vd(k.dob)+' ('+age(k.dob)+')')}${r('Ngày nhập học',vd(k.sd))}${r('Nhu cầu chính',esc(k.nd))}${r('Chẩn đoán',dxOf(k).length||k.dxo?dxNames(k,dxFull).map(x=>`<span style="display:block;text-align:right">${esc(x)}</span>`).join(''):'<span class="mu">Chưa ghi</span>')}${k.dxn?r('Nơi, bác sĩ, ngày chẩn đoán',esc(k.dxn)):''}${r('Trạng thái',tg(KST[k.st],k.st==='dang'?'ok':'gy'))}${r('Chương trình',esc(progOf(k)))}${r('Giáo viên 1-1',kTs(k).length?kTs(k).map(id=>`<span style="display:block;text-align:right">${esc(sn(id))}${kTc(k,id)?` <span class="mu sm">· ${esc(kTc(k,id))}</span>`:''}</span>`).join(''):'Không có')}${r('Giờ 1-1 đăng ký',ltSummary(k))}${r('Nhóm bán trú',g&&k.bt?esc(g.n)+' · '+dayTx(btOf(k)):'Không có')}</div>
- <div>${r('Phụ huynh',esc(k.pr)+' '+esc(k.pn))}${r('Điện thoại',esc(k.pp))}${r('Email cổng phụ huynh',esc(k.pe||'—'))}${canMoney()?r('Công nợ',fmt(balance(k.id))):''}<div class="acts" style="margin-top:12px">${isLead()?`<button class="btn p" data-a="hsedit" data-v="${k.id}">Sửa hồ sơ</button> `:''}${canDelKid()?`<button class="btn no" data-a="hsdelk" data-v="${k.id}">Xóa hồ sơ bé</button> `:''}<button class="btn" data-a="ddkid" data-v="${k.id}">Bảng chấm công của bé</button></div></div></div>`}
+ <div>${r('Phụ huynh',esc(k.pr)+' '+esc(k.pn))}${r('Điện thoại',esc(k.pp))}${r('Email cổng phụ huynh',esc(k.pe||'—'))}<div class="acts" style="margin-top:12px">${isLead()?`<button class="btn p" data-a="hsedit" data-v="${k.id}">Sửa hồ sơ</button> `:''}${canDelKid()?`<button class="btn no" data-a="hsdelk" data-v="${k.id}">Xóa hồ sơ bé</button> `:''}<button class="btn" data-a="ddkid" data-v="${k.id}">Bảng chấm công của bé</button></div></div></div>`}
 /* --- thêm, sửa hồ sơ --- */
 ACT.hsnew=()=>{S.modal={t:'hsf',id:''}};
 ACT.hsedit=v=>{S.modal={t:'hsf',id:v}};
@@ -245,7 +245,7 @@ function kprForm(k){const o=(DB.kpr||{})[k.id]||{},own=kidBtOwn(k);
  <div class="acts" style="justify-content:flex-end">${hasKpr(k)?`<button class="btn" type="button" data-a="kprclr" data-v="${k.id}">Bỏ hết giá riêng</button>`:''}<button class="btn p" type="submit">Lưu giá riêng</button></div></form>`}
 function kprCard(k){if(!canMoney())return'';
  return`<div class="card"><h2>Giá riêng của bé</h2>${kprNow(k)}<p class="sm mu" style="margin-bottom:10px">${KPR_HELP}</p>${kprForm(k)}</div>`}
-/* nút "Giá riêng" ở Học phí → Công nợ học sinh (Văn phòng không có mục Học sinh nên chỉ vào được từ đây) */
+/* nút "Giá riêng" ở Học phí → Học phí học sinh (Văn phòng không có mục Học sinh nên chỉ vào được từ đây) */
 ACT.kpropen=v=>{if(!canMoney())return false;S.modal={t:'kpr',id:v}};
 MODALS.kpr=()=>{const id=S.modal.id,k=kidBy(id);if(!k||!canMoney()||!canKid(id)){S.modal=null;return''}
  const nm=sm(CM,1),f=feeBreak(k,nm),mix=[f.bt?f.bt+' ngày bán trú':'',f.s11?f.s11+' buổi 1-1 tính riêng':''].filter(Boolean).join(', ');

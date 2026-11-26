@@ -141,8 +141,8 @@ const main=page=>page.evaluate(()=>document.querySelector('#main').innerText);
  ok('sau khi tạo hóa đơn, công nợ của bé = hóa đơn − phí dư tháng trước',gen.hp>0&&gen.bal===gen.hp-gen.sur&&gen.sur===126000,gen);
  /* bé ngưng đột ngột: không còn phí dư mới, không hoàn */
  const stop=await ev(()=>{const pm=sm(CM,-1),k=kidBy('y3a');k.st='nghi';DB.lg=DB.lg.filter(e=>!(e.hs==='y3a'&&e.kind==='hoan'));
-  const r=settle(k,pm),sp=surplusPrev(k,CM);postSettle(k,pm);return{refund:r.refund,stop:r.stop,sur:sp.amt,posted:DB.lg.filter(e=>e.hs==='y3a'&&e.kind==='hoan').length,tag:balTag(-5000,k)}});
- ok('bé ngưng đột ngột: phí dư bằng 0, không ghi khoản hoàn nào, nhãn "Dư không hoàn"',stop.refund===0&&stop.stop&&stop.sur===0&&stop.posted===0&&/Dư không hoàn/.test(stop.tag),stop);
+  const r=settle(k,pm),sp=surplusPrev(k,CM);postSettle(k,pm);return{refund:r.refund,stop:r.stop,sur:sp.amt,posted:DB.lg.filter(e=>e.hs==='y3a'&&e.kind==='hoan').length,tag:''}});
+ ok('bé ngưng đột ngột: phí dư bằng 0, không ghi khoản hoàn nào',stop.refund===0&&stop.stop&&stop.sur===0&&stop.posted===0,stop);
  await ev(()=>{kidBy('y3a').st='dang'});
 
  /* ---------- 6. giao diện học phí ---------- */
@@ -155,7 +155,7 @@ const main=page=>page.evaluate(()=>document.querySelector('#main').innerText);
  await page.click('[data-a="holgo"]');await W(80);
  ok('nút Xem và thêm ngày nghỉ mở tab Ngày nghỉ lễ trong Học phí',!!(await page.$('#holf')));
  await ev(()=>{S.hp.tab='tq';render()});await W(60);
- ok('Công nợ học sinh có cột Trừ phí dư tháng trước',/Trừ phí dư tháng trước/.test(await main(page)));
+ ok('Học phí học sinh có cột Trừ phí dư tháng trước',/Trừ phí dư tháng trước/.test(await main(page)));
 
  /* ---------- 7. phụ huynh ---------- */
  await ev(()=>{DB.hol=[{id:'q2',d:addD(TODAY,3),n:'Nghỉ lễ thử',k:'le'}];DB.hol=DB.hol});
