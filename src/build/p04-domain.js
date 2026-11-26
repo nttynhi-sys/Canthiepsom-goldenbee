@@ -101,10 +101,10 @@ function feeOf(k,kind,d,sid,code,m){
   else if(code==='tt'){note='Trung tâm cho nghỉ (thiên tai, dịch bệnh...): xếp học bù, không tính phí nghỉ'}}
  return{rf:Math.round(rf),ls:Math.round(ls),note}}
 function settle(k,m){
- const r={k:k.id,m,rows:[],cells:{},plan:0,planInc:0,planBt:0,cm:0,p:0,kp:0,tt:0,bv:0,bu:0,none:0,lost:0,refund:0,stop:k.st==='nghi'};
+ const r={k:k.id,m,rows:[],cells:{},days:{},plan:0,planInc:0,planBt:0,cm:0,p:0,kp:0,tt:0,bv:0,bu:0,none:0,lost:0,refund:0,stop:k.st==='nghi'};
  const put=(d,c)=>{const a=r.cells[d]=r.cells[d]||[];if(!a.includes(c))a.push(c)};
  for(const x of schedF(k,m)){
-  const code=DB.att[x.d+'|'+x.sid+'|'+k.id]||'';
+  r.days[x.d]=1;const code=DB.att[x.d+'|'+x.sid+'|'+k.id]||'';
   if(x.kind==='bu'){if(code==='cm'){r.bu++;put(x.d,'B')}else if(x.d<WD)put(x.d,'?');continue}
   if(x.kind==='11'){if(x.inc){r.planInc++;continue}r.plan++}else r.planBt++;   /* ca 1-1 trong gói bán trú tính theo ngày bán trú, không tính riêng */
   if(!code){if(x.d<WD){r.none++;put(x.d,'?')}continue}
