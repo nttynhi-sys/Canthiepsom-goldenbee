@@ -56,6 +56,7 @@ Cập nhật 16/11/2026 (mã ứng dụng cuối: `154babd`). Quy tắc, nghiệ
 - Kỹ thuật: tìm nguyên nhân `z25-sd-bank` và `n2.js`. Chưa có yêu cầu tính năng nào đang chờ.
 
 ## 10. Nhật ký
+- 26/11 điểm danh: Bảng chấm công cho sang tháng sau (tối đa 12 tháng), ô ngày chưa ghi kể cả ngày sắp tới bấm được (dấu +). Không đổi lược đồ. Bài thử `z66`. `y3-hol` lỗi 1 ca theo ngày chạy (cả bản gốc).
 - 21/11 học phí: cột "Trừ phí dư tháng trước" tự điền theo điểm danh và sửa được bằng cách gõ số tiền (kể cả 0 và tháng chưa có điểm danh như tháng 10), nút Về tự động; tự động ghi phí dư khi tạo hóa đơn (có ô tắt) và nút Ghi phí dư tạm tính; bảng Tạo hóa đơn có tìm kiếm và phân trang. Bảng tiền `set` thêm `man:1`, không đổi lược đồ. Bài thử `z65`, `cloud-hoc-phi-tru-phi-du`. Ghi chú: `flows1` lỗi 2 ca vào thứ Bảy (phụ thuộc ngày chạy, không liên quan).
 - 20/11 (3) thông báo cho phụ huynh khi đổi giáo viên hoặc đổi giờ học (dạy thay): tự gửi khi phân công (ô tích mặc định bật, không kèm lý do nghỉ), báo khi bỏ dạy thay nếu trước đó đã báo; phụ huynh chỉ nhận thông báo của bé mình. Không đổi database, không đổi máy chủ. Bài thử `z64`, `phone-api`.
 - 20/11 (2) gửi thông báo cho giáo viên dạy thay: tự gửi khi phân công (ô tích mặc định bật), báo hủy khi đổi người hoặc bỏ dạy thay, nút Thông báo để nhắc lại; thông báo gửi riêng (`nt.to`), chỉ người nhận thấy và tính chưa đọc. Không đổi database. Bài thử `z63`, `cloud-day-thay`.

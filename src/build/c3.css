@@ -371,3 +371,5 @@ th{color:color-mix(in srgb,#00acc1 62%,var(--tx));background:color-mix(in srgb,#
 
 /* ký hiệu chấm công nghỉ nửa ngày: N có phép, Q không lương */
 .sc-N{background:var(--ins);color:var(--in)}.sc-Q{background:var(--ers);color:var(--er)}
+.dcell.dnew{color:var(--mu);font-size:12px;font-weight:700;opacity:.55;border:1px dashed var(--ln)}
+.dcell.dnew:hover{opacity:1;color:var(--ac)}
