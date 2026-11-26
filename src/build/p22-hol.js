@@ -6,14 +6,21 @@ const holList=()=>(DB.hol||[]).slice().sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:0);
 const holTag=h=>tg(HOLK[h.k]||HOLK.le,h.k==='tt'?'wa':'in');
 
 /* Ảnh hưởng của một ngày nghỉ: bao nhiêu bé bán trú, buổi 1-1 tính riêng, lượt điểm danh đã ghi, và số tiền học phí giảm */
+function holKid(k,d){const w=dow(d),r={bt:0,s11:0,money:0};if(w===0||k.st!=='dang'||feeStartM(k)>d.slice(0,7)||!feeOn(k,d))return r;
+ if(btHas(k,w)){r.bt++;r.money+=kidBt(k)}
+ const inc=incIdW(k,w);
+ DB.lich.forEach(l=>{if(l.type==='11'&&l.hs===k.id&&l.day===w&&l.id!==inc){r.s11++;r.money+=feeSlot(k,l.id)}});return r}
 function holImpact(d){const w=dow(d),r={bt:0,s11:0,money:0,att:0,bu:0};if(w===0)return r;
- DB.kids.forEach(k=>{if(k.st!=='dang'||feeStartM(k)>d.slice(0,7)||!feeOn(k,d))return;
-  if(btHas(k,w)){r.bt++;r.money+=kidBt(k)}
-  const inc=incIdW(k,w);
-  DB.lich.forEach(l=>{if(l.type==='11'&&l.hs===k.id&&l.day===w&&l.id!==inc){r.s11++;r.money+=feeSlot(k,l.id)}})});
+ DB.kids.forEach(k=>{const x=holKid(k,d);r.bt+=x.bt;r.s11+=x.s11;r.money+=x.money});
  r.bu=DB.lich.filter(l=>l.type==='bu'&&l.date===d).length;
  r.att=Object.keys(DB.att).filter(key=>key.startsWith(d+'|')).length;
  return r}
+/* Học phí đã lập cho tháng m mà sau đó mới đặt ngày nghỉ lễ (hoặc Trung tâm cho nghỉ): đóng trước đầu tháng nên chưa biết ngày nghỉ.
+   Phí dư = học phí đã lập trừ học phí tính đúng theo lịch và ngày nghỉ (invoice), nhưng không quá tiền học phí của chính các ngày nghỉ của bé đó;
+   học phí đã lập bằng hoặc nhỏ hơn số tính đúng thì không có phí dư. Trừ vào học phí tháng sau cùng với khoản hoàn do bé nghỉ. */
+function holVal(k,m){return holIn(m).reduce((s,h)=>s+holKid(k,h.d).money,0)}
+function holCredit(k,m){if(k.st!=='dang')return 0;const H=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hp'&&e.m===m).reduce((s,e)=>s+e.amt,0);if(!(H>0))return 0;
+ const v=holVal(k,m);if(!(v>0))return 0;return Math.max(0,Math.min(Math.round(H-invoice(k,m)),v))}
 const holMonthsBilled=ds=>[...new Set(ds.map(d=>d.slice(0,7)))].filter(m=>DB.lg.some(e=>e.kind==='hp'&&e.m===m));
 
 CHG.holall=(v,t)=>{S.hol=Object.assign({},S.hol,{all:t.checked});S.pg.hol=1};
@@ -64,9 +71,9 @@ function holCard(days){const xs=holUpcoming(days);
 function surplusPrev(k,m){const mk=(DB.set||{})[k.id+'|'+sm(m,-1)];
  if(mk&&mk.man)return{amt:Math.max(0,+mk.amt||0),posted:true,man:true};
  const posted=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hoan'&&e.m===m);
- if(posted.length)return{amt:posted.reduce((s,e)=>s+e.amt,0),posted:true};
+ if(posted.length)return{amt:posted.reduce((s,e)=>s+e.amt,0),posted:true,hol:((DB.set||{})[k.id+'|'+sm(m,-1)]||{}).hol||0};
  if(k.st!=='dang')return{amt:0,posted:false};
- return{amt:settle(k,sm(m,-1)).refund,posted:false}}
+ const s=settle(k,sm(m,-1));return{amt:s.refund,posted:false,hol:s.hol||0}}
 function feeBreak(k,m){const xs=schedF(k,m),gross=invoice(k,m),sp=surplusPrev(k,m),st=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hp'&&e.m===m);
  return{bt:xs.filter(x=>x.kind==='bt').length,s11:xs.filter(x=>x.kind==='11'&&!x.inc).length,gross,sur:sp.amt,posted:sp.posted,due:Math.max(0,gross-sp.amt),closed:holIn(m),
   has:st.length>0,stored:st.reduce((s,e)=>s+e.amt,0)}}

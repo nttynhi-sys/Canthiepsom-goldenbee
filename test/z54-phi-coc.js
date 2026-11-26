@@ -21,7 +21,8 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  /* ngưng học nhưng còn nợ */
  await ev(id=>{kidBy(id).st='nghi';DB.lg.push({id:'eD1',hs:id,date:CM+'-01',kind:'hp',amt:500000,m:CM,note:'Học phí'});render()},K.id);await W();
  await page.click('#main tr:has-text("'+K.n+'") [data-a="deprf"]',{force:true});await W();
- ok('bé đã ngưng nhưng còn nợ học phí: chưa hoàn, nêu số tiền còn nợ',await ev(id=>!(S.modal&&S.modal.t==='ask')&&!DB.dep[id].r&&/còn nợ học phí/.test(document.querySelector('.toast')?document.querySelector('.toast').textContent:''),K.id));
+ ok('bé đã ngưng: hỏi xác nhận (nhắc kiểm tra đã đóng đủ học phí), chưa hoàn khi chưa xác nhận',await ev(id=>!!(S.modal&&S.modal.t==='ask')&&!DB.dep[id].r&&/đóng đủ học phí/.test(document.querySelector('.modal')?document.querySelector('.modal').textContent:document.body.textContent),K.id));
+ await ev(()=>{S.modal=null;render()});await W();
  ok('bé đã ngưng vẫn nằm trong danh sách khi còn cọc hoặc còn nợ',!!(await page.$('#main tr:has-text("'+K.n+'")')));
  /* đóng đủ: hoàn được */
  await ev(id=>{DB.lg.push({id:'eD2',hs:id,date:CM+'-05',kind:'thu',amt:500000,m:CM,note:'Thu'});render()},K.id);await W();

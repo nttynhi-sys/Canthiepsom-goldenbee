@@ -58,7 +58,7 @@ function badge(v){if(!U)return 0;const ks=myKids().map(k=>k.id);
  if(v==='bc'&&isGV())return DB.rp.filter(r=>r.au===U.id&&(r.s==='nhap')).length;
  if(v==='td'&&canUpload())return medWait().filter(medEdit).length;
  if(v==='tb')return unread();
- if(v==='hp'&&isPH())return ks.some(h=>balance(h)>0)?1:0;
+ if(v==='hp'&&isPH())return 0;
  return 0}
 
 /* --- tài khoản --- */

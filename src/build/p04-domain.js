@@ -101,7 +101,7 @@ function feeOf(k,kind,d,sid,code,m){
   else if(code==='tt'){note='Trung tâm cho nghỉ (thiên tai, dịch bệnh...): xếp học bù, không tính phí nghỉ'}}
  return{rf:Math.round(rf),ls:Math.round(ls),note}}
 function settle(k,m){
- const r={k:k.id,m,rows:[],cells:{},days:{},plan:0,planInc:0,planBt:0,cm:0,p:0,kp:0,tt:0,bv:0,bu:0,none:0,lost:0,refund:0,stop:k.st==='nghi'};
+ const r={k:k.id,m,rows:[],cells:{},days:{},hol:0,plan:0,planInc:0,planBt:0,cm:0,p:0,kp:0,tt:0,bv:0,bu:0,none:0,lost:0,refund:0,stop:k.st==='nghi'};
  const put=(d,c)=>{const a=r.cells[d]=r.cells[d]||[];if(!a.includes(c))a.push(c)};
  for(const x of schedF(k,m)){
   r.days[x.d]=1;const code=DB.att[x.d+'|'+x.sid+'|'+k.id]||'';
@@ -113,12 +113,13 @@ function settle(k,m){
   const o=feeOf(k,x.kind,x.d,x.sid,code,m);
   r.rows.push({d:x.d,kind:x.kind,slot:x.slot,code,note:o.note,rf:o.rf,ls:o.ls});
   r.refund+=o.rf;r.lost+=o.ls}
- if(r.stop){r.refund=0;r.rows.forEach(x=>{x.rf=0;x.note+=' (bé đã ngưng can thiệp: không hoàn)'})}
+ const hc=holCredit(k,m);if(hc>0){r.hol=hc;r.refund+=hc;r.rows.push({d:m+'-01',kind:'hol',slot:'',code:'tt',note:'Học phí đã lập trước, sau đó đặt ngày nghỉ lễ hoặc Trung tâm nghỉ: hoàn phần các ngày nghỉ',rf:hc,ls:0})}
+ if(r.stop){r.hol=0;r.refund=0;r.rows.forEach(x=>{x.rf=0;x.note+=' (bé đã ngưng can thiệp: không hoàn)'})}
  r.refund=Math.round(r.refund);r.lost=Math.round(r.lost);return r}
 function postSettle(k,m){const key=k.id+'|'+m,old=DB.set[key];if(old&&old.man)return;   /* số trừ phí dư nhập tay được giữ nguyên */
  const r=settle(k,m);
  if(old)DB.lg=DB.lg.filter(x=>x.id!==old.ref);
- if(r.refund>0){const nm=sm(m,1),e={id:uid(),hs:k.id,date:nm+'-01',kind:'hoan',amt:r.refund,m:nm,note:'Hoàn phí nghỉ '+mLow(m)+', trừ vào học phí tháng sau',src:key};DB.lg.push(e);DB.set[key]={ref:e.id,amt:e.amt,at:TODAY}}
+ if(r.refund>0){const nm=sm(m,1),e={id:uid(),hs:k.id,date:nm+'-01',kind:'hoan',amt:r.refund,m:nm,note:(r.hol?'Phí dư ':'Hoàn phí nghỉ ')+mLow(m)+(r.hol?' (gồm '+fmt(r.hol)+' học phí đã thu cho ngày nghỉ lễ)':'')+', trừ vào học phí tháng sau',src:key};DB.lg.push(e);DB.set[key]={ref:e.id,amt:e.amt,at:TODAY,hol:r.hol||0}}
  else delete DB.set[key]}
 const balance=h=>DB.lg.filter(e=>e.hs===h).reduce((s,e)=>s+LGK[e.kind][2]*e.amt,0);
 
