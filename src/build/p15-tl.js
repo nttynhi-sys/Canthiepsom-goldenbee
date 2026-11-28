@@ -13,7 +13,7 @@ function slipLines(s,m){const p=payroll(s,m),f=s.pay,L=[],sb=typeof subStat==='f
   if(p.p&&p.pc.p)L.push(['Bé nghỉ có phép: '+p.p+' ca × '+fnum((f.rate||0)*p.pc.p/100)+' ₫ ('+p.pc.p+'% đơn giá)',p.p*(f.rate||0)*p.pc.p/100]);
   if(p.tt&&p.pc.tt)L.push(['Trung tâm hoặc giáo viên nghỉ: '+p.tt+' ca ('+p.pc.tt+'%)',p.tt*(f.rate||0)*p.pc.tt/100]);
   if(p.bv&&p.pc.bv)L.push(['Bé nhập viện: '+p.bv+' ca ('+p.pc.bv+'%)',p.bv*(f.rate||0)*p.pc.bv/100])}
- if(sb&&sb.n)L.push(['Dạy thay '+sb.n+' ca ('+sb.cm+' ca bé có mặt, công quy đổi '+cgf(sb.cong)+'): '+sb.kids.map(x=>x.k.n+' ×'+x.n).join(', ')+(f.mode==='thang'?'. Lương cố định theo tháng: chưa cộng thêm tiền ca dạy thay':'. Đã tính trong số ca 1-1 ở trên'),null]);
+ if(sb&&sb.n)L.push(['Dạy thay '+sb.n+' ca ('+sb.cm+' ca bé có mặt, công quy đổi '+cgf(sb.cong)+'): '+sb.kids.map(x=>x.k.n+' ×'+x.n).join(', ')+(isFT(s)?'. Giáo viên Fulltime: chỉ ghi nhận công dạy thay, không cộng thêm tiền (lương cố định)':'. Đã tính tiền trong số ca 1-1 ở trên'),null]);
  if(f.rateBt)L.push(['Phụ cấp bán trú: '+p.btd+' ngày × '+fnum(f.rateBt)+' ₫',p.byBt]);
  L.push(['Phụ cấp',p.allow],['Thưởng',p.bonus]);if(p.pen)L.push(['Trừ đi muộn ('+p.late+' lần)',-p.pen]);
  vioList(s.id,m).forEach(v=>{if(vioAmt(v))L.push(['Trừ vi phạm nội quy ('+vdm(v.d)+': '+vioR(v.r)+')',-vioAmt(v)])});

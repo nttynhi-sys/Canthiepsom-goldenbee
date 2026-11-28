@@ -185,6 +185,8 @@ const vioSum=(id,m)=>vioList(id,m).reduce((a,v)=>a+vioAmt(v),0);
 function payroll(s,m){
  const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id||(DB.sub||[]).some(x=>x.sid===l.id&&x.gv===s.id)),pc=gvPct();
  const myGr=DB.groups.filter(g=>grHas(g,s.id)),open6=myGr.some(g=>grOpen(g,6));
+ /* Dạy thay: giáo viên Partime (trả theo ca) được tính tiền ca dạy thay như ca của mình; giáo viên Fulltime chỉ được ghi nhận công dạy thay (xem subStat ở p27-ds.js), không cộng tiền vì đã có lương cố định. Giáo viên nghỉ không có ca dạy thay đó (effGv). */
+ const subNoPay=l=>l.gv!==s.id&&isFT(s);
  let cong=0,late=0,btd=0,leave=0,abs=0,hol=0;
  const ss={cm:0,kp:0,p:0,tt:0,bv:0,bu:0,none:0},cc=needCC(s);
  for(const d of dts){const t=tsSt(s.id,d),w=dow(d),worked=cc?(t==='ok'||t==='late'||t==='half'||t==='halfkl'):t==='';   /* trả theo ca: không chấm công, ngày làm việc thường (không nghỉ phép, không nghỉ lễ) coi là có mặt để đếm ca chưa điểm danh */
@@ -194,11 +196,11 @@ function payroll(s,m){
   else if(t==='leave'){cong++;leave++}else if(t==='hol'){cong++;hol++;continue}   /* ngày nghỉ lễ hưởng nguyên lương ngày công, không có ca dạy */
   else if(t==='abs'||t==='kl')abs++;
   /* ca 1-1 tính theo điểm danh của bé trong ca đó */
-  mine.forEach(l=>{if(effGv(l,d)===s.id&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===d))){const c=DB.att[d+'|'+l.id+'|'+l.hs];
+  mine.forEach(l=>{if(effGv(l,d)===s.id&&!subNoPay(l)&&((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===d))){const c=DB.att[d+'|'+l.id+'|'+l.hs];
    if(c&&ss[c]!=null){ss[c]++;if(l.type==='bu'&&c==='cm')ss.bu++}else if(!c&&worked)ss.none++}})}
  /* Chủ nhật: không tính ngày công, không chấm công, không nghỉ phép; chỉ các ca 1-1 và học bù dạy vào Chủ nhật được tính theo ca (lương cố định tháng không tính thêm vì bySess=0). */
  for(const d of mDates(m)){if(dow(d)!==0||d>=WD)continue;
-  mine.forEach(l=>{if(effGv(l,d)===s.id&&((l.type==='11'&&l.day===0)||(l.type==='bu'&&l.date===d))){const c=DB.att[d+'|'+l.id+'|'+l.hs];
+  mine.forEach(l=>{if(effGv(l,d)===s.id&&!subNoPay(l)&&((l.type==='11'&&l.day===0)||(l.type==='bu'&&l.date===d))){const c=DB.att[d+'|'+l.id+'|'+l.hs];
    if(c&&ss[c]!=null){ss[c]++;if(l.type==='bu'&&c==='cm')ss.bu++}else if(!c)ss.none++}})}
  const teach=ss.cm,units=ss.cm*pc.cm+ss.kp*pc.kp+ss.p*pc.p+ss.tt*pc.tt+ss.bv*pc.bv;
  const byDay=f.mode==='buoi'?0:(f.base||0)*Math.min(cong,cfg.cc)/cfg.cc,bySess=f.mode==='thang'?0:units/100*(f.rate||0),byBt=btd*(f.rateBt||0),allow=f.allow||0,bonus=DB.bon[s.id+'|'+m]||0,pen=late*(f.latePen||0),bh=(f.base||0)*(f.bh||0)/100;
