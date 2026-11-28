@@ -1796,7 +1796,7 @@ const grOf=id=>DB.groups.find(g=>grHas(g,id));
 const grNames=g=>grTs(g).map(stBy).filter(Boolean).map(s=>s.n).join(', ')||'Chưa phân công';
 const grSet=(g,ids)=>{ids=[...new Set((ids||[]).filter(Boolean))];g.ts=ids;g.gv=ids[0]||'';g.tg=ids[1]||''};
 /* một dòng của dayList có người này phụ trách không (ca 1-1, học bù: một giáo viên; bán trú: cả danh sách giáo viên của lớp) */
-const rowHas=(s,id)=>!!id&&(s.gv===id||(s.ts||[]).includes(id));
+const rowHas=(s,id)=>!!id&&(s.gv===id||(s.ts||[]).includes(id)||(s.ok||[]).includes(id));   /* s.ok: giáo viên hiện tại của ca được điểm danh hộ các buổi trước ngày bàn giao */
 const kn=id=>{const k=kidBy(id);return k?k.n:'(đã xóa)'};
 const sn=id=>{const s=stBy(id);return s?s.n:'Chưa phân công'};
 /* Giáo viên 1-1 của một bé: k.ts là danh sách, ngang nhau (không có giáo viên chính), vì nhiều giáo viên dạy chung một bé và mỗi người có thể dạy nội dung khác nhau (ví dụ cô A dạy Ngôn ngữ, cô B dạy Vận động – giác quan). Mỗi ca 1-1 (l.gv) do đúng một người dạy; k.tc[mã nhân sự] là ghi chú nội dung người đó phụ trách. Dữ liệu cũ chỉ có k.gv thì đọc từ đó. kSet ghi k.ts và giữ người đầu ở k.gv chỉ để bản cũ vẫn đọc được; mã mới không đọc k.gv, không viết k.gv===. */
@@ -1926,7 +1926,9 @@ function lichNear(w,slot,date){return DB.lich.filter(l=>l.slot&&slotOver(date?ef
 /* --- Dạy thay: bản ghi DB.sub (collection sub) = {id,d,sid,hs,gv,og,by,at,n}: ngày d, buổi sid (mã trong DB.lich) do giáo viên gv dạy thay giáo viên gốc og. Buổi 1-1 hằng tuần không đổi, chỉ riêng ngày d đổi người dạy. --- */
 const ABS_ATT=['p','kp','tt','bv'];   /* bé vắng: giáo viên của buổi đó rảnh trong khung giờ này */
 const subOf=(d,sid)=>(DB.sub||[]).find(s=>s.d===d&&s.sid===sid)||null;
-const effGv=(l,d)=>{const s=subOf(d,l.id);return s?s.gv:l.gv};
+/* Bàn giao ca giữa giáo viên (giáo viên cũ nghỉ việc, ca giao cho giáo viên mới): l.gv là giáo viên hiện tại; l.ph = [{g,u}] sắp theo u tăng dần = giáo viên g phụ trách ca này đến hết ngày trước u. Buổi trước ngày bàn giao vẫn thuộc giáo viên cũ (công, tiền, báo cáo), giáo viên hiện tại chỉ điểm danh hộ (dayList.ok) nên bé vẫn có điểm danh để tính học phí. */
+const baseGv=(l,d)=>{const h=(l.ph||[]).find(x=>d<x.u);return h?h.g:l.gv};
+const effGv=(l,d)=>{const s=subOf(d,l.id);return s?s.gv:baseGv(l,d)};
 /* giờ học của buổi sid ngày d: dạy thay có thể đổi giờ riêng ngày đó cho hợp giáo viên dạy thay (sub.slot); ca hằng tuần không đổi. Học phí vẫn tính theo giờ gốc. */
 const effSlot=(l,d)=>{const s=subOf(d,l.id);return s&&s.slot?s.slot:l.slot};
 const sbSlot=(d,sid,slot)=>{const s=subOf(d,sid);return s&&s.slot?s.slot:slot};
@@ -1945,7 +1947,7 @@ function freeSlots(gv,hs,from,n){const out=[];let d=from;
 function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))return out;
  DB.lich.forEach(l=>{if(l.type==='11'&&l.day===w&&(!first[l.hs]||l.slot<first[l.hs].slot))first[l.hs]=l});
  DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);
-  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(effSlot(l,date)),gv:effGv(l,date),sub:subOf(date,l.id),slot:effSlot(l,date),kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
+  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(effSlot(l,date)),gv:effGv(l,date),ok:baseGv(l,date)!==l.gv?[l.gv]:[],hand:baseGv(l,date)!==l.gv,sub:subOf(date,l.id),slot:effSlot(l,date),kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
  DB.groups.forEach(g=>{const base=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w)),xk={};
   DB.kids.forEach(k=>{if(k.gr===g.id&&k.st==='dang'&&!base.includes(k)){const x=bxOn(k,date);if(x){xk[k.id]=x;base.push(k)}}});   /* bé học đột xuất ngày này */
   if(base.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,kids:base,xk})});
@@ -1970,7 +1972,7 @@ const vioAmt=v=>+((DB.vam||{})[v.st+'|'+v.id])||0;
 const vioList=(id,m)=>(DB.vio||[]).filter(v=>v.st===id&&v.s==='duyet'&&(!m||String(v.d).slice(0,7)===m));
 const vioSum=(id,m)=>vioList(id,m).reduce((a,v)=>a+vioAmt(v),0);
 function payroll(s,m){
- const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id||(DB.sub||[]).some(x=>x.sid===l.id&&x.gv===s.id)),pc=gvPct();
+ const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id||(l.ph||[]).some(x=>x.g===s.id)||(DB.sub||[]).some(x=>x.sid===l.id&&x.gv===s.id)),pc=gvPct();
  const myGr=DB.groups.filter(g=>grHas(g,s.id)),open6=myGr.some(g=>grOpen(g,6));
  /* Dạy thay: giáo viên Partime (trả theo ca) được tính tiền ca dạy thay như ca của mình; giáo viên Fulltime chỉ được ghi nhận công dạy thay (xem subStat ở p27-ds.js), không cộng tiền vì đã có lương cố định. Giáo viên nghỉ không có ca dạy thay đó (effGv). */
  const subNoPay=l=>l.gv!==s.id&&isFT(s);
@@ -2997,7 +2999,7 @@ const isGrStaff=id=>DB.groups.some(g=>grHas(g,id));
 const pool11=()=>DB.staff.filter(s=>isTeacher(s)&&s.st==='dang'&&!isGrStaff(s.id));
 const poolBt=()=>DB.staff.filter(s=>isTeacher(s)&&s.st==='dang'&&!DB.lich.some(l=>l.type==='11'&&l.gv===s.id&&l.day>=1&&l.day<=5));
 VIEWS.pc=()=>{const p=S.pc=Object.assign({tab:'gv',q:'',gv:''},S.pc);
- return head('Phân công','Giáo viên phụ trách từng trẻ và các nhóm bán trú')+tabsH([['gv','Giáo viên 1-1'],['bt','Nhóm bán trú'],['kl','Khối lượng công việc']],p.tab,'pctab')+(p.tab==='gv'?pcGV():p.tab==='bt'?pcBt():pcLoad())};
+ return head('Phân công','Giáo viên phụ trách từng trẻ và các nhóm bán trú',isLead()?'<button class="btn" data-a="bgopen" title="Giáo viên nghỉ việc hoặc đổi người phụ trách: giao ca cho giáo viên mới từ một ngày, các buổi trước đó vẫn tính cho giáo viên cũ">Bàn giao ca giáo viên</button>':'')+tabsH([['gv','Giáo viên 1-1'],['bt','Nhóm bán trú'],['kl','Khối lượng công việc']],p.tab,'pctab')+(p.tab==='gv'?pcGV():p.tab==='bt'?pcBt():pcLoad())};
 ACT.pctab=v=>{S.pc.tab=v};
 INP.pcq=v=>{S.pc.q=v;S.pg.pc=1};
 CHG.pcg=v=>{S.pc.gv=v;S.pg.pc=1};
@@ -3036,6 +3038,42 @@ CHG.pcts=(v,t)=>{const [id,sid]=t.dataset.k.split('|'),g=grBy(id),s=stBy(sid);if
 CHG.pcmvg=(v,t)=>{const k=kidBy(t.dataset.k);if(k&&v){k.gr=v;toast('Đã chuyển '+k.n+' sang '+grBy(v).n)}};
 function pcLoad(){const rows=DB.staff.filter(s=>isTeacher(s)&&s.st==='dang').map(s=>{const gr=grOf(s.id),n=DB.lich.filter(l=>l.type==='11'&&l.gv===s.id).length,ks=DB.kids.filter(k=>k.st==='dang'&&(kHas(k,s.id)||DB.lich.some(l=>l.type==='11'&&l.hs===k.id&&l.gv===s.id))).length;return{s,gr,n,ks,u:Math.min(100,Math.round(n*100/LOAD_MAX))}});
  return`<div class="card">`+tbl(['Giáo viên','Vai trò','Trẻ 1-1','Buổi 1-1/tuần','Mức tải so với '+LOAD_MAX+' buổi/tuần'],rows.map(r=>`<tr><td><b>${esc(r.s.n)}</b></td><td>${esc(r.s.pos)}${r.gr?'<br><span class="sm mu">'+esc(r.gr.n)+' · giáo viên bán trú'+'</span>':''}</td><td>${r.ks}</td><td>${r.n}</td><td style="min-width:160px"><div style="display:flex;gap:8px;align-items:center"><div style="flex:1">${bar(r.u,r.u>75?'var(--er)':'')}</div><span class="sm">${r.u}%</span></div></td></tr>`).join(''))+`<p class="sm mu" style="margin-top:8px">Khung giờ 1-1 là ${DAY_OPEN}–${DAY_CLOSE}, ${SLOTS.length} ca mỗi ngày (mỗi ca ${SLOT_MIN} phút), thứ Hai đến thứ Bảy. Mức tải tính theo ${LOAD_MAX} buổi 1-1 mỗi tuần là đủ tải.</p></div>`}
+
+/* ===== Bàn giao ca giữa giáo viên (giáo viên cũ nghỉ việc giữa tháng, giáo viên mới nhận ca) =====
+   Mỗi ca 1-1 bàn giao ghi l.ph.push({g:giáo viên cũ,u:ngày tiếp quản}) và đổi l.gv sang giáo viên mới (xem baseGv, effGv ở p04-domain.js). Buổi trước ngày tiếp quản vẫn thuộc giáo viên cũ (công, tiền, công 1-1),
+   giáo viên mới điểm danh hộ được (dayList.ok); điểm danh của bé vẫn ghi theo buổi nên học phí tháng này và tháng sau không đổi. */
+const bgFrom=()=>{const cnt={};DB.lich.forEach(l=>{if(l.type==='11'&&l.gv)cnt[l.gv]=(cnt[l.gv]||0)+1});return Object.keys(cnt).filter(id=>stBy(id)).map(id=>({id,n:cnt[id]})).sort((a,b)=>(stBy(a.id).st==='dang')-(stBy(b.id).st==='dang')||(sn(a.id)<sn(b.id)?-1:1))};
+const bgKids=from=>{const by={};DB.lich.forEach(l=>{if(l.type==='11'&&l.gv===from&&kidBy(l.hs))(by[l.hs]=by[l.hs]||[]).push(l)});return Object.keys(by).map(id=>({k:kidBy(id),ls:by[id]})).sort((a,b)=>a.k.n<b.k.n?-1:1)};
+ACT.bgopen=()=>{if(!isLead())return false;const f=bgFrom(),left=f.find(x=>stBy(x.id).st!=='dang');S.modal={t:'bg',from:(left||f[0]||{}).id||'',to:'',d:TODAY,off:[],err:''}};
+CHG.bgfrom=v=>{S.modal.from=v;S.modal.off=[];S.modal.err=''};
+CHG.bgto=v=>{S.modal.to=v;S.modal.err=''};
+CHG.bgd=v=>{if(/^\d{4}-\d{2}-\d{2}$/.test(v||''))S.modal.d=v;S.modal.err=''};
+CHG.bgk=(v,t)=>{const m=S.modal,a=new Set(m.off);if(t.checked)a.delete(v);else a.add(v);m.off=[...a];m.err=''};
+MODALS.bg=()=>{const m=S.modal;if(!isLead()){S.modal=null;return''}
+ const F=bgFrom(),T=pool11().filter(s=>s.id!==m.from),ks=m.from?bgKids(m.from):[],pick=ks.filter(x=>!m.off.includes(x.k.id));
+ return mdl('Bàn giao ca giáo viên',`<form id="bgf" class="f"><p class="sm mu" style="margin-bottom:8px">Dùng khi giáo viên nghỉ việc hoặc đổi người phụ trách giữa tháng. Giáo viên mới nhận các ca 1-1 <b>từ ngày tiếp quản</b>; các buổi trước ngày đó vẫn tính công và tiền cho giáo viên cũ, nhưng giáo viên mới vẫn điểm danh được cho bé ở các ngày trước. Điểm danh của bé được giữ nguyên nên học phí tháng này và tháng sau không đổi.</p>
+ <div class="f2"><div><label for="bg-f">Giáo viên cũ</label><select id="bg-f" data-c="bgfrom"><option value="">Chọn giáo viên</option>${F.map(x=>`<option value="${esc(x.id)}" ${x.id===m.from?'selected':''}>${esc(sn(x.id))}${stBy(x.id).st!=='dang'?' (đã nghỉ việc)':''} · ${x.n} ca</option>`).join('')}</select></div>
+ <div><label for="bg-t">Giáo viên mới</label><select id="bg-t" data-c="bgto"><option value="">Chọn giáo viên</option>${T.map(s=>`<option value="${esc(s.id)}" ${s.id===m.to?'selected':''}>${esc(tName(s))}</option>`).join('')}</select></div>
+ <div><label for="bg-d">Giáo viên mới tiếp quản từ ngày</label><input id="bg-d" type="date" value="${esc(m.d)}" data-c="bgd"></div></div>
+ <p class="sm" style="margin:10px 0 4px"><b>Bé được bàn giao</b> <span class="mu">(${pick.length}/${ks.length} bé, ${pick.reduce((a,x)=>a+x.ls.length,0)} ca mỗi tuần)</span></p>
+ <div style="max-height:220px;overflow:auto;border:1px solid var(--bd);border-radius:8px;padding:6px 10px">${ks.map(x=>`<label class="chk" style="display:flex;gap:8px;align-items:center;margin:0;padding:4px 0"><input type="checkbox" data-c="bgk" value="${esc(x.k.id)}" ${m.off.includes(x.k.id)?'':'checked'}> <span>${esc(x.k.n)} <span class="mu sm">· ${x.ls.map(l=>DAYS[l.day]+' '+l.slot).join(', ')}</span></span></label>`).join('')||'<p class="empty">Giáo viên này chưa có ca 1-1 nào.</p>'}</div>
+ <div class="err" role="alert">${esc(m.err)}</div>
+ <div class="acts" style="justify-content:flex-end;margin-top:10px"><button class="btn" type="button" data-a="mx">Hủy</button><button class="btn p" type="submit" ${m.from&&m.to&&pick.length?'':'disabled'}>Bàn giao ca</button></div></form>`,1)};
+function bgRun(m,dry){const from=m.from,to=m.to,d=m.d,sel=bgKids(from).filter(x=>!m.off.includes(x.k.id));
+ if(!from||!to||from===to)return'Hãy chọn giáo viên cũ và giáo viên mới khác nhau';if(!d)return'Hãy chọn ngày tiếp quản';if(!sel.length)return'Chưa chọn bé nào';
+ for(const x of sel)for(const l of x.ls){const last=(l.ph||[]).slice(-1)[0];if(last&&d<last.u)return'Ca '+DAYS[l.day]+' '+l.slot+' của '+x.k.n+' đã bàn giao đến '+vd(last.u)+', hãy chọn ngày từ đó trở đi';
+  const c=conflict(Object.assign({},l,{gv:to}));if(c)return c+' (bé '+x.k.n+', '+DAYS[l.day]+' '+slotLb(l.slot)+')'}
+ const bu=DB.lich.filter(l=>l.type==='bu'&&l.gv===from&&l.date>=d&&sel.some(x=>x.k.id===l.hs));   /* buổi học bù từ ngày tiếp quản trở đi cũng giao cho giáo viên mới */
+ for(const l of bu){const c=conflict(Object.assign({},l,{gv:to}));if(c)return c+' (học bù '+vd(l.date)+')'}
+ if(dry)return'';
+ bu.forEach(l=>{l.gv=to});
+ sel.forEach(x=>{x.ls.forEach(l=>{l.ph=(l.ph||[]).concat({g:from,u:d});l.gv=to});
+  const tc=Object.assign({},x.k.tc||{});if(tc[from]){if(!tc[to])tc[to]=tc[from];delete tc[from]}
+  kSet(x.k,kTs(x.k).filter(i=>i!==from).concat(to),tc)});
+ return''}
+FORM.bgf=f=>{const m=S.modal;if(!isLead()||!m||m.t!=='bg')return false;const e=bgRun(m,1);if(e){m.err=e;return}
+ const n=bgKids(m.from).filter(x=>!m.off.includes(x.k.id)).length,t=m.d;
+ ask('Bàn giao '+n+' bé của '+sn(m.from)+' cho '+sn(m.to)+' từ '+vd(t)+'? Các buổi trước ngày này vẫn tính cho '+sn(m.from)+'; '+sn(m.to)+' vẫn điểm danh được cho bé ở các ngày trước.',()=>{const e2=bgRun(m);if(e2){toast(e2);return}S.modal=null;toast('Đã bàn giao '+n+' bé từ '+sn(m.from)+' cho '+sn(m.to)+' (từ '+vd(t)+')')},'Bàn giao')};
 /* ===== 5. Lịch học ===== */
 const monOf=d=>{let x=d;while(dow(x)!==1)x=addD(x,-1);return x};
 const onLeave=(id,d)=>DB.lr.some(x=>x.st===id&&x.s==='duyet'&&x.f<=d&&d<=x.t);
@@ -3060,7 +3098,7 @@ function lhEnt(h,d,s){const w=dow(d),out=[];
   const sb=subOf(d,l.id),es=effSlot(l,d);
   if(h.mode==='gv'){
    if(sb&&sb.gv===h.gv&&es===s)out.push({l,r:'in',sb});
-   else if(l.gv===h.gv&&l.slot===s)out.push(sb&&sb.gv!==h.gv?{l,r:'out',sb}:{l,r:'own'})}
+   else if(baseGv(l,d)===h.gv&&l.slot===s)out.push(sb&&sb.gv!==h.gv?{l,r:'out',sb}:{l,r:'own'})}
   else if(h.mode==='kid'){if(l.hs===h.kid&&es===s)out.push({l,r:sb?'sub':'own',sb})}
   else if(es===s)out.push({l,r:sb?'sub':'own',sb})});
  return out}
@@ -3094,7 +3132,8 @@ ACT.lsopen=v=>{const [id,d]=v.split('|'),l=DB.lich.find(x=>x.id===id);if(!l)retu
 MODALS.ls=()=>{const m=S.modal,l=m.id?DB.lich.find(x=>x.id===m.id):null;
  if(l&&l.type==='bu'){const k=kidBy(l.hs),b2=subOf(l.date,l.id);return mdl('Buổi học bù',`<p><b>${esc(k?k.n:'')}</b> học bù ngày ${vd(l.date)}, ${slotLb(effSlot(l,l.date))}, giáo viên ${esc(sn(effGv(l,l.date)))}${b2?' (dạy thay '+esc(sn(l.gv))+')':''}.</p><div class="acts" style="margin-top:12px"><button class="btn" data-a="nav" data-v="hb">Mở mục Học bù</button></div>`)}
  const gv=l?l.gv:S.lh.gv,editable=isLead(),kid=l?kidBy(l.hs):null,sb=l&&m.date?subOf(m.date,l.id):null;
- const sbNote=sb?`<p class="note sm" style="margin-bottom:8px"><b>${vd(m.date)}:</b> giáo viên ${esc(sn(sb.gv))} dạy thay${sb.slot&&sb.slot!==l.slot?', giờ học '+esc(slotLb(sb.slot))+' (giờ gốc '+esc(slotLb(l.slot))+')':''}.${canSub()?' <button class="lk" type="button" data-a="nav" data-v="ds">Mở Dạy thay</button>':''}</p>`:'';
+ const hand=l&&m.date&&baseGv(l,m.date)!==l.gv?`<p class="note sm" style="margin-bottom:8px"><b>${vd(m.date)}:</b> buổi này thuộc giáo viên ${esc(sn(baseGv(l,m.date)))} (giáo viên ${esc(sn(l.gv))} tiếp quản ca từ ${vd((l.ph||[]).find(x=>m.date<x.u).u)}). Công và tiền tính cho giáo viên cũ; giáo viên hiện tại vẫn điểm danh cho bé được.</p>`:'';
+ const sbNote=hand+(sb?`<p class="note sm" style="margin-bottom:8px"><b>${vd(m.date)}:</b> giáo viên ${esc(sn(sb.gv))} dạy thay${sb.slot&&sb.slot!==l.slot?', giờ học '+esc(slotLb(sb.slot))+' (giờ gốc '+esc(slotLb(l.slot))+')':''}.${canSub()?' <button class="lk" type="button" data-a="nav" data-v="ds">Mở Dạy thay</button>':''}</p>`:'');
  if(l&&!editable){return mdl('Buổi 1-1',sbNote+`<p><b>${esc(kid?kid.n:'')}</b><br>${DAYN[l.day]}, ${slotLb(l.slot)}</p>`)}
  /* bé của giáo viên này, bé chưa phân công, rồi các bé đang có giáo viên khác (một bé có nhiều giáo viên: thêm giáo viên này vào dạy chung) */
  const rk=k=>kHas(k,gv)?0:!kTs(k).length?1:2,ks=DB.kids.filter(k=>k.st==='dang').sort((a,b)=>rk(a)-rk(b)||a.n.localeCompare(b.n,'vi'));
@@ -3339,14 +3378,14 @@ function ccOneStat(gv,m,rows){rows=rows||ccOneRows(m);const pc=gvPct(),mine=rows
   const b=by[r.k.id]=by[r.k.id]||{k:r.k,n:0,cm:0,p:0,kp:0,tt:0,bv:0,chua:0,sap:0,cong:0,days:[]};b.n++;if(b[c]!=null)b[c]++;b.cong+=r.code&&pc[r.code]!=null?pc[r.code]/100:0;b.days.push(r)});
  o.kids=Object.values(by).sort((a,b)=>a.k.n<b.k.n?-1:1);return o}
 const CC11={cm:['Có mặt','ok'],p:['Nghỉ P','wa'],kp:['Nghỉ KP','er'],tt:['TT/GV nghỉ','in'],bv:['Nhập viện','in'],chua:['Chưa điểm danh','er'],sap:['Sắp tới','gy']};
-const cc11List=(m,rows)=>{const ids=[...new Set(rows.map(r=>r.g).concat(rows.map(r=>r.og)))].filter(id=>id&&stBy(id)&&stBy(id).st==='dang');
+const cc11List=(m,rows)=>{const ids=[...new Set(rows.map(r=>r.g).concat(rows.map(r=>r.og)))].filter(id=>id&&stBy(id));   /* gồm giáo viên đã nghỉ việc còn ca trong tháng (bàn giao giữa tháng) */
  return ids.filter(id=>!isGV()||id===U.id).map(id=>ccOneStat(id,m,rows)).filter(o=>o.n||o.given).sort((a,b)=>sn(a.gv)<sn(b.gv)?-1:1)};
 function cc11(){const m=S.cc.m,R=ccOneRows(m),L=cc11List(m,R),sum=f=>L.reduce((a,x)=>a+f(x),0);
  const ctl=`<div class="card"><div class="top"><h2>Chấm công 1-1 ${mLabel(m)}</h2><div class="acts"><button class="btn s" data-a="ccm" data-v="-1">Tháng trước</button><button class="btn s" data-a="ccm" data-v="1" ${m>=sm(CM,3)?'disabled':''}>Tháng sau</button>${isGV()?'':'<button class="btn s" data-a="cc11xl">Xuất Excel</button>'}</div></div>
  <p class="sm mu" style="margin:8px 0 0">Mỗi ca can thiệp 1-1 của bé (và buổi học bù) là một ca; công của giáo viên tính trên từng học sinh mình dạy, theo điểm danh của bé. Áp dụng cho cả giáo viên Fulltime và Partime. Ca được người khác dạy thay không tính cho giáo viên gốc, tính cho người dạy thay (cột Dạy thay). Công 1-1 quy đổi theo tỷ lệ bảng lương (có mặt 100%, nghỉ không phép ${gvPct().kp}%, nghỉ có phép ${gvPct().p}%, Trung tâm hoặc giáo viên nghỉ ${gvPct().tt}%, nhập viện ${gvPct().bv}%).</p></div>`;
  if(!L.length)return ctl+'<div class="card"><p class="empty">Chưa có ca 1-1 nào trong '+mLow(m)+'.</p></div>';
  const sumT=`<div class="grid">${kpi('Giáo viên có ca 1-1',L.length,mLabel(m))}${kpi('Tổng số ca 1-1',sum(x=>x.n),sum(x=>x.cm)+' ca có mặt')}${kpi('Bé nghỉ',sum(x=>x.p+x.kp+x.tt+x.bv),sum(x=>x.p)+' có phép · '+sum(x=>x.kp)+' không phép')}${kpi('Chưa điểm danh',sum(x=>x.chua),'ca đã qua chưa ghi',sum(x=>x.chua)?'er':'ok')}</div>`;
- const tb=`<div class="card"><h2>Tổng hợp theo giáo viên</h2>`+tbl(['Giáo viên','Loại','>Tổng ca','>Có mặt','>Học bù','>Nghỉ P','>Nghỉ KP','>TT/GV nghỉ','>Nhập viện','>Chưa ghi','>Sắp tới','>Dạy thay','>Được thay','>Công 1-1','>Số bé'],L.map(x=>{const s=stBy(x.gv);return`<tr><td><b>${esc(sn(x.gv))}</b></td><td>${s?tg(isFT(s)?'Fulltime':'Partime',isFT(s)?'in':'gy'):''}</td><td class="r"><b>${x.n}</b></td><td class="r">${x.cm}</td><td class="r">${x.bu}</td><td class="r">${x.p}</td><td class="r">${x.kp}</td><td class="r">${x.tt}</td><td class="r">${x.bv}</td><td class="r ${x.chua?'er':''}">${x.chua}</td><td class="r">${x.sap}</td><td class="r">${x.subIn}</td><td class="r">${x.given}</td><td class="r"><b>${cgf(x.cong)}</b></td><td class="r">${x.kids.length}</td></tr>`}).join(''))+`</div>`;
+ const tb=`<div class="card"><h2>Tổng hợp theo giáo viên</h2>`+tbl(['Giáo viên','Loại','>Tổng ca','>Có mặt','>Học bù','>Nghỉ P','>Nghỉ KP','>TT/GV nghỉ','>Nhập viện','>Chưa ghi','>Sắp tới','>Dạy thay','>Được thay','>Công 1-1','>Số bé'],L.map(x=>{const s=stBy(x.gv);return`<tr><td><b>${esc(sn(x.gv))}</b>${s&&s.st!=='dang'?' '+tg('Đã nghỉ việc','gy'):''}</td><td>${s?tg(isFT(s)?'Fulltime':'Partime',isFT(s)?'in':'gy'):''}</td><td class="r"><b>${x.n}</b></td><td class="r">${x.cm}</td><td class="r">${x.bu}</td><td class="r">${x.p}</td><td class="r">${x.kp}</td><td class="r">${x.tt}</td><td class="r">${x.bv}</td><td class="r ${x.chua?'er':''}">${x.chua}</td><td class="r">${x.sap}</td><td class="r">${x.subIn}</td><td class="r">${x.given}</td><td class="r"><b>${cgf(x.cong)}</b></td><td class="r">${x.kids.length}</td></tr>`}).join(''))+`</div>`;
  const det=L.filter(x=>x.n).map(x=>`<div class="card"><div class="top"><div><h2>${esc(sn(x.gv))}</h2><p class="mu sm">${x.n} ca 1-1 · ${x.kids.length} bé · ${x.cm} có mặt · công 1-1 quy đổi <b>${cgf(x.cong)}</b>${x.given?' · '+x.given+' ca được người khác dạy thay (không tính)':''}</p></div></div>`
   +tbl(['Bé','>Số ca','>Có mặt','>Nghỉ P','>Nghỉ KP','>TT/GV','>Viện','>Công','Các ngày'],x.kids.map(o=>`<tr><td><b>${esc(o.k.n)}</b><br><span class="sm mu">${esc(kcode(o.k))}</span></td><td class="r">${o.n}</td><td class="r">${o.cm}</td><td class="r">${o.p}</td><td class="r">${o.kp}</td><td class="r">${o.tt}</td><td class="r">${o.bv}</td><td class="r"><b>${cgf(o.cong)}</b></td><td>${o.days.map(r=>`<span title="${esc(CC11[r.st][0])}${r.og!==x.gv?' · dạy thay '+esc(sn(r.og)):''}">${tg(vdm(r.d)+' '+slotLb(r.slot)+(r.kind==='bu'?' (bù)':'')+(r.og!==x.gv?' (thay)':''),CC11[r.st][1])}</span>`).join(' ')}</td></tr>`).join(''))+`</div>`).join('');
  return ctl+sumT+tb+det}
@@ -3757,11 +3796,11 @@ function slipLines(s,m){const p=payroll(s,m),f=s.pay,L=[],sb=typeof subStat==='f
  return{p,L}}
 function slipH(s,m){const {p,L}=slipLines(s,m),r=(a,b,c)=>`<tr class="${c||''}"><td>${a}</td><td class="r nw">${b==null?'':fnum(b)+' ₫'}</td></tr>`;
  return`<div class="tw"><table style="min-width:0"><tbody>${L.map(x=>r(x[0],x[1])).join('')}${r('Tổng thu nhập',p.gross,'tot')}${r('Bảo hiểm ('+(s.pay.bh||0)+'% lương cơ bản)',-p.bh)}${r('Giảm trừ gia cảnh (không tính thuế)',DB.cfg.giamTru)}${r('Thuế TNCN tạm tính ('+DB.cfg.thue+'% phần vượt giảm trừ)',-p.tax)}${r('Thực nhận',p.net,'tot')}</tbody></table></div><p class="sm mu" style="margin-top:8px">Số liệu tạm tính theo chấm công (${p.cong} công, ${p.leave} ngày nghỉ phép được tính công) và điểm danh của bé trong từng ca 1-1 của ${mLabel(m)}${m===CM?', tính đến ngày '+vdm(addD(WD,-1)):''}.${s.pay.mode!=='thang'?(p.bu?' Trong đó có '+p.bu+' ca dạy bù tính như ca thường.':'')+(p.none?' Còn '+p.none+' ca chưa điểm danh nên chưa được tính.':''):''} Thuế là mức ước tính cố định, kế toán cần đối chiếu trước khi chi.</p>`}
-function tlAll(){const t=S.tl=Object.assign({m:sm(CM,-1)},S.tl),m=t.m,st=DB.staff.filter(s=>s.st==='dang'),rows=st.map(s=>({s,p:payroll(s,m)})),T=rows.reduce((a,x)=>({g:a.g+x.p.gross,bh:a.bh+x.p.bh,tx:a.tx+x.p.tax,n:a.n+x.p.net}),{g:0,bh:0,tx:0,n:0});
+function tlAll(){const t=S.tl=Object.assign({m:sm(CM,-1)},S.tl),m=t.m,rows=DB.staff.map(s=>({s,p:payroll(s,m)})).filter(x=>x.s.st==='dang'||(isTeacher(x.s)&&x.s.pay&&x.p.teach+x.p.kp+x.p.p+x.p.tt+x.p.bv>0)),st=rows.map(x=>x.s),T=rows.reduce((a,x)=>({g:a.g+x.p.gross,bh:a.bh+x.p.bh,tx:a.tx+x.p.tax,n:a.n+x.p.net}),{g:0,bh:0,tx:0,n:0});
  return head('Tiền lương','Bảng lương tạm tính từ chấm công, lịch dạy và bán trú','<button class="btn s" data-a="tlxl">Xuất Excel</button>')
  +`<div class="grid">${kpi('Tổng thực nhận',fmt(T.n),st.length+' nhân sự')}${kpi('Tổng thu nhập',fmt(T.g),'trước bảo hiểm và thuế')}${kpi('Bảo hiểm khấu trừ',fmt(T.bh),'')}${kpi('Thuế tạm tính',fmt(T.tx),'ước tính')}</div>`
  +`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="tlm">Tháng</label><select id="tlm" data-c="tlm">${opts(tlMonths(),m)}</select></div></div>`
- +tbl(['Nhân viên','Hình thức','>Công','>Ca 1-1','>Ca bé nghỉ KP','>Ngày BT','>Tổng thu nhập','>Bảo hiểm','>Thuế','>Thực nhận'],rows.map(({s,p})=>`<tr class="k" data-a="slipopen" data-v="${s.id}|${m}"><td><b>${esc(s.n)}</b><br><span class="sm mu">${esc(s.pos)}</span></td><td>${PMODE[s.pay.mode]}</td><td class="r">${p.cong}</td><td class="r">${p.teach}${p.none?' <span class="mu sm" title="Ca chưa điểm danh">+'+p.none+'?</span>':''}</td><td class="r">${p.kp}</td><td class="r">${p.btd}</td><td class="r nw">${fnum(p.gross)}</td><td class="r nw">${fnum(p.bh)}</td><td class="r nw">${fnum(p.tax)}</td><td class="r nw"><b>${fnum(p.net)}</b></td></tr>`).join(''))+`<p class="sm mu" style="margin-top:8px">Bấm vào một dòng để xem phiếu lương, thêm thưởng hoặc xuất PDF.</p></div>`}
+ +tbl(['Nhân viên','Hình thức','>Công','>Ca 1-1','>Ca bé nghỉ KP','>Ngày BT','>Tổng thu nhập','>Bảo hiểm','>Thuế','>Thực nhận'],rows.map(({s,p})=>`<tr class="k" data-a="slipopen" data-v="${s.id}|${m}"><td><b>${esc(s.n)}</b>${s.st!=='dang'?' '+tg('Đã nghỉ việc','gy'):''}<br><span class="sm mu">${esc(s.pos)}</span></td><td>${PMODE[s.pay.mode]}</td><td class="r">${p.cong}</td><td class="r">${p.teach}${p.none?' <span class="mu sm" title="Ca chưa điểm danh">+'+p.none+'?</span>':''}</td><td class="r">${p.kp}</td><td class="r">${p.btd}</td><td class="r nw">${fnum(p.gross)}</td><td class="r nw">${fnum(p.bh)}</td><td class="r nw">${fnum(p.tax)}</td><td class="r nw"><b>${fnum(p.net)}</b></td></tr>`).join(''))+`<p class="sm mu" style="margin-top:8px">Bấm vào một dòng để xem phiếu lương, thêm thưởng hoặc xuất PDF.</p></div>`}
 function tlMine(){const t=S.tl=Object.assign({m:sm(CM,-1)},S.tl),s=stBy(U.id);
  return head('Phiếu lương của tôi',esc(s.pos))+`<div class="card"><div class="f2" style="margin-bottom:12px"><div><label for="tlm">Tháng</label><select id="tlm" data-c="tlm">${opts(tlMonths(),t.m)}</select></div></div>${slipH(s,t.m)}<div class="acts" style="margin-top:12px"><button class="btn s" data-a="slippdf" data-v="${s.id}|${t.m}">Tải phiếu PDF</button></div></div>`}
 ACT.slipopen=v=>{const [id,m]=v.split('|');S.modal={t:'slip',id,m}};

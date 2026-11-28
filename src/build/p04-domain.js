@@ -9,7 +9,7 @@ const grOf=id=>DB.groups.find(g=>grHas(g,id));
 const grNames=g=>grTs(g).map(stBy).filter(Boolean).map(s=>s.n).join(', ')||'Chưa phân công';
 const grSet=(g,ids)=>{ids=[...new Set((ids||[]).filter(Boolean))];g.ts=ids;g.gv=ids[0]||'';g.tg=ids[1]||''};
 /* một dòng của dayList có người này phụ trách không (ca 1-1, học bù: một giáo viên; bán trú: cả danh sách giáo viên của lớp) */
-const rowHas=(s,id)=>!!id&&(s.gv===id||(s.ts||[]).includes(id));
+const rowHas=(s,id)=>!!id&&(s.gv===id||(s.ts||[]).includes(id)||(s.ok||[]).includes(id));   /* s.ok: giáo viên hiện tại của ca được điểm danh hộ các buổi trước ngày bàn giao */
 const kn=id=>{const k=kidBy(id);return k?k.n:'(đã xóa)'};
 const sn=id=>{const s=stBy(id);return s?s.n:'Chưa phân công'};
 /* Giáo viên 1-1 của một bé: k.ts là danh sách, ngang nhau (không có giáo viên chính), vì nhiều giáo viên dạy chung một bé và mỗi người có thể dạy nội dung khác nhau (ví dụ cô A dạy Ngôn ngữ, cô B dạy Vận động – giác quan). Mỗi ca 1-1 (l.gv) do đúng một người dạy; k.tc[mã nhân sự] là ghi chú nội dung người đó phụ trách. Dữ liệu cũ chỉ có k.gv thì đọc từ đó. kSet ghi k.ts và giữ người đầu ở k.gv chỉ để bản cũ vẫn đọc được; mã mới không đọc k.gv, không viết k.gv===. */
@@ -139,7 +139,9 @@ function lichNear(w,slot,date){return DB.lich.filter(l=>l.slot&&slotOver(date?ef
 /* --- Dạy thay: bản ghi DB.sub (collection sub) = {id,d,sid,hs,gv,og,by,at,n}: ngày d, buổi sid (mã trong DB.lich) do giáo viên gv dạy thay giáo viên gốc og. Buổi 1-1 hằng tuần không đổi, chỉ riêng ngày d đổi người dạy. --- */
 const ABS_ATT=['p','kp','tt','bv'];   /* bé vắng: giáo viên của buổi đó rảnh trong khung giờ này */
 const subOf=(d,sid)=>(DB.sub||[]).find(s=>s.d===d&&s.sid===sid)||null;
-const effGv=(l,d)=>{const s=subOf(d,l.id);return s?s.gv:l.gv};
+/* Bàn giao ca giữa giáo viên (giáo viên cũ nghỉ việc, ca giao cho giáo viên mới): l.gv là giáo viên hiện tại; l.ph = [{g,u}] sắp theo u tăng dần = giáo viên g phụ trách ca này đến hết ngày trước u. Buổi trước ngày bàn giao vẫn thuộc giáo viên cũ (công, tiền, báo cáo), giáo viên hiện tại chỉ điểm danh hộ (dayList.ok) nên bé vẫn có điểm danh để tính học phí. */
+const baseGv=(l,d)=>{const h=(l.ph||[]).find(x=>d<x.u);return h?h.g:l.gv};
+const effGv=(l,d)=>{const s=subOf(d,l.id);return s?s.gv:baseGv(l,d)};
 /* giờ học của buổi sid ngày d: dạy thay có thể đổi giờ riêng ngày đó cho hợp giáo viên dạy thay (sub.slot); ca hằng tuần không đổi. Học phí vẫn tính theo giờ gốc. */
 const effSlot=(l,d)=>{const s=subOf(d,l.id);return s&&s.slot?s.slot:l.slot};
 const sbSlot=(d,sid,slot)=>{const s=subOf(d,sid);return s&&s.slot?s.slot:slot};
@@ -158,7 +160,7 @@ function freeSlots(gv,hs,from,n){const out=[];let d=from;
 function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))return out;
  DB.lich.forEach(l=>{if(l.type==='11'&&l.day===w&&(!first[l.hs]||l.slot<first[l.hs].slot))first[l.hs]=l});
  DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);
-  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(effSlot(l,date)),gv:effGv(l,date),sub:subOf(date,l.id),slot:effSlot(l,date),kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
+  if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(effSlot(l,date)),gv:effGv(l,date),ok:baseGv(l,date)!==l.gv?[l.gv]:[],hand:baseGv(l,date)!==l.gv,sub:subOf(date,l.id),slot:effSlot(l,date),kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
  DB.groups.forEach(g=>{const base=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w)),xk={};
   DB.kids.forEach(k=>{if(k.gr===g.id&&k.st==='dang'&&!base.includes(k)){const x=bxOn(k,date);if(x){xk[k.id]=x;base.push(k)}}});   /* bé học đột xuất ngày này */
   if(base.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,kids:base,xk})});
@@ -183,7 +185,7 @@ const vioAmt=v=>+((DB.vam||{})[v.st+'|'+v.id])||0;
 const vioList=(id,m)=>(DB.vio||[]).filter(v=>v.st===id&&v.s==='duyet'&&(!m||String(v.d).slice(0,7)===m));
 const vioSum=(id,m)=>vioList(id,m).reduce((a,v)=>a+vioAmt(v),0);
 function payroll(s,m){
- const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id||(DB.sub||[]).some(x=>x.sid===l.id&&x.gv===s.id)),pc=gvPct();
+ const f=s.pay||{},cfg=DB.cfg,dts=mDates(m).filter(d=>isW(d)&&d<WD),mine=DB.lich.filter(l=>l.gv===s.id||(l.ph||[]).some(x=>x.g===s.id)||(DB.sub||[]).some(x=>x.sid===l.id&&x.gv===s.id)),pc=gvPct();
  const myGr=DB.groups.filter(g=>grHas(g,s.id)),open6=myGr.some(g=>grOpen(g,6));
  /* Dạy thay: giáo viên Partime (trả theo ca) được tính tiền ca dạy thay như ca của mình; giáo viên Fulltime chỉ được ghi nhận công dạy thay (xem subStat ở p27-ds.js), không cộng tiền vì đã có lương cố định. Giáo viên nghỉ không có ca dạy thay đó (effGv). */
  const subNoPay=l=>l.gv!==s.id&&isFT(s);

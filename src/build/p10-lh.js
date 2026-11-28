@@ -22,7 +22,7 @@ function lhEnt(h,d,s){const w=dow(d),out=[];
   const sb=subOf(d,l.id),es=effSlot(l,d);
   if(h.mode==='gv'){
    if(sb&&sb.gv===h.gv&&es===s)out.push({l,r:'in',sb});
-   else if(l.gv===h.gv&&l.slot===s)out.push(sb&&sb.gv!==h.gv?{l,r:'out',sb}:{l,r:'own'})}
+   else if(baseGv(l,d)===h.gv&&l.slot===s)out.push(sb&&sb.gv!==h.gv?{l,r:'out',sb}:{l,r:'own'})}
   else if(h.mode==='kid'){if(l.hs===h.kid&&es===s)out.push({l,r:sb?'sub':'own',sb})}
   else if(es===s)out.push({l,r:sb?'sub':'own',sb})});
  return out}
@@ -56,7 +56,8 @@ ACT.lsopen=v=>{const [id,d]=v.split('|'),l=DB.lich.find(x=>x.id===id);if(!l)retu
 MODALS.ls=()=>{const m=S.modal,l=m.id?DB.lich.find(x=>x.id===m.id):null;
  if(l&&l.type==='bu'){const k=kidBy(l.hs),b2=subOf(l.date,l.id);return mdl('Buổi học bù',`<p><b>${esc(k?k.n:'')}</b> học bù ngày ${vd(l.date)}, ${slotLb(effSlot(l,l.date))}, giáo viên ${esc(sn(effGv(l,l.date)))}${b2?' (dạy thay '+esc(sn(l.gv))+')':''}.</p><div class="acts" style="margin-top:12px"><button class="btn" data-a="nav" data-v="hb">Mở mục Học bù</button></div>`)}
  const gv=l?l.gv:S.lh.gv,editable=isLead(),kid=l?kidBy(l.hs):null,sb=l&&m.date?subOf(m.date,l.id):null;
- const sbNote=sb?`<p class="note sm" style="margin-bottom:8px"><b>${vd(m.date)}:</b> giáo viên ${esc(sn(sb.gv))} dạy thay${sb.slot&&sb.slot!==l.slot?', giờ học '+esc(slotLb(sb.slot))+' (giờ gốc '+esc(slotLb(l.slot))+')':''}.${canSub()?' <button class="lk" type="button" data-a="nav" data-v="ds">Mở Dạy thay</button>':''}</p>`:'';
+ const hand=l&&m.date&&baseGv(l,m.date)!==l.gv?`<p class="note sm" style="margin-bottom:8px"><b>${vd(m.date)}:</b> buổi này thuộc giáo viên ${esc(sn(baseGv(l,m.date)))} (giáo viên ${esc(sn(l.gv))} tiếp quản ca từ ${vd((l.ph||[]).find(x=>m.date<x.u).u)}). Công và tiền tính cho giáo viên cũ; giáo viên hiện tại vẫn điểm danh cho bé được.</p>`:'';
+ const sbNote=hand+(sb?`<p class="note sm" style="margin-bottom:8px"><b>${vd(m.date)}:</b> giáo viên ${esc(sn(sb.gv))} dạy thay${sb.slot&&sb.slot!==l.slot?', giờ học '+esc(slotLb(sb.slot))+' (giờ gốc '+esc(slotLb(l.slot))+')':''}.${canSub()?' <button class="lk" type="button" data-a="nav" data-v="ds">Mở Dạy thay</button>':''}</p>`:'');
  if(l&&!editable){return mdl('Buổi 1-1',sbNote+`<p><b>${esc(kid?kid.n:'')}</b><br>${DAYN[l.day]}, ${slotLb(l.slot)}</p>`)}
  /* bé của giáo viên này, bé chưa phân công, rồi các bé đang có giáo viên khác (một bé có nhiều giáo viên: thêm giáo viên này vào dạy chung) */
  const rk=k=>kHas(k,gv)?0:!kTs(k).length?1:2,ks=DB.kids.filter(k=>k.st==='dang').sort((a,b)=>rk(a)-rk(b)||a.n.localeCompare(b.n,'vi'));
