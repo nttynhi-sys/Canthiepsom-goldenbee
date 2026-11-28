@@ -38,6 +38,8 @@ function myKids(){if(!U)return[];if(seesAll())return DB.kids;
  if(isGV()){const gs=myGroups().map(g=>g.id);return DB.kids.filter(k=>kHas(k,U.id)||(k.gr&&gs.includes(k.gr))||DB.lich.some(l=>l.gv===U.id&&l.hs===k.id)||subKid(k.id))}
  return DB.kids.filter(k=>pkeyOf(k)===U.pkey)}
 const canKid=id=>myKids().some(k=>k.id===id);
+/* điểm danh một buổi cụ thể: giáo viên dạy thay luôn điểm danh được bé của buổi mình dạy thay đúng ngày đó, dù đã quá 30 ngày (subKid chỉ giữ bé trong danh sách 30 ngày gần đây) */
+const canKidOn=(id,d,sid)=>canKid(id)||(!!U&&(DB.sub||[]).some(s=>s.gv===U.id&&s.hs===id&&s.d===d&&(!sid||s.sid===sid)));
 const rdKey=n=>n.id+'|'+(U?U.id:'');
 /* thông báo gửi riêng (n.to là mảng mã nhân sự, ví dụ phân công dạy thay): chỉ người nhận tính là chưa đọc và nhận thông báo; Trưởng Trung tâm, Quản lý, Văn phòng vẫn xem được trong danh sách */
 const ntMine=n=>!n.to||(!!U&&n.to.includes(U.id));

@@ -8,7 +8,7 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  /* dựng dữ liệu: hai giáo viên dạy thay vài ca ở tháng trước, với các trạng thái điểm danh khác nhau */
  const S0=await ev(()=>{const m=sm(CM,-1);DB.sub=[];
   const ls=DB.lich.filter(l=>l.type==='11'&&kidBy(l.hs)&&kidBy(l.hs).st==='dang'),T=DB.staff.filter(s=>s.st==='dang'&&isTeacher(s));
-  const g1=T[0],g2=T[1];const out=[];
+  const g1=T[0],g2=T[1];const out=[];g1.ft=false;g1.cc=false;g1.pay=Object.assign({},g1.pay,{mode:'buoi',rate:60000});   /* Partime: ca dạy thay được tính tiền */
   const pick=(n)=>{const r=[];for(const l of ls){if(r.length>=n)break;const d=mDates(m).find(x=>dow(x)===l.day&&!isClosed(x)&&x<TODAY&&!r.some(y=>y.d===x&&y.l.id===l.id));if(d&&l.gv!==g1.id&&l.gv!==g2.id)r.push({l,d})}return r};
   const R=pick(5);if(R.length<5)return{skip:1,n:R.length};
   const codes=['cm','cm','kp','p',''];

@@ -39,9 +39,10 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
    for(let d=addD(WD,-1);d>=m+'-01';d=addD(d,-1)){if(dow(d)!==l.day||!isW(d)||isClosed(d)||subOf(d,l.id))continue;
     const T2=dsTeachers().find(t=>t.id!==l.gv&&!dsWhy(t.id,d,l.slot,l.id));if(!T2||DB.groups.some(g=>grHas(g,T2.id)))continue;
     return{d,sid:l.id,hs:l.hs,T1:l.gv,T2:T2.id}}}return null});
- if(M){const R=await ev(p=>{const key=p.d+'|'+p.sid+'|'+p.hs;DB.att[key]='cm';const a1=payroll(stBy(p.T1),CM).teach,a2=payroll(stBy(p.T2),CM).teach;
+ if(M){const R=await ev(p=>{const key=p.d+'|'+p.sid+'|'+p.hs;DB.att[key]='cm';const t2=stBy(p.T2);t2.ft=false;t2.cc=false;t2.pay=Object.assign({},t2.pay,{mode:'buoi',rate:60000});   /* giáo viên dạy thay là Partime: được tính tiền ca (Fulltime chỉ ghi công, xem z71) */
+   const a1=payroll(stBy(p.T1),CM).teach,a2=payroll(stBy(p.T2),CM).teach;
    dsApply(dsLesson(p.sid),p.d,p.T2,'');const b1=payroll(stBy(p.T1),CM).teach,b2=payroll(stBy(p.T2),CM).teach;return{a1,a2,b1,b2}},M);
-  ok('tiền công theo ca: ca đã dạy ngày được dạy thay tính cho giáo viên dạy thay, không tính cho giáo viên nghỉ',R.b2===R.a2+1&&R.b1===R.a1-1,R)}
+  ok('tiền công theo ca: ca đã dạy ngày được dạy thay tính cho giáo viên dạy thay (Partime), không tính cho giáo viên nghỉ',R.b2===R.a2+1&&R.b1===R.a1-1,R)}
  else ok('(bỏ qua) không tìm thấy ca đã qua trong tháng để thử tiền công',true);
  /* lịch trống: giờ có bé vắng là giờ trống */
  const F=await ev(()=>{for(const l of DB.lich.filter(x=>x.type==='11'&&x.day>=1&&x.day<=5)){let d=addD(TODAY,2);for(let i=0;i<14&&dow(d)!==l.day;i++)d=addD(d,1);if(isClosed(d)||dsLeave(l.gv,d)||DB.groups.some(g=>grHas(g,l.gv)))continue;
