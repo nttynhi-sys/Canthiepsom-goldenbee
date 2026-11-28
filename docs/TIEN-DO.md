@@ -56,6 +56,7 @@ Cập nhật 16/11/2026 (mã ứng dụng cuối: `154babd`). Quy tắc, nghiệ
 - Kỹ thuật: tìm nguyên nhân `z25-sd-bank` và `n2.js`. Chưa có yêu cầu tính năng nào đang chờ.
 
 ## 10. Nhật ký
+- 28/11 Chấm công 1-1: tab mới ở Chấm công (tổng ca, có mặt, nghỉ P, KP… và công trên từng học sinh của mỗi giáo viên Fulltime, Partime) và bốn cột Ca 1-1 ở Bảng công tháng; Excel. Không đổi lược đồ. Bài thử `z72`.
 - 28/11 dạy thay: Partime được tính công và tiền ca dạy thay, Fulltime chỉ ghi công (không cộng tiền), giáo viên nghỉ không được tính ca đó; giáo viên dạy thay điểm danh được bé đúng ngày dạy thay. Không đổi lược đồ. Bài thử `z71`; `z59`, `z69` cập nhật (giáo viên dạy thay đặt là Partime).
 - 28/11 Lịch học (lưới 1-1 theo tuần) hiện dạy thay: học sinh, giờ dạy thay, giáo viên dạy thay và giáo viên được thay; xem theo giáo viên, bé, tổng hợp. Không đổi lược đồ. Bài thử `z70`.
 - 28/11 điểm danh học đột xuất (bé bán trú xin học thêm thứ Bảy; học phí cộng vào tháng sau) và tab Công dạy thay (công, học sinh của từng giáo viên dạy thay theo tháng, Excel, dòng ở phiếu lương). Collection mới `bx`, không cần migration. Bài thử `z68`, `cloud-hoc-dot-xuat`, `z69`. Ghi chú: `z53`, `z67` (một ca), `n26-roles`, `flows1` lỗi theo ngày chạy (thứ Bảy 28/11), cả bản gốc.
