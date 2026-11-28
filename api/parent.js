@@ -82,6 +82,8 @@ const LOCKED_MSG = 'Cổng phụ huynh đang tạm khóa vì học phí quá h�
    Không gửi giảm trừ gia cảnh, thuế, mức trừ vi phạm của nhân viên; khóa lạ cũng bị bỏ (danh sách trắng). Khớp CFG_MONEY ở src/build/p02b-cloud.js. */
 const PARENT_CFGM = ['p11', 'pbtDay', 'pbtDay11', 'lt_ng', 'lt_nh', 'lt_gq', 'lt_ms', 'lt_vd', 'lt_tc', 'lt_nc'];
 /* dạy thay: phụ huynh chỉ nhận ngày, buổi, bé, giáo viên dạy thay và giờ học đã đổi (nếu có); không nhận giáo viên gốc, ghi chú (lý do nghỉ) hay người phân công */
+/* học đột xuất: phụ huynh chỉ thấy ngày, lớp và học phí của bé mình (không thấy người ghi, ghi chú nội bộ) */
+const parentBx = d => ({ id: d.id, hs: d.hs, d: d.d, gr: d.gr, a: typeof d.a === 'number' && isFinite(d.a) && d.a >= 0 ? d.a : undefined });
 const parentSub = d => Object.assign({ id: d.id, d: d.d, sid: d.sid, hs: d.hs, gv: d.gv }, typeof d.slot === 'string' && /^\d{2}:\d{2}$/.test(d.slot) ? { slot: d.slot } : {});
 const parentCfgm = d => { const o = {}; PARENT_CFGM.forEach(k => { if (d && d[k] != null) o[k] = d[k]; }); return o; };
 
@@ -99,7 +101,7 @@ async function snapshot(me, since, known) {
   ];
   if (ids.length) {
     job.push(['records', 'collection=eq.kids&id=' + inList(ids) + sf]);
-    ['plans:k', 'sess:k', 'mk:hs', 'lich:hs', 'sub:hs'].forEach(s => { const [c, f] = s.split(':'); job.push(['records', 'collection=eq.' + c + '&data->>' + f + '=' + inList(ids) + sf]); });
+    ['plans:k', 'sess:k', 'mk:hs', 'lich:hs', 'sub:hs', 'bx:hs'].forEach(s => { const [c, f] = s.split(':'); job.push(['records', 'collection=eq.' + c + '&data->>' + f + '=' + inList(ids) + sf]); });
     job.push(['records', 'collection=eq.rp&data->>hs=' + inList(ids) + '&data->>s=eq.gui' + sf]);
     job.push(['records', 'collection=eq.att&' + orList(ids, i => 'id.like.*|' + i) + sf]);
     job.push(['money', 'collection=eq.set&' + orList(ids, i => 'id.like.' + i + '|*') + sm]);
@@ -120,6 +122,7 @@ async function snapshot(me, since, known) {
       if (t === 'money') { money.push(r.collection === 'cfgm' ? Object.assign({}, r, { data: parentCfgm(r.data) }) : r); return; }
       if (c === 'staff') { records.push({ collection: c, id: r.id, data: safeStaff(r.data || {}), updated_at: r.updated_at }); return; }
       if (c === 'sub') { records.push({ collection: c, id: r.id, data: parentSub(r.data || {}), updated_at: r.updated_at }); return; }
+      if (c === 'bx') { records.push({ collection: c, id: r.id, data: parentBx(r.data || {}), updated_at: r.updated_at }); return; }
       if (c === 'nt') { const n = r.data || {}; if (!(n.tg === 'all' || ids.includes(n.tg) || k.groups.includes(n.tg))) return; }
       if (c === 'media') {
         const m = parentMedia(r.data, ids);
@@ -145,6 +148,7 @@ async function snapshot(me, since, known) {
     const all = await fetchRows('records', 'collection=in.(ref,tri)&data->>sh=eq.1');
     out.live = { ref: all.filter(r => r.collection === 'ref' && parentRef(r.data)).map(r => r.id), tri: all.filter(r => r.collection === 'tri' && parentTri(r.data)).map(r => r.id) };
     /* dạy thay đã bỏ thì dòng bị xóa: gửi danh sách đang có của bé để máy phụ huynh gỡ */
+    out.live.bx = ids.length ? (await fetchRows('records', 'collection=eq.bx&data->>hs=' + inList(ids))).map(r => r.id) : [];
     out.live.sub = ids.length ? (await fetchRows('records', 'collection=eq.sub&data->>hs=' + inList(ids))).map(r => r.id) : [];
   }
   return out;

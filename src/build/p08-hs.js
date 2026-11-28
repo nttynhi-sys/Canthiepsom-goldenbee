@@ -283,6 +283,7 @@ function hsDelKid(id){
  DB.sess=DB.sess.filter(x=>x.k!==id);
  DB.plans=DB.plans.filter(x=>x.k!==id);
  DB.lich=DB.lich.filter(x=>x.hs!==id);
+ DB.bx=(DB.bx||[]).filter(x=>x.hs!==id);
  DB.mk=DB.mk.filter(x=>x.hs!==id);
  DB.rp=DB.rp.filter(x=>x.hs!==id);
  DB.lg=DB.lg.filter(x=>x.hs!==id);
