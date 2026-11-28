@@ -42,8 +42,8 @@ const ok=(n,c,x)=>{if(c){passes++;console.log('PASS',n)}else{fails++;console.log
  ok('ghi vào sổ: một khoản "Phí dư" gồm cả phần nghỉ lễ, trừ vào học phí tháng sau',P1.n===1&&P1.a===P1.ex&&/Phí dư/.test(P1.note)&&/nghỉ lễ/.test(P1.note)&&P1.sp.posted&&P1.sp.hol===R.cr,P1);
  /* học phí đã lập bằng số đúng (đã trừ ngày lễ): không có phí dư */
  const N=await ev(k=>{const kid=kidBy(k.id),m=CM;DB.lg=DB.lg.filter(e=>!(e.hs===kid.id&&(e.kind==='hp'||e.kind==='hoan')));delete DB.set[kid.id+'|'+m];
-  DB.lg.push({id:'z67b',hs:kid.id,date:m+'-01',kind:'hp',amt:invoice(kid,m),m,note:'Học phí đã trừ ngày lễ'});return{cr:holCredit(kid,m),sur:surplusPrev(kid,sm(m,1)).amt}},K);
- ok('học phí đã lập đúng số (đã trừ ngày lễ): không phát sinh phí dư nghỉ lễ',N.cr===0&&N.sur===0,N);
+  DB.lg.push({id:'z67b',hs:kid.id,date:m+'-01',kind:'hp',amt:invoice(kid,m),m,note:'Học phí đã trừ ngày lễ'});return{cr:holCredit(kid,m),hol:surplusPrev(kid,sm(m,1)).hol||0}},K);
+ ok('học phí đã lập đúng số (đã trừ ngày lễ): không phát sinh phí dư nghỉ lễ',N.cr===0&&N.hol===0,N);
  /* bé không có lịch mà học phí nhập tay: không bị coi là phí dư */
  const Z=await ev(()=>{const kid=DB.kids.find(x=>x.st==='dang'&&!btOf(x).length&&!DB.lich.some(l=>l.hs===x.id));if(!kid)return{skip:1};const m=CM;
   DB.lg.push({id:'z67c',hs:kid.id,date:m+'-01',kind:'hp',amt:3000000,m,note:'nhập tay',man:1});return{cr:holCredit(kid,m)}});

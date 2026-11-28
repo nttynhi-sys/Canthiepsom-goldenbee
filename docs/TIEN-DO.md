@@ -56,6 +56,7 @@ Cập nhật 16/11/2026 (mã ứng dụng cuối: `154babd`). Quy tắc, nghiệ
 - Kỹ thuật: tìm nguyên nhân `z25-sd-bank` và `n2.js`. Chưa có yêu cầu tính năng nào đang chờ.
 
 ## 10. Nhật ký
+- 28/11 điểm danh học đột xuất (bé bán trú xin học thêm thứ Bảy; học phí cộng vào tháng sau) và tab Công dạy thay (công, học sinh của từng giáo viên dạy thay theo tháng, Excel, dòng ở phiếu lương). Collection mới `bx`, không cần migration. Bài thử `z68`, `cloud-hoc-dot-xuat`, `z69`. Ghi chú: `z53`, `z67` (một ca), `n26-roles`, `flows1` lỗi theo ngày chạy (thứ Bảy 28/11), cả bản gốc.
 - 26/11 học phí: bỏ công nợ cộng dồn khỏi giao diện (còn Học phí học sinh theo từng tháng: học phí gõ tay được, trừ phí dư, phải đóng, đã thu, phí cọc); phí dư tháng trước gồm học phí đã thu cho ngày nghỉ lễ đặt sau; hoàn cọc chỉ cần bé đã ngưng. Không đổi lược đồ. Bài thử `z67`.
 - 26/11 điểm danh: Bảng chấm công cho sang tháng sau (tối đa 12 tháng), ô ngày chưa ghi kể cả ngày sắp tới bấm được (dấu +). Không đổi lược đồ. Bài thử `z66`. `y3-hol` lỗi 1 ca theo ngày chạy (cả bản gốc).
 - 21/11 học phí: cột "Trừ phí dư tháng trước" tự điền theo điểm danh và sửa được bằng cách gõ số tiền (kể cả 0 và tháng chưa có điểm danh như tháng 10), nút Về tự động; tự động ghi phí dư khi tạo hóa đơn (có ô tắt) và nút Ghi phí dư tạm tính; bảng Tạo hóa đơn có tìm kiếm và phân trang. Bảng tiền `set` thêm `man:1`, không đổi lược đồ. Bài thử `z65`, `cloud-hoc-phi-tru-phi-du`. Ghi chú: `flows1` lỗi 2 ca vào thứ Bảy (phụ thuộc ngày chạy, không liên quan).

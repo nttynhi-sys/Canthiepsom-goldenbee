@@ -65,12 +65,20 @@ const isSch=d=>isW(d)||sunHas(d);
 const sunTeacher=id=>DB.lich.some(l=>l.gv===id&&l.type==='11'&&l.day===0);
 const HOLK={le:'Nghỉ lễ',tt:'Trung tâm cho nghỉ'};
 const holIn=m=>(DB.hol||[]).filter(h=>h.d.slice(0,7)===m&&dow(h.d)!==0).sort((a,b)=>a.d<b.d?-1:1);
+/* Học đột xuất: bé bán trú xin học thêm một ngày ngoài lịch (ví dụ thứ Bảy). Collection bx = {id,hs,d,gr,a?,n,by,at}: a = học phí ngày đó (không có thì giá bán trú một ngày của bé, kidBt).
+   Ngày này có hàng điểm danh như ngày bán trú (sched trả xtra:1) nhưng KHÔNG nằm trong hóa đơn tháng của chính ngày đó: học phí cộng vào tháng sau (bxCharge, monthFee, feeBreak). Bé nghỉ P, TT/GV nghỉ hoặc nhập viện thì không tính; có mặt, nghỉ KP hoặc chưa điểm danh thì tính. */
+const bxOn=(k,d)=>(DB.bx||[]).find(x=>x.hs===k.id&&x.d===d)||null;
+const bxAmt=(k,x)=>typeof x.a==='number'&&isFinite(x.a)&&x.a>=0?x.a:kidBt(k);
+const BX_FREE=['p','tt','bv'];
+function bxCharge(k,m){const items=(DB.bx||[]).filter(x=>x.hs===k.id&&x.d.slice(0,7)===m).sort((a,b)=>a.d<b.d?-1:1).map(x=>{const code=DB.att[x.d+'|'+(x.gr||k.gr)+'|'+k.id]||'';return{x,d:x.d,code,amt:bxAmt(k,x),on:!BX_FREE.includes(code)}});
+ return{items,total:k.st==='dang'?items.filter(i=>i.on).reduce((s,i)=>s+i.amt,0):0}}
 function sched(k,m){const out=[],ls=DB.lich.filter(l=>l.hs===k.id),bd=btOf(k);
  for(const d of mDates(m)){const w=dow(d);if(isClosed(d))continue;
   const day=ls.filter(l=>l.type==='11'&&l.day===w).sort((x,y)=>x.slot<y.slot?-1:x.slot>y.slot?1:0),inBt=bd.includes(w);
   day.forEach((l,i)=>out.push({d,sid:l.id,kind:'11',slot:l.slot,inc:inBt&&i===0}));
   ls.forEach(l=>{if(l.type==='bu'&&l.date===d)out.push({d,sid:l.id,kind:'bu',slot:l.slot})});
-  if(inBt)out.push({d,sid:k.gr,kind:'bt',slot:BT.s})}
+  if(inBt)out.push({d,sid:k.gr,kind:'bt',slot:BT.s});
+  else if(k.gr&&bxOn(k,d))out.push({d,sid:k.gr,kind:'bt',slot:BT.s,xtra:1})}
  return out}
 /* Thời gian tính phí riêng của bé: k.fs = tính từ ngày, k.fe = tính đến hết ngày (cả hai tùy chọn, ISO yyyy-mm-dd).
    Không đặt thì tính như cũ: từ đầu tháng nhập học (k.sd) đến khi bé ngưng. Chỉ các buổi trong khoảng này mới tính học phí, hoàn phí nghỉ và
@@ -81,7 +89,7 @@ const hasFeeWin=k=>!!(k.fs||k.fe);
 const schedF=(k,m)=>sched(k,m).filter(x=>feeOn(k,x.d));
 /* Học phí tháng = số ca 1-1 tính riêng × giá ca + số ngày bán trú × giá ngày bán trú (gồm sẵn 1 ca 1-1 mỗi ngày); raw=true: bỏ qua thời gian tính phí riêng (tính trọn tháng) */
 function invoice(k,m,raw){if(k.st!=='dang'||(raw?k.sd:feeStartM(k)).slice(0,7)>m)return 0;const xs=raw?sched(k,m):schedF(k,m);
- return xs.filter(x=>x.kind==='11'&&!x.inc).reduce((a,x)=>a+feeSlot(k,x.sid),0)+xs.filter(x=>x.kind==='bt').length*kidBt(k)}
+ return xs.filter(x=>x.kind==='11'&&!x.inc).reduce((a,x)=>a+feeSlot(k,x.sid),0)+xs.filter(x=>x.kind==='bt'&&!x.xtra).length*kidBt(k)}
 const makeupFor=(h,d,s)=>DB.mk.find(r=>r.hs===h&&r.from.d===d&&r.from.sid===s&&(r.s==='xn'||r.s==='xong'));
 const CL={cm:'x',p:'P',kp:'K',tt:'N',bv:'V'};
 /* Nhập viện có giấy, ngày bán trú: phí bán trú (không gồm ca 1-1) hoàn bvRefund% (mặc định 50%), riêng phí ca 1-1 trong ngày hoàn bvRefund11% (mặc định 100%) */
@@ -105,6 +113,7 @@ function settle(k,m){
  const put=(d,c)=>{const a=r.cells[d]=r.cells[d]||[];if(!a.includes(c))a.push(c)};
  for(const x of schedF(k,m)){
   r.days[x.d]=1;const code=DB.att[x.d+'|'+x.sid+'|'+k.id]||'';
+  if(x.xtra){if(code){put(x.d,CL[code]);r[code]++}else if(x.d<WD){r.none++;put(x.d,'?')}continue}   /* học đột xuất: học phí cộng vào tháng sau, không hoàn phí nghỉ ở đây */
   if(x.kind==='bu'){if(code==='cm'){r.bu++;put(x.d,'B')}else if(x.d<WD)put(x.d,'?');continue}
   if(x.kind==='11'){if(x.inc){r.planInc++;continue}r.plan++}else r.planBt++;   /* ca 1-1 trong gói bán trú tính theo ngày bán trú, không tính riêng */
   if(!code){if(x.d<WD){r.none++;put(x.d,'?')}continue}
@@ -150,7 +159,9 @@ function dayList(date){const w=dow(date),out=[],first={};if(isClosed(date))retur
  DB.lich.forEach(l=>{if(l.type==='11'&&l.day===w&&(!first[l.hs]||l.slot<first[l.hs].slot))first[l.hs]=l});
  DB.lich.forEach(l=>{if((l.type==='11'&&l.day===w)||(l.type==='bu'&&l.date===date)){const k=kidBy(l.hs);
   if(k&&k.st==='dang')out.push({sid:l.id,kind:l.type,label:(l.type==='bu'?'Học bù · ':'1-1 · ')+slotLb(effSlot(l,date)),gv:effGv(l,date),sub:subOf(date,l.id),slot:effSlot(l,date),kids:[k],inc:l.type==='11'&&first[l.hs]===l&&btHas(k,w)})}});
- DB.groups.forEach(g=>{const ks=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w));if(ks.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,kids:ks})});
+ DB.groups.forEach(g=>{const base=DB.kids.filter(k=>k.gr===g.id&&k.st==='dang'&&btHas(k,w)),xk={};
+  DB.kids.forEach(k=>{if(k.gr===g.id&&k.st==='dang'&&!base.includes(k)){const x=bxOn(k,date);if(x){xk[k.id]=x;base.push(k)}}});   /* bé học đột xuất ngày này */
+  if(base.length)out.push({sid:g.id,kind:'bt',label:g.n+' · Bán trú',ts:grTs(g),slot:BT.s,kids:base,xk})});
  return out.sort((a,b)=>a.slot<b.slot?-1:a.slot>b.slot?1:0)}
 
 /* --- Chấm công nhân viên và lương --- */

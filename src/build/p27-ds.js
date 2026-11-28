@@ -33,10 +33,11 @@ function dsRanges(gv,d){const out=[];let cur=null;
 /* buổi cần người dạy thay trong ngày d: giáo viên gốc có đơn nghỉ đã duyệt */
 const dsNeed=d=>dayList(d).filter(s=>(s.kind==='11'||s.kind==='bu')&&!s.sub&&(l=>l&&dsLeave(l.gv,d,l.slot))(dsLesson(s.sid)));
 function dsNeedCount(){let n=0;for(let i=0;i<7;i++){const d=addD(TODAY,i);if(isSch(d))n+=dsNeed(d).length}return n}
-const dsDef=()=>({tab:'cv',d:isSch(WD)&&WD>=TODAY?WD:TODAY,all:0,q:''});
+const dsDef=()=>({tab:'cv',d:isSch(WD)&&WD>=TODAY?WD:TODAY,all:0,q:'',m:CM});
 
 VIEWS.ds=()=>{
- const c=S.ds=Object.assign(dsDef(),S.ds),T=[['cv','Buổi cần dạy thay'],['gt','Lịch trống giáo viên']];
+ const c=S.ds=Object.assign(dsDef(),S.ds),T=[['cv','Buổi cần dạy thay'],['gt','Lịch trống giáo viên'],['cg','Công dạy thay']];
+ if(c.tab==='cg')return head('Dạy thay','Công dạy thay của từng giáo viên trong tháng, dạy học sinh nào','<button class="btn s" data-a="dscx">Xuất Excel</button>')+tabsH(T,c.tab,'dstab')+dsCongTab(c);
  const body=c.tab==='gt'?dsFreeTab(c):dsLessonTab(c);
  return head('Dạy thay','Phân giáo viên khác dạy thay khi giáo viên nghỉ ốm, nghỉ phép')
  +`<div class="card"><div class="f2"><div><label for="ds-d">Ngày</label><div style="display:flex;gap:6px;align-items:center"><button class="btn s" data-a="dsday" data-v="-1" aria-label="Ngày trước">‹</button><input id="ds-d" type="date" value="${esc(c.d)}" data-c="dsd" style="width:auto"><button class="btn s" data-a="dsday" data-v="1" aria-label="Ngày sau">›</button><button class="btn s" data-a="dsday" data-v="0">Hôm nay</button></div></div>
@@ -170,3 +171,34 @@ ACT.dsdel=v=>{if(!canSub())return false;const [d,sid]=v.split('|'),l=dsLesson(si
  ask('Bỏ dạy thay buổi '+slotLb(effSlot(l,d))+' ngày '+vdm(d)+' của '+given(kn(l.hs))+'? Buổi sẽ về lại giáo viên của bé ('+given(sn(l.gv))+').',()=>{const sb=subOf(d,sid);dsUndo(l,d);let pt=false;if(sb){dsNotify(sb.gv,'cancel',[{d,sid,hs:l.hs,slot:sb.slot||'',og:l.gv}]);if(sb.pn)pt=dsNotifyParent('cancel',l,[{d}])}toast('Đã bỏ dạy thay'+(sb?' và báo cho '+given(sn(sb.gv)):'')+(pt?', đã báo phụ huynh':''))},'Bỏ dạy thay')};
 /* nhắc lại lịch dạy thay: gửi thêm một thông báo cho giáo viên dạy thay của buổi đó */
 ACT.dsnotify=v=>{if(!canSub())return false;const [d,sid]=v.split('|'),l=dsLesson(sid),sb=subOf(d,sid);if(!l||!sb)return false;dsNotify(sb.gv,'remind',[{d,sid,hs:l.hs,slot:sb.slot||'',og:l.gv,n:sb.n}]);toast('Đã gửi thông báo cho '+given(sn(sb.gv)))};
+
+/* ===== Công dạy thay: cuối tháng biết mỗi giáo viên dạy thay bao nhiêu ca, với những học sinh nào =====
+   Mỗi bản ghi sub (ngày d, buổi sid, bé hs, giáo viên dạy thay gv) là một ca. Trạng thái theo điểm danh của bé: có mặt (đã dạy), bé nghỉ (P, KP, TT/GV nghỉ, nhập viện),
+   chưa điểm danh (ngày đã qua), sắp tới. Công quy đổi = cùng tỷ lệ với bảng lương (gvPct: có mặt 100%, nghỉ KP 50%...) nên khớp phiếu lương theo ca. */
+const cgf=n=>String(Math.round(n*100)/100).replace('.',',');
+function subRows(m){const pc=gvPct();
+ return(DB.sub||[]).filter(s=>String(s.d).slice(0,7)===m).map(s=>{const l=dsLesson(s.sid),k=kidBy(s.hs);if(!l||!k)return null;const code=DB.att[attKey(s.d,s.sid,s.hs)]||'';
+  return{s,l,k,d:s.d,gv:s.gv,og:s.og,slot:effSlot(l,s.d),kind:l.type,code,st:code==='cm'?'cm':ABS_ATT.includes(code)?'abs':(s.d<=TODAY?'chua':'sap'),cong:code&&pc[code]!=null?pc[code]/100:0}}).filter(Boolean)
+  .sort((a,b)=>a.d<b.d?-1:a.d>b.d?1:a.slot<b.slot?-1:a.slot>b.slot?1:0)}
+function subStat(gv,m,rows){rows=(rows||subRows(m)).filter(r=>r.gv===gv);const by={};
+ rows.forEach(r=>{const o=by[r.k.id]=by[r.k.id]||{k:r.k,n:0,cm:0,abs:0,chua:0,sap:0,cong:0,days:[]};o.n++;o[r.st]++;o.cong+=r.cong;o.days.push(r)});
+ const sum=f=>rows.reduce((a,r)=>a+f(r),0);
+ return{gv,n:rows.length,cm:sum(r=>r.st==='cm'?1:0),abs:sum(r=>r.st==='abs'?1:0),chua:sum(r=>r.st==='chua'?1:0),sap:sum(r=>r.st==='sap'?1:0),cong:sum(r=>r.cong),rows,kids:Object.values(by).sort((a,b)=>a.k.n<b.k.n?-1:1)}}
+const SUBST={cm:['Có mặt','ok'],abs:['Bé nghỉ','wa'],chua:['Chưa điểm danh','er'],sap:['Sắp tới','gy']};
+const subGvList=m=>{const rows=subRows(m);return[...new Set(rows.map(r=>r.gv))].map(g=>subStat(g,m,rows)).sort((a,b)=>b.cong-a.cong||b.n-a.n||(sn(a.gv)<sn(b.gv)?-1:1))};
+/* tiền ca dạy thay đã nằm trong lương theo ca (hình thức theo ca hoặc kết hợp); lương cố định theo tháng thì chưa tính thêm */
+const subPay=(gv,st)=>{const s=stBy(gv),f=s&&s.pay;if(!f)return null;return f.mode==='thang'?{auto:false}:{auto:true,amt:st.cong*(f.rate||0)}};
+ACT.dsmon=v=>{S.ds.m=sm(S.ds.m||CM,+v)};
+CHG.dsmonp=v=>{if(/^\d{4}-\d{2}$/.test(v||''))S.ds.m=v};
+function dsCongTab(c){const m=c.m||CM,L=subGvList(m),M=canMoney(),sum=f=>L.reduce((a,x)=>a+f(x),0);
+ const ctl=`<div class="card"><div class="acts"><button class="btn s" data-a="dsmon" data-v="-1" aria-label="Tháng trước">‹ Tháng trước</button><input id="ds-m" type="month" value="${esc(m)}" data-c="dsmonp" style="width:auto" aria-label="Chọn tháng"><button class="btn s" data-a="dsmon" data-v="1" aria-label="Tháng sau">Tháng sau ›</button><b>${mLabel(m)}</b></div>
+ <p class="sm mu" style="margin:8px 0 0">Mỗi ca dạy thay tính một công. Công quy đổi theo cùng tỷ lệ với bảng lương (bé có mặt 100%, nghỉ không phép ${gvPct().kp}%, nghỉ có phép ${gvPct().p}%, Trung tâm hoặc giáo viên nghỉ ${gvPct().tt}%, nhập viện ${gvPct().bv}%).${M?' Giáo viên lương theo ca đã được tính tiền các ca này trong bảng lương; giáo viên lương cố định theo tháng chưa được cộng thêm, hãy dùng số công dưới đây để tính thêm.':''}</p></div>`;
+ if(!L.length)return ctl+'<div class="card"><p class="empty">Chưa có ca dạy thay nào trong '+mLow(m)+'.</p></div>';
+ const sumT=`<div class="grid">${kpi('Giáo viên dạy thay',L.length,mLabel(m))}${kpi('Tổng số ca',sum(x=>x.n),sum(x=>x.cm)+' ca bé có mặt')}${kpi('Công quy đổi',cgf(sum(x=>x.cong)),'theo tỷ lệ bảng lương')}${kpi('Chưa điểm danh',sum(x=>x.chua),'ca đã qua chưa ghi',sum(x=>x.chua)?'er':'ok')}</div>`;
+ const tb=`<div class="card"><h2>Tổng hợp theo giáo viên</h2>`+tbl(['Giáo viên','>Số ca','>Có mặt','>Bé nghỉ','>Chưa ghi','>Sắp tới','>Công quy đổi','>Số bé'].concat(M?['>Tiền ca (theo lương ca)']:[]),L.map(x=>{const sp=M?subPay(x.gv,x):null;return`<tr><td><b>${esc(sn(x.gv))}</b></td><td class="r">${x.n}</td><td class="r">${x.cm}</td><td class="r">${x.abs}</td><td class="r ${x.chua?'er':''}">${x.chua}</td><td class="r">${x.sap}</td><td class="r"><b>${cgf(x.cong)}</b></td><td class="r">${x.kids.length}</td>${M?`<td class="r nw">${sp&&sp.auto?fnum(sp.amt)+' ₫':'<span class="sm mu">Lương cố định, chưa tính thêm</span>'}</td>`:''}</tr>`}).join(''))+`</div>`;
+ const det=L.map(x=>`<div class="card"><div class="top"><div><h2>${esc(sn(x.gv))}</h2><p class="mu sm">${x.n} ca dạy thay · ${x.kids.length} bé · công quy đổi <b>${cgf(x.cong)}</b></p></div></div>`
+  +tbl(['Bé','>Số ca','>Có mặt','>Công','Các ngày dạy thay'],x.kids.map(o=>`<tr><td><b>${esc(o.k.n)}</b><br><span class="sm mu">${esc(kcode(o.k))}</span></td><td class="r">${o.n}</td><td class="r">${o.cm}</td><td class="r"><b>${cgf(o.cong)}</b></td><td>${o.days.map(r=>`<span title="${esc(SUBST[r.st][0])}${r.og?' · thay '+esc(sn(r.og)):''}">${tg(vdm(r.d)+' '+slotLb(r.slot)+(r.kind==='bu'?' (bù)':''),SUBST[r.st][1])}</span>`).join(' ')}</td></tr>`).join(''))+`</div>`).join('');
+ return ctl+sumT+tb+det}
+ACT.dscx=()=>{if(!canSub())return false;const m=(S.ds&&S.ds.m)||CM,L=subGvList(m),M=canMoney();
+ exportXLSX('cong-day-thay-'+m+'.xlsx',[{n:'Tổng hợp',rows:[['Giáo viên dạy thay','Số ca','Có mặt','Bé nghỉ','Chưa điểm danh','Sắp tới','Công quy đổi','Số bé'].concat(M?['Tiền ca theo lương ca']:[])].concat(L.map(x=>{const sp=M?subPay(x.gv,x):null;return[sn(x.gv),x.n,x.cm,x.abs,x.chua,x.sap,Math.round(x.cong*100)/100,x.kids.length].concat(M?[sp&&sp.auto?Math.round(sp.amt):'Lương cố định']:[])}))},
+  {n:'Chi tiết',rows:[['Giáo viên dạy thay','Ngày','Giờ','Loại','Mã bé','Họ tên bé','Giáo viên nghỉ','Trạng thái','Công quy đổi']].concat(L.reduce((a,x)=>a.concat(x.rows.map(r=>[sn(r.gv),vd(r.d),r.slot,r.kind==='bu'?'Học bù':'1-1',kcode(r.k),r.k.n,r.og?sn(r.og):'',SUBST[r.st][0],Math.round(r.cong*100)/100])),[]))}])};

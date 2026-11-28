@@ -74,8 +74,8 @@ function surplusPrev(k,m){const mk=(DB.set||{})[k.id+'|'+sm(m,-1)];
  if(posted.length)return{amt:posted.reduce((s,e)=>s+e.amt,0),posted:true,hol:((DB.set||{})[k.id+'|'+sm(m,-1)]||{}).hol||0};
  if(k.st!=='dang')return{amt:0,posted:false};
  const s=settle(k,sm(m,-1));return{amt:s.refund,posted:false,hol:s.hol||0}}
-function feeBreak(k,m){const xs=schedF(k,m),gross=invoice(k,m),sp=surplusPrev(k,m),st=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hp'&&e.m===m);
- return{bt:xs.filter(x=>x.kind==='bt').length,s11:xs.filter(x=>x.kind==='11'&&!x.inc).length,gross,sur:sp.amt,posted:sp.posted,due:Math.max(0,gross-sp.amt),closed:holIn(m),
+function feeBreak(k,m){const xs=schedF(k,m),gross=invoice(k,m),sp=surplusPrev(k,m),st=DB.lg.filter(e=>e.hs===k.id&&e.kind==='hp'&&e.m===m),xc=bxCharge(k,sm(m,-1));
+ return{bt:xs.filter(x=>x.kind==='bt'&&!x.xtra).length,s11:xs.filter(x=>x.kind==='11'&&!x.inc).length,gross,xtra:xc.total,xitems:xc.items.filter(i=>i.on),sur:sp.amt,posted:sp.posted,due:Math.max(0,gross+xc.total-sp.amt),closed:holIn(m),
   has:st.length>0,stored:st.reduce((s,e)=>s+e.amt,0)}}
 /* thẻ học phí tháng sau cho phụ huynh: học phí theo lịch, trừ phí dư tháng trước, số phải đóng */
 function feeNextCard(k){const nm=sm(CM,1),f=feeBreak(k,nm),pm=CM;
@@ -85,6 +85,7 @@ function feeNextCard(k){const nm=sm(CM,1),f=feeBreak(k,nm),pm=CM;
  return`<div class="card"><h2>Học phí ${mLow(nm)} (dự kiến)</h2>
   ${row('Học phí theo lịch của bé',fmt(f.gross))}
   <p class="sm mu" style="margin:-2px 0 6px">${f.bt?f.bt+' ngày bán trú':''}${f.bt&&f.s11?', ':''}${f.s11?f.s11+' buổi 1-1 tính riêng':''}${f.closed.length?'. Đã trừ '+f.closed.length+' ngày Trung tâm nghỉ: '+f.closed.map(x=>vdm(x.d)+' '+esc(x.n)).join(', '):''}.</p>
+  ${f.xtra?row('Học đột xuất '+mLow(pm)+' ('+f.xitems.map(i=>vdm(i.d)).join(', ')+')','+'+fmt(f.xtra)):''}
   ${row('Trừ phí dư '+mLow(pm)+(f.posted?'':' (tạm tính)'),f.sur?'-'+fmt(f.sur):fmt(0),f.sur?'ok':'')}
   ${row('Phải đóng',fmt(f.due),'ok')}
   <p class="sm mu" style="margin-top:6px">Học phí đóng trước đầu tháng. Phí dư là khoản hoàn do bé nghỉ có phép, Trung tâm nghỉ hoặc nhập viện có giấy. Số tạm tính có thể đổi nếu còn buổi chưa điểm danh.</p></div>`}
